@@ -1,0 +1,74 @@
+extends SceneTree
+var frame_times: Array=[]
+var swap_count:=0
+var previous_revision:=-1
+
+func _initialize() -> void: call_deferred("run")
+
+func validate(terrain: Node) -> void:
+	if terrain.committed_revision==previous_revision: return
+	previous_revision=terrain.committed_revision;swap_count+=1
+	var keys: Array=terrain._active_chunks.keys()
+	for i in range(keys.size()):
+		var a: Rect2=terrain._partition.bounds(keys[i])
+		assert(terrain._active_chunks[keys[i]].visible)
+		for j in range(i+1,keys.size()):
+			assert(not a.intersects(terrain._partition.bounds(keys[j])),"Visible overlap")
+			assert(not terrain._partition.adjacent(keys[i],keys[j]) or absi(keys[i].z-keys[j].z)<=1,"Visible illegal LOD edge")
+	for node in terrain._staged.values(): assert(not node.visible,"Staging rendered early")
+	assert(keys.size()<512 and terrain._mesh_cache.size()<=terrain.cached_mesh_limit)
+
+func settle(terrain: Node) -> float:
+	var start:=Time.get_ticks_usec()
+	while terrain.committed_revision!=terrain.partition_revision:
+		await process_frame
+		validate(terrain)
+		assert(Time.get_ticks_usec()-start<60000000,"Hierarchy timeout")
+	validate(terrain)
+	return (Time.get_ticks_usec()-start)/1000000.0
+
+func run() -> void:
+	var scene=load("res://main.tscn").instantiate()
+	var terrain=scene.get_node("Terrain");terrain.profile_streaming=true
+	root.add_child(scene)
+	var camera=scene.get_node("FreeCamera");camera.set_process(false)
+	var initial: float=await settle(terrain)
+	var count: int=terrain._active_chunks.size()
+	var records: Array=terrain.streaming_records.duplicate(true)
+	var route: Array=[]
+	for speed in [1.5,7.0,1500.0,5000.0]:
+		var start:=Time.get_ticks_usec();var last:=start
+		while Time.get_ticks_usec()-start<2000000:
+			await process_frame
+			var now:=Time.get_ticks_usec();var delta: float=(now-last)/1000000.0
+			frame_times.append(delta*1000.0);last=now
+			camera.position.x+=speed*delta
+			validate(terrain)
+			var covered:=false
+			for key: Vector3i in terrain._active_chunks:
+				if terrain._partition.bounds(key).has_point(Vector2(camera.position.x,camera.position.z)): covered=true;break
+			assert(covered,"Flight left active terrain coverage")
+		var seconds: float=await settle(terrain)
+		route.append({"speed":speed,"settle_s":seconds,"leaves":terrain._active_chunks.size()})
+	for destination in [Vector3(22000,450,-10000),Vector3(-17000,450,14000),Vector3(0,45,70)]:
+		terrain.request_teleport(destination)
+		var seconds: float=await settle(terrain)
+		assert(camera.position.is_equal_approx(destination),"Teleport did not commit with terrain")
+		route.append({"teleport":str(destination),"settle_s":seconds,"leaves":terrain._active_chunks.size()})
+	frame_times.sort()
+	var result: Dictionary={"initial_s":initial,"leaves":count,"span_metres":terrain.chunk_size*float(1<<terrain.maximum_lod)*3.0,"moving_p95_ms":frame_times[int(frame_times.size()*0.95)],"moving_max_ms":frame_times[-1],"swaps":swap_count,"route":route,"static_memory_mb":OS.get_static_memory_usage()/1048576.0,"records":records}
+	var label:=OS.get_cmdline_user_args()[0] if not OS.get_cmdline_user_args().is_empty() else "current"
+	result["plan_max_ms"]=terrain.max_plan_ms
+	result["partition_swap_max_ms"]=terrain.max_partition_swap_ms
+	var file:=FileAccess.open("res://tools/hierarchy_"+label+".json",FileAccess.WRITE)
+	file.store_string(JSON.stringify(result,"\t"))
+	result.erase("records");print(JSON.stringify(result))
+	camera.position=Vector3(1800,1200,1200);camera.look_at(Vector3(0,100,0));terrain._refresh_visible_chunks()
+	await settle(terrain)
+	for mode in [0,9]:
+		terrain._terrain_material.set_shader_parameter("debug_view",mode)
+		for i in range(10): await process_frame
+		await RenderingServer.frame_post_draw
+		var image:=root.get_texture().get_image();image.resize(1440,758)
+		image.save_png("res://tools/hierarchy_view_"+str(mode)+".png")
+	scene.queue_free();await process_frame;quit()

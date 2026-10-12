@@ -1,0 +1,29 @@
+-------------------------------TERRAIN GENERATION
+-infinite chunk terrainAAAAAAAAAAAAAAAAAAAAAAAAAA
+-biomes
+-caves
+-cave biomes
+-optimization
+-environment objects
+-monuments
+
+-------------------------------PLAYER WALK AROUND TERRAIN SYSTEM WITH MULTIPLAYER SYNC
+-player walking in 3d world
+-other players synchronization
+-animations
+
+-------------------------------INVENTORY, AND CRAFTING SYSTEM
+
+
+
+-------------------------------ANIMALS AND ENEMIES
+
+
+
+
+--------------------------------ITEMS, HARVESTING, COMBAT
+
+
+
+
+--------------------------------BUILDING SYSTEM

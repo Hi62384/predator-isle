@@ -1,0 +1,61 @@
+{
+	"128": {
+		"biome_ms": 21.63,
+		"grass_relief_including_water_ms": 63.928,
+		"height_and_noise_ms": 232.006,
+		"island_ms": 67.957,
+		"mesh_arrays_ms": 22.14,
+		"nested_field_timings_us": {
+
+		},
+		"normal_field_ms": 0.614
+	},
+	"16": {
+		"biome_ms": 0.59,
+		"grass_relief_including_water_ms": 7.01,
+		"height_and_noise_ms": 11.907,
+		"island_ms": 2.328,
+		"mesh_arrays_ms": 0.667,
+		"nested_field_timings_us": {
+			"fractal_detail_us": 365,
+			"plateau_cliff_talus_us": 1018,
+			"regional_fields_us": 1294,
+			"ridge_valley_us": 79,
+			"water_and_bank_us": 2780
+		},
+		"normal_field_ms": 0.106,
+		"river_descriptor_queries_nested_in_grass_ms": 1.145
+	},
+	"64": {
+		"biome_ms": 7.072,
+		"grass_relief_including_water_ms": 91.793,
+		"height_and_noise_ms": 147.237,
+		"island_ms": 23.771,
+		"mesh_arrays_ms": 5.817,
+		"nested_field_timings_us": {
+			"fractal_detail_us": 4945,
+			"plateau_cliff_talus_us": 13273,
+			"regional_fields_us": 16095,
+			"ridge_valley_us": 1175,
+			"water_and_bank_us": 35757
+		},
+		"normal_field_ms": 0.119,
+		"river_descriptor_queries_nested_in_grass_ms": 12.941
+	},
+	"8": {
+		"biome_ms": 0.512,
+		"grass_relief_including_water_ms": 3.181,
+		"height_and_noise_ms": 6.364,
+		"island_ms": 1.738,
+		"mesh_arrays_ms": 0.18,
+		"nested_field_timings_us": {
+			"fractal_detail_us": 156,
+			"plateau_cliff_talus_us": 403,
+			"regional_fields_us": 503,
+			"ridge_valley_us": 24,
+			"water_and_bank_us": 1483
+		},
+		"normal_field_ms": 0.075,
+		"river_descriptor_queries_nested_in_grass_ms": 0.747
+	}
+}

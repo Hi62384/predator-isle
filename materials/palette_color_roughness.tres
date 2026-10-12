@@ -1,0 +1,14 @@
+[gd_resource type="Texture2DArray" load_steps=10 format=3]
+
+[ext_resource type="Image" path="res://materials/palette_color_Grass001.res" id="1"]
+[ext_resource type="Image" path="res://materials/palette_color_Ground054.res" id="2"]
+[ext_resource type="Image" path="res://materials/palette_color_Snow001.res" id="3"]
+[ext_resource type="Image" path="res://materials/palette_color_Rock030.res" id="4"]
+[ext_resource type="Image" path="res://materials/palette_color_Ground037.res" id="5"]
+[ext_resource type="Image" path="res://materials/palette_color_Ground048.res" id="6"]
+[ext_resource type="Image" path="res://materials/palette_color_Gravel020.res" id="7"]
+[ext_resource type="Image" path="res://materials/palette_color_Rock035.res" id="8"]
+[ext_resource type="Image" path="res://materials/palette_color_Rock028.res" id="9"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8"), ExtResource("9")])

@@ -1,0 +1,92 @@
+[gd_resource type="Resource" script_class="CliffNormalSettings" format=3 uid="uid://bi8rm6yulvxb0"]
+
+[ext_resource type="Script" path="res://scripts/cliff_normal_settings.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/cliff_normal_layer.gd" id="2"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock064.res" id="normal_0"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock058.res" id="normal_1"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock051.res" id="normal_2"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock030.res" id="normal_4"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rocks007.res" id="normal_7"]
+[ext_resource type="Texture2D" path="res://materials/cliff_texture_Rocks011.res" id="normal_8"]
+
+[sub_resource type="Resource" id="Layer_0"]
+resource_name = "Rock064"
+script = ExtResource("2")
+label = "Rock064"
+normal_texture = ExtResource("normal_0")
+strength = 1.4
+texture_size_metres = 173.5
+noise_size_metres = 457.0
+noise_cutoff = 0.52
+flip_normal_y = true
+
+[sub_resource type="Resource" id="Layer_1"]
+resource_name = "Rock058"
+script = ExtResource("2")
+label = "Rock058"
+normal_texture = ExtResource("normal_1")
+strength = 1.5
+texture_size_metres = 156.0
+noise_size_metres = 604.0
+noise_seed = 1
+rotation_degrees = 78.0941474763312
+texture_offset = Vector2(13.71, 7.93)
+flip_normal_y = true
+
+[sub_resource type="Resource" id="Layer_2"]
+resource_name = "Rock051"
+script = ExtResource("2")
+label = "Rock051"
+normal_texture = ExtResource("normal_2")
+strength = 2.0
+texture_size_metres = 120.0
+noise_size_metres = 398.0
+noise_seed = 2
+rotation_degrees = -18.0
+texture_offset = Vector2(27.42, 15.86)
+flip_normal_y = true
+
+[sub_resource type="Resource" id="Layer_4"]
+resource_name = "Rock030"
+script = ExtResource("2")
+label = "Rock030"
+normal_texture = ExtResource("normal_4")
+strength = 2.0
+texture_size_metres = 196.5
+noise_size_metres = 70.0
+noise_cutoff = 0.32
+noise_seed = 4
+rotation_degrees = 279.71799558286796
+texture_offset = Vector2(54.84, 31.72)
+flip_normal_y = true
+
+[sub_resource type="Resource" id="Layer_7"]
+resource_name = "Rocks007"
+script = ExtResource("2")
+label = "Rocks007"
+normal_texture = ExtResource("normal_7")
+strength = 2.0
+texture_size_metres = 104.5
+noise_size_metres = 40.0
+noise_cutoff = 0.38
+noise_seed = 7
+rotation_degrees = 121.34184368940464
+texture_offset = Vector2(95.97, 55.51)
+
+[sub_resource type="Resource" id="Layer_8"]
+resource_name = "Rocks011"
+script = ExtResource("2")
+label = "Rocks011"
+normal_texture = ExtResource("normal_8")
+strength = 2.0
+texture_size_metres = 217.5
+noise_size_metres = 367.0
+noise_seed = 8
+rotation_degrees = 188.5497930582501
+texture_offset = Vector2(109.68, 63.44)
+flip_normal_y = true
+
+[resource]
+script = ExtResource("1")
+layers = Array[ExtResource("2")]([SubResource("Layer_0"), SubResource("Layer_1"), SubResource("Layer_2"), SubResource("Layer_4"), SubResource("Layer_7"), SubResource("Layer_8")])
+macro_strength = 0.73

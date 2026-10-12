@@ -1,0 +1,101 @@
+[
+  {
+    "id": "Rock064",
+    "source": "https://ambientcg.com/view?id=Rock064",
+    "resolution": "2K",
+    "original_filename": "Rock064_2K-JPG_NormalGL.jpg",
+    "filename": "rock064_normal.jpg",
+    "sha256": "053fc6b0867e69f472b6de5904050d409722c07fa7276be79bc9fc4664b98508",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock058",
+    "source": "https://ambientcg.com/view?id=Rock058",
+    "resolution": "2K",
+    "original_filename": "Rock058_2K-JPG_NormalGL.jpg",
+    "filename": "rock058_normal.jpg",
+    "sha256": "405c2a5ef2fd2c25dc33dd4c38c3522ff2cd51c7f1a8729af0c7e34bac009c3c",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock051",
+    "source": "https://ambientcg.com/view?id=Rock051",
+    "resolution": "2K",
+    "original_filename": "Rock051_2K-JPG_NormalGL.jpg",
+    "filename": "rock051_normal.jpg",
+    "sha256": "3ce30cda8bf3f8652de9df97f61e74cab3d5e23d3e3537cb2faf02e281b118e5",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock060",
+    "source": "https://ambientcg.com/view?id=Rock060",
+    "resolution": "2K",
+    "original_filename": "Rock060_2K-JPG_NormalGL.jpg",
+    "filename": "rock060_normal.jpg",
+    "sha256": "dd60d8336c3d829f2e801b3cb07d5cfb730db090008af9dd5c70ee6cd2017c09",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock030",
+    "source": "https://ambientcg.com/view?id=Rock030",
+    "resolution": "2K",
+    "original_filename": "Rock030_2K-JPG_NormalGL.jpg",
+    "filename": "rock030_normal.jpg",
+    "sha256": "bf4b029b98fc771887e80807e28f97488c3a8936369152bd1020b2535415a5af",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock061",
+    "source": "https://ambientcg.com/view?id=Rock061",
+    "resolution": "2K",
+    "original_filename": "Rock061_2K-JPG_NormalGL.jpg",
+    "filename": "rock061_normal.jpg",
+    "sha256": "cfe36360a8c64bdcdcd8967aac03c46c3f51b5f02441ea60e678c1f050033cc7",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rock050",
+    "source": "https://ambientcg.com/view?id=Rock050",
+    "resolution": "2K",
+    "original_filename": "Rock050_2K-JPG_NormalGL.jpg",
+    "filename": "rock050_normal.jpg",
+    "sha256": "b44ca5feda6387b5e6d94ac5b84d82d0f2355f5e8c6f9e5113a05673d5da63ff",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rocks007",
+    "source": "https://ambientcg.com/view?id=Rocks007",
+    "resolution": "2K",
+    "original_filename": "Rocks007_2K-JPG_NormalGL.jpg",
+    "filename": "rocks007_normal.jpg",
+    "sha256": "1fc86f2f4423828c201edf10e41defce7c757d94804b2bb4804e6aa2a539f633",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  },
+  {
+    "id": "Rocks011",
+    "source": "https://ambientcg.com/view?id=Rocks011",
+    "resolution": "2K",
+    "original_filename": "Rocks011_2K-JPG_NormalGL.jpg",
+    "filename": "rocks011_normal.jpg",
+    "sha256": "6efebf093cc7a9a980b2ad9559b6fdb6582443696db3af18852fd951c0df664b",
+    "license": "CC0",
+    "convention": "OpenGL +Y",
+    "download": "HTTP ranges: ZIP metadata and NormalGL entry only"
+  }
+]

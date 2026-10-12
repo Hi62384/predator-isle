@@ -1,0 +1,1282 @@
+{
+	"initial_s": 2.515501,
+	"leaves": 177,
+	"moving_max_ms": 45.568,
+	"moving_p95_ms": 6.738,
+	"records": [
+		{
+			"commit_ms": 2.489,
+			"lod": 0,
+			"queue_ms": 30.138,
+			"resolution": 64,
+			"worker_ms": 111.905
+		},
+		{
+			"commit_ms": 1.106,
+			"lod": 0,
+			"queue_ms": 30.306,
+			"resolution": 64,
+			"worker_ms": 115.797
+		},
+		{
+			"commit_ms": 1.337,
+			"lod": 0,
+			"queue_ms": 29.572,
+			"resolution": 64,
+			"worker_ms": 190.443
+		},
+		{
+			"commit_ms": 0.538,
+			"lod": 0,
+			"queue_ms": 151.047,
+			"resolution": 64,
+			"worker_ms": 68.966
+		},
+		{
+			"commit_ms": 0.883,
+			"lod": 0,
+			"queue_ms": 224.683,
+			"resolution": 64,
+			"worker_ms": 73.264
+		},
+		{
+			"commit_ms": 1.208,
+			"lod": 0,
+			"queue_ms": 147.201,
+			"resolution": 64,
+			"worker_ms": 168.925
+		},
+		{
+			"commit_ms": 1.272,
+			"lod": 0,
+			"queue_ms": 224.674,
+			"resolution": 64,
+			"worker_ms": 151.465
+		},
+		{
+			"commit_ms": 1.02,
+			"lod": 0,
+			"queue_ms": 321.161,
+			"resolution": 64,
+			"worker_ms": 76.451
+		},
+		{
+			"commit_ms": 0.996,
+			"lod": 0,
+			"queue_ms": 302.35,
+			"resolution": 64,
+			"worker_ms": 98.656
+		},
+		{
+			"commit_ms": 3.007,
+			"lod": 0,
+			"queue_ms": 29.963,
+			"resolution": 128,
+			"worker_ms": 410.218
+		},
+		{
+			"commit_ms": 0.899,
+			"lod": 0,
+			"queue_ms": 399.747,
+			"resolution": 64,
+			"worker_ms": 52.242
+		},
+		{
+			"commit_ms": 1.073,
+			"lod": 0,
+			"queue_ms": 405.721,
+			"resolution": 64,
+			"worker_ms": 80.11
+		},
+		{
+			"commit_ms": 1.344,
+			"lod": 0,
+			"queue_ms": 443.991,
+			"resolution": 64,
+			"worker_ms": 71.117
+		},
+		{
+			"commit_ms": 0.79,
+			"lod": 0,
+			"queue_ms": 381.636,
+			"resolution": 64,
+			"worker_ms": 149.04
+		},
+		{
+			"commit_ms": 0.619,
+			"lod": 0,
+			"queue_ms": 453.839,
+			"resolution": 64,
+			"worker_ms": 74.1
+		},
+		{
+			"commit_ms": 1.254,
+			"lod": 0,
+			"queue_ms": 490.496,
+			"resolution": 64,
+			"worker_ms": 86.251
+		},
+		{
+			"commit_ms": 1.34,
+			"lod": 0,
+			"queue_ms": 533.309,
+			"resolution": 64,
+			"worker_ms": 50.389
+		},
+		{
+			"commit_ms": 1.037,
+			"lod": 0,
+			"queue_ms": 533.312,
+			"resolution": 64,
+			"worker_ms": 54.163
+		},
+		{
+			"commit_ms": 0.881,
+			"lod": 0,
+			"queue_ms": 587.531,
+			"resolution": 64,
+			"worker_ms": 56.529
+		},
+		{
+			"commit_ms": 1.051,
+			"lod": 0,
+			"queue_ms": 520.881,
+			"resolution": 64,
+			"worker_ms": 160.092
+		},
+		{
+			"commit_ms": 1.12,
+			"lod": 0,
+			"queue_ms": 648.516,
+			"resolution": 64,
+			"worker_ms": 73.13
+		},
+		{
+			"commit_ms": 0.975,
+			"lod": 0,
+			"queue_ms": 593.706,
+			"resolution": 64,
+			"worker_ms": 142.583
+		},
+		{
+			"commit_ms": 0.74,
+			"lod": 0,
+			"queue_ms": 581.832,
+			"resolution": 64,
+			"worker_ms": 179.377
+		},
+		{
+			"commit_ms": 0.871,
+			"lod": 0,
+			"queue_ms": 738.643,
+			"resolution": 64,
+			"worker_ms": 47.188
+		},
+		{
+			"commit_ms": 1.417,
+			"lod": 0,
+			"queue_ms": 684.268,
+			"resolution": 64,
+			"worker_ms": 127.125
+		},
+		{
+			"commit_ms": 0.726,
+			"lod": 0,
+			"queue_ms": 762.841,
+			"resolution": 64,
+			"worker_ms": 79.488
+		},
+		{
+			"commit_ms": 1.279,
+			"lod": 0,
+			"queue_ms": 726.813,
+			"resolution": 64,
+			"worker_ms": 148.419
+		},
+		{
+			"commit_ms": 1.134,
+			"lod": 0,
+			"queue_ms": 787.156,
+			"resolution": 64,
+			"worker_ms": 92.814
+		},
+		{
+			"commit_ms": 0.964,
+			"lod": 0,
+			"queue_ms": 818.22,
+			"resolution": 64,
+			"worker_ms": 81.168
+		},
+		{
+			"commit_ms": 0.96,
+			"lod": 0,
+			"queue_ms": 847.558,
+			"resolution": 64,
+			"worker_ms": 90.506
+		},
+		{
+			"commit_ms": 0.965,
+			"lod": 0,
+			"queue_ms": 884.356,
+			"resolution": 64,
+			"worker_ms": 73.513
+		},
+		{
+			"commit_ms": 0.266,
+			"lod": 1,
+			"queue_ms": 902.579,
+			"resolution": 32,
+			"worker_ms": 41.245
+		},
+		{
+			"commit_ms": 0.229,
+			"lod": 1,
+			"queue_ms": 943.831,
+			"resolution": 32,
+			"worker_ms": 16.326
+		},
+		{
+			"commit_ms": 1.4,
+			"lod": 0,
+			"queue_ms": 878.496,
+			"resolution": 64,
+			"worker_ms": 90.244
+		},
+		{
+			"commit_ms": 0.939,
+			"lod": 0,
+			"queue_ms": 963.642,
+			"resolution": 64,
+			"worker_ms": 50.524
+		},
+		{
+			"commit_ms": 0.847,
+			"lod": 0,
+			"queue_ms": 963.647,
+			"resolution": 64,
+			"worker_ms": 57.586
+		},
+		{
+			"commit_ms": 1.067,
+			"lod": 0,
+			"queue_ms": 1017.424,
+			"resolution": 64,
+			"worker_ms": 53.302
+		},
+		{
+			"commit_ms": 1.085,
+			"lod": 0,
+			"queue_ms": 944.871,
+			"resolution": 64,
+			"worker_ms": 151.137
+		},
+		{
+			"commit_ms": 1.023,
+			"lod": 0,
+			"queue_ms": 1072.27,
+			"resolution": 64,
+			"worker_ms": 73.758
+		},
+		{
+			"commit_ms": 0.762,
+			"lod": 0,
+			"queue_ms": 975.37,
+			"resolution": 64,
+			"worker_ms": 180.9
+		},
+		{
+			"commit_ms": 1.843,
+			"lod": 0,
+			"queue_ms": 1023.483,
+			"resolution": 64,
+			"worker_ms": 156.149
+		},
+		{
+			"commit_ms": 0.406,
+			"lod": 1,
+			"queue_ms": 1150.984,
+			"resolution": 32,
+			"worker_ms": 25.474
+		},
+		{
+			"commit_ms": 0.346,
+			"lod": 1,
+			"queue_ms": 1176.466,
+			"resolution": 32,
+			"worker_ms": 23.531
+		},
+		{
+			"commit_ms": 1.337,
+			"lod": 0,
+			"queue_ms": 1181.992,
+			"resolution": 64,
+			"worker_ms": 47.28
+		},
+		{
+			"commit_ms": 0.989,
+			"lod": 0,
+			"queue_ms": 1102.494,
+			"resolution": 64,
+			"worker_ms": 149.225
+		},
+		{
+			"commit_ms": 0.966,
+			"lod": 0,
+			"queue_ms": 1162.801,
+			"resolution": 64,
+			"worker_ms": 140.412
+		},
+		{
+			"commit_ms": 1.054,
+			"lod": 0,
+			"queue_ms": 1205.284,
+			"resolution": 64,
+			"worker_ms": 109.112
+		},
+		{
+			"commit_ms": 1.323,
+			"lod": 0,
+			"queue_ms": 1236.161,
+			"resolution": 64,
+			"worker_ms": 90.176
+		},
+		{
+			"commit_ms": 0.831,
+			"lod": 0,
+			"queue_ms": 1254.236,
+			"resolution": 64,
+			"worker_ms": 89.174
+		},
+		{
+			"commit_ms": 0.892,
+			"lod": 0,
+			"queue_ms": 1308.464,
+			"resolution": 64,
+			"worker_ms": 82.891
+		},
+		{
+			"commit_ms": 0.941,
+			"lod": 0,
+			"queue_ms": 1320.803,
+			"resolution": 64,
+			"worker_ms": 88.47
+		},
+		{
+			"commit_ms": 1.051,
+			"lod": 0,
+			"queue_ms": 1333.018,
+			"resolution": 64,
+			"worker_ms": 72.059
+		},
+		{
+			"commit_ms": 0.439,
+			"lod": 1,
+			"queue_ms": 1344.543,
+			"resolution": 32,
+			"worker_ms": 37.889
+		},
+		{
+			"commit_ms": 0.352,
+			"lod": 1,
+			"queue_ms": 1382.437,
+			"resolution": 32,
+			"worker_ms": 10.16
+		},
+		{
+			"commit_ms": 0.414,
+			"lod": 1,
+			"queue_ms": 1392.603,
+			"resolution": 32,
+			"worker_ms": 46.15
+		},
+		{
+			"commit_ms": 0.288,
+			"lod": 1,
+			"queue_ms": 1438.762,
+			"resolution": 32,
+			"worker_ms": 16.369
+		},
+		{
+			"commit_ms": 0.601,
+			"lod": 1,
+			"queue_ms": 1455.142,
+			"resolution": 32,
+			"worker_ms": 19.193
+		},
+		{
+			"commit_ms": 0.47,
+			"lod": 1,
+			"queue_ms": 1474.341,
+			"resolution": 32,
+			"worker_ms": 34.866
+		},
+		{
+			"commit_ms": 0.393,
+			"lod": 1,
+			"queue_ms": 1509.215,
+			"resolution": 32,
+			"worker_ms": 17.56
+		},
+		{
+			"commit_ms": 0.492,
+			"lod": 1,
+			"queue_ms": 1526.782,
+			"resolution": 32,
+			"worker_ms": 43.802
+		},
+		{
+			"commit_ms": 0.535,
+			"lod": 1,
+			"queue_ms": 1393.298,
+			"resolution": 32,
+			"worker_ms": 26.116
+		},
+		{
+			"commit_ms": 0.396,
+			"lod": 1,
+			"queue_ms": 1419.422,
+			"resolution": 32,
+			"worker_ms": 23.003
+		},
+		{
+			"commit_ms": 0.323,
+			"lod": 1,
+			"queue_ms": 1442.435,
+			"resolution": 32,
+			"worker_ms": 40.161
+		},
+		{
+			"commit_ms": 0.278,
+			"lod": 1,
+			"queue_ms": 1482.602,
+			"resolution": 32,
+			"worker_ms": 13.818
+		},
+		{
+			"commit_ms": 0.522,
+			"lod": 1,
+			"queue_ms": 1496.426,
+			"resolution": 32,
+			"worker_ms": 21.128
+		},
+		{
+			"commit_ms": 0.49,
+			"lod": 1,
+			"queue_ms": 1517.561,
+			"resolution": 32,
+			"worker_ms": 34.461
+		},
+		{
+			"commit_ms": 0.244,
+			"lod": 1,
+			"queue_ms": 1552.028,
+			"resolution": 32,
+			"worker_ms": 25.445
+		},
+		{
+			"commit_ms": 0.513,
+			"lod": 1,
+			"queue_ms": 1577.479,
+			"resolution": 32,
+			"worker_ms": 25.381
+		},
+		{
+			"commit_ms": 0.39,
+			"lod": 2,
+			"queue_ms": 1412.576,
+			"resolution": 16,
+			"worker_ms": 36.619
+		},
+		{
+			"commit_ms": 0.175,
+			"lod": 2,
+			"queue_ms": 1449.202,
+			"resolution": 16,
+			"worker_ms": 16.347
+		},
+		{
+			"commit_ms": 0.348,
+			"lod": 1,
+			"queue_ms": 1465.555,
+			"resolution": 32,
+			"worker_ms": 19.903
+		},
+		{
+			"commit_ms": 0.305,
+			"lod": 1,
+			"queue_ms": 1485.465,
+			"resolution": 32,
+			"worker_ms": 32.735
+		},
+		{
+			"commit_ms": 0.168,
+			"lod": 2,
+			"queue_ms": 1518.205,
+			"resolution": 16,
+			"worker_ms": 23.23
+		},
+		{
+			"commit_ms": 0.375,
+			"lod": 2,
+			"queue_ms": 1541.438,
+			"resolution": 16,
+			"worker_ms": 19.165
+		},
+		{
+			"commit_ms": 0.323,
+			"lod": 1,
+			"queue_ms": 1560.613,
+			"resolution": 32,
+			"worker_ms": 19.305
+		},
+		{
+			"commit_ms": 0.255,
+			"lod": 1,
+			"queue_ms": 1579.932,
+			"resolution": 32,
+			"worker_ms": 51.53
+		},
+		{
+			"commit_ms": 0.461,
+			"lod": 1,
+			"queue_ms": 1412.599,
+			"resolution": 32,
+			"worker_ms": 20.719
+		},
+		{
+			"commit_ms": 0.232,
+			"lod": 1,
+			"queue_ms": 1433.329,
+			"resolution": 32,
+			"worker_ms": 43.491
+		},
+		{
+			"commit_ms": 0.259,
+			"lod": 1,
+			"queue_ms": 1476.826,
+			"resolution": 32,
+			"worker_ms": 14.696
+		},
+		{
+			"commit_ms": 0.227,
+			"lod": 1,
+			"queue_ms": 1491.532,
+			"resolution": 32,
+			"worker_ms": 47.025
+		},
+		{
+			"commit_ms": 0.222,
+			"lod": 1,
+			"queue_ms": 1538.563,
+			"resolution": 32,
+			"worker_ms": 14.03
+		},
+		{
+			"commit_ms": 0.439,
+			"lod": 1,
+			"queue_ms": 1552.598,
+			"resolution": 32,
+			"worker_ms": 61.619
+		},
+		{
+			"commit_ms": 0.261,
+			"lod": 1,
+			"queue_ms": 1614.224,
+			"resolution": 32,
+			"worker_ms": 26.002
+		},
+		{
+			"commit_ms": 0.273,
+			"lod": 1,
+			"queue_ms": 1640.234,
+			"resolution": 32,
+			"worker_ms": 26.137
+		},
+		{
+			"commit_ms": 0.521,
+			"lod": 1,
+			"queue_ms": 1576.082,
+			"resolution": 32,
+			"worker_ms": 27.08
+		},
+		{
+			"commit_ms": 0.659,
+			"lod": 1,
+			"queue_ms": 1603.167,
+			"resolution": 32,
+			"worker_ms": 51.869
+		},
+		{
+			"commit_ms": 0.267,
+			"lod": 1,
+			"queue_ms": 1655.043,
+			"resolution": 32,
+			"worker_ms": 20.892
+		},
+		{
+			"commit_ms": 0.381,
+			"lod": 1,
+			"queue_ms": 1675.941,
+			"resolution": 32,
+			"worker_ms": 21.841
+		},
+		{
+			"commit_ms": 0.145,
+			"lod": 2,
+			"queue_ms": 1697.79,
+			"resolution": 16,
+			"worker_ms": 25.304
+		},
+		{
+			"commit_ms": 0.093,
+			"lod": 2,
+			"queue_ms": 1723.101,
+			"resolution": 16,
+			"worker_ms": 12.321
+		},
+		{
+			"commit_ms": 0.082,
+			"lod": 2,
+			"queue_ms": 1735.426,
+			"resolution": 16,
+			"worker_ms": 34.104
+		},
+		{
+			"commit_ms": 0.09,
+			"lod": 2,
+			"queue_ms": 1769.536,
+			"resolution": 16,
+			"worker_ms": 12.991
+		},
+		{
+			"commit_ms": 0.149,
+			"lod": 2,
+			"queue_ms": 1606.042,
+			"resolution": 16,
+			"worker_ms": 35.211
+		},
+		{
+			"commit_ms": 0.108,
+			"lod": 2,
+			"queue_ms": 1641.257,
+			"resolution": 16,
+			"worker_ms": 21.162
+		},
+		{
+			"commit_ms": 0.1,
+			"lod": 2,
+			"queue_ms": 1662.425,
+			"resolution": 16,
+			"worker_ms": 14.806
+		},
+		{
+			"commit_ms": 0.113,
+			"lod": 2,
+			"queue_ms": 1677.236,
+			"resolution": 16,
+			"worker_ms": 14.201
+		},
+		{
+			"commit_ms": 0.088,
+			"lod": 2,
+			"queue_ms": 1691.442,
+			"resolution": 16,
+			"worker_ms": 13.365
+		},
+		{
+			"commit_ms": 0.1,
+			"lod": 2,
+			"queue_ms": 1704.812,
+			"resolution": 16,
+			"worker_ms": 36.543
+		},
+		{
+			"commit_ms": 0.464,
+			"lod": 2,
+			"queue_ms": 1741.364,
+			"resolution": 16,
+			"worker_ms": 34.352
+		},
+		{
+			"commit_ms": 0.22,
+			"lod": 2,
+			"queue_ms": 1775.724,
+			"resolution": 16,
+			"worker_ms": 11.503
+		},
+		{
+			"commit_ms": 0.345,
+			"lod": 2,
+			"queue_ms": 1636.281,
+			"resolution": 16,
+			"worker_ms": 24.882
+		},
+		{
+			"commit_ms": 0.197,
+			"lod": 2,
+			"queue_ms": 1661.17,
+			"resolution": 16,
+			"worker_ms": 17.342
+		},
+		{
+			"commit_ms": 0.152,
+			"lod": 2,
+			"queue_ms": 1678.517,
+			"resolution": 16,
+			"worker_ms": 14.89
+		},
+		{
+			"commit_ms": 0.122,
+			"lod": 2,
+			"queue_ms": 1693.412,
+			"resolution": 16,
+			"worker_ms": 16.922
+		},
+		{
+			"commit_ms": 0.183,
+			"lod": 3,
+			"queue_ms": 1710.342,
+			"resolution": 16,
+			"worker_ms": 18.43
+		},
+		{
+			"commit_ms": 0.107,
+			"lod": 3,
+			"queue_ms": 1728.779,
+			"resolution": 16,
+			"worker_ms": 55.339
+		},
+		{
+			"commit_ms": 0.112,
+			"lod": 3,
+			"queue_ms": 1784.122,
+			"resolution": 16,
+			"worker_ms": 30.735
+		},
+		{
+			"commit_ms": 0.094,
+			"lod": 3,
+			"queue_ms": 1814.865,
+			"resolution": 16,
+			"worker_ms": 27.917
+		},
+		{
+			"commit_ms": 0.118,
+			"lod": 2,
+			"queue_ms": 1672.668,
+			"resolution": 16,
+			"worker_ms": 15.735
+		},
+		{
+			"commit_ms": 0.389,
+			"lod": 2,
+			"queue_ms": 1688.409,
+			"resolution": 16,
+			"worker_ms": 23.159
+		},
+		{
+			"commit_ms": 0.462,
+			"lod": 2,
+			"queue_ms": 1711.576,
+			"resolution": 16,
+			"worker_ms": 14.95
+		},
+		{
+			"commit_ms": 0.232,
+			"lod": 2,
+			"queue_ms": 1726.536,
+			"resolution": 16,
+			"worker_ms": 38.901
+		},
+		{
+			"commit_ms": 0.178,
+			"lod": 2,
+			"queue_ms": 1765.442,
+			"resolution": 16,
+			"worker_ms": 26.538
+		},
+		{
+			"commit_ms": 0.156,
+			"lod": 2,
+			"queue_ms": 1791.989,
+			"resolution": 16,
+			"worker_ms": 15.797
+		},
+		{
+			"commit_ms": 0.469,
+			"lod": 2,
+			"queue_ms": 1807.794,
+			"resolution": 16,
+			"worker_ms": 15.981
+		},
+		{
+			"commit_ms": 0.195,
+			"lod": 2,
+			"queue_ms": 1823.786,
+			"resolution": 16,
+			"worker_ms": 19.221
+		},
+		{
+			"commit_ms": 0.399,
+			"lod": 2,
+			"queue_ms": 1787.719,
+			"resolution": 16,
+			"worker_ms": 38.435
+		},
+		{
+			"commit_ms": 0.156,
+			"lod": 2,
+			"queue_ms": 1826.159,
+			"resolution": 16,
+			"worker_ms": 13.365
+		},
+		{
+			"commit_ms": 0.144,
+			"lod": 2,
+			"queue_ms": 1839.532,
+			"resolution": 16,
+			"worker_ms": 9.514
+		},
+		{
+			"commit_ms": 0.157,
+			"lod": 2,
+			"queue_ms": 1849.05,
+			"resolution": 16,
+			"worker_ms": 36.128
+		},
+		{
+			"commit_ms": 0.138,
+			"lod": 2,
+			"queue_ms": 1885.184,
+			"resolution": 16,
+			"worker_ms": 20.15
+		},
+		{
+			"commit_ms": 0.131,
+			"lod": 2,
+			"queue_ms": 1905.339,
+			"resolution": 16,
+			"worker_ms": 23.971
+		},
+		{
+			"commit_ms": 0.14,
+			"lod": 2,
+			"queue_ms": 1929.317,
+			"resolution": 16,
+			"worker_ms": 18.875
+		},
+		{
+			"commit_ms": 0.119,
+			"lod": 2,
+			"queue_ms": 1948.2,
+			"resolution": 16,
+			"worker_ms": 17.356
+		},
+		{
+			"commit_ms": 0.36,
+			"lod": 3,
+			"queue_ms": 1794.102,
+			"resolution": 16,
+			"worker_ms": 46.891
+		},
+		{
+			"commit_ms": 0.225,
+			"lod": 3,
+			"queue_ms": 1841.0,
+			"resolution": 16,
+			"worker_ms": 18.445
+		},
+		{
+			"commit_ms": 0.153,
+			"lod": 3,
+			"queue_ms": 1859.452,
+			"resolution": 16,
+			"worker_ms": 23.809
+		},
+		{
+			"commit_ms": 0.112,
+			"lod": 3,
+			"queue_ms": 1883.269,
+			"resolution": 16,
+			"worker_ms": 60.436
+		},
+		{
+			"commit_ms": 0.114,
+			"lod": 3,
+			"queue_ms": 1943.711,
+			"resolution": 16,
+			"worker_ms": 21.266
+		},
+		{
+			"commit_ms": 0.18,
+			"lod": 3,
+			"queue_ms": 1964.982,
+			"resolution": 16,
+			"worker_ms": 22.382
+		},
+		{
+			"commit_ms": 0.492,
+			"lod": 3,
+			"queue_ms": 1987.371,
+			"resolution": 16,
+			"worker_ms": 29.695
+		},
+		{
+			"commit_ms": 0.306,
+			"lod": 3,
+			"queue_ms": 2017.074,
+			"resolution": 16,
+			"worker_ms": 27.387
+		},
+		{
+			"commit_ms": 0.258,
+			"lod": 3,
+			"queue_ms": 1848.471,
+			"resolution": 16,
+			"worker_ms": 65.686
+		},
+		{
+			"commit_ms": 0.123,
+			"lod": 3,
+			"queue_ms": 1914.162,
+			"resolution": 16,
+			"worker_ms": 21.937
+		},
+		{
+			"commit_ms": 0.089,
+			"lod": 3,
+			"queue_ms": 1936.107,
+			"resolution": 16,
+			"worker_ms": 20.139
+		},
+		{
+			"commit_ms": 0.08,
+			"lod": 3,
+			"queue_ms": 1956.249,
+			"resolution": 16,
+			"worker_ms": 47.892
+		},
+		{
+			"commit_ms": 0.067,
+			"lod": 3,
+			"queue_ms": 2004.149,
+			"resolution": 16,
+			"worker_ms": 21.242
+		},
+		{
+			"commit_ms": 0.081,
+			"lod": 3,
+			"queue_ms": 2025.397,
+			"resolution": 16,
+			"worker_ms": 26.356
+		},
+		{
+			"commit_ms": 0.07,
+			"lod": 3,
+			"queue_ms": 2051.76,
+			"resolution": 16,
+			"worker_ms": 26.815
+		},
+		{
+			"commit_ms": 0.074,
+			"lod": 3,
+			"queue_ms": 2078.581,
+			"resolution": 16,
+			"worker_ms": 20.535
+		},
+		{
+			"commit_ms": 0.312,
+			"lod": 4,
+			"queue_ms": 1848.493,
+			"resolution": 16,
+			"worker_ms": 34.894
+		},
+		{
+			"commit_ms": 0.139,
+			"lod": 4,
+			"queue_ms": 1883.394,
+			"resolution": 16,
+			"worker_ms": 72.293
+		},
+		{
+			"commit_ms": 0.15,
+			"lod": 4,
+			"queue_ms": 1955.693,
+			"resolution": 16,
+			"worker_ms": 30.919
+		},
+		{
+			"commit_ms": 0.085,
+			"lod": 4,
+			"queue_ms": 1986.616,
+			"resolution": 16,
+			"worker_ms": 36.626
+		},
+		{
+			"commit_ms": 0.117,
+			"lod": 3,
+			"queue_ms": 2023.251,
+			"resolution": 16,
+			"worker_ms": 29.283
+		},
+		{
+			"commit_ms": 0.168,
+			"lod": 3,
+			"queue_ms": 2052.537,
+			"resolution": 16,
+			"worker_ms": 42.189
+		},
+		{
+			"commit_ms": 0.186,
+			"lod": 3,
+			"queue_ms": 2094.731,
+			"resolution": 16,
+			"worker_ms": 18.553
+		},
+		{
+			"commit_ms": 0.143,
+			"lod": 3,
+			"queue_ms": 2113.292,
+			"resolution": 16,
+			"worker_ms": 52.346
+		},
+		{
+			"commit_ms": 0.379,
+			"lod": 3,
+			"queue_ms": 1969.438,
+			"resolution": 16,
+			"worker_ms": 18.672
+		},
+		{
+			"commit_ms": 0.165,
+			"lod": 3,
+			"queue_ms": 1988.115,
+			"resolution": 16,
+			"worker_ms": 30.125
+		},
+		{
+			"commit_ms": 0.117,
+			"lod": 3,
+			"queue_ms": 2018.245,
+			"resolution": 16,
+			"worker_ms": 22.27
+		},
+		{
+			"commit_ms": 0.11,
+			"lod": 3,
+			"queue_ms": 2040.528,
+			"resolution": 16,
+			"worker_ms": 23.855
+		},
+		{
+			"commit_ms": 0.111,
+			"lod": 3,
+			"queue_ms": 2064.392,
+			"resolution": 16,
+			"worker_ms": 51.698
+		},
+		{
+			"commit_ms": 0.094,
+			"lod": 3,
+			"queue_ms": 2116.094,
+			"resolution": 16,
+			"worker_ms": 21.721
+		},
+		{
+			"commit_ms": 0.093,
+			"lod": 3,
+			"queue_ms": 2137.827,
+			"resolution": 16,
+			"worker_ms": 50.608
+		},
+		{
+			"commit_ms": 0.093,
+			"lod": 3,
+			"queue_ms": 2188.442,
+			"resolution": 16,
+			"worker_ms": 19.104
+		},
+		{
+			"commit_ms": 0.374,
+			"lod": 3,
+			"queue_ms": 2048.399,
+			"resolution": 16,
+			"worker_ms": 22.544
+		},
+		{
+			"commit_ms": 0.206,
+			"lod": 3,
+			"queue_ms": 2070.948,
+			"resolution": 16,
+			"worker_ms": 20.966
+		},
+		{
+			"commit_ms": 0.23,
+			"lod": 3,
+			"queue_ms": 2091.921,
+			"resolution": 16,
+			"worker_ms": 23.023
+		},
+		{
+			"commit_ms": 0.192,
+			"lod": 3,
+			"queue_ms": 2114.949,
+			"resolution": 16,
+			"worker_ms": 21.651
+		},
+		{
+			"commit_ms": 0.143,
+			"lod": 4,
+			"queue_ms": 2136.604,
+			"resolution": 16,
+			"worker_ms": 37.262
+		},
+		{
+			"commit_ms": 0.072,
+			"lod": 4,
+			"queue_ms": 2173.874,
+			"resolution": 16,
+			"worker_ms": 54.471
+		},
+		{
+			"commit_ms": 0.067,
+			"lod": 4,
+			"queue_ms": 2228.351,
+			"resolution": 16,
+			"worker_ms": 28.794
+		},
+		{
+			"commit_ms": 0.067,
+			"lod": 4,
+			"queue_ms": 2257.149,
+			"resolution": 16,
+			"worker_ms": 21.629
+		},
+		{
+			"commit_ms": 0.314,
+			"lod": 4,
+			"queue_ms": 2169.635,
+			"resolution": 16,
+			"worker_ms": 28.637
+		},
+		{
+			"commit_ms": 0.135,
+			"lod": 4,
+			"queue_ms": 2198.278,
+			"resolution": 16,
+			"worker_ms": 56.937
+		},
+		{
+			"commit_ms": 0.195,
+			"lod": 4,
+			"queue_ms": 2255.223,
+			"resolution": 16,
+			"worker_ms": 33.602
+		},
+		{
+			"commit_ms": 0.311,
+			"lod": 4,
+			"queue_ms": 2288.834,
+			"resolution": 16,
+			"worker_ms": 28.084
+		},
+		{
+			"commit_ms": 0.161,
+			"lod": 4,
+			"queue_ms": 2316.923,
+			"resolution": 16,
+			"worker_ms": 23.633
+		},
+		{
+			"commit_ms": 0.347,
+			"lod": 4,
+			"queue_ms": 2102.265,
+			"resolution": 16,
+			"worker_ms": 60.646
+		},
+		{
+			"commit_ms": 0.428,
+			"lod": 4,
+			"queue_ms": 2162.918,
+			"resolution": 16,
+			"worker_ms": 27.828
+		},
+		{
+			"commit_ms": 0.197,
+			"lod": 4,
+			"queue_ms": 2190.752,
+			"resolution": 16,
+			"worker_ms": 31.122
+		},
+		{
+			"commit_ms": 0.214,
+			"lod": 4,
+			"queue_ms": 2221.881,
+			"resolution": 16,
+			"worker_ms": 35.648
+		},
+		{
+			"commit_ms": 0.183,
+			"lod": 5,
+			"queue_ms": 2257.534,
+			"resolution": 16,
+			"worker_ms": 60.668
+		},
+		{
+			"commit_ms": 0.29,
+			"lod": 4,
+			"queue_ms": 2318.206,
+			"resolution": 16,
+			"worker_ms": 58.663
+		},
+		{
+			"commit_ms": 0.295,
+			"lod": 4,
+			"queue_ms": 2376.877,
+			"resolution": 16,
+			"worker_ms": 28.322
+		},
+		{
+			"commit_ms": 0.219,
+			"lod": 4,
+			"queue_ms": 2405.206,
+			"resolution": 16,
+			"worker_ms": 27.152
+		}
+	],
+	"route": [
+		{
+			"leaves": 177,
+			"settle_s": 0.000003,
+			"speed": 1.5
+		},
+		{
+			"leaves": 177,
+			"settle_s": 0.000003,
+			"speed": 7.0
+		},
+		{
+			"leaves": 183,
+			"settle_s": 0.667289,
+			"speed": 1500.0
+		},
+		{
+			"leaves": 153,
+			"settle_s": 1.724305,
+			"teleport": "(22000.0, 450.0, -10000.0)"
+		},
+		{
+			"leaves": 141,
+			"settle_s": 2.819466,
+			"teleport": "(-17000.0, 450.0, 14000.0)"
+		},
+		{
+			"leaves": 177,
+			"settle_s": 2.464377,
+			"teleport": "(0.0, 45.0, 70.0)"
+		}
+	],
+	"span_metres": 24576.0,
+	"static_memory_mb": 51.0965871810913,
+	"swaps": 10
+}

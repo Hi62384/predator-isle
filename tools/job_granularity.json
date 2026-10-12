@@ -1,0 +1,13 @@
+{
+	"chunk_ms": [
+		368.463012695313,
+		289.970001220703,
+		303.636993408203
+	],
+	"four_row_blocks_ms": [
+		310.410003662109,
+		324.153991699219,
+		317.31298828125
+	],
+	"scope": "Canonical padded height sampling only, four 128-resolution chunks; max four concurrent jobs. Not a complete alternate mesh builder."
+}

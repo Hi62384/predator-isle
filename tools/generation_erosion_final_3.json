@@ -1,0 +1,96 @@
+{
+	"128": {
+		"commit_ms": {
+			"max": 3.575,
+			"median": 3.575,
+			"p95": 3.575
+		},
+		"queue_ms": {
+			"max": 25.313,
+			"median": 25.313,
+			"p95": 25.313
+		},
+		"worker_ms": {
+			"max": 302.173,
+			"median": 302.173,
+			"p95": 302.173
+		}
+	},
+	"16": {
+		"commit_ms": {
+			"max": 0.395,
+			"median": 0.131,
+			"p95": 0.334
+		},
+		"queue_ms": {
+			"max": 1368.808,
+			"median": 1079.88,
+			"p95": 1311.552
+		},
+		"worker_ms": {
+			"max": 23.965,
+			"median": 10.117,
+			"p95": 19.713
+		}
+	},
+	"64": {
+		"commit_ms": {
+			"max": 1.648,
+			"median": 1.062,
+			"p95": 1.455
+		},
+		"queue_ms": {
+			"max": 772.011,
+			"median": 414.611,
+			"p95": 747.292
+		},
+		"worker_ms": {
+			"max": 228.481,
+			"median": 107.569,
+			"p95": 210.665
+		}
+	},
+	"8": {
+		"commit_ms": {
+			"max": 0.628,
+			"median": 0.083,
+			"p95": 0.27
+		},
+		"queue_ms": {
+			"max": 2438.059,
+			"median": 1812.003,
+			"p95": 2370.539
+		},
+		"worker_ms": {
+			"max": 13.004,
+			"median": 4.175,
+			"p95": 7.795
+		}
+	},
+	"distant_job_batch": 8,
+	"draw_radius": 16,
+	"frame_ms": {
+		"max": 97.216,
+		"median": 6.059,
+		"p95": 6.865
+	},
+	"initial_chunks_per_s": 444.236128023223,
+	"label": "erosion_final_3",
+	"lods": [
+		128,
+		64,
+		16,
+		8
+	],
+	"moving_frame_ms": {
+		"max": 11.296,
+		"median": 6.06,
+		"p95": 6.684
+	},
+	"playable_3x3_s": 0.408659,
+	"render_size": "(2560, 1346)",
+	"seed": 73921,
+	"static_memory_mb": 59.83030128479,
+	"visible_fill_s": 2.451399,
+	"worker_count": 4
+}

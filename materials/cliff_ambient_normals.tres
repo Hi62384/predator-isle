@@ -1,0 +1,12 @@
+[gd_resource type="Texture2DArray" load_steps=10 format=3]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock064.res" id="1"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock058.res" id="2"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock051.res" id="3"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock060.res" id="4"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock030.res" id="5"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock061.res" id="6"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rock050.res" id="7"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rocks007.res" id="8"]
+[ext_resource type="Image" path="res://materials/cliff_normal_Rocks011.res" id="9"]
+[resource]
+_images = Array[Image]([ExtResource("1"),ExtResource("2"),ExtResource("3"),ExtResource("4"),ExtResource("5"),ExtResource("6"),ExtResource("7"),ExtResource("8"),ExtResource("9")])

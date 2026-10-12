@@ -1,0 +1,743 @@
+{
+	"initial_s": 1.582747,
+	"leaves": 99,
+	"moving_max_ms": 21.292,
+	"moving_p95_ms": 8.418,
+	"partition_swap_max_ms": 11.138,
+	"plan_max_ms": 6.327,
+	"records": [
+		{
+			"commit_ms": 0.815,
+			"lod": 0,
+			"queue_ms": 25.522,
+			"resolution": 64,
+			"worker_ms": 102.663
+		},
+		{
+			"commit_ms": 1.016,
+			"lod": 0,
+			"queue_ms": 25.872,
+			"resolution": 64,
+			"worker_ms": 125.938
+		},
+		{
+			"commit_ms": 1.541,
+			"lod": 0,
+			"queue_ms": 24.895,
+			"resolution": 64,
+			"worker_ms": 191.065
+		},
+		{
+			"commit_ms": 1.254,
+			"lod": 0,
+			"queue_ms": 153.822,
+			"resolution": 64,
+			"worker_ms": 69.617
+		},
+		{
+			"commit_ms": 1.339,
+			"lod": 0,
+			"queue_ms": 129.472,
+			"resolution": 64,
+			"worker_ms": 157.072
+		},
+		{
+			"commit_ms": 0.94,
+			"lod": 0,
+			"queue_ms": 220.928,
+			"resolution": 64,
+			"worker_ms": 73.374
+		},
+		{
+			"commit_ms": 1.25,
+			"lod": 0,
+			"queue_ms": 299.109,
+			"resolution": 64,
+			"worker_ms": 81.478
+		},
+		{
+			"commit_ms": 0.902,
+			"lod": 0,
+			"queue_ms": 226.81,
+			"resolution": 64,
+			"worker_ms": 167.607
+		},
+		{
+			"commit_ms": 0.974,
+			"lod": 0,
+			"queue_ms": 293.459,
+			"resolution": 64,
+			"worker_ms": 112.573
+		},
+		{
+			"commit_ms": 3.301,
+			"lod": 0,
+			"queue_ms": 25.236,
+			"resolution": 128,
+			"worker_ms": 404.1
+		},
+		{
+			"commit_ms": 0.899,
+			"lod": 0,
+			"queue_ms": 384.317,
+			"resolution": 64,
+			"worker_ms": 44.543
+		},
+		{
+			"commit_ms": 1.019,
+			"lod": 0,
+			"queue_ms": 408.232,
+			"resolution": 64,
+			"worker_ms": 86.861
+		},
+		{
+			"commit_ms": 0.788,
+			"lod": 0,
+			"queue_ms": 434.912,
+			"resolution": 64,
+			"worker_ms": 79.312
+		},
+		{
+			"commit_ms": 0.635,
+			"lod": 0,
+			"queue_ms": 434.917,
+			"resolution": 64,
+			"worker_ms": 79.5
+		},
+		{
+			"commit_ms": 0.999,
+			"lod": 0,
+			"queue_ms": 396.067,
+			"resolution": 64,
+			"worker_ms": 147.633
+		},
+		{
+			"commit_ms": 1.114,
+			"lod": 0,
+			"queue_ms": 517.784,
+			"resolution": 64,
+			"worker_ms": 50.498
+		},
+		{
+			"commit_ms": 1.532,
+			"lod": 0,
+			"queue_ms": 499.208,
+			"resolution": 64,
+			"worker_ms": 83.961
+		},
+		{
+			"commit_ms": 1.208,
+			"lod": 0,
+			"queue_ms": 547.755,
+			"resolution": 64,
+			"worker_ms": 45.841
+		},
+		{
+			"commit_ms": 0.752,
+			"lod": 0,
+			"queue_ms": 517.772,
+			"resolution": 64,
+			"worker_ms": 173.013
+		},
+		{
+			"commit_ms": 0.76,
+			"lod": 0,
+			"queue_ms": 692.923,
+			"resolution": 64,
+			"worker_ms": 48.832
+		},
+		{
+			"commit_ms": 1.328,
+			"lod": 0,
+			"queue_ms": 573.144,
+			"resolution": 64,
+			"worker_ms": 186.735
+		},
+		{
+			"commit_ms": 1.107,
+			"lod": 0,
+			"queue_ms": 596.467,
+			"resolution": 64,
+			"worker_ms": 170.781
+		},
+		{
+			"commit_ms": 0.516,
+			"lod": 1,
+			"queue_ms": 590.724,
+			"resolution": 32,
+			"worker_ms": 15.952
+		},
+		{
+			"commit_ms": 0.302,
+			"lod": 1,
+			"queue_ms": 606.683,
+			"resolution": 32,
+			"worker_ms": 49.725
+		},
+		{
+			"commit_ms": 0.213,
+			"lod": 1,
+			"queue_ms": 656.412,
+			"resolution": 32,
+			"worker_ms": 20.085
+		},
+		{
+			"commit_ms": 0.202,
+			"lod": 1,
+			"queue_ms": 676.506,
+			"resolution": 32,
+			"worker_ms": 28.97
+		},
+		{
+			"commit_ms": 0.257,
+			"lod": 1,
+			"queue_ms": 705.482,
+			"resolution": 32,
+			"worker_ms": 21.727
+		},
+		{
+			"commit_ms": 0.583,
+			"lod": 1,
+			"queue_ms": 727.214,
+			"resolution": 32,
+			"worker_ms": 18.112
+		},
+		{
+			"commit_ms": 0.357,
+			"lod": 1,
+			"queue_ms": 745.333,
+			"resolution": 32,
+			"worker_ms": 39.979
+		},
+		{
+			"commit_ms": 0.412,
+			"lod": 1,
+			"queue_ms": 785.321,
+			"resolution": 32,
+			"worker_ms": 15.776
+		},
+		{
+			"commit_ms": 1.265,
+			"lod": 0,
+			"queue_ms": 766.141,
+			"resolution": 64,
+			"worker_ms": 46.562
+		},
+		{
+			"commit_ms": 1.044,
+			"lod": 0,
+			"queue_ms": 747.304,
+			"resolution": 64,
+			"worker_ms": 189.0
+		},
+		{
+			"commit_ms": 0.372,
+			"lod": 1,
+			"queue_ms": 773.459,
+			"resolution": 32,
+			"worker_ms": 28.473
+		},
+		{
+			"commit_ms": 0.178,
+			"lod": 1,
+			"queue_ms": 801.937,
+			"resolution": 32,
+			"worker_ms": 27.016
+		},
+		{
+			"commit_ms": 0.168,
+			"lod": 1,
+			"queue_ms": 828.991,
+			"resolution": 32,
+			"worker_ms": 35.164
+		},
+		{
+			"commit_ms": 0.188,
+			"lod": 1,
+			"queue_ms": 864.159,
+			"resolution": 32,
+			"worker_ms": 12.014
+		},
+		{
+			"commit_ms": 0.13,
+			"lod": 2,
+			"queue_ms": 876.186,
+			"resolution": 16,
+			"worker_ms": 20.081
+		},
+		{
+			"commit_ms": 0.095,
+			"lod": 2,
+			"queue_ms": 896.272,
+			"resolution": 16,
+			"worker_ms": 30.391
+		},
+		{
+			"commit_ms": 0.103,
+			"lod": 2,
+			"queue_ms": 926.668,
+			"resolution": 16,
+			"worker_ms": 18.041
+		},
+		{
+			"commit_ms": 0.081,
+			"lod": 2,
+			"queue_ms": 944.715,
+			"resolution": 16,
+			"worker_ms": 25.769
+		},
+		{
+			"commit_ms": 0.488,
+			"lod": 1,
+			"queue_ms": 802.802,
+			"resolution": 32,
+			"worker_ms": 45.536
+		},
+		{
+			"commit_ms": 0.348,
+			"lod": 1,
+			"queue_ms": 848.343,
+			"resolution": 32,
+			"worker_ms": 15.602
+		},
+		{
+			"commit_ms": 0.167,
+			"lod": 2,
+			"queue_ms": 863.953,
+			"resolution": 16,
+			"worker_ms": 17.918
+		},
+		{
+			"commit_ms": 0.139,
+			"lod": 2,
+			"queue_ms": 881.892,
+			"resolution": 16,
+			"worker_ms": 19.235
+		},
+		{
+			"commit_ms": 0.098,
+			"lod": 2,
+			"queue_ms": 901.131,
+			"resolution": 16,
+			"worker_ms": 30.067
+		},
+		{
+			"commit_ms": 0.085,
+			"lod": 2,
+			"queue_ms": 931.206,
+			"resolution": 16,
+			"worker_ms": 14.087
+		},
+		{
+			"commit_ms": 0.886,
+			"lod": 1,
+			"queue_ms": 945.299,
+			"resolution": 32,
+			"worker_ms": 34.943
+		},
+		{
+			"commit_ms": 0.366,
+			"lod": 1,
+			"queue_ms": 980.247,
+			"resolution": 32,
+			"worker_ms": 15.76
+		},
+		{
+			"commit_ms": 0.346,
+			"lod": 2,
+			"queue_ms": 815.43,
+			"resolution": 16,
+			"worker_ms": 22.104
+		},
+		{
+			"commit_ms": 0.128,
+			"lod": 2,
+			"queue_ms": 837.543,
+			"resolution": 16,
+			"worker_ms": 15.038
+		},
+		{
+			"commit_ms": 0.198,
+			"lod": 1,
+			"queue_ms": 852.588,
+			"resolution": 32,
+			"worker_ms": 47.801
+		},
+		{
+			"commit_ms": 0.21,
+			"lod": 1,
+			"queue_ms": 900.396,
+			"resolution": 32,
+			"worker_ms": 14.096
+		},
+		{
+			"commit_ms": 0.114,
+			"lod": 2,
+			"queue_ms": 914.495,
+			"resolution": 16,
+			"worker_ms": 24.962
+		},
+		{
+			"commit_ms": 0.121,
+			"lod": 2,
+			"queue_ms": 939.463,
+			"resolution": 16,
+			"worker_ms": 10.87
+		},
+		{
+			"commit_ms": 0.124,
+			"lod": 3,
+			"queue_ms": 950.34,
+			"resolution": 16,
+			"worker_ms": 22.668
+		},
+		{
+			"commit_ms": 0.091,
+			"lod": 3,
+			"queue_ms": 973.012,
+			"resolution": 16,
+			"worker_ms": 39.19
+		},
+		{
+			"commit_ms": 0.269,
+			"lod": 3,
+			"queue_ms": 972.244,
+			"resolution": 16,
+			"worker_ms": 21.957
+		},
+		{
+			"commit_ms": 0.149,
+			"lod": 3,
+			"queue_ms": 994.208,
+			"resolution": 16,
+			"worker_ms": 23.708
+		},
+		{
+			"commit_ms": 0.107,
+			"lod": 2,
+			"queue_ms": 1017.919,
+			"resolution": 16,
+			"worker_ms": 12.544
+		},
+		{
+			"commit_ms": 0.123,
+			"lod": 2,
+			"queue_ms": 1030.468,
+			"resolution": 16,
+			"worker_ms": 24.281
+		},
+		{
+			"commit_ms": 0.093,
+			"lod": 2,
+			"queue_ms": 1054.755,
+			"resolution": 16,
+			"worker_ms": 12.38
+		},
+		{
+			"commit_ms": 0.087,
+			"lod": 2,
+			"queue_ms": 1067.14,
+			"resolution": 16,
+			"worker_ms": 33.753
+		},
+		{
+			"commit_ms": 0.091,
+			"lod": 3,
+			"queue_ms": 1100.897,
+			"resolution": 16,
+			"worker_ms": 18.441
+		},
+		{
+			"commit_ms": 0.095,
+			"lod": 3,
+			"queue_ms": 1119.344,
+			"resolution": 16,
+			"worker_ms": 42.821
+		},
+		{
+			"commit_ms": 0.282,
+			"lod": 3,
+			"queue_ms": 941.626,
+			"resolution": 16,
+			"worker_ms": 28.531
+		},
+		{
+			"commit_ms": 0.164,
+			"lod": 3,
+			"queue_ms": 970.163,
+			"resolution": 16,
+			"worker_ms": 37.5
+		},
+		{
+			"commit_ms": 0.129,
+			"lod": 3,
+			"queue_ms": 1007.672,
+			"resolution": 16,
+			"worker_ms": 21.077
+		},
+		{
+			"commit_ms": 0.136,
+			"lod": 3,
+			"queue_ms": 1028.755,
+			"resolution": 16,
+			"worker_ms": 28.817
+		},
+		{
+			"commit_ms": 0.132,
+			"lod": 2,
+			"queue_ms": 1057.58,
+			"resolution": 16,
+			"worker_ms": 12.298
+		},
+		{
+			"commit_ms": 0.086,
+			"lod": 2,
+			"queue_ms": 1069.884,
+			"resolution": 16,
+			"worker_ms": 39.013
+		},
+		{
+			"commit_ms": 0.1,
+			"lod": 3,
+			"queue_ms": 1108.903,
+			"resolution": 16,
+			"worker_ms": 39.532
+		},
+		{
+			"commit_ms": 0.075,
+			"lod": 3,
+			"queue_ms": 1148.444,
+			"resolution": 16,
+			"worker_ms": 19.028
+		},
+		{
+			"commit_ms": 0.327,
+			"lod": 4,
+			"queue_ms": 1002.781,
+			"resolution": 16,
+			"worker_ms": 38.378
+		},
+		{
+			"commit_ms": 0.155,
+			"lod": 4,
+			"queue_ms": 1041.165,
+			"resolution": 16,
+			"worker_ms": 34.255
+		},
+		{
+			"commit_ms": 0.256,
+			"lod": 4,
+			"queue_ms": 1075.423,
+			"resolution": 16,
+			"worker_ms": 29.326
+		},
+		{
+			"commit_ms": 0.174,
+			"lod": 4,
+			"queue_ms": 1104.755,
+			"resolution": 16,
+			"worker_ms": 34.41
+		},
+		{
+			"commit_ms": 0.163,
+			"lod": 4,
+			"queue_ms": 1139.17,
+			"resolution": 16,
+			"worker_ms": 27.377
+		},
+		{
+			"commit_ms": 0.162,
+			"lod": 4,
+			"queue_ms": 1166.55,
+			"resolution": 16,
+			"worker_ms": 25.379
+		},
+		{
+			"commit_ms": 0.116,
+			"lod": 3,
+			"queue_ms": 1191.938,
+			"resolution": 16,
+			"worker_ms": 35.297
+		},
+		{
+			"commit_ms": 0.275,
+			"lod": 3,
+			"queue_ms": 1227.241,
+			"resolution": 16,
+			"worker_ms": 25.837
+		},
+		{
+			"commit_ms": 0.313,
+			"lod": 4,
+			"queue_ms": 1014.814,
+			"resolution": 16,
+			"worker_ms": 32.136
+		},
+		{
+			"commit_ms": 0.214,
+			"lod": 4,
+			"queue_ms": 1046.958,
+			"resolution": 16,
+			"worker_ms": 47.36
+		},
+		{
+			"commit_ms": 0.206,
+			"lod": 4,
+			"queue_ms": 1094.325,
+			"resolution": 16,
+			"worker_ms": 35.306
+		},
+		{
+			"commit_ms": 0.209,
+			"lod": 4,
+			"queue_ms": 1129.64,
+			"resolution": 16,
+			"worker_ms": 30.574
+		},
+		{
+			"commit_ms": 0.137,
+			"lod": 3,
+			"queue_ms": 1160.219,
+			"resolution": 16,
+			"worker_ms": 50.614
+		},
+		{
+			"commit_ms": 0.126,
+			"lod": 3,
+			"queue_ms": 1210.837,
+			"resolution": 16,
+			"worker_ms": 23.278
+		},
+		{
+			"commit_ms": 0.154,
+			"lod": 3,
+			"queue_ms": 1234.126,
+			"resolution": 16,
+			"worker_ms": 35.924
+		},
+		{
+			"commit_ms": 0.463,
+			"lod": 3,
+			"queue_ms": 1270.063,
+			"resolution": 16,
+			"worker_ms": 17.37
+		},
+		{
+			"commit_ms": 0.23,
+			"lod": 4,
+			"queue_ms": 1172.082,
+			"resolution": 16,
+			"worker_ms": 57.175
+		},
+		{
+			"commit_ms": 0.127,
+			"lod": 4,
+			"queue_ms": 1229.261,
+			"resolution": 16,
+			"worker_ms": 35.939
+		},
+		{
+			"commit_ms": 0.324,
+			"lod": 4,
+			"queue_ms": 1265.204,
+			"resolution": 16,
+			"worker_ms": 53.847
+		},
+		{
+			"commit_ms": 0.251,
+			"lod": 4,
+			"queue_ms": 1165.961,
+			"resolution": 16,
+			"worker_ms": 38.017
+		},
+		{
+			"commit_ms": 0.127,
+			"lod": 4,
+			"queue_ms": 1203.984,
+			"resolution": 16,
+			"worker_ms": 43.676
+		},
+		{
+			"commit_ms": 0.117,
+			"lod": 5,
+			"queue_ms": 1247.666,
+			"resolution": 16,
+			"worker_ms": 72.103
+		},
+		{
+			"commit_ms": 0.074,
+			"lod": 5,
+			"queue_ms": 1319.775,
+			"resolution": 16,
+			"worker_ms": 55.274
+		},
+		{
+			"commit_ms": 0.079,
+			"lod": 4,
+			"queue_ms": 1375.053,
+			"resolution": 16,
+			"worker_ms": 20.431
+		},
+		{
+			"commit_ms": 0.081,
+			"lod": 4,
+			"queue_ms": 1395.494,
+			"resolution": 16,
+			"worker_ms": 36.702
+		},
+		{
+			"commit_ms": 0.074,
+			"lod": 5,
+			"queue_ms": 1432.206,
+			"resolution": 16,
+			"worker_ms": 55.306
+		},
+		{
+			"commit_ms": 0.119,
+			"lod": 4,
+			"queue_ms": 1487.516,
+			"resolution": 16,
+			"worker_ms": 26.182
+		}
+	],
+	"route": [
+		{
+			"leaves": 99,
+			"settle_s": 0.000004,
+			"speed": 1.5
+		},
+		{
+			"leaves": 99,
+			"settle_s": 0.000004,
+			"speed": 7.0
+		},
+		{
+			"leaves": 141,
+			"settle_s": 0.212793,
+			"speed": 1500.0
+		},
+		{
+			"leaves": 129,
+			"settle_s": 0.753846,
+			"speed": 5000.0
+		},
+		{
+			"leaves": 129,
+			"settle_s": 1.643186,
+			"teleport": "(22000.0, 450.0, -10000.0)"
+		},
+		{
+			"leaves": 129,
+			"settle_s": 2.694759,
+			"teleport": "(-17000.0, 450.0, 14000.0)"
+		},
+		{
+			"leaves": 99,
+			"settle_s": 1.916657,
+			"teleport": "(0.0, 45.0, 70.0)"
+		}
+	],
+	"span_metres": 24576.0,
+	"static_memory_mb": 50.8154754638672,
+	"swaps": 13
+}

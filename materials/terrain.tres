@@ -1,0 +1,55 @@
+[gd_resource type="ShaderMaterial" format=4 uid="uid://dfcn882jkdh04"]
+
+[ext_resource type="Shader" uid="uid://cec23k8fjricw" path="res://shaders/terrain_biomes.gdshader" id="1"]
+[ext_resource type="Texture2DArray" path="res://materials/palette_color_roughness.res" id="2"]
+[ext_resource type="Texture2DArray" path="res://materials/palette_normals.res" id="3"]
+[ext_resource type="Texture2D" path="res://materials/grass_macro.res" id="5"]
+[ext_resource type="Texture2D" path="res://materials/meso_macro.res" id="6"]
+
+[resource]
+render_priority = 0
+shader = ExtResource("1")
+shader_parameter/palette_color = ExtResource("2")
+shader_parameter/palette_normal = ExtResource("3")
+shader_parameter/enable_ambient_cliff_normals = true
+shader_parameter/cliff_world_seed = 73921.0
+shader_parameter/macro_detail_strength = 1.2
+shader_parameter/medium_detail_strength = 0.75
+shader_parameter/cliff_layer_count = 0
+shader_parameter/cliff_layer_params = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/cliff_layer_masks = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/cliff_layer_transforms = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/cliff_layer_extras = PackedVector4Array(0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0)
+shader_parameter/selection_blend_width = 0.065
+shader_parameter/max_active_macro_layers = 2
+shader_parameter/max_active_medium_layers = 2
+shader_parameter/distance_fade_start = 1800.0
+shader_parameter/distance_fade_end = 4500.0
+shader_parameter/medium_fade_start = 200.0
+shader_parameter/medium_fade_end = 850.0
+shader_parameter/cliff_force_layer = -1
+shader_parameter/cliff_normal_debug = 0
+shader_parameter/cliff_micro_strength = 1.0
+shader_parameter/cliff_region_metres = 180.0
+shader_parameter/cliff_collapse_strength = 0.7
+shader_parameter/cliff_top_softness = 0.38
+shader_parameter/cliff_bottom_softness = 0.65
+shader_parameter/grass_macro = ExtResource("5")
+shader_parameter/meso_mask = ExtResource("6")
+shader_parameter/water_level = 0.0
+shader_parameter/texture_blend_sharpness = 4.0
+shader_parameter/detail_distance = 180.0
+shader_parameter/shore_width = 1.5
+shader_parameter/shore_strength = 0.75
+shader_parameter/slope_rock_start = 0.08
+shader_parameter/slope_rock_end = 0.3
+shader_parameter/grass_roughness_floor = 0.94
+shader_parameter/grass_specular = 0.06
+shader_parameter/grass_normal_scale = 0.4
+shader_parameter/tile_metres = Vector4(1.4, 3.5, 3, 4)
+shader_parameter/normal_strength = 0.75
+shader_parameter/sand_tint = Color(1, 0.82, 0.46, 1)
+shader_parameter/debug_view = 0
+shader_parameter/diagnostic_surface = 0
+shader_parameter/chunk_lod = 0.0
+shader_parameter/chunk_size_metres = 256.0

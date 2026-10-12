@@ -1,0 +1,21 @@
+[gd_resource type="Resource" script_class="GroundMaterialSettings" format=3 uid="uid://bodyn5igqnyfg"]
+
+[ext_resource type="Script" uid="uid://bu4w7w6wmf7xh" path="res://scripts/ground_material_settings.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+dirt_coverage = 0.48
+dirt_cutoff = 0.56
+path_coverage = 0.95
+wear_size_metres = 340.0
+wear_width_metres = 3.5
+path_dry_earth_mix = 0.28
+path_mud_mix = 0.24
+path_wander_strength = 0.82
+path_edge_noise_strength = 0.9
+path_edge_noise_metres = 7.0
+path_edge_softness_metres = 0.65
+erosion_strength = 0.28
+ridge_soil_strength = 0.18
+grass_texture_metres = 1.1
+grass_normal_strength = 0.75

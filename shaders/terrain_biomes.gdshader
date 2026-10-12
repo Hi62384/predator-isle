@@ -1,0 +1,656 @@
+shader_type spatial;
+render_mode diffuse_burley, specular_schlick_ggx;
+uniform sampler2DArray palette_color : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray palette_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2DArray cliff_ambient_normals : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform bool enable_ambient_cliff_normals=true;
+uniform float cliff_world_seed=73921.0;
+uniform float macro_detail_strength : hint_range(0.0,2.0)=1.2;
+uniform float medium_detail_strength : hint_range(0.0,2.0)=0.75;
+uniform int cliff_layer_count=0;
+uniform vec4 cliff_layer_params[16]; // strength, tile metres, band, enabled
+uniform vec4 cliff_layer_masks[16]; // noise metres, cutoff, softness, breakup strength
+uniform vec4 cliff_layer_transforms[16]; // angle, offset x/y, flip Y
+uniform vec4 cliff_layer_extras[16]; // breakup frequency, seed
+uniform float selection_blend_width=0.065;
+uniform int max_active_macro_layers : hint_range(0,2)=2;
+uniform int max_active_medium_layers : hint_range(0,2)=2;
+uniform float distance_fade_start=1800.0;
+uniform float distance_fade_end=4500.0;
+uniform float medium_fade_start=200.0;
+uniform float medium_fade_end=850.0;
+// Diagnostic: force a single source at full coverage; -1 restores natural masks.
+uniform int cliff_force_layer : hint_range(-1,15)=-1;
+// 0 combined; 1 base/off; 2 macro only; 3 medium only; 4 coverage; 5 IDs; 6 final normal.
+uniform int cliff_normal_debug : hint_range(0,6)=0;
+uniform float cliff_micro_strength : hint_range(0.0,2.0)=1.0;
+uniform float cliff_region_metres=180.0;
+uniform float cliff_collapse_strength=0.7;
+uniform float cliff_top_softness=0.38;
+uniform float cliff_bottom_softness=0.65;
+uniform sampler2D grass_macro : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform sampler2D meso_mask : filter_linear_mipmap_anisotropic, repeat_enable;
+uniform float water_level=0.0;
+uniform float texture_blend_sharpness=4.0;
+uniform float detail_distance=180.0;
+uniform float shore_width=1.5;
+uniform float shore_strength=0.75;
+// Ground-only controls; no texture pixels are stored in the settings resource.
+uniform float ground_region_size=620.0;
+uniform float ground_macro_strength=0.4;
+uniform float ground_grass_variation=0.7;
+uniform float ground_moisture_darkening=0.28;
+uniform float ground_patch_size=48.0;
+uniform float ground_dirt_coverage=0.24;
+uniform float ground_dirt_cutoff=0.62;
+uniform float ground_patch_softness=0.22;
+uniform float ground_path_coverage=0.3;
+uniform float ground_wear_size=180.0;
+uniform float ground_wear_width=3.0;
+uniform float ground_shore_width=7.0;
+uniform float ground_damp_width=24.0;
+uniform float ground_erosion_strength=0.28;
+uniform float ground_ridge_strength=0.18;
+uniform float ground_grass_metres=1.1;
+uniform float ground_normal_strength=0.75;
+uniform float path_sand_mix=0.38;
+uniform float path_gravel_mix=0.18;
+uniform float path_dry_earth_mix=0.28;
+uniform float path_mud_mix=0.24;
+uniform float path_normal_strength=1.0;
+uniform float path_texture_metres=2.0;
+uniform float path_wander_strength=0.82;
+uniform float path_edge_noise_strength=0.48;
+uniform float path_edge_noise_metres=7.0;
+uniform float path_edge_softness_metres=1.4;
+uniform int ground_debug=0;
+uniform float slope_rock_start=0.08;
+uniform float slope_rock_end=0.30;
+uniform float grass_roughness_floor=0.94;
+uniform float grass_specular=0.06;
+uniform float grass_normal_scale=0.4;
+uniform vec4 tile_metres=vec4(1.4,3.5,3.0,4.0);
+uniform float normal_strength=0.75;
+uniform vec3 sand_tint : source_color=vec3(1.0,0.82,0.46);
+uniform int debug_view=0;
+uniform int diagnostic_surface=0;
+uniform float chunk_lod=0.0;
+uniform float chunk_size_metres=256.0;
+varying vec3 world_position;
+varying vec3 world_normal;
+varying float view_distance;
+varying vec3 geology_control;
+
+float field(vec2 p) {
+ vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
+ vec4 h=fract(sin(vec4(dot(i,vec2(127.1,311.7)),dot(i+vec2(1,0),vec2(127.1,311.7)),dot(i+vec2(0,1),vec2(127.1,311.7)),dot(i+vec2(1,1),vec2(127.1,311.7))))*43758.5453);
+ return mix(mix(h.x,h.y,f.x),mix(h.z,h.w,f.x),f.y);
+}
+// Ground color uses gradient noise rather than interpolated random corner
+// colors: the latter exposes flat square cells once the PBR layer fades out.
+float ground_field(vec2 p) {
+ p=mat2(vec2(0.8,0.6),vec2(-0.6,0.8))*p;
+ vec2 i=floor(p),f=fract(p);
+ vec2 u=f*f*f*(f*(f*6.0-15.0)+10.0);
+ vec4 a=fract(sin(vec4(dot(i,vec2(127.1,311.7)),dot(i+vec2(1,0),vec2(127.1,311.7)),dot(i+vec2(0,1),vec2(127.1,311.7)),dot(i+vec2(1,1),vec2(127.1,311.7))))*43758.5453)*6.283185;
+ vec4 v=vec4(dot(vec2(cos(a.x),sin(a.x)),f),dot(vec2(cos(a.y),sin(a.y)),f-vec2(1,0)),dot(vec2(cos(a.z),sin(a.z)),f-vec2(0,1)),dot(vec2(cos(a.w),sin(a.w)),f-vec2(1,1)));
+ float value=mix(mix(v.x,v.y,u.x),mix(v.z,v.w,u.x),u.y);
+ // Subpixel fields converge smoothly to their mean instead of aliasing.
+ float footprint=max(length(dFdx(p)),length(dFdy(p)));
+ return clamp(0.5+value*0.7*(1.0-smoothstep(0.3,1.0,footprint)),0.0,1.0);
+}
+void vertex() {
+ world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
+ world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);
+ view_distance=length((VIEW_MATRIX*vec4(world_position,1.0)).xyz);
+ geology_control=CUSTOM0.xyz;
+}
+// Shared jittered junctions form a world-space graph. Adjacent regions evaluate
+// the same endpoints, so branches meet instead of becoming isolated scratches.
+float path_hash(vec2 p) {return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+vec2 path_node(vec2 id,float size) {
+ return (id+0.5+(vec2(path_hash(id+17.3),path_hash(id+91.7))-0.5)*0.56)*size;
+}
+vec2 path_tangent(vec2 id) {
+ float angle=(path_hash(id+vec2(43.1,19.7))-0.5)*1.5;
+ return vec2(cos(angle),sin(angle));
+}
+vec2 path_curve(vec2 a,vec2 c1,vec2 c2,vec2 b,float t) {
+ float u=1.0-t;
+ return a*u*u*u+3.0*c1*u*u*t+3.0*c2*u*t*t+b*t*t*t;
+}
+vec2 ground_trail(vec2 p,float size,float width,float pixel_width) {
+ p=mat2(vec2(0.9135,0.4067),vec2(-0.4067,0.9135))*p;
+ // Warp the entire connected network, including its junctions. Unlike moving
+ // only the final closest point, this cannot tear the mask into broken bands.
+ p+=path_wander_strength*vec2(12.0*sin(p.y/57.0)+7.0*sin(p.y/29.0+1.7),12.0*sin(p.x/67.0)+6.0*sin(p.x/33.0));
+ vec2 cell=floor(p/size);
+ vec2 result=vec2(0.0);
+ for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++) {
+  vec2 id=cell+vec2(float(i),float(j));
+  vec2 a=path_node(id,size);
+  for(int edge=0;edge<2;edge++) {
+   float seed=path_hash(id+vec2(float(edge)*57.0,37.0));
+   if(seed<(edge==0 ? 0.88 : 0.32)) {
+    vec2 next_id=id+(edge==0 ? vec2(1,0) : vec2(0,1));
+    vec2 b=path_node(next_id,size);
+    vec2 ab=b-a;
+    float t=clamp(dot(p-a,ab)/dot(ab,ab),0.0,1.0);
+    // Reject distant edges before evaluating the curved path.
+    if(length(p-a-ab*t)<size*0.65+width*4.0) {
+     vec2 direction=normalize(ab);
+     // Both ends use a node-owned tangent, so incoming/outgoing branches
+     // merge tangentially instead of merely covering a sharp corner with a disc.
+     vec2 ta=path_tangent(id),tb=path_tangent(next_id);
+     if(dot(ta,direction)<0.0) ta=-ta;
+     if(dot(tb,direction)<0.0) tb=-tb;
+     float handle=length(ab)*0.36;
+     vec2 c1=a+ta*handle,c2=b-tb*handle;
+     float closest=1e20;
+     for(int probe=0;probe<=6;probe++) {
+      float candidate=float(probe)/6.0;
+      vec2 delta=path_curve(a,c1,c2,b,candidate)-p;
+      if(dot(delta,delta)<closest) { closest=dot(delta,delta);t=candidate; }
+     }
+     for(int step=0;step<3;step++) {
+      float u=1.0-t;
+      vec2 q=path_curve(a,c1,c2,b,t);
+      vec2 v=3.0*(c1-a)*u*u+6.0*(c2-c1)*u*t+3.0*(b-c2)*t*t;
+      vec2 acc=6.0*(c2-2.0*c1+a)*u+6.0*(b-2.0*c2+c1)*t;
+      t=clamp(t-clamp(dot(q-p,v)/max(dot(v,v)+dot(q-p,acc),1.0),-0.15,0.15),0.0,1.0);
+     }
+     vec2 q=path_curve(a,c1,c2,b,t);
+     vec2 noise_p=p*3.1/max(path_edge_noise_metres,0.5)+vec2(seed*31.0,seed*17.0);
+     float edge_noise=0.5+0.25*sin(noise_p.x+sin(noise_p.y*0.73))+0.25*sin(noise_p.y*0.61+seed*17.0);
+     float w=width*mix(0.78,1.28,path_hash(id+vec2(8.0,float(edge)*23.0)))*(0.92+0.12*sin(t*9.0+seed*19.0));
+     float d=length(p-q)-(edge_noise-0.5)*w*path_edge_noise_strength;
+     float aa=min(pixel_width,size*0.05);
+     float feather=max(path_edge_softness_metres,0.05)+aa;
+     vec2 curve_mask=vec2(1.0-smoothstep(w*0.56,w+feather,d),1.0-smoothstep(w,w*2.15+feather,d));
+     // Rounded endpoint unions let several links merge into a broad worn turn
+     // instead of exposing a pointed, ruler-straight Y intersection.
+     float join_d=min(length(p-a),length(p-b))-(edge_noise-0.5)*w*path_edge_noise_strength;
+     vec2 join_mask=vec2(1.0-smoothstep(w*0.62,w*1.42+feather,join_d),1.0-smoothstep(w*1.15,w*2.35+feather,join_d));
+     result=max(result,max(curve_mask,join_mask)*min(1.0,w/max(aa,0.001)));
+    }
+   }
+  }
+ }
+ return result;
+}
+// BC5 stores OpenGL XY in RG; the absent B channel is never sampled.
+vec3 unpack_normal(vec2 xy) {
+ xy=xy*2.0-1.0; return normalize(vec3(xy,sqrt(max(1.0-dot(xy,xy),0.001))));
+}
+// Only near terrain pays for the second, rotated non-integer tiling.
+// Rotate normal XY back into the first projection's basis before blending.
+void projected_surface(int id,vec2 uv,vec2 dx,vec2 dy,float fine,out vec4 surface,out vec3 t) {
+ surface=textureGrad(palette_color,vec3(uv,float(id)),dx,dy); t=vec3(0,0,1);
+ vec2 alternate=vec2(-uv.y,uv.x)*0.79+vec2(13.17,7.43);
+ vec2 ax=vec2(-dx.y,dx.x)*0.79, ay=vec2(-dy.y,dy.x)*0.79;
+ // A dominant close grass sample retains blade/soil contrast; the offset
+ // sample breaks repetition without averaging two equally strong structures.
+ float blend=id==8 ? 0.18 : ((id==0 || id==4) ? 0.16 : 0.35)*fine;
+ if(fine>0.001 || id==8) {
+  surface=mix(surface,textureGrad(palette_color,vec3(alternate,float(id)),ax,ay),blend);
+ }
+ if(fine>0.001) {
+  t=unpack_normal(textureGrad(palette_normal,vec3(uv,float(id)),dx,dy).rg);
+  vec3 other=unpack_normal(textureGrad(palette_normal,vec3(alternate,float(id)),ax,ay).rg);
+  t=normalize(mix(t,vec3(other.y,-other.x,other.z),blend));
+  // Convert the tangent normal to a surface slope before world-space basis
+  // projection. A neutral map gives zero slope on every signed axis.
+  t.xy/=max(t.z,0.25);
+ }
+}
+vec4 material_mean(int id) {
+ vec4 s=vec4(0.263,0.357,0.149,0.94);
+ if(id==1) s=vec4(0.608,0.545,0.435,0.663);
+ if(id==2) s=vec4(0.882,0.918,0.957,0.616);
+ if(id==3) s=vec4(0.306,0.298,0.267,0.686);
+ if(id==4) s=vec4(0.596,0.573,0.349,0.88);
+ if(id==5) s=vec4(0.326,0.235,0.184,0.667);
+ if(id==6) s=vec4(0.447,0.447,0.439,0.471);
+ if(id==7) s=vec4(0.051,0.094,0.102,0.686);
+ return s;
+}
+vec3 id_color(int id) {
+ if(id==0) return vec3(0.15,0.7,0.2);
+ if(id==1) return vec3(1.0,0.8,0.2);
+ if(id==2) return vec3(0.8,0.95,1.0);
+ if(id==3) return vec3(0.7,0.5,0.4);
+ if(id==4) return vec3(0.8,0.8,0.15);
+ if(id==5) return vec3(0.4,0.15,0.07);
+ if(id==6) return vec3(0.3,0.7,0.85);
+ if(id==8) return vec3(0.88,0.4,0.2);
+ return vec3(0.45,0.25,0.6);
+}
+void sample_layer(int id,vec3 p,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient) {
+ surface=vec4(0.0); gradient=vec3(0.0);
+ // Flat surfaces take one projection; far surfaces skip all normal fetches.
+ if(projection.x>0.002) {
+  vec2 uv=vec2(p.z,-p.y*sign(n.x));
+  vec4 s; vec3 t; projected_surface(id,uv,vec2(dx.z,-dx.y*sign(n.x)),vec2(dy.z,-dy.y*sign(n.x)),fine,s,t); surface+=s*projection.x;
+  gradient+=vec3(0.0,-t.y*sign(n.x),t.x)*projection.x;
+ }
+ if(projection.y>0.002) {
+  vec2 uv=vec2(p.x,-p.z*sign(n.y));
+  vec4 s; vec3 t; projected_surface(id,uv,vec2(dx.x,-dx.z*sign(n.y)),vec2(dy.x,-dy.z*sign(n.y)),fine,s,t); surface+=s*projection.y;
+  gradient+=vec3(t.x,0.0,-t.y*sign(n.y))*projection.y;
+ }
+ if(projection.z>0.002) {
+  vec2 uv=vec2(p.x,p.y*sign(n.z));
+  vec4 s; vec3 t; projected_surface(id,uv,vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,s,t); surface+=s*projection.z;
+  gradient+=vec3(t.x,t.y*sign(n.z),0.0)*projection.z;
+ }
+}
+// Rotating coordinates requires the inverse rotation on the sampled slope.
+vec2 ambient_slope(int id,vec2 uv,vec2 dx,vec2 dy) {
+ float angle=cliff_layer_transforms[id].x;
+ float c=cos(angle),s=sin(angle);
+ mat2 rotation=mat2(vec2(c,s),vec2(-s,c));
+ vec2 offset=cliff_layer_transforms[id].yz;
+ vec3 t=unpack_normal(textureGrad(cliff_ambient_normals,vec3(rotation*uv+offset,float(id)),rotation*dx,rotation*dy).rg);
+ t.y*=mix(1.0,-1.0,cliff_layer_transforms[id].w);
+ return transpose(rotation)*(t.xy/max(t.z,0.35));
+}
+vec3 ambient_gradient(int id,float metres,vec3 dx,vec3 dy,vec3 n,vec3 projection) {
+ vec3 p=world_position/metres;
+ dx/=metres;dy/=metres;
+ vec3 g=vec3(0.0);
+ if(projection.x>0.002) {
+  vec2 t=ambient_slope(id,vec2(p.z,-p.y*sign(n.x)),vec2(dx.z,-dx.y*sign(n.x)),vec2(dy.z,-dy.y*sign(n.x)));
+  g+=vec3(0.0,-t.y*sign(n.x),t.x)*projection.x;
+ }
+ if(projection.y>0.002) {
+  vec2 t=ambient_slope(id,vec2(p.x,-p.z*sign(n.y)),vec2(dx.x,-dx.z*sign(n.y)),vec2(dy.x,-dy.z*sign(n.y)));
+  g+=vec3(t.x,0.0,-t.y*sign(n.y))*projection.y;
+ }
+ if(projection.z>0.002) {
+  vec2 t=ambient_slope(id,vec2(p.x,p.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)));
+  g+=vec3(t.x,t.y*sign(n.z),0.0)*projection.z;
+ }
+ return g-n*dot(g,n);
+}
+void ambient_band(bool macro_band,vec3 dx,vec3 dy,vec3 n,vec3 projection,out vec3 g,out float coverage,out vec3 selected) {
+ g=vec3(0.0);coverage=0.0;selected=vec3(0.0);
+ int limit=macro_band ? max_active_macro_layers : max_active_medium_layers;
+ float fade=macro_band ? 1.0-smoothstep(distance_fade_start,max(distance_fade_end,distance_fade_start+1.0),view_distance) : 1.0-smoothstep(medium_fade_start,max(medium_fade_end,medium_fade_start+1.0),view_distance);
+ if(limit>0 && fade>0.001) {
+  float best=0.0,second=0.0,third=0.0;
+  int first_id=0,second_id=0;
+  vec2 seed=vec2(mod(cliff_world_seed,997.0),mod(floor(cliff_world_seed/997.0),991.0));
+  for(int i=0;i<16;i++) {
+   if(i>=cliff_layer_count) break;
+   bool is_macro=cliff_layer_params[i].z<0.5;
+   if(is_macro==macro_band && cliff_layer_params[i].w>0.5 && cliff_layer_params[i].x>0.0) {
+    vec4 settings=cliff_layer_masks[i];
+    vec2 p=(world_position.xz+vec2(world_position.y*0.37,world_position.y*0.19))/max(settings.x,1.0);
+    vec2 q=vec2(world_position.x*0.41+world_position.z*0.71,world_position.y)/max(settings.x,1.0);
+    float layer_seed=cliff_layer_extras[i].y;
+    vec2 offset=seed+vec2(layer_seed*37.13,layer_seed*19.71);
+    float mask=field(p+offset)*mix(1.0-settings.w,1.0,field(q*cliff_layer_extras[i].x+offset.yx));
+    // Rank unsaturated masks. Ranking smoothstep weights made strong overlaps
+    // tie at 1.0 and subtract themselves to ZERO, erasing the normal detail.
+    float w=max(0.0,mask-settings.y);
+    if(w>best) {third=second;second=best;second_id=first_id;best=w;first_id=i;}
+    else if(w>second) {third=second;second=w;second_id=i;}
+    else third=max(third,w);
+   }
+  }
+  if(cliff_force_layer>=0 && cliff_force_layer<cliff_layer_count) {
+   bool forced_macro=cliff_layer_params[cliff_force_layer].z<0.5;
+   limit=forced_macro==macro_band ? 1 : 0;
+   first_id=cliff_force_layer;best=1.0;second=0.0;third=0.0;
+  }
+  // Competitors taper to zero at a rank crossing: no hard texture-ID swap.
+  float cutoff=limit==1 ? second : third;
+  for(int slot=0;slot<2;slot++) {
+   int id=slot==0 ? first_id : second_id;
+   float candidate=slot==0 ? best : second;
+   float presence=smoothstep(0.0,max(cliff_layer_masks[id].z,0.001),candidate);
+   float w=presence*smoothstep(0.0,max(selection_blend_width,0.001),max(0.0,candidate-cutoff))*fade;
+   if(cliff_force_layer>=0) w=fade;
+   if(slot<limit && w>0.001) {
+    float metres=max(cliff_layer_params[id].y,0.5);
+    float footprint=max(length(dx),length(dy))/metres;
+    w*=1.0-smoothstep(0.12,0.4,footprint);
+    g+=ambient_gradient(id,metres,dx,dy,n,projection)*w*cliff_layer_params[id].x;
+    coverage+=w;
+    selected+=(0.5+0.45*cos(vec3(0.0,2.1,4.2)+float(id)*2.4))*w;
+   }
+  }
+  g/=max(1.0,coverage);
+  selected/=max(1.0,coverage);
+ }
+}
+void fragment() {
+ // Derivatives must be evaluated before divergent material/projection branches.
+ vec3 position_dx=dFdx(world_position),position_dy=dFdy(world_position);
+ vec3 n=normalize(world_normal);
+ vec3 projection=pow(abs(n),vec3(6.0)); projection/=dot(projection,vec3(1.0));
+ float fine=1.0-smoothstep(detail_distance*0.35,detail_distance,view_distance);
+ if(debug_view==7 || debug_view==18 || diagnostic_surface==2) fine=0.0;
+ float broad=field(world_position.xz/580.0+vec2(37,71));
+ float patch=field(world_position.xz/74.0+vec2(broad*2.0,19.0));
+ float breakup=field(world_position.xz/11.0+vec2(59,13));
+ float slope=1.0-n.y;
+ float concave=smoothstep(0.03,0.35,UV.y);
+ float convex=smoothstep(0.03,0.35,-UV.y);
+ float highland=UV2.x, drainage=UV2.y;
+ // Broad terrain-following folds. Height bends the pattern across contours;
+ // exposure/drainage determine its role rather than a world-wide color mask.
+ // All bands coexist at immutable world scales. Height bends the grass flow
+ // across terrain contours without camera-dependent UVs or normal-based swim.
+ vec2 warp=vec2(broad,field(world_position.xz/710.0+vec2(93,31)))-0.5;
+ vec2 flow_uv=world_position.xz/920.0+vec2(world_position.y/2400.0,0.0)+warp*0.15;
+ vec3 flow_a=texture(grass_macro,flow_uv).rgb;
+ vec3 flow_b=texture(grass_macro,vec2(-flow_uv.y,flow_uv.x)*0.613+vec2(0.31,0.73)).rgb;
+ vec3 flow=mix(flow_a,flow_b,0.35);
+ vec2 meso_uv=world_position.xz/230.0+warp*0.2;
+ vec3 meso=mix(texture(meso_mask,meso_uv).rgb,texture(meso_mask,vec2(-meso_uv.y,meso_uv.x)*0.713+vec2(0.19,0.67)).rgb,0.4);
+ if(debug_view==20) meso=vec3(0.5);
+ float folds=flow.r;
+ float cover=meso.r;
+ // UV.x is the sample's water-surface elevation, not a universal sand band.
+ float bank=(1.0-smoothstep(max(shore_width,0.1),max(shore_width*4.7,0.2),abs(world_position.y-UV.x)))*mix(0.15,1.0,drainage)*clamp(shore_strength/0.75,0.0,1.0);
+ float underwater=smoothstep(0.0,3.0,UV.x-world_position.y);
+ // Analytic fields have no repeating texture footprint. Stable horizontal
+ // coordinates drive placement; terrain fields modulate ecological suitability.
+ vec2 gp=world_position.xz;
+ vec2 ground_warp=vec2(field(gp/430.0+vec2(41,97)),field(gp/510.0+vec2(113,7)))-0.5;
+ float region=ground_field(gp/max(ground_region_size,80.0)+ground_warp*0.65+vec2(211,53));
+ float ground_patch=ground_field(gp/max(ground_patch_size,5.0)+ground_warp*2.4+vec2(37,193));
+ // Tuft/soil-retention scale: subtle cover structure, not another biome mask.
+ float sward=ground_field(gp/17.0+ground_warp+vec2(157,67));
+ // Height / local gradient estimates shore distance without per-chunk maps.
+ // This is a local approximation, not an exact water-distance field.
+ float above_water=world_position.y-UV.x;
+ float bank_gradient=max(length(n.xz)/max(n.y,0.15),0.06);
+ float shore_distance=max(above_water,0.0)/bank_gradient;
+ float shore_context=1.0-smoothstep(5.0,14.0,max(above_water,0.0));
+ float local_shore_width=ground_shore_width*mix(0.8,1.2,region);
+ float shoreline=(1.0-smoothstep(0.0,local_shore_width,shore_distance))*shore_context;
+ shoreline*=1.0-smoothstep(0.12,0.32,slope);
+ float damp_margin=(1.0-smoothstep(ground_shore_width*0.4,ground_damp_width,shore_distance))*shore_context;
+ // Mesh curvature changes sign rapidly across hills. Do not turn every crest
+ // brown and every hollow dark green; reserve strong moisture for water margins.
+ float moisture=clamp(damp_margin*0.7+(1.0-region)*0.2,0.0,1.0);
+ float ground_exposure=clamp(region*0.35-moisture*0.2,0.0,1.0);
+ // Regional identities are environmental weights, not six equally mixed tints.
+ float upland=clamp(highland*0.75+smoothstep(90.0,420.0,world_position.y)*0.35,0.0,1.0);
+ float wet_family=smoothstep(0.26,0.73,moisture);
+ float dry_family=smoothstep(0.30,0.78,ground_exposure)*(1.0-wet_family);
+ float high_family=upland*(1.0-dry_family)*(1.0-wet_family);
+ float lush_family=(1.0-upland)*(1.0-dry_family)*(1.0-wet_family)*smoothstep(0.12,0.4,moisture+0.15);
+ float sparse_family=0.0;
+ float normal_family=max(0.05,1.0-wet_family-dry_family-high_family-lush_family-sparse_family);
+ float family_sum=wet_family+dry_family+high_family+lush_family+sparse_family+normal_family;
+ vec3 family_color=(vec3(0.70,0.85,0.72)*wet_family+vec3(1.13,1.06,0.84)*dry_family+
+     vec3(0.88,0.96,0.94)*high_family+vec3(0.82,1.01,0.83)*lush_family+
+     vec3(1.03,0.98,0.87)*sparse_family+vec3(1.0)*normal_family)/family_sum;
+ // Lush/wet plains remain calm: region noise only perturbs the dry-region budget.
+ float dirt_budget=dry_family*0.8*(1.0-upland);
+ vec2 downhill=n.xz/max(length(n.xz),0.001);
+ vec2 across_flow=vec2(-downhill.y,downhill.x);
+ // Local orientation modulates world-space fields, never texture coordinates.
+ float flow_structure=field(gp/vec2(14.0,90.0)+ground_warp*0.65)*abs(across_flow.x)+
+     field(gp/vec2(90.0,14.0)+ground_warp*0.65+vec2(81,17))*abs(across_flow.y);
+ flow_structure/=max(abs(across_flow.x)+abs(across_flow.y),1.0);
+ // Horizontal province coordinates keep a failed wall and its apron correlated.
+ // Height gently changes family balance within a face, never with camera distance.
+ vec2 geology_uv=world_position.xz/max(cliff_region_metres,1.0);
+ float collapse_zone=smoothstep(0.72,0.91,field(geology_uv+vec2(157,83)))*cliff_collapse_strength;
+ vec2 style_uv=geology_uv+vec2(world_position.y*0.0017,world_position.y*0.0008);
+ float vertical_zone=smoothstep(0.35,0.72,field(style_uv+vec2(23,61)));
+ float clean_zone=smoothstep(0.57,0.84,field(style_uv+vec2(73,11)))*(1.0-collapse_zone);
+ float ledge_zone=smoothstep(0.44,0.79,field(style_uv+vec2(111,37)))*(1.0-clean_zone*0.8);
+ float buttress_zone=smoothstep(0.35,0.78,field(style_uv+vec2(5,139))+convex*0.12);
+ clean_zone=max(clean_zone,(1.0-vertical_zone)*(1.0-ledge_zone)*(1.0-collapse_zone)*0.75);
+ float cliff=smoothstep(0.31-cliff_top_softness*0.1,0.42+cliff_top_softness*0.2,slope)*max(smoothstep(0.12,0.55,highland),geology_control.z);
+ // The transition follows slope and the existing geological apron. Small
+ // repeating masks must not cut holes through this material boundary.
+ // Soil retention and exposure lead. Noise only perturbs these conditions.
+ float thin_soil=clamp(slope*1.6+convex*0.35+highland*0.30-drainage*0.5-concave*0.2,0.0,1.0);
+ float dry=dry_family*0.7*ground_grass_variation;
+ float exposure=slope+convex*0.025-concave*0.02;
+ float rock=smoothstep(slope_rock_end-0.065,slope_rock_end+0.055,exposure);
+ rock=max(rock,cliff);
+ float exposed_lip=geology_control.z*convex*smoothstep(0.10,0.25,slope)*0.35;
+ rock=max(rock,exposed_lip*mix(0.35,0.95,max(ledge_zone,collapse_zone)));
+ float talus_apron=smoothstep(0.08,0.2+cliff_bottom_softness*0.38,geology_control.x)*(1.0-cliff);
+ talus_apron*=mix(0.45,1.0,clamp(collapse_zone+ledge_zone*0.45,0.0,1.0));
+ // Competent wall gives way to debris only in the generator's existing apron.
+ rock*=1.0-talus_apron*0.65;
+ float debris=max(geology_control.x*2.4,concave*highland*smoothstep(0.018,0.10,slope)*0.35)*(1.0-smoothstep(0.28,0.50,slope));
+ float earth=0.0;
+ float gravel=clamp(smoothstep(0.12,0.75,debris)+bank*0.25+geology_control.y*0.15,0.0,0.85);
+ gravel=max(gravel,talus_apron*0.65);
+ float soil=clamp(earth+bank*(1.0-gravel)*0.85+underwater*0.8,0.0,0.95);
+ float wear=0.0;
+ float sediment=bank*(1.0-smoothstep(0.03,0.16,slope))*smoothstep(0.5,0.78,meso.b)*0.45;
+ // Replace the repeating ground masks, but preserve the established cliff and
+ // apron classifiers. Broad patch edges replace fine brown/green speckling.
+ float ground_only=1.0-smoothstep(0.12,0.7,max(cliff,talus_apron));
+ float bare=smoothstep(ground_dirt_cutoff,ground_dirt_cutoff+ground_patch_softness,
+     ground_patch*0.66+ground_exposure*0.52+(sward-0.5)*0.10)*ground_dirt_coverage*dirt_budget;
+ float erosion=smoothstep(0.52,0.8,flow_structure)*damp_margin*drainage*(1.0-upland)*ground_erosion_strength;
+ float ridge_soil=0.0; // Removed: curvature-colored ridge blotches.
+ float broken_soil=smoothstep(0.68,0.87,sward)*sparse_family*ground_dirt_coverage*0.4;
+ vec2 trail=vec2(0.0);
+ if(slope<0.22 && ground_path_coverage>0.0) trail=ground_trail(gp,max(ground_wear_size,40.0)*2.5,ground_wear_width,max(length(position_dx.xz),length(position_dy.xz)));
+ trail*= (1.0-smoothstep(0.10,0.22,slope))*(1.0-shoreline)*(1.0-underwater);
+ float worn=(trail.x+trail.y*0.22)*ground_path_coverage;
+ // Shore succession replaces inland soil instead of adding random patches to it.
+ float inland_soil=clamp(bare+erosion+ridge_soil+broken_soil,0.0,0.85);
+ float ground_soil=mix(inland_soil,0.65+moisture*0.2,shoreline);
+ ground_soil=max(ground_soil,underwater*0.8);
+ soil=mix(soil,ground_soil,ground_only);
+ dry=mix(dry,clamp(dry_family*0.7+trail.y*0.12,0.0,0.85)*ground_grass_variation,ground_only);
+ // A slow sediment province selects mud/silt vs gravel; no small shore noise.
+ float deposit=smoothstep(0.40,0.76,region)*(1.0-smoothstep(0.025,0.16,slope));
+ gravel=mix(gravel,clamp(debris*0.5+shoreline*(1.0-deposit)*smoothstep(0.02,0.16,slope)*0.55,0.0,0.85),ground_only);
+ sediment=mix(sediment,shoreline*deposit*0.5,ground_only);
+ wear=mix(wear,worn,ground_only);
+ bank=mix(bank,damp_margin,ground_only);
+ float biome_peak=max(max(COLOR.r,COLOR.g),max(COLOR.b,COLOR.a));
+ vec4 biome=pow(max(COLOR/max(biome_peak,0.000001),vec4(0.000001)),vec4(texture_blend_sharpness)); biome/=max(dot(biome,vec4(1.0)),0.000001);
+ float ground=biome.x*(1.0-rock);
+ float rock_family=biome.w+(1.0-biome.w)*rock;
+ float dark_rock=clamp(concave*0.12+drainage*0.15+(patch-0.5)*0.12,0.0,0.23);
+ float w[8];
+ w[0]=ground*(1.0-soil)*(1.0-gravel)*(1.0-dry);
+ w[1]=(biome.y+biome.x*sediment)*(1.0-rock);
+ w[2]=biome.z*(1.0-rock);
+ w[3]=rock_family*(1.0-dark_rock);
+ w[4]=ground*(1.0-soil)*(1.0-gravel)*dry;
+ w[5]=ground*soil*(1.0-gravel);
+ w[6]=ground*gravel;
+ w[7]=rock_family*dark_rock;
+ // Top four minus the fifth weight: continuous entry to the active set.
+ // IDs are calculated per fragment, never interpolated as vertex numbers.
+ int ids[4]; float selected[4];
+ for(int k=0;k<4;k++) {
+  int best=0; for(int j=1;j<8;j++) {if(w[j]>w[best]) best=j;}
+  ids[k]=best; selected[k]=w[best]; w[best]=-1.0;
+ }
+ float cutoff=0.0; for(int j=0;j<8;j++) cutoff=max(cutoff,w[j]);
+ float total=0.0; for(int k=0;k<4;k++) {selected[k]=max(selected[k]-cutoff,0.0);total+=selected[k];}
+ if(total<0.00001) {selected[0]=1.0;total=1.0;}
+ vec3 albedo=vec3(0.0),gradient=vec3(0.0),debug_weights=vec3(0.0);
+ float roughness=0.0;
+ float fracture_depth=0.0;
+ vec4 cliff_fields=vec4(0.0);
+ vec3 joint_fields=vec3(0.0);
+ float rock_variant=0.0;
+ vec3 cliff_family_weights=vec3(0.0);
+ for(int k=0;k<4;k++) {
+  float weight=selected[k]/total;
+  if(weight<0.003) continue;
+  int id=ids[k]; float metres=1.4;
+  if(id==1) metres=tile_metres.y;
+  if(id==2) metres=tile_metres.z;
+  if(id==3) metres=tile_metres.w;
+  if(id==4) metres=2.1;
+  if(id==5) metres=1.4;
+  if(id==6) metres=0.8;
+  if(id==7) metres=6.0;
+  if(id==0) metres=mix(tile_metres.x,ground_grass_metres,ground_only);
+  vec4 surface; vec3 g;
+  float footprint=max(length(position_dx),length(position_dy))/metres;
+  float micro=1.0-smoothstep(0.045,0.18,footprint);
+  if(debug_view==18 || debug_view==20) micro=0.0;
+  surface=material_mean(id);g=vec3(0.0);
+  if(micro>0.003) {
+   vec4 sampled;
+   sample_layer(id,world_position/metres,position_dx/metres,position_dy/metres,projection,n,fine*micro,sampled,g);
+   surface=mix(surface,sampled,micro);g*=micro;
+  }
+  // Keep mip-filtered ground albedo at medium/far range. Previously an early
+  // footprint cutoff replaced it with a flat color, exposing the mask grid.
+  // This costs one planar color fetch, not distant normal/triplanar samples.
+  if((id==0 || id==4 || id==5) && ground_only>0.99 && debug_view!=18 && debug_view!=20) {
+   vec4 ground_color=textureGrad(palette_color,vec3(world_position.x/metres,-world_position.z/metres,float(id)),vec2(position_dx.x,-position_dx.z)/metres,vec2(position_dy.x,-position_dy.z)/metres);
+   surface=mix(ground_color,surface,micro);
+  }
+  vec3 tint=vec3(1.0);
+  if(id==0) {surface.rgb=mix(vec3(dot(surface.rgb,vec3(0.2126,0.7152,0.0722))),surface.rgb,0.76);tint=mix(vec3(0.67,0.76,0.57),vec3(0.77,0.79,0.60),broad);tint*=mix(vec3(1.0),vec3(0.72,0.85,0.74),drainage*0.65);g*=grass_normal_scale;surface.a=max(surface.a,grass_roughness_floor);}
+  if(id==4) {tint=vec3(0.38,0.46,0.32);g*=0.65;surface.a=max(surface.a,0.88);}
+  if(id==1) tint=mix(sand_tint,vec3(0.79,0.76,0.65),biome.x);
+  if(id==5) {tint=mix(vec3(1.08,0.95,0.83),vec3(0.67,0.72,0.68),bank);surface.a=mix(surface.a,0.55,bank);}
+  if(id==6) {tint=vec3(0.70,0.67,0.61);surface.a=max(surface.a,0.85);}
+  if(id==7) tint=vec3(1.35,1.29,1.16);
+  tint*=mix(0.91,1.09,broad)*(1.0-bank*0.12);
+  if(id==0 || id==4) {
+   g*=mix(1.0,ground_normal_strength/max(grass_normal_scale,0.01),ground_only);
+   tint*=mix(vec3(1.08,1.02,0.88),vec3(0.84,0.95,0.87),moisture*ground_grass_variation);
+   tint*=1.0-moisture*ground_moisture_darkening;
+   float geographic_value=clamp(ground_exposure*0.7+upland*0.2-moisture*0.7,-0.6,0.6);
+   tint*=1.0+geographic_value*ground_macro_strength;
+   tint*=mix(vec3(1.0),family_color,ground_grass_variation);
+   // No small-scale procedural green color overlay. Fine surface detail comes
+   // from the grass PBR maps; only broad environmental color remains.
+   tint*=mix(vec3(1.0),vec3(1.05,1.01,0.92),ground_exposure*ground_grass_variation);
+   surface.rgb=mix(vec3(dot(surface.rgb,vec3(0.2126,0.7152,0.0722))),surface.rgb,0.68);
+  }
+  albedo+=surface.rgb*tint*weight; roughness+=surface.a*weight;
+  gradient+=g*weight; debug_weights+=id_color(id)*weight;
+ }
+ // Dedicated path surface: compact earth, pale sandy inclusions and gravel.
+ // Only path pixels pay for this PBR blend; nothing spills onto open grass.
+ float path_amount=clamp((trail.x+trail.y*0.12)*ground_path_coverage*ground*ground_only,0.0,1.0);
+ if(path_amount>0.002) {
+  float path_patch=ground_field(gp/32.0+vec2(171,53));
+  float sand_part=clamp(path_sand_mix*1.6*smoothstep(0.3,0.72,path_patch)*(1.0-moisture*0.5),0.0,0.65);
+  float gravel_part=clamp(path_gravel_mix*2.1*smoothstep(0.3,0.7,ground_field(gp/11.7+vec2(51,27)))*(0.8+trail.y-trail.x*0.4),0.0,0.55);
+  float dry_part=clamp(path_dry_earth_mix*1.6*smoothstep(0.4,0.67,ground_field(gp/18.0+vec2(83,11))),0.0,0.65);
+  float mud_part=clamp(path_mud_mix*2.4*smoothstep(0.46,0.7,ground_field(gp/12.0+vec2(9,137)))*(0.7+moisture),0.0,0.8);
+  vec4 dirt_surface,sand_surface,gravel_surface;vec3 dirt_g,sand_g,gravel_g;
+  float pm=max(path_texture_metres,0.4);
+  sample_layer(5,world_position/pm,position_dx/pm,position_dy/pm,projection,n,fine,dirt_surface,dirt_g);
+  sample_layer(1,world_position/(pm*1.3),position_dx/(pm*1.3),position_dy/(pm*1.3),projection,n,fine,sand_surface,sand_g);
+  sample_layer(6,world_position/(pm*0.55),position_dx/(pm*0.55),position_dy/(pm*0.55),projection,n,fine,gravel_surface,gravel_g);
+  vec3 path_color=mix(dirt_surface.rgb*vec3(1.08,1.03,0.98),sand_surface.rgb*vec3(0.60,0.53,0.43),sand_part);
+  vec3 dry_color=mix(dirt_surface.rgb,sand_surface.rgb,0.32)*vec3(0.78,0.68,0.53);
+  path_color=mix(path_color,dry_color,dry_part);
+  path_color=mix(path_color,gravel_surface.rgb*vec3(0.52,0.43,0.33),gravel_part);
+  path_color=mix(path_color,dirt_surface.rgb*vec3(0.46,0.40,0.32),mud_part);
+  path_color*=mix(0.94,0.70,moisture)*mix(0.94,1.06,path_patch);
+  albedo=mix(albedo,path_color,path_amount);
+  float path_rough=mix(mix(mix(dirt_surface.a,sand_surface.a,sand_part),mix(dirt_surface.a,sand_surface.a,0.3),dry_part),gravel_surface.a,gravel_part);
+  path_rough=mix(path_rough,0.68,mud_part);
+  roughness=mix(roughness,clamp(path_rough+0.08,0.62,0.96),path_amount);
+  vec3 path_g=mix(mix(mix(dirt_g,sand_g,sand_part),mix(dirt_g,sand_g,0.3),dry_part),gravel_g,gravel_part);
+  path_g=mix(path_g,dirt_g*0.42,mud_part)*path_normal_strength;
+  gradient=mix(gradient,path_g,path_amount);
+ }
+ gradient-=n*dot(gradient,n);
+ gradient*=normal_strength*fine;
+ // Keep the existing Rock028 color/roughness and base micro normal.
+ // No old generated relief textures are sampled or used for recess shading.
+ if(cliff>0.01 && diagnostic_surface!=1) {
+  gradient*=mix(1.0,0.3*cliff_micro_strength,cliff);
+  vec4 face;vec3 unused;
+  sample_layer(8,world_position/36.0,position_dx/36.0,position_dy/36.0,projection,n,0.0,face,unused);
+  rock_variant=smoothstep(0.22,0.75,field(world_position.xz/2400.0));
+  vec3 cliff_color=face.rgb*mix(vec3(0.76,0.78,0.75),vec3(1.04,0.99,0.89),rock_variant);
+  albedo=mix(albedo,cliff_color,cliff*0.87);
+  roughness=mix(roughness,clamp(face.a+0.075,0.62,1.0),cliff*0.8);
+  vec3 macro_g=vec3(0.0),medium_g=vec3(0.0),macro_ids=vec3(0.0),medium_ids=vec3(0.0);
+  float macro_coverage=0.0,medium_coverage=0.0;
+  bool use_detail=enable_ambient_cliff_normals && cliff_normal_debug!=1 && debug_view!=27 && debug_view!=7 && diagnostic_surface!=2;
+  if(use_detail) {
+   if(cliff_normal_debug!=3) ambient_band(true,position_dx,position_dy,n,projection,macro_g,macro_coverage,macro_ids);
+   if(cliff_normal_debug!=2) ambient_band(false,position_dx,position_dy,n,projection,medium_g,medium_coverage,medium_ids);
+  }
+  if(cliff_normal_debug==2 || cliff_normal_debug==3) gradient*=1.0-cliff;
+  // Surface-gradient addition preserves a neutral overlay and avoids RGB-normal blending.
+  gradient+=(macro_g*macro_detail_strength+medium_g*medium_detail_strength)*cliff;
+  cliff_family_weights=vec3(macro_coverage,medium_coverage,0.0);
+  cliff_fields=vec4(macro_ids,1.0);
+  joint_fields=medium_ids;
+  debug_weights=mix(debug_weights,id_color(8),cliff*0.93);
+ }
+ if(diagnostic_surface==1) {albedo=vec3(0.3);gradient=vec3(0.0);}
+ ALBEDO=albedo; ROUGHNESS=clamp(roughness,0.35,1.0);
+ SPECULAR=mix(0.22,grass_specular,ground);
+ vec3 mapped_normal=normalize(n+gradient);
+ NORMAL=normalize((VIEW_MATRIX*vec4(mapped_normal,0.0)).xyz);
+ if(ground_debug>0) {
+  float mask=ground*(1.0-soil)*(1.0-gravel);
+  if(ground_debug==2) mask=soil*ground;
+  if(ground_debug==3) mask=wear*ground;
+  if(ground_debug==4) mask=shoreline*(1.0-cliff);
+  if(ground_debug==5) mask=moisture*(1.0-cliff);
+  if(ground_debug==6) mask=region;
+  if(ground_debug==7) mask=dry*ground;
+  if(ground_debug==10) mask=bare*ground;
+  if(ground_debug==11) mask=erosion*ground;
+  if(ground_debug==12) mask=ridge_soil*ground;
+  if(ground_debug==13) mask=sward;
+  ALBEDO=vec3(0);EMISSION=vec3(mask);SPECULAR=0.0;
+  if(ground_debug==8) EMISSION=vec3(dry_family+sparse_family, lush_family+normal_family,wet_family+high_family)/family_sum;
+  if(ground_debug==9) EMISSION=vec3(lush_family+normal_family,wet_family,dry_family+high_family+sparse_family)/family_sum;
+ }
+ if(cliff_normal_debug==4) {ALBEDO=vec3(0);EMISSION=cliff_family_weights*cliff;}
+ if(cliff_normal_debug==5) {ALBEDO=vec3(0);EMISSION=(cliff_fields.rgb+joint_fields)*0.5*cliff;}
+ if(cliff_normal_debug==6) {ALBEDO=vec3(0);EMISSION=mapped_normal*0.5+0.5;}
+ if(debug_view>0 && debug_view!=7 && debug_view!=18 && debug_view!=20 && debug_view!=27) {
+  vec3 debug_color=albedo;
+  if(debug_view==1) debug_color=debug_weights;
+  if(debug_view==2) debug_color=cliff>0.5 ? id_color(8) : id_color(ids[0]);
+  if(debug_view==4) debug_color=n*0.5+0.5;
+  if(debug_view==6) debug_color=geology_control;
+  if(debug_view==8) debug_color=mapped_normal*0.5+0.5;
+  if(debug_view==10) debug_color=vec3(folds);
+  if(debug_view==11) debug_color=vec3(soil);
+  if(debug_view==12) debug_color=vec3(drainage);
+  if(debug_view==13) debug_color=vec3(dry);
+  if(debug_view==14) debug_color=vec3(cliff);
+  if(debug_view==15) debug_color=vec3(fracture_depth*0.5);
+  if(debug_view==16) debug_color=vec3(debris);
+  if(debug_view==17) debug_color=meso;
+  // Existing terrain classifiers, not invented discrete region IDs.
+  if(debug_view==19) debug_color=vec3(highland,drainage,thin_soil);
+  if(debug_view==21) debug_color=vec3(cliff_fields.r);
+  if(debug_view==22) debug_color=vec3(joint_fields.r);
+  if(debug_view==23) debug_color=vec3(cliff_fields.g);
+  if(debug_view==24) debug_color=vec3(cliff_fields.b);
+  if(debug_view==25) debug_color=vec3(cliff_fields.a);
+  if(debug_view==26) debug_color=vec3(rock_variant);
+  if(debug_view==28) debug_color=cliff_family_weights*cliff;
+  if(debug_view==29) debug_color=vec3(cliff_family_weights.x*cliff);
+  if(debug_view==30) debug_color=vec3(cliff_family_weights.y*cliff);
+  if(debug_view==31) debug_color=vec3(cliff_family_weights.z*cliff);
+  if(debug_view==32) debug_color=vec3(vertical_zone,ledge_zone,clean_zone)*cliff;
+  if(debug_view==33) debug_color=vec3(buttress_zone*cliff);
+  if(debug_view==34) debug_color=vec3(collapse_zone)*max(cliff,talus_apron);
+  if(debug_view==9) {
+   debug_color=0.5+0.4*cos(vec3(0.0,2.1,4.2)+chunk_lod*1.7);
+   vec2 cell=fract(world_position.xz/chunk_size_metres);
+   float edge=min(min(cell.x,1.0-cell.x),min(cell.y,1.0-cell.y))*chunk_size_metres;
+   debug_color*=smoothstep(0.0,max(1.0,view_distance*0.0015),edge);
+  }
+  ALBEDO=vec3(0.0); EMISSION=debug_color; ROUGHNESS=1.0; SPECULAR=0.0;
+ }
+}
