@@ -98,8 +98,8 @@ func _ready() -> void:
 	_terrain_material = preload("res://materials/terrain.tres").duplicate() as ShaderMaterial
 	# Bind explicitly as well as in the resource: inspector material saves must
 	# never silently turn an unbound array into white cliffs / invalid normals.
-	_terrain_material.set_shader_parameter("palette_color",preload("res://materials/palette_color_roughness.res"))
-	_terrain_material.set_shader_parameter("palette_normal",preload("res://materials/palette_normals.res"))
+	_terrain_material.set_shader_parameter("palette_color",preload("res://materials/palette_color_roughness.tres"))
+	_terrain_material.set_shader_parameter("palette_normal",preload("res://materials/palette_normals.tres"))
 	_terrain_material.set_shader_parameter("cliff_ambient_normals",preload("res://materials/cliff_ambient_normals.tres"))
 	_terrain_material.set_shader_parameter("cliff_world_seed",float(world_seed))
 	_terrain_material.set_shader_parameter("grass_macro",preload("res://materials/grass_macro.res"))

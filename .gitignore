@@ -1,3 +1,12 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# Superseded combined arrays: use external-layer .tres resources instead.
+/materials/palette_color_roughness.res
+/materials/palette_normals.res
+
+# Local patch deliveries, archives and backups.
+/ProjectBridge_patch.zip
+*.bak
+*.zip

@@ -1,8 +1,8 @@
 [gd_resource type="ShaderMaterial" format=4 uid="uid://dfcn882jkdh04"]
 
 [ext_resource type="Shader" uid="uid://cec23k8fjricw" path="res://shaders/terrain_biomes.gdshader" id="1"]
-[ext_resource type="Texture2DArray" path="res://materials/palette_color_roughness.res" id="2"]
-[ext_resource type="Texture2DArray" path="res://materials/palette_normals.res" id="3"]
+[ext_resource type="Texture2DArray" path="res://materials/palette_color_roughness.tres" id="2"]
+[ext_resource type="Texture2DArray" path="res://materials/palette_normals.tres" id="3"]
 [ext_resource type="Texture2D" path="res://materials/grass_macro.res" id="5"]
 [ext_resource type="Texture2D" path="res://materials/meso_macro.res" id="6"]
 

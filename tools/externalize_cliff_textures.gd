@@ -13,15 +13,11 @@ func _initialize() -> void:
 		var texture := ImageTexture.create_from_image(source)
 		assert(ResourceSaver.save(texture, "res://materials/cliff_texture_" + id + ".res", ResourceSaver.FLAG_COMPRESS) == OK)
 	print("External cliff textures saved")
-	var colors: Array[Image] = []
-	var normals: Array[Image] = []
-	for id in ["Grass001", "Ground054", "Snow001", "Rock030", "Ground037", "Ground048", "Gravel020", "Rock035", "Rock028"]:
-		colors.append(load("res://materials/palette_color_" + id + ".res"))
-		normals.append(load("res://materials/palette_normal_" + id + ".res"))
-	var color_array := Texture2DArray.new()
-	var normal_array := Texture2DArray.new()
-	assert(color_array.create_from_images(colors) == OK)
-	assert(normal_array.create_from_images(normals) == OK)
-	assert(ResourceSaver.save(color_array, "res://materials/palette_color_roughness.res", ResourceSaver.FLAG_COMPRESS) == OK)
-	assert(ResourceSaver.save(normal_array, "res://materials/palette_normals.res", ResourceSaver.FLAG_COMPRESS) == OK)
+	# The small .tres arrays reference existing compressed Image layers.
+	# Serializing arrays after GL readback duplicates and decompresses their data.
+	var color_array: Texture2DArray = load("res://materials/palette_color_roughness.tres")
+	var normal_array: Texture2DArray = load("res://materials/palette_normals.tres")
+	assert(color_array.get_layers() == 9)
+	assert(normal_array.get_layers() == 9)
+	print("Palette uses external compressed layers; no combined binary copies saved")
 	quit()
