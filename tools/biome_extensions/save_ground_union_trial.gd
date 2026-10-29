@@ -1,0 +1,37 @@
+extends SceneTree
+var guards:Dictionary={}
+var captures:Dictionary={}
+func checked(name:String)->Dictionary:
+	var path:String="res://tools/biome_extensions/artifacts/"+name+".json";var report=JSON.parse_string(FileAccess.get_file_as_string(path));assert(report.passed and report.failures.is_empty(),name);guards[path]=FileAccess.get_sha256(path)
+	for source:String in report.source_sha256:assert(FileAccess.get_sha256(source)==report.source_sha256[source],"Stale private shoulder evidence "+source);guards[source]=report.source_sha256[source]
+	for image:String in report.get("capture_sha256",{}):assert(FileAccess.get_sha256(image)==report.capture_sha256[image]);captures[image]=report.capture_sha256[image]
+	return report
+func history(name:String)->Dictionary:
+	var path:String="res://tools/biome_extensions/artifacts/revisions/"+name+"/manifest.json";var manifest=JSON.parse_string(FileAccess.get_file_as_string(path));guards[path]=FileAccess.get_sha256(path)
+	for copy:Dictionary in manifest.files:assert(FileAccess.get_sha256(copy.snapshot)==copy.sha256)
+	return {"manifest":path,"verified_copies":manifest.files.size(),"not_current_source_proof":true}
+func _initialize()->void:
+	var geometry:=checked("check_conduit_ground_union_candidate");assert(geometry.checks==206305 and geometry.cases.size()==48)
+	var root:=checked("render_conduit_ground_union_candidate");assert(root.views.size()==12)
+	var native:=checked("render_ground_union_worker_domains");assert(native.views.size()==27 and native.phases.size()==9)
+	var changed_roots:int=0
+	for phase:Dictionary in native.phases:
+		if phase.phase==1:assert(phase.changed_roots>0);changed_roots+=phase.changed_roots
+	var walk:=checked("check_ground_union_worker_walk");assert(walk.cases.size()==2)
+	var positives:=checked("check_ground_union_positive_walks");assert(positives.cases.size()==4)
+	var local:=checked("check_ground_union_local_walk");assert(local.cases.size()==2)
+	for report:Dictionary in [walk,positives,local]:
+		for item:Dictionary in report.cases:assert(item.finished and not item.failed and item.max_unsupported_drop_m<.75 and item.native_structure_floor_probes>=2)
+	var dense:=checked("diagnose_ground_union_unchanged_route");assert(dense.maximum_independent_triangle_floor_change_m<.02 and dense.maximum_native_mesh_error_m<.03)
+	checked("admit_ground_union_additional_site");var profile:=checked("profile_ground_union_worker");assert(profile.cases.size()==9)
+	var candidate_source:String=preload("res://tools/biome_extensions/conduit_ground_union_candidate.gd").script_for().source_code;var candidate_path:String="res://tools/biome_extensions/artifacts/ground_union_candidate_frozen_source.txt";FileAccess.open(candidate_path,FileAccess.WRITE).store_string(candidate_source);guards[candidate_path]=FileAccess.get_sha256(candidate_path)
+	var dispatcher_source:String=preload("res://tools/biome_extensions/ground_union_worker_fixture.gd").controller_script().source_code;var dispatcher_path:String="res://tools/biome_extensions/artifacts/ground_union_dispatcher_frozen_source.txt";FileAccess.open(dispatcher_path,FileAccess.WRITE).store_string(dispatcher_source);guards[dispatcher_path]=FileAccess.get_sha256(dispatcher_path)
+	guards["res://tools/biome_extensions/save_ground_union_trial.gd"]=FileAccess.get_sha256("res://tools/biome_extensions/save_ground_union_trial.gd")
+	for prefix:String in ["check_conduit_ground_union_candidate","render_conduit_ground_union_candidate","check_ground_union_worker_walk","check_ground_union_worker_walk_domains","diagnose_ground_union_unchanged_route_triangles","admit_ground_union_additional_site","check_ground_union_additional_walk","check_ground_union_local_walk","check_ground_union_positive_walks","render_ground_union_worker_domains","profile_ground_union_worker_scoped"]:
+		for suffix:String in ["engine.log","out.log","err.log"]:
+			var path:String="res://.godot/extensions_"+prefix+"."+suffix
+			if FileAccess.file_exists(path):guards[path]=FileAccess.get_sha256(path)
+	var historical:Array=[]
+	for name:String in ["experiment_check_conduit_shoulder_candidate_cc56313c1799","experiment_render_conduit_shoulder_candidate_80e117e5f8f6","failed_diagnostic_check_ground_union_worker_walk_domains_aa07f8884a27","failed_diagnostic_check_ground_union_additional_walk_4ba31210453d"]:historical.append(history(name))
+	var result:Dictionary={"passed":true,"failures":[],"production_registered":false,"all_user_tasks_complete":false,"surface_reference_quality_complete":false,"source_sha256":guards,"capture_sha256":captures,"geometry_checks":geometry.checks,"primitive_triplets":48,"full_native_cut_views":27,"single_root_same_scene_images":12,"changed_roots_in_original_three_native_cuts":changed_roots,"two_original_positive_route_cases":4,"additional_local_route_cases":2,"original_failed_efficacy_suite_repaired":false,"additional_failed_long_approach_repaired":false,"third_original_sampled_mesh_change_m":dense.maximum_independent_triangle_floor_change_m,"third_original_native_mesh_error_m":dense.maximum_native_mesh_error_m,"cold_worker_pairs":9,"median_candidate_to_original_worker_ratio":profile.median_candidate_to_original_ratio,"historical_proofs":historical,"scope":"PRIVATE pre-registration grounded-shoulder study. Actual canonical ground at each profile vertex,small tangent compact lips,original crest,unchanged small branches,buried outer supports and caps,explicit protected-route fade;not Boolean/CSG union or terrain-field replacement.48 exact original/candidate/off primitive triplets;complete original root rebuild and twelve strict same-scene mesh returns;three original frozen native domains/nine actual worker cuts/27images with all non-structure/map/semantic/XZ payloads exact,actual collision matching new GPU root faces,and complete original-cut returns exact. Two ORIGINAL changed cross-sections73921/17 pass original320m capsule gates. Original92881 coarse positive gate remains FAILED:one-metre independent mesh reference finds only about6mm change,not its required20mm efficacy. A NEW geometry-admitted site126m away on the SAME collider root has a separate local120m original/candidate return passing unchanged controls;its attempted80m long approach fails identically in both modes and remains FAILED. No bad fixture reroll/repair claim. Nine alternating native-owned-root cold worker pairs retain all unrelated payloads and characterize added guide-query cost. Proposed full source and original dispatch substitution frozen before any production change.","limitations":"Not production registration,all-world art/navigation,all custom scales,uninterrupted/fullLOD6 streaming,cold startup or cave completion. Existing root-level material/normal seams remain a broader art matter. Native root/cut images use boundedLOD4;the failed longer approach and older minimum-scale rejected site are not repaired. Actual nominal320m/120m routes are slightly shorter in reported measured horizontal distance because original waypoint tolerance is unchanged. Cross-cold-scene return image differences are explicitly reported,not exact acceptance;only same-scene root image returns are exact. Component timing is one bounded workload,not repeatable universal CPU/GPU gains."}
+	FileAccess.open("res://tools/biome_extensions/artifacts/ground_union_trial.json",FileAccess.WRITE).store_string(JSON.stringify(result,"  "));print("GROUND_UNION_TRIAL ",guards.size()," guards / ",captures.size()," images / ratio=",profile.median_candidate_to_original_ratio);quit()

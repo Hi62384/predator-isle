@@ -1,0 +1,14 @@
+extends SceneTree
+func _initialize()->void:
+	var source_path:String="res://tools/biome_extensions/render_earth_crystal_roots_candidate.gd";var source:String=FileAccess.get_file_as_string(source_path)
+	var original_guards:String='\tfor path:String in baseline.source_sha256:assert(FileAccess.get_sha256(path)==baseline.source_sha256[path]);hashes[path]=baseline.source_sha256[path]';assert(source.count(original_guards)==1)
+	var current_guards:String='\tvar regression_path:String="res://data/surface_regression_20261018.json";var regression=JSON.parse_string(FileAccess.get_file_as_string(regression_path));assert(regression.passed and regression.test_count==31);hashes[regression_path]=FileAccess.get_sha256(regression_path)\n\tfor raw:String in regression.source_sha256:\n\t\tvar path:String="res://"+raw.replace("\\\\","/");assert(FileAccess.get_sha256(path)==regression.source_sha256[raw]);hashes[path]=regression.source_sha256[raw]\n\thashes["res://tools/biome_extensions/render_crystal_grounded_roots.gd"]=FileAccess.get_sha256("res://tools/biome_extensions/render_crystal_grounded_roots.gd")'
+	source=source.replace(original_guards,current_guards)
+	source=source.replace('["crystal_wastes","insect_colony"]','["crystal_wastes"]')
+	var replacement:String='preload("res://tools/biome_extensions/earth_crystal_worker_fixture.gd").configure(terrain,phase==1)';assert(source.count(replacement)==1)
+	source=source.replace(replacement,'terrain.settings=terrain.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL);terrain.settings.crystal_wastes.crystal_grounded_roots=phase==1')
+	source=source.replace('earth_crystal_roots_%s_%d_%s.png','registered_crystal_roots_%s_%d_%s.png').replace('artifacts/render_earth_crystal_roots_candidate.json','artifacts/render_crystal_grounded_roots.json')
+	source=source.replace('"production_registration":false','"production_registration":true')
+	var scope_begin:int=source.find('"scope":"PRIVATE');var scope_end:int=source.find('"},"  "))',scope_begin);assert(scope_begin>0 and scope_end>scope_begin)
+	source=source.substr(0,scope_begin)+'"scope":"REGISTERED actual unchanged four-worker production controller with real saved crystal_grounded_roots false/true/false. Original three frozen Crystal ground/medium/aerial cameras,fullLOD6,no private controller/constructor substitution. Complete terrain/water/features/nonstructure collision/XZ/colors remain exact;original complete cuts return exact;actual GPU roots equal worker collider vertices. Nine images;cross-cold-scene pixel differences reported,not exact-image proof. No Insect morphology change adopted. Shared31 current-source guard. Not all-world art,continuous-edge,performance or cave acceptance.'+source.substr(scope_end)
+	var script:=GDScript.new();script.source_code=source;assert(script.reload()==OK);set_script(script);call_deferred("run")

@@ -1,0 +1,7 @@
+extends SceneTree
+func _initialize()->void:
+	var original:String="res://tools/caves/check_gradient_topology_native.gd";var source:String=FileAccess.get_file_as_string(original);var marker:String='var hash:=HashingContext.new();hash.start(HashingContext.HASH_SHA256);hash.update(var_to_bytes(arrays));check(expected_hashes.get(str(key),"")==hash.finish().hex_encode(),"Complete repaired candidate mesh repeats original failed-equivalence candidate output exactly");';assert(source.count(marker)==1)
+	source=source.replace(marker,"")
+	source=source.replace('check_cave_gradient_topology_native.json','check_cave_case_topology_native.json').replace('res://tools/caves/check_gradient_topology_native.gd','res://tools/caves/check_case_topology_native.gd')
+	source=source.replace('tetrahedral linear-gradient face orientation is an INTENTIONAL winding repair,not bit-equivalent to centroid-normal orientation. All227candidate full arrays must repeat the separately preserved failed-equivalence candidate hashes.','tetrahedral SIGN-CASE face orientation is an INTENTIONAL winding repair,not bit-equivalent to either older centroid-normal or welded-gradient orientation. The preceding gradient candidate still had6contradictory global edges;its failed report remains preserved. This new gate does NOT certify old full-array identity. It checks global topology/native traversal of the intentional repair.')
+	var script:=GDScript.new();script.source_code=source;assert(script.reload()==OK);set_script(script);call_deferred("_initialize")

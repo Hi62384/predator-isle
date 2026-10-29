@@ -6,7 +6,7 @@ const Workload=preload("res://scripts/caves/workload.gd")
 const REGION:float=1536
 const SurfaceRenderer=preload("res://scripts/caves/surface_renderer.gd")
 const SurfaceTransaction=preload("res://scripts/caves/surface_transaction.gd")
-const SurfaceBatch=preload("res://scripts/caves/surface_batch.gd")
+const SurfaceBatch=preload("res://scripts/csharp/caves/SurfaceBatch.cs")
 const WaterRenderer=preload("res://scripts/caves/water_renderer.gd")
 const Palette=preload("res://scripts/caves/material_palette.gd")
 const Frontiers=preload("res://scripts/caves/stream_frontiers.gd")
@@ -14,7 +14,7 @@ const BiomeRegions=preload("res://scripts/caves/biome_regions.gd")
 const BiomeMaterials=preload("res://scripts/caves/biome_materials.gd")
 const FeatureRenderer=preload("res://scripts/caves/feature_renderer.gd")
 var TraversalEnvelope=preload("res://scripts/csharp/caves/TraversalEnvelope.cs").new()
-const SurfacePolicy=preload("res://scripts/caves/surface_streaming_policy.gd")
+var SurfacePolicy=preload("res://scripts/csharp/caves/SurfaceStreamingPolicy.cs").new()
 var host
 var configuration
 var _jobs:Dictionary={}

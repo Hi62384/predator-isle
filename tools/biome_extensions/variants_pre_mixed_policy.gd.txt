@@ -1,0 +1,86 @@
+extends RefCounted
+## Only globally impossible owner branches are removed. The original Grass
+## fallback, decoding, blending, diagnostics and coast ordering stay intact.
+## Accept the loaded Shader, rather than reading shader text with FileAccess:
+## this also works when resources are remapped in an exported game.
+const LEGACY:Array[String]=["jungle","forest","savanna","swamp","mountain","tropical","badlands"]
+const CONTROLS:Array[String]=["jungle_control.z","forest_control.z","savanna_control.z","swamp_control.z","mountain_control.z","tropical_control.x","badlands_control.x","coast_control.x"]
+const ALL:int=65535
+const CAPACITY:int=8
+static var _cache:Dictionary={}
+
+static func configured_mask(settings:Resource)->int:
+	if settings==null:return ALL
+	var mask:int=0
+	for i in range(LEGACY.size()):
+		if settings.get(LEGACY[i]+"_coverage")>0:mask|=1<<i
+	if settings.rocky_coast_enabled or settings.beaches_enabled:mask|=1<<7
+	for i in range(TerrainSettings.EXTENSION_KEYS.size()):
+		if settings.get(TerrainSettings.EXTENSION_KEYS[i]+"_coverage")>0:mask|=1<<(i+8)
+	if settings.alien_infected!=null and settings.alien_infected.overlay_strength>0:mask|=1<<15
+	return mask
+
+static func supported(mask:int)->bool:
+	# Globally configured legacy/coastal worlds without extensions can also
+	# omit impossible owners. Preserve bodies/fallback/order exactly. Fresh
+	# compilation is distinct from cached runtime: an arithmetic-identical
+	# renamed original also exceeds the old2GiB gate. Matched private default,
+	# legacy-mixed and mixed comparisons retain exact complete image bytes.
+	# Still leave mixed legacy+extension and multi-extension worlds untouched.
+	if mask<0 or mask>ALL:return false
+	var extensions:int=mask>>8
+	return extensions==0 or ((mask & 255)==0 and (extensions & (extensions-1))==0)
+
+static func source_for(source:String,mask:int)->String:
+	if mask<0 or mask>ALL or mask==ALL:return source
+	# Fail open to the exact original shader if its dispatch contract changes.
+	# A modified shader must never be partially transformed by stale patterns.
+	var loops:Array[String]=[]
+	var search:int=0
+	for unused in range(2):
+		var begin:int=source.find("for(int i=0;i<8;i++){",search)
+		if begin<0:return source
+		var depth:int=1;var end:int=begin+"for(int i=0;i<8;i++){".length()
+		while end<source.length() and depth>0:
+			if source[end]=="{":depth+=1
+			elif source[end]=="}":depth-=1
+			end+=1
+		if depth!=0:return source
+		loops.append(source.substr(begin,end-begin));search=end
+	if source.find("for(int i=0;i<8;i++){",search)>=0:return source
+	for control:String in CONTROLS:
+		for threshold:String in [".999",".001"]:
+			if source.count("if("+control+">"+threshold+")")!=1:return source
+	var result:String=source
+	for loop:String in loops:
+		var first:int=-1;var last:int=-1
+		for i in range(8):
+			if (mask & (1<<(i+8)))!=0:
+				if first<0:first=i
+				last=i
+		# Do not duplicate shade_extension calls for mixed owners. On the
+		# Compatibility driver that expands compiler IR enough to exceed the
+		# original scene's memory gate. Retain one original ordered dispatch,
+		# including runtime masks for holes inside this conservative range.
+		var replacement:String="" if first<0 else loop.replace("for(int i=0;i<8;i++){","for(int i=%d;i<%d;i++){" % [first,last+1])
+		result=result.replace(loop,replacement)
+	for i in range(CONTROLS.size()):
+		if (mask & (1<<i))==0:
+			for threshold:String in [".999",".001"]:
+				result=result.replace("if("+CONTROLS[i]+">"+threshold+")","if(false)")
+	return "// CONFIGURED_TERRAIN_OWNERS_%d\n" % mask+result
+
+static func select(original:Shader,settings:Resource,enabled:bool=true)->Shader:
+	if not enabled or original==null:return original
+	var mask:int=configured_mask(settings)
+	if not supported(mask):return original
+	var source:String=original.code
+	var key:String=source.sha256_text()+":"+str(mask)
+	if _cache.has(key):
+		var hit:Shader=_cache[key];_cache.erase(key);_cache[key]=hit;return hit
+	var code:String=source_for(source,mask)
+	if code==source:return original
+	var variant:=Shader.new();variant.code=code
+	while _cache.size()>=CAPACITY:_cache.erase(_cache.keys()[0])
+	_cache[key]=variant
+	return variant

@@ -1,0 +1,12 @@
+extends SceneTree
+func _initialize()->void:
+	var hashes:Dictionary={}
+	for path:String in ["res://tools/biome_extensions/record_renamed_shader_failure.gd","res://tools/biome_extensions/render_float_period_trial.gd","res://tools/biome_extensions/biological_float_period_candidate.gd","res://shaders/terrain_biomes.gdshader","res://shaders/biological_sampling.gdshaderinc","res://shaders/biome_extensions.gdshaderinc","res://scripts/chunk_terrain.gd","res://scripts/terrain_mesh_builder.gd","res://scenes/main.tscn"]:hashes[path]=FileAccess.get_sha256(path)
+	for suffix:String in ["engine.log","out.log","err.log"]:
+		var path:String="res://.godot/extensions_render_renamed_original_no_cache."+suffix;hashes[path]=FileAccess.get_sha256(path)
+	var tissue:String=FileAccess.get_file_as_string("res://shaders/biological_sampling.gdshaderinc");var renamed:String=tissue.replace("biological_sample(","biological_sample_cold_baseline(")
+	assert(renamed.replace("biological_sample_cold_baseline(","biological_sample(")==tissue)
+	var extensions:String=FileAccess.get_file_as_string("res://shaders/biome_extensions.gdshaderinc").replace('#include "res://shaders/biological_sampling.gdshaderinc"',renamed).replace("biological_sample(","biological_sample_cold_baseline(")
+	var generated:String=FileAccess.get_file_as_string("res://shaders/terrain_biomes.gdshader").replace('#include "res://shaders/biome_extensions.gdshaderinc"',extensions)
+	assert(generated.sha256_text()=="ce89b819684d0b3c7b24494087a7ecad10b6c2bcae535057e7508791a6c2c32a")
+	FileAccess.open("res://tools/biome_extensions/artifacts/renamed_original_shader_resource_failure.json",FileAccess.WRITE).store_string(JSON.stringify({"passed":false,"failures":["Arithmetic-identical renamed ORIGINAL shader exceeded2048MiB at2054.1MiB sampled. Only PID13876 was stopped before capture."],"source_sha256":hashes,"generated_shader_sha256":generated.sha256_text(),"production_registration":false,"only_function_name_changed":true,"observation":"Renaming the original biological_sample declaration and every call changes no arithmetic. A no-correction control also fails the old cap. Engine shader cache disabled; driver cache not cleared. External watch values are transcribed from runner output,not independent engine measurements. This establishes neither the exact compiler mechanism nor permission to relabel the previous correction failures as passing."},"  "));quit()

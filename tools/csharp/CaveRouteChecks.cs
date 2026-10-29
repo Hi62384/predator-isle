@@ -28,6 +28,21 @@ internal static class CaveRouteChecks
         }
         var bad = candidate.solve(path, default, 4, 8, 10, 400, .2, 0, -30);
         require(!bad["valid"].AsBool() && bad["reason"].AsString() == "invalid_input", "Null route surface accepted");
+        var networkScript = GD.Load<GDScript>("res://scripts/caves/network.gd");
+        foreach (int seed in new[] { 17, 73921 })
+        {
+            using var oldNetwork = networkScript.New().AsGodotObject(); using var newNetwork = networkScript.New().AsGodotObject();
+            oldNetwork.Set("Solver", reference);
+            var surface = Callable.From<double, double, double>((x, z) => 100 + 8 * Math.Sin(x * .001) + 5 * Math.Sin(z * .002));
+            var water = Callable.From<double, double, double>((x, z) => -1000);
+            foreach (var network in new[] { oldNetwork, newNetwork }) { network.Call("configure", surface, water, seed, 400.0); network.Set("activity", 1.0); }
+            foreach (var cell in new[] { Vector2I.Zero, new Vector2I(-2, 3), new Vector2I(9, -3) })
+            {
+                var expected = oldNetwork.Call("region", cell); var actual = newNetwork.Call("region", cell);
+                require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)), $"Complete cave region differs after route migration: {seed}/{cell}");
+                require(actual.AsGodotDictionary()["valid"].AsBool(), "Cave region fixture was not admitted");
+            }
+        }
         var envelopeReference = GD.Load<GDScript>("res://scripts/caves/traversal_envelope.gd"); using var envelope = new TraversalEnvelope();
         foreach (var p in new[] { Vector3.Zero, new Vector3(-1, -1, -1), new Vector3(2, 62, 64), new Vector3(32, 32, 32), new Vector3(-64, 0, 64), Vector3.Inf })
         {

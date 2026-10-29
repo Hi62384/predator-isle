@@ -1,0 +1,11 @@
+extends SceneTree
+func _initialize()->void:
+	var guards:Dictionary={};var captures:Dictionary={};var checks:Dictionary={}
+	for name:String in ["check_grounded_earth_crystal_candidate","check_earth_crystal_selected_contacts","render_earth_crystal_roots_candidate"]:
+		var path:String="res://tools/biome_extensions/artifacts/"+name+".json";var report=JSON.parse_string(FileAccess.get_file_as_string(path));assert(report.passed and report.failures.is_empty());guards[path]=FileAccess.get_sha256(path)
+		for source:String in report.source_sha256:assert(FileAccess.get_sha256(source)==report.source_sha256[source]);guards[source]=report.source_sha256[source]
+		for capture:String in report.get("capture_sha256",{}):assert(FileAccess.get_sha256(capture)==report.capture_sha256[capture]);captures[capture]=report.capture_sha256[capture]
+		checks[name]=report.get("checks",null)
+	var compiled:String="res://tools/biome_extensions/artifacts/earth_crystal_trial_source.txt";FileAccess.open(compiled,FileAccess.WRITE).store_string(preload("res://tools/biome_extensions/grounded_earth_crystal_candidate.gd").script_for().source_code);guards[compiled]=FileAccess.get_sha256(compiled)
+	guards["res://tools/biome_extensions/save_earth_crystal_trial.gd"]=FileAccess.get_sha256("res://tools/biome_extensions/save_earth_crystal_trial.gd")
+	FileAccess.open("res://tools/biome_extensions/artifacts/earth_crystal_trial.json",FileAccess.WRITE).store_string(JSON.stringify({"passed":true,"failures":[],"production_registration":false,"source_sha256":guards,"capture_sha256":captures,"checks_by_report":checks,"all_user_tasks_complete":false,"scope":"Private Crystal/Insect bottom-ring support experiment. Six actual dry roots,24 actual production-selected terrain cuts,18 actual fullLOD6 four-worker native views with GPU/collider agreement and complete original-cut returns. Original exposed-foot efficacy measured on selected triangles,not inferred from missing32m margin. Only existing foot vertices lower;no new triangles or XZ footprint. Frozen complete compiled private methods retained before production edits. Not continuous-edge,all-world,CPU performance,unpaused traversal,whole-surface art or ordered cave completion."},"  "));print("EARTH_CRYSTAL_TRIAL ",guards.size()," guards / ",captures.size()," images");quit()

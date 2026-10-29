@@ -1,0 +1,12 @@
+extends SceneTree
+func _initialize()->void:
+	var original_path:String="res://tools/biome_extensions/artifacts/diagnose_tissue_ground_boundary.json";var original=JSON.parse_string(FileAccess.get_file_as_string(original_path));assert(original.passed)
+	var raster_path:String="res://tools/biome_extensions/artifacts/check_raster_camera_coordinates.json";var raster=JSON.parse_string(FileAccess.get_file_as_string(raster_path));assert(raster.passed and raster.detected_unscaled_negatives==3)
+	var guards:Dictionary={original_path:FileAccess.get_sha256(original_path),raster_path:FileAccess.get_sha256(raster_path)};var images:Dictionary={};var contradictions:int=0
+	for report:Dictionary in [original,raster]:
+		for path:String in report.source_sha256:assert(FileAccess.get_sha256(path)==report.source_sha256[path]);guards[path]=report.source_sha256[path]
+		for path:String in report.capture_sha256:assert(FileAccess.get_sha256(path)==report.capture_sha256[path]);images[path]=report.capture_sha256[path]
+	for probe:Dictionary in original.probes:
+		if probe.visible.get("kind","")=="shell" and probe.colors["0both"]==probe.colors["0ground"] and probe.colors["0both"]!=probe.colors["0shells"]:contradictions+=1
+	assert(contradictions>=1,"At least one exact native layer-isolation counterexample to the ray assignment");guards["res://tools/biome_extensions/reject_ground_boundary_unscaled.gd"]=FileAccess.get_sha256("res://tools/biome_extensions/reject_ground_boundary_unscaled.gd")
+	FileAccess.open("res://tools/biome_extensions/artifacts/ground_boundary_unscaled_failure.json",FileAccess.WRITE).store_string(JSON.stringify({"passed":false,"failures":["New ground-boundary diagnostic used raster960x540 coordinates directly for camera rays in logical1280x720 canvas coordinates. CPU hit/source claims are rejected,not terrain defects or verified causal evidence."],"source_sha256":guards,"capture_sha256":images,"explicit_gpu_source_contradictions":contradictions,"independently_detected_known_geometry_projection_errors":3,"scope":"FAILED diagnostic preserved before correction. Existing images remain real native captures;unscaled ray/source assignments are invalid. Known-quad GPU test independently proves logical/raster mismatch,with corrected centroid errors zero and original unscaled errors123–240pixels. This does not invalidate image-only shader comparisons,which do not use camera rays,and does not establish any physical ground/shell gap."},"  "));print("UNSCALED_GROUND_DIAGNOSTIC_REJECTED ",contradictions);quit()
