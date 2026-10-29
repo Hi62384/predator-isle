@@ -1,0 +1,22 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://alien_foundry/assets/shaders/membrane.gdshader" id="1_4marg"]
+[ext_resource type="Texture2D" path="res://alien_foundry/assets/materials/textures/default_relief.res" id="2_0sypj"]
+[ext_resource type="Texture2D" path="res://alien_foundry/assets/materials/textures/default_tone.res" id="3_e0fh5"]
+
+[resource]
+resource_name = "Hive Membrane"
+render_priority = 0
+shader = ExtResource("1_4marg")
+shader_parameter/primary_color = Color(0.62, 0.54, 0.45, 1)
+shader_parameter/secondary_color = Color(0.34, 0.25, 0.21, 1)
+shader_parameter/pale_color = Color(0.78, 0.7, 0.58, 1)
+shader_parameter/texture_scale = 1.0
+shader_parameter/seed_offset = 0.5617
+shader_parameter/detail_strength = 0.8525
+shader_parameter/creature_wetness = 0.78289485
+shader_parameter/roughness_bias = 0.017340347
+shader_parameter/use_tissue_atlas = true
+shader_parameter/use_vascular_field = true
+shader_parameter/tissue_tone = ExtResource("3_e0fh5")
+shader_parameter/tissue_relief = ExtResource("2_0sypj")

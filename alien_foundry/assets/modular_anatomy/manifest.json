@@ -1,0 +1,1890 @@
+{
+  "schema_version": 1,
+  "units": "meters",
+  "axes": {
+    "right": "+X",
+    "up": "+Y",
+    "outward": "+Z"
+  },
+  "attachment_convention": "Local +Z points outward. Faces are full craniofacial shells: preserve authored head anchors or project embedded origins with posterior insertion. Other modules conform to sampled carrier tissue. See each attachment profile and README; morph topology remains independent.",
+  "modules": {
+    "face_neutral": {
+      "id": "face_neutral",
+      "category": "face",
+      "path": "res://alien_foundry/assets/modular_anatomy/face_neutral.glb",
+      "description": "Neutral humanoid tissue with orbital recesses, lid creases, nasal alae, philtrum, lips and mental plane.",
+      "bounds": {
+        "min": [
+          -0.5376755956641236,
+          -0.704025,
+          -0.68
+        ],
+        "max": [
+          0.5369901867122616,
+          0.704025,
+          0.4967215569948292
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region",
+        "mounting": "craniofacial",
+        "full_shell": true,
+        "head_origin_offset": 0.2,
+        "embedded_surface_offset": 0.25,
+        "posterior_depth": 0.68,
+        "internal_carrier_scale": 0.5,
+        "transition": {
+          "mode": "posterior_z",
+          "axis": "+Z",
+          "host_weight_one": -0.3,
+          "host_weight_zero": -0.1,
+          "preserve_front_features": true,
+          "allow_front_grid_warp": false
+        }
+      },
+      "sockets": [
+        {
+          "id": "left_eye",
+          "position": [
+            -0.205,
+            0.155,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "right_eye",
+          "position": [
+            0.205,
+            0.155,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "mouth",
+          "position": [
+            0,
+            -0.29,
+            0.15
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "forehead": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "jaw": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_spacing": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_size": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "nose_projection": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        },
+        "eye_open": {
+          "min": -0.75,
+          "max": 1,
+          "default": 0
+        },
+        "strain": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 18911,
+      "triangles": 37818,
+      "quad_faces": 18491
+    },
+    "face_mask": {
+      "id": "face_mask",
+      "category": "face",
+      "path": "res://alien_foundry/assets/modular_anatomy/face_mask.glb",
+      "description": "Smooth expressionless facial plate with narrow recessed eyelids and subdued soft anatomy.",
+      "bounds": {
+        "min": [
+          -0.5361290695020756,
+          -0.7020000000000001,
+          -0.68
+        ],
+        "max": [
+          0.5361290695020756,
+          0.7020000000000001,
+          0.24159368538954512
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region",
+        "mounting": "craniofacial",
+        "full_shell": true,
+        "head_origin_offset": 0.2,
+        "embedded_surface_offset": 0.25,
+        "posterior_depth": 0.68,
+        "internal_carrier_scale": 0.5,
+        "transition": {
+          "mode": "posterior_z",
+          "axis": "+Z",
+          "host_weight_one": -0.3,
+          "host_weight_zero": -0.1,
+          "preserve_front_features": true,
+          "allow_front_grid_warp": false
+        }
+      },
+      "sockets": [
+        {
+          "id": "left_eye",
+          "position": [
+            -0.205,
+            0.155,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "right_eye",
+          "position": [
+            0.205,
+            0.155,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "mouth",
+          "position": [
+            0,
+            -0.29,
+            0.15
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "forehead": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "jaw": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_spacing": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_size": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "nose_projection": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        },
+        "eye_open": {
+          "min": -0.75,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 15677,
+      "triangles": 31350,
+      "quad_faces": 15272
+    },
+    "face_elongated": {
+      "id": "face_elongated",
+      "category": "face",
+      "path": "res://alien_foundry/assets/modular_anatomy/face_elongated.glb",
+      "description": "Elongated asymmetric facial plate preserving the eye, nasolabial and jaw landmarks.",
+      "bounds": {
+        "min": [
+          -0.5361247908687311,
+          -0.858,
+          -0.68
+        ],
+        "max": [
+          0.5361333481354201,
+          0.858,
+          0.4965977024531524
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region",
+        "mounting": "craniofacial",
+        "full_shell": true,
+        "head_origin_offset": 0.2,
+        "embedded_surface_offset": 0.25,
+        "posterior_depth": 0.68,
+        "internal_carrier_scale": 0.5,
+        "transition": {
+          "mode": "posterior_z",
+          "axis": "+Z",
+          "host_weight_one": -0.3,
+          "host_weight_zero": -0.1,
+          "preserve_front_features": true,
+          "allow_front_grid_warp": false
+        }
+      },
+      "sockets": [
+        {
+          "id": "left_eye",
+          "position": [
+            -0.205,
+            0.18944444444444442,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "right_eye",
+          "position": [
+            0.205,
+            0.18944444444444442,
+            0.1
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        },
+        {
+          "id": "mouth",
+          "position": [
+            0,
+            -0.3544444444444444,
+            0.15
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "forehead": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "jaw": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_spacing": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_size": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "nose_projection": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        },
+        "eye_open": {
+          "min": -0.75,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 15790,
+      "triangles": 31576,
+      "quad_faces": 15370
+    },
+    "muzzle_short": {
+      "id": "muzzle_short",
+      "category": "muzzle",
+      "path": "res://alien_foundry/assets/modular_anatomy/muzzle_short.glb",
+      "description": "Generic animal-inspired muzzle with nasal channels, alae, cheek pads and lip fissure; not a particular species.",
+      "bounds": {
+        "min": [
+          -0.4355080774419145,
+          -0.34,
+          -0.24
+        ],
+        "max": [
+          0.4355080774419145,
+          0.34,
+          0.5376455281649222
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "mouth",
+          "position": [
+            0,
+            -0.15,
+            0.28
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "nose_projection": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4450,
+      "triangles": 8896,
+      "quad_faces": 4270
+    },
+    "muzzle_long": {
+      "id": "muzzle_long",
+      "category": "muzzle",
+      "path": "res://alien_foundry/assets/modular_anatomy/muzzle_long.glb",
+      "description": "Generic animal-inspired muzzle with nasal channels, alae, cheek pads and lip fissure; not a particular species.",
+      "bounds": {
+        "min": [
+          -0.33969630040469334,
+          -0.3,
+          -0.24
+        ],
+        "max": [
+          0.33969630040469334,
+          0.3,
+          0.9741053530982571
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "mouth",
+          "position": [
+            0,
+            -0.15,
+            0.28
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "nose_projection": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4473,
+      "triangles": 8942,
+      "quad_faces": 4284
+    },
+    "eye_socket": {
+      "id": "eye_socket",
+      "category": "eye",
+      "path": "res://alien_foundry/assets/modular_anatomy/eye_socket.glb",
+      "description": "Concentric quad eyelid loops with a recessed sensory bowl and attachment flange. Eyeballs are generated at runtime.",
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.3208102335113738,
+          -0.17
+        ],
+        "max": [
+          0.5,
+          0.32081023351137383,
+          0.15775020864524197
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "eyeball",
+          "position": [
+            0,
+            0,
+            0.025
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_open": {
+          "min": -0.75,
+          "max": 1,
+          "default": 0
+        },
+        "eye_size": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 1154,
+      "triangles": 2304,
+      "quad_faces": 1056
+    },
+    "eye_recessed": {
+      "id": "eye_recessed",
+      "category": "eye",
+      "path": "res://alien_foundry/assets/modular_anatomy/eye_recessed.glb",
+      "description": "Concentric quad eyelid loops with a recessed sensory bowl and attachment flange. Eyeballs are generated at runtime.",
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.27613486821017913,
+          -0.17
+        ],
+        "max": [
+          0.5,
+          0.2761348682101792,
+          0.087750208645242
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "eyeball",
+          "position": [
+            0,
+            0,
+            0.025
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "eye_open": {
+          "min": -0.75,
+          "max": 1,
+          "default": 0
+        },
+        "eye_size": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 1154,
+      "triangles": 2304,
+      "quad_faces": 1056
+    },
+    "mouth_humanoid": {
+      "id": "mouth_humanoid",
+      "category": "mouth",
+      "path": "res://alien_foundry/assets/modular_anatomy/mouth_humanoid.glb",
+      "description": "Radially organized lip-to-throat quad loops with actual cavity depth and opening morph. Teeth are generated procedurally.",
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.32,
+          -0.17
+        ],
+        "max": [
+          0.5,
+          0.32,
+          0.16275020864524198
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "throat",
+          "position": [
+            0,
+            0,
+            -0.08
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 1154,
+      "triangles": 2304,
+      "quad_faces": 1056
+    },
+    "mouth_animal": {
+      "id": "mouth_animal",
+      "category": "mouth",
+      "path": "res://alien_foundry/assets/modular_anatomy/mouth_animal.glb",
+      "description": "Radially organized lip-to-throat quad loops with actual cavity depth and opening morph. Teeth are generated procedurally.",
+      "bounds": {
+        "min": [
+          -0.5,
+          -0.35840000000000005,
+          -0.17
+        ],
+        "max": [
+          0.5,
+          0.35840000000000005,
+          0.18525020864524197
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "throat",
+          "position": [
+            0,
+            0,
+            -0.08
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 1154,
+      "triangles": 2304,
+      "quad_faces": 1056
+    },
+    "mouth_radial": {
+      "id": "mouth_radial",
+      "category": "mouth",
+      "path": "res://alien_foundry/assets/modular_anatomy/mouth_radial.glb",
+      "description": "Radially organized lip-to-throat quad loops with actual cavity depth and opening morph. Teeth are generated procedurally.",
+      "bounds": {
+        "min": [
+          -0.49485105286534864,
+          -0.45201987009160083,
+          -0.36
+        ],
+        "max": [
+          0.5175,
+          0.43448809681979744,
+          0.177750208645242
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "throat",
+          "position": [
+            0,
+            0,
+            -0.08
+          ],
+          "normal": [
+            0,
+            0,
+            1
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "mouth_open": {
+          "min": 0,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 1442,
+      "triangles": 2880,
+      "quad_faces": 1344
+    },
+    "palm_humanoid": {
+      "id": "palm_humanoid",
+      "category": "palm",
+      "path": "res://alien_foundry/assets/modular_anatomy/palm_humanoid.glb",
+      "description": "Grasping base with thenar and hypothenar pads and continuous engraved flexion creases; arbitrary procedural digits attach around distal edge.",
+      "bounds": {
+        "min": [
+          -0.4233465592945931,
+          -0.5406000000000001,
+          -0.31
+        ],
+        "max": [
+          0.4233465592945931,
+          0.5449769359011647,
+          0.3138865846616172
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region",
+        "mounting": "palm_volume",
+        "full_shell": true,
+        "surface_mount": false,
+        "posterior_depth": 0.31,
+        "core_half_extents": [
+          0.289,
+          0.417,
+          0.116
+        ],
+        "transition": {
+          "mode": "wrist_y",
+          "axis": "+Y",
+          "host_weight_one": -0.48,
+          "host_weight_zero": -0.3,
+          "preserve_digit_roots": true,
+          "allow_front_grid_warp": false
+        }
+      },
+      "sockets": [
+        {
+          "id": "digit_0",
+          "position": [
+            -0.26,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_1",
+          "position": [
+            -0.13,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_2",
+          "position": [
+            0,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_3",
+          "position": [
+            0.13,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_4",
+          "position": [
+            0.26,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "spread": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "cup": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4530,
+      "triangles": 9056,
+      "quad_faces": 4416
+    },
+    "palm_organic": {
+      "id": "palm_organic",
+      "category": "palm",
+      "path": "res://alien_foundry/assets/modular_anatomy/palm_organic.glb",
+      "description": "Grasping base with thenar and hypothenar pads and continuous engraved flexion creases; arbitrary procedural digits attach around distal edge.",
+      "bounds": {
+        "min": [
+          -0.4128847323001269,
+          -0.53,
+          -0.24
+        ],
+        "max": [
+          0.4137192162540778,
+          0.5322422140381459,
+          0.3036300425720939
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "digit_0",
+          "position": [
+            -0.26,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_1",
+          "position": [
+            -0.13,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_2",
+          "position": [
+            0,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_3",
+          "position": [
+            0.13,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "digit_4",
+          "position": [
+            0.26,
+            0.37,
+            0.06
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "spread": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "cup": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 3854,
+      "triangles": 7704,
+      "quad_faces": 3744
+    },
+    "foot_plantigrade": {
+      "id": "foot_plantigrade",
+      "category": "foot",
+      "path": "res://alien_foundry/assets/modular_anatomy/foot_plantigrade.glb",
+      "description": "Foot base with heel, raised arch, metatarsal pad and toe attachment edge; no fixed toes.",
+      "bounds": {
+        "min": [
+          -0.31830438185040527,
+          -0.55,
+          -0.24
+        ],
+        "max": [
+          0.31830438185040527,
+          0.55,
+          0.3794067671369061
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "toe_0",
+          "position": [
+            -0.19,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_1",
+          "position": [
+            -0.095,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_2",
+          "position": [
+            0,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_3",
+          "position": [
+            0.095,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_4",
+          "position": [
+            0.19,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "spread": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "arch": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4082,
+      "triangles": 8160,
+      "quad_faces": 3968
+    },
+    "foot_digitigrade": {
+      "id": "foot_digitigrade",
+      "category": "foot",
+      "path": "res://alien_foundry/assets/modular_anatomy/foot_digitigrade.glb",
+      "description": "Foot base with heel, raised arch, metatarsal pad and toe attachment edge; no fixed toes.",
+      "bounds": {
+        "min": [
+          -0.27055872457284447,
+          -0.5775000000000001,
+          -0.24
+        ],
+        "max": [
+          0.27055872457284447,
+          0.5775000000000001,
+          0.5923873344521376
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [
+        {
+          "id": "toe_0",
+          "position": [
+            -0.19,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_1",
+          "position": [
+            -0.095,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_2",
+          "position": [
+            0,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_3",
+          "position": [
+            0.095,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        },
+        {
+          "id": "toe_4",
+          "position": [
+            0.19,
+            0.4,
+            0.08
+          ],
+          "normal": [
+            0,
+            1,
+            0
+          ]
+        }
+      ],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "spread": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "arch": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4082,
+      "triangles": 8160,
+      "quad_faces": 3968
+    },
+    "sensory_fold": {
+      "id": "sensory_fold",
+      "category": "specialized",
+      "path": "res://alien_foundry/assets/modular_anatomy/sensory_fold.glb",
+      "description": "Pinna-like concha and folded sensory lamellae.",
+      "bounds": {
+        "min": [
+          -0.3298793599021848,
+          -0.52,
+          -0.24
+        ],
+        "max": [
+          0.3298793599021848,
+          0.52,
+          0.21231236120157515
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "flare": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "cup": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4082,
+      "triangles": 8160,
+      "quad_faces": 3968
+    },
+    "joint_folds": {
+      "id": "joint_folds",
+      "category": "specialized",
+      "path": "res://alien_foundry/assets/modular_anatomy/joint_folds.glb",
+      "description": "Swept nested joint folds for a flexible biological gusset.",
+      "bounds": {
+        "min": [
+          -0.38,
+          -0.52,
+          -0.24
+        ],
+        "max": [
+          0.38,
+          0.52,
+          0.20772308276715098
+        ]
+      },
+      "attachment": {
+        "position": [
+          0,
+          0,
+          0
+        ],
+        "normal": [
+          0,
+          0,
+          1
+        ],
+        "up": [
+          0,
+          1,
+          0
+        ],
+        "embed_depth": 0.035,
+        "group": "attachment_region"
+      },
+      "sockets": [],
+      "deformations": {
+        "width": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "height": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "asymmetry": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "curvature": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "flare": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        },
+        "cup": {
+          "min": -1,
+          "max": 1,
+          "default": 0
+        }
+      },
+      "material_slots": [
+        "Tissue",
+        "Cavity"
+      ],
+      "vertices": 4082,
+      "triangles": 8160,
+      "quad_faces": 3968
+    }
+  }
+}

@@ -1,5 +1,10 @@
 # Project instructions
 
+## Current user priorities
+
+- Port runtime systems to C# before continuing feature work. Write new runtime implementation and migration checks in C#; existing GDScript remains only until its replacement is integrated and checked.
+- Do not reuse the Hoogie project, its code, or its textures. The user withdrew authorization to use it.
+
 <!-- ProjectBridge offline-patch instructions; do not duplicate -->
 ## ProjectBridge delivery modes — choose based on the request
 

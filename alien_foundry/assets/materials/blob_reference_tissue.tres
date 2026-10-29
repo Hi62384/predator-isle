@@ -1,0 +1,27 @@
+[gd_resource type="ShaderMaterial" format=3]
+
+[ext_resource type="Shader" path="res://alien_foundry/assets/shaders/blob_tissue.gdshader" id="1_blob"]
+[ext_resource type="Texture2D" path="res://alien_foundry/assets/materials/textures/default_tone.res" id="2_tone"]
+[ext_resource type="Texture2D" path="res://alien_foundry/assets/materials/textures/default_relief.res" id="3_relief"]
+[ext_resource type="Texture2D" path="res://alien_foundry/assets/materials/textures/default_structure.res" id="4_structure"]
+
+[resource]
+resource_name = "Blob reference tissue | preview swatch"
+shader = ExtResource("1_blob")
+shader_parameter/tissue_index = 0.0
+shader_parameter/primary_color = Color(0.58, 0.51, 0.38, 1)
+shader_parameter/secondary_color = Color(0.32, 0.25, 0.215, 1)
+shader_parameter/pale_color = Color(0.73, 0.67, 0.55, 1)
+shader_parameter/colony_olive_color = Color(0.45, 0.455, 0.325, 1)
+shader_parameter/colony_strain_color = Color(0.48, 0.345, 0.355, 1)
+shader_parameter/colony_vascular_color = Color(0.30, 0.23, 0.265, 1)
+shader_parameter/blob_pigment_strength = 0.42
+shader_parameter/blob_vascular_strength = 0.58
+shader_parameter/blob_moisture_strength = 0.78
+shader_parameter/blob_fibre_strength = 0.66
+shader_parameter/use_tissue_atlas = true
+shader_parameter/use_vascular_field = true
+shader_parameter/use_structural_atlas = true
+shader_parameter/tissue_tone = ExtResource("2_tone")
+shader_parameter/tissue_relief = ExtResource("3_relief")
+shader_parameter/tissue_structure = ExtResource("4_structure")

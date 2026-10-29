@@ -1,5 +1,8 @@
 # Godot 4+ specific ignores
 .godot/
+.tools/
+bin/
+obj/
 /android/
 
 # Superseded combined arrays: use external-layer .tres resources instead.
@@ -10,3 +13,48 @@
 /ProjectBridge_patch.zip
 *.bak
 *.zip
+
+# Local exported binaries, reports are retained under tools/desert.
+/builds/
+/tools/maintenance/artifacts/*
+!/tools/maintenance/artifacts/.gdignore
+/tools/diagnostics/artifacts/*
+!/tools/diagnostics/artifacts/.gdignore
+/tools/desert/artifacts/
+/tools/snow/artifacts/*
+!/tools/snow/artifacts/.gdignore
+/tools/snow/baseline/
+/tools/jungle/baseline/
+/tools/forest/baseline/
+/tools/savanna/baseline/
+/tools/savanna/artifacts/*
+!/tools/savanna/artifacts/.gdignore
+/tools/forest/artifacts/*
+!/tools/forest/artifacts/.gdignore
+/tools/jungle/artifacts/*
+!/tools/jungle/artifacts/.gdignore
+/canonical_neighbors.json
+/native_core_results.json
+/channel_report.json
+/channel_probe.png
+/channel_probe.png.import
+tools/swamp/artifacts/*
+!tools/swamp/artifacts/.gdignore
+tools/swamp/baseline/*
+!tools/swamp/baseline/.gdignore
+tools/mountain/artifacts/*
+!tools/mountain/artifacts/.gdignore
+tools/mountain/baseline/*
+!tools/mountain/baseline/.gdignore
+tools/rocky_coast/artifacts/*
+!tools/rocky_coast/artifacts/.gdignore
+tools/rocky_coast/baseline/*
+!tools/rocky_coast/baseline/.gdignore
+tools/beach/artifacts/*
+!tools/beach/artifacts/.gdignore
+tools/tropical/artifacts/*
+!tools/tropical/artifacts/.gdignore
+tools/badlands/artifacts/*
+!tools/badlands/artifacts/.gdignore
+tools/biome_extensions/artifacts/*
+!tools/biome_extensions/artifacts/.gdignore

@@ -1,0 +1,1717 @@
+{
+  "format": "current232_godot_project_source_v1",
+  "files": {
+    "Alien_Foundry/assets/materials/blob_reference_tissue.tres": {
+      "bytes": 1456,
+      "sha256": "3e7d6d9d6ec5d0f6b75cafd899d2e6afd2a99dd23f4e968928b1ecfc65ca7504"
+    },
+    "Alien_Foundry/assets/materials/bone.tres": {
+      "bytes": 1264,
+      "sha256": "e2e5259080686209bfcbe790efd0f75c72d7658f8b63c7ed7795ed7c485293ea"
+    },
+    "Alien_Foundry/assets/materials/chitin.tres": {
+      "bytes": 1266,
+      "sha256": "54078ed8e262b2c1f755e343b27f037d63a7d1b1a182bfda676a1b3042ff1297"
+    },
+    "Alien_Foundry/assets/materials/crystal.tres": {
+      "bytes": 1267,
+      "sha256": "095412113dd54e0a2dc7f3cd530051f103c1c8995c18348766a7bb5df20cadd4"
+    },
+    "Alien_Foundry/assets/materials/flesh.tres": {
+      "bytes": 1265,
+      "sha256": "d72700738681d875a128692573864bd307dec47328dba1b077b75f77efa8888d"
+    },
+    "Alien_Foundry/assets/materials/membrane.tres": {
+      "bytes": 1016,
+      "sha256": "a432e550652f460d6b7eee9d6253873874ee32f29051008bfd1d64034d74d802"
+    },
+    "Alien_Foundry/assets/materials/muscle.tres": {
+      "bytes": 1266,
+      "sha256": "68d6a79e73a8d86394ccf32c75fdd5767a1d5c32be52e41307db6607cd94a3a1"
+    },
+    "Alien_Foundry/assets/materials/root.tres": {
+      "bytes": 1264,
+      "sha256": "b2c878dad864a10e3f71fce6ea17a7a4c4b2a8a8f184fd445e8918583e3830c3"
+    },
+    "Alien_Foundry/assets/materials/slime.tres": {
+      "bytes": 1265,
+      "sha256": "4820c94a1572a43b6c910e101767d6253887160eb4c6dc2c3fe108628a994b41"
+    },
+    "Alien_Foundry/assets/materials/textures/default_relief.res": {
+      "bytes": 658849,
+      "sha256": "d825a7d65313a4834e9b26b1c3f888b25cd95fdd8040c9723db2d55d3f47acc1"
+    },
+    "Alien_Foundry/assets/materials/textures/default_structure.res": {
+      "bytes": 775686,
+      "sha256": "0eff0b2ee47d70c13eb67697f0766d7c8a69a11bfd6947d71b373b8e546b2aae"
+    },
+    "Alien_Foundry/assets/materials/textures/default_tone.res": {
+      "bytes": 922226,
+      "sha256": "bc50e934c484ce83a2edd40fcf1fc257b565d484a70dadd6ca69e417862116c2"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_recessed.glb": {
+      "bytes": 222076,
+      "sha256": "9ba7177b3381a600c3c71397d31e701b1dc60fee5e0d2b0b48da68236f871aba"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_recessed.glb.import": {
+      "bytes": 1065,
+      "sha256": "0e62bbe582601268f3ad81f59d49fcdf5805e8f8b9fb2f888a153fabba3c49b3"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_recessed.lods.json": {
+      "bytes": 53026,
+      "sha256": "75efb56475b4a720a67f9f951a3243c8f5bf4c3e449fc11485e3bb4f80229919"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_socket.glb": {
+      "bytes": 222068,
+      "sha256": "2e5e4cd079546083aa8b79443c804c5a7c5a9ffe1df4357f18099515802ec2ce"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_socket.glb.import": {
+      "bytes": 1059,
+      "sha256": "ed1e2bde69e4d821249c5def8fa983de88c5927078da4dcc8fa53bde4ba7be2c"
+    },
+    "Alien_Foundry/assets/modular_anatomy/eye_socket.lods.json": {
+      "bytes": 53057,
+      "sha256": "d6abb53e8ea0839c45bdb245d5ed4bd0588790036169a31200012ee9ea49b4e4"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_elongated.glb": {
+      "bytes": 4965612,
+      "sha256": "a5da28e3ed59ea61c1ccd53e11f920fb1e74c5728151a860015b041ddd785b39"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_elongated.glb.import": {
+      "bytes": 1071,
+      "sha256": "30139c53464ac95c0d1a454734f483a94f5b4e3655cfd5e362585177cfc49a26"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_elongated.lods.json": {
+      "bytes": 1102510,
+      "sha256": "9240ab2035fb961ffab18cbfaacf2f677429f7e72c08c036e5f8fe785b80e523"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_mask.glb": {
+      "bytes": 5009180,
+      "sha256": "4b210cd2d3dd556547a6c62137e3360f2bd5ceee94d6551791f387ba014c13ae"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_mask.glb.import": {
+      "bytes": 1055,
+      "sha256": "0d8b78c1ca13313878c5f3e268a0ea2f4d230464c28c82fa867d00182c5d6e3a"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_mask.lods.json": {
+      "bytes": 1096516,
+      "sha256": "3e41b2e604d04af98e8b9a64b1166b1ceafc9bb882e312e8b6bc1206a88e5f89"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_neutral.glb": {
+      "bytes": 6137368,
+      "sha256": "35d361f8f7f4bd1580a63223fc8d09952fdde93173f9f877041987660e3bb94d"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_neutral.glb.import": {
+      "bytes": 1064,
+      "sha256": "3af77ba408de8393f080862b248af38663d414117e88354793540efad0c0a392"
+    },
+    "Alien_Foundry/assets/modular_anatomy/face_neutral.lods.json": {
+      "bytes": 1352233,
+      "sha256": "72ade1fbc1ce6e9551d6fa4770e4a88684b23ae3e0d1e314d94b62c2b7cc9878"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_digitigrade.glb": {
+      "bytes": 743792,
+      "sha256": "d27358ef688776eb7f08791d71399cde9d6b9e832fb2e0a837c1b45b2451661d"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_digitigrade.glb.import": {
+      "bytes": 1077,
+      "sha256": "00a427ee9c0221171a8eada89114bf4d8055842de94bfddd9743b676262797b5"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_digitigrade.lods.json": {
+      "bytes": 224275,
+      "sha256": "0cc0f65ff0689001139bac376354100b89168fdf8cb921ef3dc1c333d6df03e4"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_plantigrade.glb": {
+      "bytes": 744440,
+      "sha256": "037d4bd0b3330278e4d6e8691277499f5f64b7f07702fc5a1f6c16526dbc1e10"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_plantigrade.glb.import": {
+      "bytes": 1076,
+      "sha256": "f360949f78acfa392d35eb17dcedc7ea5a237a7a5c07ee9625def5952febb044"
+    },
+    "Alien_Foundry/assets/modular_anatomy/foot_plantigrade.lods.json": {
+      "bytes": 225033,
+      "sha256": "2f1662207d273467a7654ad0098c90a38a7e2e6695e5a5f3bf0cf2320ae3bda7"
+    },
+    "Alien_Foundry/assets/modular_anatomy/joint_folds.glb": {
+      "bytes": 749700,
+      "sha256": "cc697bc36f7e8012e65b62f7e5060d950e341705653b9e45ec380ed91590b8a0"
+    },
+    "Alien_Foundry/assets/modular_anatomy/joint_folds.glb.import": {
+      "bytes": 1062,
+      "sha256": "c94033976e006203831c62758b7aeeb741ed794984f0d31dc5c5c9de1149feee"
+    },
+    "Alien_Foundry/assets/modular_anatomy/joint_folds.lods.json": {
+      "bytes": 224433,
+      "sha256": "76146eebbc315f5bd8335648d1cf2dd1c6a3785f8c094c919c882cd5b687615b"
+    },
+    "Alien_Foundry/assets/modular_anatomy/manifest.json": {
+      "bytes": 37498,
+      "sha256": "7fda287c52f6d71a880d9ffe383a54903d3340509e9c28bb6915230d093f4649"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_animal.glb": {
+      "bytes": 224844,
+      "sha256": "f71f1bc4c244d865c89c6c1f6062f54b9e99c70f1f5692066c9514c34a43cb6d"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_animal.glb.import": {
+      "bytes": 1064,
+      "sha256": "951aa36b80042b061d4cff154f1b6267927906261c71fbdfa81374e4651770c7"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_animal.lods.json": {
+      "bytes": 53159,
+      "sha256": "04c1eb2f22fa02edb37d5997323fc21b221bd992547c00d98b463cdad4438b3e"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_humanoid.glb": {
+      "bytes": 224852,
+      "sha256": "76531c3fbc62ed44806bf0aa138eb865636c0975a3d139da6f76b7feec6899ef"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_humanoid.glb.import": {
+      "bytes": 1071,
+      "sha256": "47efa69ebb1a9e56dbd7c6bfce76029cdd0070daba9eea1f7464756a59256f2a"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_humanoid.lods.json": {
+      "bytes": 53264,
+      "sha256": "563629f83ff5dc166cff7dea3075aa6d029a806dfafce3976a307034db79669b"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_radial.glb": {
+      "bytes": 277956,
+      "sha256": "cf1b99b6b6677d1e78bca2b34fb1b8b05d9288dba0fe2687be95db1ee66626ae"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_radial.glb.import": {
+      "bytes": 1065,
+      "sha256": "636447abde0eedf428a88bc935fbf08eeec08a6b8dcebf074c893d3d672b353b"
+    },
+    "Alien_Foundry/assets/modular_anatomy/mouth_radial.lods.json": {
+      "bytes": 66939,
+      "sha256": "3fc9c63287c9b4d2848f7e38cb23a95c6c338d8c23ee78cbd94412f2b65e85a1"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_long.glb": {
+      "bytes": 965032,
+      "sha256": "f01f4c55b10394915c894cb84eef816febac37b0eadceb78210f23dcb493df74"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_long.glb.import": {
+      "bytes": 1062,
+      "sha256": "182bc29ab1eea9f0ead4bb068e94f1e7b9e7c21e7f596430573b69f95e1cddea"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_long.lods.json": {
+      "bytes": 244018,
+      "sha256": "79e8cbecc99ebdb3a0616c7d23a49028d821a340d0e17bd80381ed04a143a59d"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_short.glb": {
+      "bytes": 956360,
+      "sha256": "55eb19ae1fefb1a248de9e67fe5956f60a0810cdf6330fde9a4b9e37cffbf04a"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_short.glb.import": {
+      "bytes": 1064,
+      "sha256": "edb9c9e7d2b41d9f0e82663e896f492bc579571db1b3b3f18e3cca9906ef68dc"
+    },
+    "Alien_Foundry/assets/modular_anatomy/muzzle_short.lods.json": {
+      "bytes": 242862,
+      "sha256": "60993b134f9d77e97b3b35ccfe39114a2b90d9db66048f38e27ecfe904f38bdc"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_humanoid.glb": {
+      "bytes": 803372,
+      "sha256": "302e7b95190881356f15db8c537c10ff311fcf2fc7ba3314b094d601d4ab9799"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_humanoid.glb.import": {
+      "bytes": 1068,
+      "sha256": "80a52ce6cc0c92234e880d400d5dda76373a07f1919d3bab9a70a4ab3b7b047c"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_humanoid.lods.json": {
+      "bytes": 252687,
+      "sha256": "83dabe1518fc599752444af206069bc00c64a39f6e83979c091f692b62ec8b81"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_organic.glb": {
+      "bytes": 701816,
+      "sha256": "304806832105e7d4d67f455ea83b826bea441f436095c79b6f7f15f987d6f8b4"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_organic.glb.import": {
+      "bytes": 1064,
+      "sha256": "f951aea5703a904294095061ea655bebb300d2cc6d09b7dc25d289eb3176ea53"
+    },
+    "Alien_Foundry/assets/modular_anatomy/palm_organic.lods.json": {
+      "bytes": 212587,
+      "sha256": "fcaed76f701e6ee9fff46bb44881b227348e0b7cf421ce94ec13e89ee97214f6"
+    },
+    "Alien_Foundry/assets/modular_anatomy/sensory_fold.glb": {
+      "bytes": 749696,
+      "sha256": "974b324b6b52d88a31223e02ac65080f8cddc56af487dc72fed083749aa9e108"
+    },
+    "Alien_Foundry/assets/modular_anatomy/sensory_fold.glb.import": {
+      "bytes": 1065,
+      "sha256": "fae9cfeb1df6f45f05125e180f52577dc06496e7e2ebe2fc760558da4c387dc7"
+    },
+    "Alien_Foundry/assets/modular_anatomy/sensory_fold.lods.json": {
+      "bytes": 224729,
+      "sha256": "c0453b881321ecc0ee5ca639e1730bac33405cdb647605b217e32da76e79d855"
+    },
+    "Alien_Foundry/assets/shaders/blob_tissue.gdshader": {
+      "bytes": 14706,
+      "sha256": "f2720c118fcfcee29e0a31a2c46e61b1928785508f33b46525745c12a44b1305"
+    },
+    "Alien_Foundry/assets/shaders/blob_tissue.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "d4225b42314723780f1672c852062b16fd5ed5d42c856c955c5c3b3305a968ba"
+    },
+    "Alien_Foundry/assets/shaders/blob_tissue_response.gdshader": {
+      "bytes": 17816,
+      "sha256": "7c4fd160b73172474128cb2bc5ed37b210f5404b0e3f8ae6af07e2eb8efedbe9"
+    },
+    "Alien_Foundry/assets/shaders/blob_tissue_response.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "67977e9230bf7adb28bd67a2e390f1589f828964ea00050497e04e9fdfbb7e8f"
+    },
+    "Alien_Foundry/assets/shaders/membrane.gdshader": {
+      "bytes": 4328,
+      "sha256": "a987f0fa4acfd17b1dcb34adafeeeee93e610e8e00f0446e7a08556496bcee82"
+    },
+    "Alien_Foundry/assets/shaders/membrane.gdshader.uid": {
+      "bytes": 19,
+      "sha256": "f66e8dd8699d503e285601303f9e9879ae41698a956d705cd704b28c16b29bfb"
+    },
+    "Alien_Foundry/assets/shaders/organic_tissue.gdshader": {
+      "bytes": 16494,
+      "sha256": "0a0730053773c8fa74f56b806000dfbb0c7f1d5428d251ef266104ad4975f4ed"
+    },
+    "Alien_Foundry/assets/shaders/organic_tissue.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "127d5a8e54870671cb17c3d49bf28a1b648dec9e640d0a321d427d4a727e1e76"
+    },
+    "Alien_Foundry/assets/shaders/wireframe.gdshader": {
+      "bytes": 181,
+      "sha256": "baba2c1bcc21e1f15b89399c560c78583b16e3549f54728588e0599f2505ece5"
+    },
+    "Alien_Foundry/assets/shaders/wireframe.gdshader.uid": {
+      "bytes": 20,
+      "sha256": "a523237656f041c6315a653f5883ead084ca42c334b30cb5f6425fd117f50b72"
+    },
+    "Alien_Foundry/examples/GenerateLiveBlob232.gd": {
+      "bytes": 7377,
+      "sha256": "7e59067218aa2df6c56a95b5fda0843831de17922a3b8dd1d332c7b374bc979f"
+    },
+    "Alien_Foundry/examples/GenerateLiveBlob232.gd.uid": {
+      "bytes": 20,
+      "sha256": "8da180b9dccb445ceec0025e61ad096eb843be9df19244764c94f5f6a588b3dd"
+    },
+    "Alien_Foundry/project.godot": {
+      "bytes": 979,
+      "sha256": "5813ce0cef7d567fc0522b8f34a4405699c59daa088f180153b06f172d045476"
+    },
+    "Alien_Foundry/scenes/Main.tscn": {
+      "bytes": 294,
+      "sha256": "c00f7847d9cabfe4f0db403b5831752be111a11d4b6233cf44bc29b03aefe3be"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyConnection.gd": {
+      "bytes": 192,
+      "sha256": "d8d368ee3e831140342ecb89f973716c46664974b6cb28b108cb5b9e25ed4368"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyConnection.gd.uid": {
+      "bytes": 20,
+      "sha256": "61dc03bba2bf50cc175c35940c449b45cfd141f896e77e113fd9f6ea909416c2"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyGraph.gd": {
+      "bytes": 36050,
+      "sha256": "0d32227cce39d195e8331979f575470f4e4289fa9c79896993d31fe827934797"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyGraph.gd.uid": {
+      "bytes": 19,
+      "sha256": "0a04f7bf1bb7b6d76c7f482e24b381da2f11238445f94fa6191b336408f0e29c"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyNode.gd": {
+      "bytes": 604,
+      "sha256": "7f69c60997587b53a6bd6830e6af269f116cb4eb7bd13ac03edc732be749409a"
+    },
+    "Alien_Foundry/scripts/anatomy/AnatomyNode.gd.uid": {
+      "bytes": 20,
+      "sha256": "9e0b4cd6ad3f603b1bab4e3d65e181b221ab8f727f4806bee17c8233d9fa17f9"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBaseVolumeDevelopment.gd": {
+      "bytes": 14518,
+      "sha256": "d04a3544e55c70606dbd2bab8125486b9fc61dbb48dadb8dc3494059903b0593"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBaseVolumeDevelopment.gd.uid": {
+      "bytes": 20,
+      "sha256": "f2c7323050e915e6653e34f40b2e0084284b1b68cd490468d655f44dd6ca5e49"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBiologicalBlueprint.gd": {
+      "bytes": 26001,
+      "sha256": "f234fca5eb00c5130ca8279ed2b928594ba0066264927f18ce4491543573dc7c"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBiologicalBlueprint.gd.uid": {
+      "bytes": 20,
+      "sha256": "ba1c852ad4195edd15dcc4cd85565486ecb91512d0756da17d65aef8f5c5374c"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBlueprintGraph.gd": {
+      "bytes": 2098,
+      "sha256": "b01dd60abb1de6220ea3250f5d9564742c88dace62abf442938529fd09c54a1a"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBlueprintGraph.gd.uid": {
+      "bytes": 20,
+      "sha256": "e0e987264595c1269b9e55c030f6b4b743a463146810d257f05c551e469533d5"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBodyEnvelopeDevelopment.gd": {
+      "bytes": 3737,
+      "sha256": "e424be501d27254d8713fcf97e1a3d3d4cbf0b166ec2e394a08ce261759cdbcb"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBodyEnvelopeDevelopment.gd.uid": {
+      "bytes": 20,
+      "sha256": "10cbfbdbdc3c8ce19309858833f76e87be01efb6664b08533eea7a5ba80dd85c"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBodyGroupDevelopment.gd": {
+      "bytes": 4181,
+      "sha256": "1577d7ed3a2638b975a2e4b6c44bfe471525b8cf93beea04336a20cddfd40654"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobBodyGroupDevelopment.gd.uid": {
+      "bytes": 20,
+      "sha256": "57c19f63912aa471a84b9ca06839ab3af1eae45663c76c5b3fa1bbec13cc9df8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobCavityRim.gd": {
+      "bytes": 9416,
+      "sha256": "105d382cb9ed0c033d7bc8967e05cfa6e2a13a0e1a7c267358481c128cb40e5d"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobCavityRim.gd.uid": {
+      "bytes": 19,
+      "sha256": "e3b11e02b512a3c50995ffa2ed172836440d819e63378b1e749fdc01e597fc11"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobCompactBody.gd": {
+      "bytes": 9817,
+      "sha256": "4c639c14afbb810989f286bf92b10907be0bcc09b3b970cdd44cbb28a888b9c4"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobCompactBody.gd.uid": {
+      "bytes": 20,
+      "sha256": "6962ff902803cbe1a59e7a0f351751afdebb9f607be5f1d6ee19e5725afe6496"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobContainedLip.gd": {
+      "bytes": 7678,
+      "sha256": "c90e71d9d26fd735bdbacc2413ee68d616815d6c0ac07645f86b3212b306ee4c"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobContainedLip.gd.uid": {
+      "bytes": 20,
+      "sha256": "9dbb87bb2592993dbcaea6532cb4b020856934e7f09df788375279a677bec4f0"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobGrownContactAnatomy.gd": {
+      "bytes": 3154,
+      "sha256": "d38dc08b2f2053661ad29df84e0a5fc4c41d203b0e8c0d002e5ec1510014ace5"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobGrownContactAnatomy.gd.uid": {
+      "bytes": 20,
+      "sha256": "e994a3ff9f7c6712fc4a609b6b259da0167fab8f4b06f94c736f0dee5f0eee99"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobGrownEnvelopeAnatomy.gd": {
+      "bytes": 1794,
+      "sha256": "2fea13c23ff0935b01aca01b18053553dc16b5c4dfe34bfbc6e612bcb8958a7d"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobGrownEnvelopeAnatomy.gd.uid": {
+      "bytes": 20,
+      "sha256": "bb06cb0aeab233c02cea6ca6affc7a7fa9b430493cc25bbdcd95c17499e81fb2"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobHangingLoadAnatomy.gd": {
+      "bytes": 8746,
+      "sha256": "57084c5fb9b3fc9a58dd0162f5ac97e2cd6805cc986cfb055db48cd7635488c0"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobHangingLoadAnatomy.gd.uid": {
+      "bytes": 19,
+      "sha256": "68e72558a3c9344cac703c5c6bacd2396c18d91bf5a93cc86db8f8cbb2da5063"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobIdentityProfiles.gd": {
+      "bytes": 9740,
+      "sha256": "c25266456eb3068e0cb4394675fd30176206312658fd51b69143aa78e796f0c0"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobIdentityProfiles.gd.uid": {
+      "bytes": 19,
+      "sha256": "e007346b10036ac957758c0e75da4558889059be2fa712b0678a9ce5613999da"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobIdentityRealization.gd": {
+      "bytes": 6975,
+      "sha256": "cda5034a459e95ac2767435a6cda7b4fb248edf2eb51edbfaeb16f1ed74c4f4f"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobIdentityRealization.gd.uid": {
+      "bytes": 20,
+      "sha256": "02232a855d0022c6d81712ca1373a982ae54ed60c34ca0305ac49cd1b0ccd120"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobLoadedLobeAnatomy.gd": {
+      "bytes": 6713,
+      "sha256": "54c8090171d3d6ddca37373fabc584bc623202c4953b16b128f2e1ec9c3311b8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobLoadedLobeAnatomy.gd.uid": {
+      "bytes": 20,
+      "sha256": "0ddb0a98bf232197f3fa5319867bfc5f619b7a81abd2b3e48c5c5cefb7e92cd2"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobLocalLattice.gd": {
+      "bytes": 2726,
+      "sha256": "555654fd0756ba158f9c0d0c781238f641a04b5a77d60bdee845142720aacd61"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobLocalLattice.gd.uid": {
+      "bytes": 20,
+      "sha256": "014581912498a6625af0187e4844dbd38c79964c1911e99c824660dc62b4d084"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleAnatomy.gd": {
+      "bytes": 9044,
+      "sha256": "fd6c1af3ba0217f4ed7a0ffdfeaff6d0a13f99bd91f595013beaa5fbb01a7903"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleAnatomy.gd.uid": {
+      "bytes": 19,
+      "sha256": "c7ed3d9bdc0179b42ea08146ea14f8d5d059c99ae95b22ed613c526e630afd03"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor217.gd": {
+      "bytes": 49172,
+      "sha256": "8d5ee2bc6c7c9ff31405bd425886a5419555bb52bb2ab9a56ba7eb789c4e6c4b"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor217.gd.uid": {
+      "bytes": 20,
+      "sha256": "85190a9bcbf87cba353e83633237ed3bae27b4003bbca04f5333d786baec94ea"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor219.gd": {
+      "bytes": 64375,
+      "sha256": "6e5c4a716f8e6063c0bed776778b3a92dcf36a69f6365d551e9658f0ade0c7f8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor219.gd.uid": {
+      "bytes": 20,
+      "sha256": "d74cb2181249c2ad0511a1bedceed94a511dba2fc8872592e9963f28819ce788"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor221.gd": {
+      "bytes": 66493,
+      "sha256": "a98e87f38b37db2f5c1e02e94b6756c44fd3fd2886ba2cb27e6ed34db0597d7a"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantleCavityAuthor221.gd.uid": {
+      "bytes": 20,
+      "sha256": "57c88786b962e7d08eda22e5697d7a0b293f8ec667158f472e74c547347fc8ff"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantlePlacement.gd": {
+      "bytes": 3846,
+      "sha256": "3616d60b63b99f5153a832c0cbbace89786c1d3321d0ccbadbd20ef31f9553c8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMantlePlacement.gd.uid": {
+      "bytes": 20,
+      "sha256": "9ff8291eede5289381ee0733bc02f47001959e0c03a09e61a2e1adc4a5dd0ff9"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMassReprofileDevelopment.gd": {
+      "bytes": 2220,
+      "sha256": "6ea8f72bc582de0daf7b0b733866e6d78fa5d8eac8c2e0b7b93c998c02c58f83"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMassReprofileDevelopment.gd.uid": {
+      "bytes": 20,
+      "sha256": "2c985679e7a163d2720fef72f67301824747330c52a31fee095fba6cb82a12f3"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMembraneCovering.gd": {
+      "bytes": 2502,
+      "sha256": "7741131e07a9062d084188a5d6a393a73e218bb8ea743a9f0a72f15b837119d4"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMembraneCovering.gd.uid": {
+      "bytes": 19,
+      "sha256": "6cee048e70a7ba9e10fd6783b0f992f15c9ca03612a4e3d5ffd5fa342af2e0b5"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMessyTissue.gd": {
+      "bytes": 22766,
+      "sha256": "2611a78435a9a796e9dc7725ce6211f4f666c61d5acfacded9591ab1b8b6e2dc"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobMessyTissue.gd.uid": {
+      "bytes": 20,
+      "sha256": "65c00af1d9a3dcd54d4a1311073320399794ee614081cd982928d1c44a21798f"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousCartilage.gd": {
+      "bytes": 2615,
+      "sha256": "7519b0075ea14e0f87e7b8568622c2fc770fda021ede4b7a0be9594447b5e5cc"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousCartilage.gd.uid": {
+      "bytes": 20,
+      "sha256": "4fc629f889d579e6b1c96cf66f4db3a9954bf2d036dcb7e813b1ac5f395c0778"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousGrowth.gd": {
+      "bytes": 32512,
+      "sha256": "c009cd0135fe74e9ff2d6e47df8bd6fd8f767b8c341077f376cc5671a4c6fa1b"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousGrowth.gd.uid": {
+      "bytes": 19,
+      "sha256": "784bfb023ed234ffe448fdf58e3a94be1929438141d4a6b7a0f79b179b48c4fa"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousWebbing.gd": {
+      "bytes": 28911,
+      "sha256": "125841c3ea7f94e9c3a29e20c62e9458b1a1a2336b62992224defff8e6b9482a"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPorousWebbing.gd.uid": {
+      "bytes": 20,
+      "sha256": "ef1570642e5f1d3c601e4d6a0f80e336dfc511e17aa7608593b0edb4716086f3"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPrimaryCavityAuthor223.gd": {
+      "bytes": 67420,
+      "sha256": "0bb5c7dc994bdd12ea4c6e28bcdd46434d49026ef5deedcda6d973758b0591e6"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobPrimaryCavityAuthor223.gd.uid": {
+      "bytes": 20,
+      "sha256": "fe05a2db49daef416f8355b0cd3be1f58acf1e374c4ea9a361cbae034b48dd7a"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobRegionalCavities.gd": {
+      "bytes": 4041,
+      "sha256": "20cafe49cb728c7a07f39b227c424efda5905e8aaddba8c91dbf7ed19f5bc36b"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobRegionalCavities.gd.uid": {
+      "bytes": 20,
+      "sha256": "be79b4fbfdf1436c46c93d578d57a9fb06bee6fac2b38854106dae8230d3db53"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobRootRouting.gd": {
+      "bytes": 2135,
+      "sha256": "bebfe5a0fc164efdc2604acad75c3a524dac23b1f6bb909fecb7b7605f835c5f"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobRootRouting.gd.uid": {
+      "bytes": 19,
+      "sha256": "079b641cdf3a4b6d952235e75d556dabbd4026eabe624ad7a1ee50a587d0195c"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSacGroupGrowth.gd": {
+      "bytes": 3282,
+      "sha256": "667aaae988fc6579703368895b61e393ffe3ff0e6309504152a9590bf4ab9385"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSacGroupGrowth.gd.uid": {
+      "bytes": 20,
+      "sha256": "fb8a06e86b71a415847fc6fd18a2633ef54be2e28b9b1f9c7f9bb4f20ec5c4c6"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSecondaryTendonDetail.gd": {
+      "bytes": 4634,
+      "sha256": "fada9b31df7cdcb02cd302e96a26b66fcaff596173cb6c135728605cb367c194"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSecondaryTendonDetail.gd.uid": {
+      "bytes": 20,
+      "sha256": "cfb4fbde6402a31abe5a180374b1ac94ad0d835dcd281e8a09c1fe420752b5c8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceFibers.gd": {
+      "bytes": 29288,
+      "sha256": "2d8b7282870f7f337cf3e1fee927f40e3c239b86ec81f300e57abe3d73a0eb84"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceFibers.gd.uid": {
+      "bytes": 20,
+      "sha256": "f8c02bbd693f434fc10ad21a2307706a3144a92eb8a0fb32118121396466b0fc"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceField.gd": {
+      "bytes": 3125,
+      "sha256": "2b76643120b14658b62cc4e412def929695f825018f7293b2ba6cd95b1df8567"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceField.gd.uid": {
+      "bytes": 19,
+      "sha256": "b9d54af1c35326b6769f7d7800a07190a8cd26aff7db492c9984b6ef3ec56809"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceGrowth.gd": {
+      "bytes": 13500,
+      "sha256": "3fdecfa3202b40f46e1610bd1b19a8205ba3fc6ca424636aa20fb7f67825a1d8"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceGrowth.gd.uid": {
+      "bytes": 19,
+      "sha256": "a328ead5ab3dd5a0616e539436563e043a339beb951e8d4ab96f4d66e978e651"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceRegions.gd": {
+      "bytes": 11566,
+      "sha256": "2a557472cedac6e4fd3b86cca232d408164cdf7ffad8acbb1a8da0ac1df29548"
+    },
+    "Alien_Foundry/scripts/anatomy/BlobSurfaceRegions.gd.uid": {
+      "bytes": 20,
+      "sha256": "14c008af2242c1c1f699ba72a14cb661e166d6fe9a7ca040e6e25119893a5d7a"
+    },
+    "Alien_Foundry/scripts/anatomy/CreatureDNA.gd": {
+      "bytes": 2377,
+      "sha256": "41cefd0c46637f1ad3405a70415611675513e77c91b5ef671a53dc74d1fcbe03"
+    },
+    "Alien_Foundry/scripts/anatomy/CreatureDNA.gd.uid": {
+      "bytes": 20,
+      "sha256": "147e0f896883cddfe1692d35ae1a452b6ee641e9312402a2b6a3ecfb17937837"
+    },
+    "Alien_Foundry/scripts/anatomy/CreatureLineage.gd": {
+      "bytes": 10255,
+      "sha256": "32aeba4f11f1d7fe6ed72b3fde03de521290dcba97dc65ffc52a39a1b2c54ad0"
+    },
+    "Alien_Foundry/scripts/anatomy/CreatureLineage.gd.uid": {
+      "bytes": 20,
+      "sha256": "cb8b685ecdec28ab8b580dc7ea0e86857de9e073a0b576e618f4cf8f5dda1565"
+    },
+    "Alien_Foundry/scripts/anatomy/TissueDistribution.gd": {
+      "bytes": 2389,
+      "sha256": "d3e7a24e9772adbbe9a593a50e69ab4f87b03a6a8e8491114ea5874e7d8a9ec8"
+    },
+    "Alien_Foundry/scripts/anatomy/TissueDistribution.gd.uid": {
+      "bytes": 20,
+      "sha256": "b58a26a3225093c2793896553e0abee2839d3358d10afc256fe27c7bfe88dac5"
+    },
+    "Alien_Foundry/scripts/anatomy/TissueGrowth.gd": {
+      "bytes": 3934,
+      "sha256": "0ea272e713169a6bbe0e1139a80a787b4a4ac67e02dcd57d29b9ddc18effd8aa"
+    },
+    "Alien_Foundry/scripts/anatomy/TissueGrowth.gd.uid": {
+      "bytes": 20,
+      "sha256": "53999530841cf4aa51b11a8b9233d13a0185fa49f80b454b211196239b3b1249"
+    },
+    "Alien_Foundry/scripts/assets/ModuleLibrary.gd": {
+      "bytes": 54241,
+      "sha256": "bd67f2847516daaebc437dba35bd76808b67e8d35132aa4cf0ec0afb0c609553"
+    },
+    "Alien_Foundry/scripts/assets/ModuleLibrary.gd.uid": {
+      "bytes": 20,
+      "sha256": "c76fd61e4f8fd103e57556315e4ec49bdf06adbf99fa28e6566f878cd169aecb"
+    },
+    "Alien_Foundry/scripts/generators/AbominationGenerator.gd": {
+      "bytes": 4320,
+      "sha256": "b07838f389811959bbb83f61b786bd7d6a4607329823bc013951bf22ceeff635"
+    },
+    "Alien_Foundry/scripts/generators/AbominationGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "a9277d50ee9cf9fbe9a863e15cdd3802af1edff33e3f2021ccdaea0c22df79fc"
+    },
+    "Alien_Foundry/scripts/generators/BeastGenerator.gd": {
+      "bytes": 5161,
+      "sha256": "fa0d8d93709edfd2d0c3e192cddb4b4f64f31cfc493553456e8afb56392a65a6"
+    },
+    "Alien_Foundry/scripts/generators/BeastGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "73809bdf1c264c4a021a35ee57718e3e27b08376da60308fd11b528288a7a860"
+    },
+    "Alien_Foundry/scripts/generators/BlobGenerator.gd": {
+      "bytes": 55122,
+      "sha256": "8c2332bbf13d8ce1bd61a06221901d739522a02f3cec9271e060f497ae8890c3"
+    },
+    "Alien_Foundry/scripts/generators/BlobGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "d4337cf210bc20c17f3decbf03d52a71d0c05fcd10553ea7d17386966a03db6b"
+    },
+    "Alien_Foundry/scripts/generators/BlobIterativeGenerator.gd": {
+      "bytes": 32639,
+      "sha256": "e822906372421745fe7876830445573a55bf13e2cacb2d21fdc9b9d075869011"
+    },
+    "Alien_Foundry/scripts/generators/BlobIterativeGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "aec63d90fa5488838bb34515896bfa4cc860e58695003a7bad22e9366b274cf4"
+    },
+    "Alien_Foundry/scripts/generators/CombinationGenerator.gd": {
+      "bytes": 21207,
+      "sha256": "b3e6dd8deedf6a866773431531480dd30af347ad15c5a030fe506989dad69a24"
+    },
+    "Alien_Foundry/scripts/generators/CombinationGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "6de07bfd80caaf22a11095d8656e39b51dc776971667f9e6b7df2676284fa94f"
+    },
+    "Alien_Foundry/scripts/generators/CrawlerGenerator.gd": {
+      "bytes": 4513,
+      "sha256": "54bb508b04ea2828bec483a7d2febb2c05db7ed9257a8f57addf4c0c5bce3687"
+    },
+    "Alien_Foundry/scripts/generators/CrawlerGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "f9272f83f48184da49a18667d44c9647e9ae00f692b02a7a6a995ca11ab739ba"
+    },
+    "Alien_Foundry/scripts/generators/CreatureGenerator.gd": {
+      "bytes": 3854,
+      "sha256": "c1d8929e959aedf2da8ce9294497f83b224903ef03d05c7ef3d2c5ca6d72a976"
+    },
+    "Alien_Foundry/scripts/generators/CreatureGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "2d566cbde43a0e8733c22f0cc7fc2c5b03e6a3930a070dc771ceb92a8d3a02ca"
+    },
+    "Alien_Foundry/scripts/generators/HumanoidGenerator.gd": {
+      "bytes": 12206,
+      "sha256": "209c220d69440288e2c80f6f2a8ee89fc256a0e233c3f6ad254cbf414ab25139"
+    },
+    "Alien_Foundry/scripts/generators/HumanoidGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "5e76389ac1fbf508ed9ef5c424718b5cfa62084623a071842e09c8ed72a9f023"
+    },
+    "Alien_Foundry/scripts/generators/SlithererGenerator.gd": {
+      "bytes": 3538,
+      "sha256": "3a0e6799e222e3a13d1b7430b1a7c4f278cb61e72130bcfb5306be51d1c04315"
+    },
+    "Alien_Foundry/scripts/generators/SlithererGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "82e3bb0e1ca89060ddccf5d224545ac58e840239cfe596393a61c40fac8a7ca9"
+    },
+    "Alien_Foundry/scripts/geometry/BlobAdaptiveFieldNormal207.gd": {
+      "bytes": 3973,
+      "sha256": "786b537ff490d5567b5ddc90c9d0f5edb58d2324caa3fedf4620c8c9a6a7f1b3"
+    },
+    "Alien_Foundry/scripts/geometry/BlobAdaptiveFieldNormal207.gd.uid": {
+      "bytes": 20,
+      "sha256": "6f038e58ab5dc895dffc21c03ee7d7564666deafc684a24c91fa1e6b20648858"
+    },
+    "Alien_Foundry/scripts/geometry/BlobAdaptiveFieldNormal208.gd": {
+      "bytes": 5744,
+      "sha256": "119449931485b75b2d8f8e0f27a6632e7747bf267181e2fae28716f0aa5eb3a2"
+    },
+    "Alien_Foundry/scripts/geometry/BlobAdaptiveFieldNormal208.gd.uid": {
+      "bytes": 20,
+      "sha256": "53f66ef5cceb23aa75549ae58756147b5679c83ae0cb00fa5c4bbbca5fcc3bed"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBlueprintVascularAdapter.gd": {
+      "bytes": 6842,
+      "sha256": "a2da7ea6f0c554f97deaafc5d673d99f6af4f32e75b6892dbc3e1c2ff067474d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBlueprintVascularAdapter.gd.uid": {
+      "bytes": 20,
+      "sha256": "37a93f72ef47f9b9186df9e4c1b8bcaeff9b0ce1c238674bedecc99a22995047"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBlueprintVascularNetwork.gd": {
+      "bytes": 16094,
+      "sha256": "ca191c9ef3fa9a5fe0a06db5809b60a4f2591f02e12132cbc28cb8eff265ffc6"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBlueprintVascularNetwork.gd.uid": {
+      "bytes": 20,
+      "sha256": "40669094b2691bc493157d5c15f3fa39a022bcb9b0ae18fea5cd7e0ea229e2f5"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyBranchField.gd": {
+      "bytes": 6549,
+      "sha256": "8745c4b822a00b4197cf46f61b85118bc1c4737901f53a0b0fe82c89f28a9305"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyBranchField.gd.uid": {
+      "bytes": 20,
+      "sha256": "d756533d21030eb20264cdec49345db8900f7c005a2e2d73a5ade5b24b50cefe"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyEnvelopeField.gd": {
+      "bytes": 23668,
+      "sha256": "232fe36064f8ce0ddc17c199810ccf4e3a70a14c11a34a28874aaffa80bad828"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyEnvelopeField.gd.uid": {
+      "bytes": 20,
+      "sha256": "06e314d3b6f355b916ef076b0d028f9944941077f26b29fcf44b4c69b29fed0b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyGroup202Qualification.gd": {
+      "bytes": 10251,
+      "sha256": "1e520503d8809694acb464340fee8c6ac5e755358beb391aa426ca73e8de135a"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyGroup202Qualification.gd.uid": {
+      "bytes": 19,
+      "sha256": "e0ce7dd5ea175ef11387e018ed34875662e955c20d086e5ffd06a5cfb43c0d5a"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyGroupField.gd": {
+      "bytes": 12010,
+      "sha256": "601bbc67acb7e4f285daa06a654028fda684dbd9200179aa6420cfacc0920a07"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBodyGroupField.gd.uid": {
+      "bytes": 19,
+      "sha256": "2586a239a32cd318a4a25666fbb5d37c00fcfe37ab4fec0134e641d970fe174e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBranch202Certificate.gd": {
+      "bytes": 3333,
+      "sha256": "0602031e6a5f5b20b44faad62a3014d5dee31df918098ea5bfccca9e6808a125"
+    },
+    "Alien_Foundry/scripts/geometry/BlobBranch202Certificate.gd.uid": {
+      "bytes": 20,
+      "sha256": "61ffce57e9485b3f40bfe28b53237c9d56b15ccb5cb899ae0c2b0056ee88a3e8"
+    },
+    "Alien_Foundry/scripts/geometry/BlobCentralPleat215.gd": {
+      "bytes": 3046,
+      "sha256": "86ec97adfc433db78541db8ba3ee093d59a157531ca62a16dd1d75f006ba4eab"
+    },
+    "Alien_Foundry/scripts/geometry/BlobCentralPleat215.gd.uid": {
+      "bytes": 20,
+      "sha256": "907ce405c7b92cbae1afab81fc8720d9e6524277c5bf0eaf7d5121771d8e0e7c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEdgeRootRefinement204.gd": {
+      "bytes": 8768,
+      "sha256": "b1a77e2f627459c79975beab003bf9246a472fdd2d46006da7d3bd20a5ba50f3"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEdgeRootRefinement204.gd.uid": {
+      "bytes": 20,
+      "sha256": "82a319b3458a8349ddb0afd186dacfc8c6b596c23cc7f32a5d3db8f3530b1ca5"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEdgeRootRefinement208.gd": {
+      "bytes": 9506,
+      "sha256": "0ddadb58f49ea0d11d04ead6a83629cb447a1a4a82c105e0d8d7bf9d396c29e0"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEdgeRootRefinement208.gd.uid": {
+      "bytes": 19,
+      "sha256": "9e49836990fcdfa5f8e0475e8de6db3397f928ee7db0b7aac58f9f6499b7cf08"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEnvelope201Certificate.gd": {
+      "bytes": 12375,
+      "sha256": "0ec2cad6ec251e43288470cc2642c4e3050860aaf9c70252d4fec39a24235a5b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobEnvelope201Certificate.gd.uid": {
+      "bytes": 19,
+      "sha256": "7fc9d2c187c2f3ba42aab5851519c24f6a2e0b0a38a49fbf2eecda521a0651a7"
+    },
+    "Alien_Foundry/scripts/geometry/BlobGrownContactField.gd": {
+      "bytes": 1998,
+      "sha256": "4b10b38d97a503d1701e390cf2fa3a9d3f2dff7cca845696f7c06ca75b09156e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobGrownContactField.gd.uid": {
+      "bytes": 20,
+      "sha256": "4744e4a95a778737d94d908d4b54c93d9c363d253f2185c6699d2810373f647c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobGrownEnvelopeField.gd": {
+      "bytes": 8288,
+      "sha256": "31a8a8dcb1f64ba41bb14711bac365b9f3048389c92fc3d6097f21f55a53e775"
+    },
+    "Alien_Foundry/scripts/geometry/BlobGrownEnvelopeField.gd.uid": {
+      "bytes": 20,
+      "sha256": "121bea34b32cb9a31f5078d0bf841a6ab6b7b819187de1ad910e7f176f8078cd"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHangingRootField.gd": {
+      "bytes": 2354,
+      "sha256": "133c1a7d5ca7425d495a86f3a5c95c1ca9a831d42702e20028f3ae342c86904c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHangingRootField.gd.uid": {
+      "bytes": 20,
+      "sha256": "a509e8558175666165386f37194b489496c7ea22f012d8c7884161be40378649"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHangingTissueField.gd": {
+      "bytes": 1367,
+      "sha256": "c541b8b87219578978450c6777231181194a3f18c20f3f78152037bffdb5ee6d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHangingTissueField.gd.uid": {
+      "bytes": 20,
+      "sha256": "2f69901b661098d3fe0bb0306401957475c6ae6cb407673032df8b32052cfd28"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPilot224.gd": {
+      "bytes": 15055,
+      "sha256": "717c28e99e57c34834f83f95a530ba8da232da258d9f1f4c3b9e739bc97b9556"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPilot224.gd.uid": {
+      "bytes": 20,
+      "sha256": "e797226b58300bf6d43a5aab8dad33fc8a35a37e6f525b384eca43cbe1d26ff9"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPilot226.gd": {
+      "bytes": 20822,
+      "sha256": "91945b7825135efef00aca503a0b670fa93e754276db7056f6a2f7f57f389ef4"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPilot226.gd.uid": {
+      "bytes": 20,
+      "sha256": "2c0821e89ba6a06f990221e69961bae26e7e146403a3b9d80f85ceeb222a37d4"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPolicy224.gd": {
+      "bytes": 8578,
+      "sha256": "3e23457a53f853af2b011bf6d3d73247f925dba96c30a3c34a4b3642cc4e3636"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPolicy224.gd.uid": {
+      "bytes": 20,
+      "sha256": "9b852bc5f6ffc0c803cafcd5d873f50456b5839567e25c914191b1b4a3203eda"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPolicy226.gd": {
+      "bytes": 3706,
+      "sha256": "9fb9722ba5123b19f268a84c6f1fb44890276fbd78b13532142995322f554bed"
+    },
+    "Alien_Foundry/scripts/geometry/BlobHighPreviewPolicy226.gd.uid": {
+      "bytes": 19,
+      "sha256": "85acc7d5efc8a0ca9117ec86bd2740148270c1ac8735d3aaa984a5b297aeb087"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLiveQuadPolicy232.gd": {
+      "bytes": 3562,
+      "sha256": "e87a1cb3a48aef736bc6f53f0a31c1a678031b6f4c480d5a4272a578fbb0dbf5"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLiveQuadPolicy232.gd.uid": {
+      "bytes": 19,
+      "sha256": "2e0f8e88585f5d83402816f11437d4e37e4237757ecdaa74409152ee964e208e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLiveQuadVolume232.gd": {
+      "bytes": 23599,
+      "sha256": "a33795a0ec7b00362cc93e14f98af010a096023d6a9290e89a00bc60f5048c90"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLiveQuadVolume232.gd.uid": {
+      "bytes": 20,
+      "sha256": "28369c303752e465aa5dd637453dbbe97660fe60946a47316a105beb5295c4cf"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLoadedPressureField.gd": {
+      "bytes": 4587,
+      "sha256": "777a227c61ef68f324f8d16597700bd0e7c77a360e135e7db9c3d57dc85a664d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLoadedPressureField.gd.uid": {
+      "bytes": 20,
+      "sha256": "29ee9f16fc943913329e6c61d30dc8e507f742f8b67e6ec7d1fbd6bf0d335f7f"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLocalLatticeSurface.gd": {
+      "bytes": 18584,
+      "sha256": "8117e67b15d8aa4831e54fc347f3f26dbbade7d1f9414e0d46430428caa7301b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobLocalLatticeSurface.gd.uid": {
+      "bytes": 20,
+      "sha256": "b3e2455c0f1d41e015ae84c0f7d5ef7bbe313d518ff7950900e9742caad0aab7"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleButtressField.gd": {
+      "bytes": 3042,
+      "sha256": "c6b93a9895d1b68dd52106b5fe356babbcfc66def04fba610ecef93d7222012c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleButtressField.gd.uid": {
+      "bytes": 20,
+      "sha256": "2156620579d6b1ee11f27f10c261677e5133fb1f4055a48cb7fb3914aa4dd398"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityDispatch219.gd": {
+      "bytes": 2017,
+      "sha256": "1fd8013a5d24a59092d5811c99f4f608055bba22047c3c20deaf4c3714c5ab53"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityDispatch219.gd.uid": {
+      "bytes": 20,
+      "sha256": "12814be8139344139d6b32a595831e6610211cfa7fb8db652e9317b6106c0a93"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityDispatch221.gd": {
+      "bytes": 2013,
+      "sha256": "80cf987cd1bc09c92927912bb35c1ebeeb25900860024194282e8ed4b309b742"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityDispatch221.gd.uid": {
+      "bytes": 20,
+      "sha256": "c3d0f039bdb3a391eefab581e6ffa332a0d8f7a0fef735b7cdb36b78d5efb1a7"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy217.gd": {
+      "bytes": 19261,
+      "sha256": "06ac42542491b6f94b2cca12f9829d42c8c848fdc64ae7ff6b88dc5ae09e0cc3"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy217.gd.uid": {
+      "bytes": 19,
+      "sha256": "5134caea0937b9348830058ca030321dda1a6870a3684d6aa243967fea6198bf"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy219.gd": {
+      "bytes": 26796,
+      "sha256": "df244cd3234298989faa285c1f30d106d40f877088ea933ef40a83c6fb83bef2"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy219.gd.uid": {
+      "bytes": 19,
+      "sha256": "a9759b0aac9a4f11f8bbf6c4438fdbbcba48b6f5924d2ccad49599fad5f4cb17"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy221.gd": {
+      "bytes": 39742,
+      "sha256": "fd9014bbfa8313e3345c34ba77b57ffad31be03d7e4d0421c11702ebcbec4561"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleCavityPolicy221.gd.uid": {
+      "bytes": 19,
+      "sha256": "30ba13514348ac3f642711e16007f938a9b081465da6b34aba5dcfd09c83403b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleField.gd": {
+      "bytes": 6583,
+      "sha256": "b28f5424351eff0bc4a4f44b448c7b92e740494c2fb925c8eb7a9fe657a00312"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMantleField.gd.uid": {
+      "bytes": 20,
+      "sha256": "56b341f2b5abc0aa48ccb3ada70566b0004fd050ab124d363ec36bc9a3eebaef"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassOuterProfile203.gd": {
+      "bytes": 31503,
+      "sha256": "c5d52c6f0069e180f5abcfcc802d8947a8c44b91ac2d60da40b52cacc280aa5a"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassOuterProfile203.gd.uid": {
+      "bytes": 19,
+      "sha256": "386948da216e0965186ff4127d170234fd8b6ebb558259c693618dd4fef9e851"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassReprofile203Qualification.gd": {
+      "bytes": 14774,
+      "sha256": "1e270288b3942fc342ac2243edbf6b72e243127409794ab01643036e7bbcfaa6"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassReprofile203Qualification.gd.uid": {
+      "bytes": 19,
+      "sha256": "62199bc41c584bbc72f45564b37b516cb6a75e1dd03ccc5d1f4c61158d482500"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassReprofileField.gd": {
+      "bytes": 13539,
+      "sha256": "0a7c77023482f07c430e56c9aef01061910050fb988f6c5155a31c8d5fc565fc"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMassReprofileField.gd.uid": {
+      "bytes": 19,
+      "sha256": "7d64ef4c8166c83ac522e091717a83b32fdad67fc0ceba3100b3139a2f1e0f13"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneLegacySurface.gd": {
+      "bytes": 37505,
+      "sha256": "bfcfd5416e8375dc787d6b08c177c5420ccc56b2914cf1ef2050abea410c969b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneLegacySurface.gd.uid": {
+      "bytes": 20,
+      "sha256": "9c9cba265babd5253ced80efcf97acaf0b01b65ed3769d8c3947678744ca2799"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneSurface.gd": {
+      "bytes": 38456,
+      "sha256": "41d207cdad29e87828f2c10625b2e61d717550c63ccff74c2f86d1811c20bfb7"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneSurface.gd.uid": {
+      "bytes": 19,
+      "sha256": "d6298a884dd0e23a9d360293326dec0899473a5bcaaf9ab3a3ac916616440a44"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneTangentCuff.gd": {
+      "bytes": 28508,
+      "sha256": "522ea5452b8bcb368740d827f52ae5e1acfb2312313c8b8b8641921b578d6bb0"
+    },
+    "Alien_Foundry/scripts/geometry/BlobMembraneTangentCuff.gd.uid": {
+      "bytes": 20,
+      "sha256": "d3ad172e0059b3e457195d63f234238d20ee5964b60d8c76ca9d7ce23df949eb"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousCartilageSurface.gd": {
+      "bytes": 22561,
+      "sha256": "c2441f2135556fc73d1a0e3cc94adaf7a19dcd1a498972f29190ec6bd6288ce2"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousCartilageSurface.gd.uid": {
+      "bytes": 20,
+      "sha256": "a0f2605cd641f19ac70b5c0d2f4ca808eb518f70462b0281579d08eb32cfb744"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousPatchField.gd": {
+      "bytes": 14967,
+      "sha256": "ebca4a65a9525d0680158e19917110e47df5420e24f52579948573ca5876474f"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousPatchField.gd.uid": {
+      "bytes": 19,
+      "sha256": "bd533affc08950e5b2a3ba447ea692cec80342f022b429eeb0b073dacaa4b397"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousSwathField.gd": {
+      "bytes": 10221,
+      "sha256": "8a823e3e7a1f1f7b95ef99a0a354160dd56514d24031daf0ac77e28e3a2b67ef"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPorousSwathField.gd.uid": {
+      "bytes": 20,
+      "sha256": "8293ad23ce4cbd8a74bc9b8d4ecace374feed74caa5a5c3e78078f56563fcf57"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPositiveGrowth206.gd": {
+      "bytes": 12208,
+      "sha256": "5c1e781f85a05b639b2854dfc9d6c6ababf329e723d41692ed230e681b7d3644"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPositiveGrowth206.gd.uid": {
+      "bytes": 20,
+      "sha256": "6b5bf52362fdc6a69a79cefbbf7a17f99d7fac9cd2733c46e6ae57d89bbef83c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryCavityDispatch223.gd": {
+      "bytes": 2216,
+      "sha256": "058bb10c7e95b57bf0c6b0f184fa2cf27ab1ec5a0cdc3ee8423185dd502e878a"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryCavityDispatch223.gd.uid": {
+      "bytes": 20,
+      "sha256": "d7f7e13bfa6dae58338553b3e02ff7692befc6ec8eccf31b312df572c6370830"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryCavityPolicy223.gd": {
+      "bytes": 37901,
+      "sha256": "c0e344a8a407659ee78c2b5565b86a0d10df77e4af504f53a83c39b11325e833"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryCavityPolicy223.gd.uid": {
+      "bytes": 19,
+      "sha256": "5129fcc025ec7534f33ae5c463de78b190a8573a55c9f5c240d3acf34de3387c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryPleat214.gd": {
+      "bytes": 5552,
+      "sha256": "bbfff3d3aaffab2b4a8c33ac048ecabef275a82150dc6792d2693ab6747be1ef"
+    },
+    "Alien_Foundry/scripts/geometry/BlobPrimaryPleat214.gd.uid": {
+      "bytes": 20,
+      "sha256": "1a500913de34e4f1decc92751494582a1daa9fc37680a0e44f9b565c69a558f1"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadArtifact229.gd": {
+      "bytes": 10111,
+      "sha256": "372e6d1a0eaaf8570b68fa24f8252428c639525fa9499849d7a4d0b3ddd35347"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadArtifact229.gd.uid": {
+      "bytes": 20,
+      "sha256": "d2468f0c86eaeb939dc7aa16117fcf7d8f8ac3d1095a4757946788a08e00806d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadChoice229.gd": {
+      "bytes": 10921,
+      "sha256": "2b48bf053d942115ac8c60ca9ffff086a353e72d4eb957fc32e466f757e74a78"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadChoice229.gd.uid": {
+      "bytes": 20,
+      "sha256": "29adb0f8770e29ec1014661dd52049520a3309c54988a90a604527908630d7a2"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadExtractor229.gd": {
+      "bytes": 9757,
+      "sha256": "2e8e4f26d580f999f713e8962de4d10ff31e177504a14fa3343ca02ef4766008"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadExtractor229.gd.uid": {
+      "bytes": 20,
+      "sha256": "b28633825e5470a2fe6e678a27baa986d84f3fafeef5330bba8e9a1f63d9274b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadOwnership229.gd": {
+      "bytes": 19410,
+      "sha256": "321300c89fcca3d37af95c20c1381b8e9c537e4ac9d415f6fdc315e0ec6fc390"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadOwnership229.gd.uid": {
+      "bytes": 19,
+      "sha256": "e8281c3073017a54156e866e4752cc8dde0ccd87007ce1b506932fdde2f8d54c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadPolicy229.gd": {
+      "bytes": 7040,
+      "sha256": "3de3017161bf52826f39a09897a73a505e285dafc8bcdc153de68037e306945b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobQuadPolicy229.gd.uid": {
+      "bytes": 20,
+      "sha256": "9b4532ab9ba47f1e8865bd5028705af466d2698acaae392b506fee17b44a5ca5"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearExtractor210.gd": {
+      "bytes": 3037,
+      "sha256": "d51706f2a5bd42aecb3cb04f6420085981f1957df273625c65540d790e0fbd39"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearExtractor210.gd.uid": {
+      "bytes": 20,
+      "sha256": "b7f2e97aab19067093e2bfc6183ba7f16272131b29983d8fbd825bfeac809ec1"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearGrid210.gd": {
+      "bytes": 31655,
+      "sha256": "3f006bf01ccf2b408e15fa046620b5661d0c6076ae699bcf9d9c8180fcd1235d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearGrid210.gd.uid": {
+      "bytes": 20,
+      "sha256": "120109be2f1179ce3d05347b68001b2b4a47cd35c35b3bb53961046f622269e7"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearPass226.gd": {
+      "bytes": 20326,
+      "sha256": "762a44f87ec003ac302f1c8b20b1bf719c8aac14b8315a98ef105dca9d0e3b7b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRectilinearPass226.gd.uid": {
+      "bytes": 20,
+      "sha256": "adf35b89e87751c521db7eaa66a7cddc68d2f7dde7d0f5eeb84bc2195c356356"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRoundedSwathField.gd": {
+      "bytes": 13035,
+      "sha256": "4501034392e42e2491cc2b0c1df155c1de32deb8018eb649163f3a19225a680d"
+    },
+    "Alien_Foundry/scripts/geometry/BlobRoundedSwathField.gd.uid": {
+      "bytes": 19,
+      "sha256": "677604e1a157b3537c660b9f17a6d2695b1e3991a04dd97cb9416abf5daa55ae"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacGroupField.gd": {
+      "bytes": 15238,
+      "sha256": "50968b833c32fed3746e0f4013ab9c935e252c47c6757502675b3e92f5eeb8fe"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacGroupField.gd.uid": {
+      "bytes": 20,
+      "sha256": "aea40d9034c041619793d3077eb0203119c3fa740df1a12f29ffbd6001762892"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacGroupQualification.gd": {
+      "bytes": 7724,
+      "sha256": "24a63e30b0e9ee1865f7837ae6b9c837bc41976df86cfe5101631fafd729f127"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacGroupQualification.gd.uid": {
+      "bytes": 20,
+      "sha256": "c0130696738d9ce40d165dd9253c84cc8805cfe42dfc449c530d05d0ed589f0b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacSurface212.gd": {
+      "bytes": 14054,
+      "sha256": "084803af55abc4c1d0eec82b5d823171f9ff104c8b82ed653a9479a693138d6e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSacSurface212.gd.uid": {
+      "bytes": 20,
+      "sha256": "3d442f850f97e2f60868720b68d81da6512fb2ecfae1c23070c6fc2125f57eb1"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabEdge210.gd": {
+      "bytes": 1920,
+      "sha256": "fb9ee9b7fbea13205e1448a048663ebe13cbd9fcc67ef2bd92d6cd78932ad952"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabEdge210.gd.uid": {
+      "bytes": 20,
+      "sha256": "bde8c3a94bce9752b16be42aca8f2237092f407c79b944b7e0362c5a0c6301f6"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabPilot210.gd": {
+      "bytes": 6393,
+      "sha256": "2f9eabc225447217dad8327a5ab73e32d5aa228b78c554fd73d60dfb41e3601e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabPilot210.gd.uid": {
+      "bytes": 19,
+      "sha256": "6b7a41d7743a44368818a2d5135306de332676fdd6e5a3d6e6a450e6dd6b3eca"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabPolicy210.gd": {
+      "bytes": 5341,
+      "sha256": "8c525d0e0922f60bdc1435a7eab66878d76c2e367d0131dda2730ea04076692c"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSlabPolicy210.gd.uid": {
+      "bytes": 19,
+      "sha256": "424ce1385e20a48982e59d7fe7646caf4f638896d552828321ecef8db4e95212"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSurfaceVascularNetwork.gd": {
+      "bytes": 31851,
+      "sha256": "dbfb5e5118df973626a80c859ddaf85794cd94f3f34dc7000199f2020a13425e"
+    },
+    "Alien_Foundry/scripts/geometry/BlobSurfaceVascularNetwork.gd.uid": {
+      "bytes": 20,
+      "sha256": "613f8cc9fd15af549342b41520e6c40610c2712d284063de3d3755c6235d6bac"
+    },
+    "Alien_Foundry/scripts/geometry/BlobVascularDirectAdapter.gd": {
+      "bytes": 8690,
+      "sha256": "4c9830c86f2851e1fb001dbccde59e8ec63bd12060fb7f6c3365ceba8415e304"
+    },
+    "Alien_Foundry/scripts/geometry/BlobVascularDirectAdapter.gd.uid": {
+      "bytes": 20,
+      "sha256": "95880726babdb4611a2f1ecdf09995bb630dc717bd0cc19e1499918162fb818b"
+    },
+    "Alien_Foundry/scripts/geometry/BlobVascularSurfaceRoutes.gd": {
+      "bytes": 11341,
+      "sha256": "9d429ad94c26e5e4bb45203a205950c00cde567134e3bfd3ca94db98c60e4225"
+    },
+    "Alien_Foundry/scripts/geometry/BlobVascularSurfaceRoutes.gd.uid": {
+      "bytes": 20,
+      "sha256": "4bc40c3cc3d18500e79f24fd0bcfa6958c07b633ffb701566f74c62735f0cbb7"
+    },
+    "Alien_Foundry/scripts/geometry/CartilageSparseTetrahedra.gd": {
+      "bytes": 6344,
+      "sha256": "bace1b49b95c902bf246b47e7565a3754443e57a46a7decafcbb0276a75db279"
+    },
+    "Alien_Foundry/scripts/geometry/CartilageSparseTetrahedra.gd.uid": {
+      "bytes": 20,
+      "sha256": "e60ea47a8c25257dfaf206a91a76597b50b5ef84e132f1879b343b64bc71f5b4"
+    },
+    "Alien_Foundry/scripts/geometry/CurveGeometry.gd": {
+      "bytes": 5469,
+      "sha256": "65ef85170bb736b84dac19abccd01b4300c3ec41566dfafb11a5c3fa5b16170c"
+    },
+    "Alien_Foundry/scripts/geometry/CurveGeometry.gd.uid": {
+      "bytes": 19,
+      "sha256": "8eba4478caea85b4be4b698b50114abcf6b9eace43302c8d19312a9bb6a28eec"
+    },
+    "Alien_Foundry/scripts/geometry/DirectSurfaceFeatureCarrier.gd": {
+      "bytes": 32814,
+      "sha256": "58a70681950652f402f5cd39e04d2238cb7662913203a8881b987557a255348d"
+    },
+    "Alien_Foundry/scripts/geometry/DirectSurfaceFeatureCarrier.gd.uid": {
+      "bytes": 20,
+      "sha256": "a06c91176baf160367857b3a189dcd3fce1673e3073888c57a648d812022fef8"
+    },
+    "Alien_Foundry/scripts/geometry/FieldConnectivity.gd": {
+      "bytes": 4639,
+      "sha256": "34d0e415f8a5b4cc036182b51c576d3723d2468745656f5005694d500405d952"
+    },
+    "Alien_Foundry/scripts/geometry/FieldConnectivity.gd.uid": {
+      "bytes": 19,
+      "sha256": "cb9c8d4f135409754e66d363ccff3773a0ff5cb8f5da729b24d8b1b5a0cf4197"
+    },
+    "Alien_Foundry/scripts/geometry/LocalSurfaceNets.gd": {
+      "bytes": 5770,
+      "sha256": "4ad4f94c8cd18683557597f37001bfc59da8b6832b027e45f70d65e9eabf8786"
+    },
+    "Alien_Foundry/scripts/geometry/LocalSurfaceNets.gd.uid": {
+      "bytes": 20,
+      "sha256": "f1b6bd46ca4df5b3046c8c7112963da84f8f9afe32609e0ce3636356a32780e8"
+    },
+    "Alien_Foundry/scripts/geometry/MembraneGeometry.gd": {
+      "bytes": 11796,
+      "sha256": "f294dde255bd39f4a469a99ad4afacf9c96fdab5221d4fa8428652b44f88c74f"
+    },
+    "Alien_Foundry/scripts/geometry/MembraneGeometry.gd.uid": {
+      "bytes": 20,
+      "sha256": "5a08156af6d2e090ba853b0890b3737f855a1f29cf910b68f60d9b0f47f7b94b"
+    },
+    "Alien_Foundry/scripts/geometry/MeshExtractor.gd": {
+      "bytes": 9472,
+      "sha256": "98493978bffbadac6e80480129639bd549e16143c794ebe06f9dc743775bbeaa"
+    },
+    "Alien_Foundry/scripts/geometry/MeshExtractor.gd.uid": {
+      "bytes": 20,
+      "sha256": "4074b884d476bc50ccc063b053043763b369f3cec171270c4c7ec334cf7d25e4"
+    },
+    "Alien_Foundry/scripts/geometry/NoiseGenerator.gd": {
+      "bytes": 4862,
+      "sha256": "e68f887ca5636b713ca43ac0e0cdb791fdbc7aa0a1cf809fb5ed3ef10170dcc3"
+    },
+    "Alien_Foundry/scripts/geometry/NoiseGenerator.gd.uid": {
+      "bytes": 19,
+      "sha256": "cb5e9f36cb9e051deebd721ca9d5aa005a3f233c44aa5a74f23b3a158d187d73"
+    },
+    "Alien_Foundry/scripts/geometry/OrganicGrowth.gd": {
+      "bytes": 2259,
+      "sha256": "5a6a368d842103401e201567f63eedd82208f9e4a877c6e347e93722550bab6b"
+    },
+    "Alien_Foundry/scripts/geometry/OrganicGrowth.gd.uid": {
+      "bytes": 20,
+      "sha256": "4f6eaaa850a6bfa3f42341042e1ca4aafa3b4ef2435c8d1e4b4a4bb10d9eadb1"
+    },
+    "Alien_Foundry/scripts/geometry/OrganicVolume.gd": {
+      "bytes": 127591,
+      "sha256": "814d04dbbae33a1e7b37cf6697cadc793adcc5738ccc8057cb61a46c41bf9457"
+    },
+    "Alien_Foundry/scripts/geometry/OrganicVolume.gd.uid": {
+      "bytes": 20,
+      "sha256": "377c986d5c8d3ced32ae1284cea9cea244f100ee1f86cf05aeead7a321f73181"
+    },
+    "Alien_Foundry/scripts/geometry/SDFOperations.gd": {
+      "bytes": 1488,
+      "sha256": "093ec73e6ff3fe99bf4a147537f62219fc470bdaf3607c45920aec5e3deb5066"
+    },
+    "Alien_Foundry/scripts/geometry/SDFOperations.gd.uid": {
+      "bytes": 20,
+      "sha256": "43889adcaa9abc5fa0298fcb7d5b058111f3fe27cab20bf9fe55c9499c970a8f"
+    },
+    "Alien_Foundry/scripts/geometry/TendonGeometry.gd": {
+      "bytes": 17492,
+      "sha256": "2157880047ecf3bbb7515e9a2ba51affd29b2d0161fc2ef50a3fe0118aa405bd"
+    },
+    "Alien_Foundry/scripts/geometry/TendonGeometry.gd.uid": {
+      "bytes": 19,
+      "sha256": "8eabf061b7a2c2c6721b128f9bec1998fa1654c03b479c1bed885d10bb820b69"
+    },
+    "Alien_Foundry/scripts/jobs/GenerationJob.gd": {
+      "bytes": 4771,
+      "sha256": "c8331eabf3177014704b4c729b268f104f62e8d5fac1fc6cdb43e4e90530ea84"
+    },
+    "Alien_Foundry/scripts/jobs/GenerationJob.gd.uid": {
+      "bytes": 20,
+      "sha256": "a3b8f0b1266d4bd70f80c56cb6329b3090ddad99c7c917615d1e41931d9e4a96"
+    },
+    "Alien_Foundry/scripts/persistence/CreatureAssetExport.gd": {
+      "bytes": 4636,
+      "sha256": "c1524736dcaa7523e93badaca3b890e0383f794da8e38029dbe812f197f356ff"
+    },
+    "Alien_Foundry/scripts/persistence/CreatureAssetExport.gd.uid": {
+      "bytes": 20,
+      "sha256": "6a588df250f39c71d05638c4272e803e218402b9501befd1d4d412b0499047a9"
+    },
+    "Alien_Foundry/scripts/persistence/CreatureSerializer.gd": {
+      "bytes": 39441,
+      "sha256": "d4236b63e9743c838920722646b02687939de3c23868a740c97fc2be2ba324dd"
+    },
+    "Alien_Foundry/scripts/persistence/CreatureSerializer.gd.uid": {
+      "bytes": 20,
+      "sha256": "bb82eee46c4368ea5e62341a267ee8787ac5036b8f79b2fd5127593876c97ea6"
+    },
+    "Alien_Foundry/scripts/persistence/DirectSurfaceRecipeCodec.gd": {
+      "bytes": 6828,
+      "sha256": "f1372d41a44dd80e2720f2c6b31168d13d9dabd1826ee6e534184179d5b2e6cf"
+    },
+    "Alien_Foundry/scripts/persistence/DirectSurfaceRecipeCodec.gd.uid": {
+      "bytes": 19,
+      "sha256": "24724ad158c56772a6c612520068f6b5961826f260a1750bbebb0eb040a62048"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobBlueprintVascularPipeline.gd": {
+      "bytes": 10604,
+      "sha256": "a6c2dace008636f47d5d25f92260aaf26aeb05e1767468e8560c38e403dd446e"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobBlueprintVascularPipeline.gd.uid": {
+      "bytes": 19,
+      "sha256": "b7e46bb11c070079b85c615fa7bdf11f5471292f1012961e854cf61b9e294793"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobCavityMaterialContext.gd": {
+      "bytes": 21466,
+      "sha256": "abc71109fc0a319bf141deee8d157354a9cf6a31f9a0f74dab3ea304e476eef7"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobCavityMaterialContext.gd.uid": {
+      "bytes": 20,
+      "sha256": "6d5a9cd2ac42de59c4c9bde969b7c9e042d903788bfd31725f29e34c04794bf8"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobDirectSurfacePipeline.gd": {
+      "bytes": 12144,
+      "sha256": "55e09810520d3170443607527b2d2a36190e9187a98e78812d06abb4a42efaec"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobDirectSurfacePipeline.gd.uid": {
+      "bytes": 19,
+      "sha256": "a375b15249d6243711f5b4f342ed28b13d8a5b57ab3c09bdf818e19d8628ada4"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobFiberMaterialContext.gd": {
+      "bytes": 7963,
+      "sha256": "d7bce1b42317ab9e2f4fd2b9eca51e1d457d9843dc91d0c0d724877273e3f7c5"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobFiberMaterialContext.gd.uid": {
+      "bytes": 20,
+      "sha256": "c6b9d4bbf4360d662f96fb310435394e6b745c09f36274a7c341a3613d5c886e"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobGroundPlacement.gd": {
+      "bytes": 12545,
+      "sha256": "6889e40d11ad02af116001949029d637bea3aca68014295810ddc4a41f5e5774"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobGroundPlacement.gd.uid": {
+      "bytes": 19,
+      "sha256": "fc02ca13731867dd6b36cf5ca967c67a395387a8cd0ccca635d76069be034d33"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobIterationArtifacts.gd": {
+      "bytes": 11646,
+      "sha256": "e0194fee1f0147a59d78f10e18318c2f4954d37f8c6f6e05e7ff72d209d1e17e"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobIterationArtifacts.gd.uid": {
+      "bytes": 19,
+      "sha256": "1073aa9a6fc6de00afcd19e5282680c8f47552ff4627c8ec2e6559e0f7762696"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobIterativePipeline.gd": {
+      "bytes": 18798,
+      "sha256": "ce9a9ecab64fa7f55c7d708be3f2601e1716b555ae8cd5167b386f216af08270"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobIterativePipeline.gd.uid": {
+      "bytes": 20,
+      "sha256": "c1f2cf754775a0c305913979a97a58f4fb7678eba8f4f01276e827a6e14a1948"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobLiveQuadPipeline232.gd": {
+      "bytes": 2610,
+      "sha256": "b5b0ab0edf4f6b2108551e82ca812c0a2842e03b67281d7fee6d62daa209ab93"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobLiveQuadPipeline232.gd.uid": {
+      "bytes": 20,
+      "sha256": "54571b22f3d504807d6fb783aec3e4423d7eba64fb43102dd1d5496c3c2be156"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobPipeline.gd": {
+      "bytes": 20217,
+      "sha256": "eea6e043c2dbb12a42f4c1daa58956f4112b8f209547585a3d305847fed653b5"
+    },
+    "Alien_Foundry/scripts/pipeline/BlobPipeline.gd.uid": {
+      "bytes": 20,
+      "sha256": "084b861dbeb794e2b5cfd1b47709029b4c87dc10230504df4d68a77e926be170"
+    },
+    "Alien_Foundry/scripts/pipeline/GeometryMaterialStage.gd": {
+      "bytes": 4222,
+      "sha256": "3d70590160f4ec0be45883774b1bf339ac832c83f86e14978b77464e2ff6ceb5"
+    },
+    "Alien_Foundry/scripts/pipeline/GeometryMaterialStage.gd.uid": {
+      "bytes": 19,
+      "sha256": "0e5bb158c3ff080b01cefe75a45f34a285d3e45d3c8761cd0900309d6c11e709"
+    },
+    "Alien_Foundry/scripts/pipeline/PipelineCache.gd": {
+      "bytes": 1181,
+      "sha256": "726e02ad36712dbe56305a30c66458363485fc3663397cf0d5adf23a0c5f347d"
+    },
+    "Alien_Foundry/scripts/pipeline/PipelineCache.gd.uid": {
+      "bytes": 20,
+      "sha256": "ad88a605a7aace8f91d1f4beebfa68bbabfda73a3ffd63b6b7ed20062d057522"
+    },
+    "Alien_Foundry/scripts/rendering/BlobFeatureDiagnostic.gd": {
+      "bytes": 13258,
+      "sha256": "14373e7ce15243abb2ce4946a71aa1b70fa3337bb8c4293ea21c633aa60f7921"
+    },
+    "Alien_Foundry/scripts/rendering/BlobFeatureDiagnostic.gd.uid": {
+      "bytes": 19,
+      "sha256": "d525bd6527c88c76d94917f67eb7314ebaa4f510b088604744bb0f6bf9912f46"
+    },
+    "Alien_Foundry/scripts/rendering/BlobTissueMaterial.gd": {
+      "bytes": 3161,
+      "sha256": "7bf0a016289a1cfbe318a92d278c1a11bc37585898ef7d5517687b0fc6f3c251"
+    },
+    "Alien_Foundry/scripts/rendering/BlobTissueMaterial.gd.uid": {
+      "bytes": 20,
+      "sha256": "53af0d2f22e41e39f9b27a552cf8a185e77214eb1e999f4caa3c11efa4ce6ea4"
+    },
+    "Alien_Foundry/scripts/rendering/BlobTissueResponseProfile.gd": {
+      "bytes": 673,
+      "sha256": "de73d3ad60e138b0354351a9a45efb3904e7e3cfba357aababfffc2ea009d694"
+    },
+    "Alien_Foundry/scripts/rendering/BlobTissueResponseProfile.gd.uid": {
+      "bytes": 20,
+      "sha256": "f6d49e7ce8be7daec1aa6bc33f1856edbabb595c8ccff54b21526d0c981149c7"
+    },
+    "Alien_Foundry/scripts/rendering/CreatureRenderer.gd": {
+      "bytes": 38170,
+      "sha256": "279dde236cea8f6af83f4042f614328aa94c06aa314c407268d1af00c12809f6"
+    },
+    "Alien_Foundry/scripts/rendering/CreatureRenderer.gd.uid": {
+      "bytes": 19,
+      "sha256": "e96b1d477343c6d4a343555bdb6fd9027383e608fb91c77cc75db326c58f70e0"
+    },
+    "Alien_Foundry/scripts/rendering/CreatureVisual.gd": {
+      "bytes": 11346,
+      "sha256": "92fb68e8b8e5658c567fb7cb98740087c1e4a2042a83c3f0ed1b4b82f81e5567"
+    },
+    "Alien_Foundry/scripts/rendering/CreatureVisual.gd.uid": {
+      "bytes": 20,
+      "sha256": "71f3170ae937929ea5203e168cc0e9e1a15495988c498546a7405f4a3eba584f"
+    },
+    "Alien_Foundry/scripts/rendering/MaterialGenerator.gd": {
+      "bytes": 7977,
+      "sha256": "84122b8beac080d13f19bb0edcdfe834f5f0502a6af6c50021a3f1cadbe1a370"
+    },
+    "Alien_Foundry/scripts/rendering/MaterialGenerator.gd.uid": {
+      "bytes": 19,
+      "sha256": "ae72bcd4d59627a01b0a1ac338b18849b90f426cf5fc1cff027bc12f169804f7"
+    },
+    "Alien_Foundry/scripts/rendering/TissueAtlas.gd": {
+      "bytes": 11501,
+      "sha256": "beaa9eff97f60bace52befdd152b62b9a1d74cc8f242e992d49e9be94b16f35f"
+    },
+    "Alien_Foundry/scripts/rendering/TissueAtlas.gd.uid": {
+      "bytes": 20,
+      "sha256": "f8c0a11663bf8359a93812080029affa8b1f17021bceb1e8bba976b2a4c8b347"
+    },
+    "Alien_Foundry/scripts/rendering/VascularField.gd": {
+      "bytes": 4697,
+      "sha256": "0397cdbb7898cb5ca9d89ab8fff55b3f449bd1f544466b8b7134b1a84ba03a11"
+    },
+    "Alien_Foundry/scripts/rendering/VascularField.gd.uid": {
+      "bytes": 20,
+      "sha256": "e5bde060007bee8fe40d2bf0361cb387cd3e29fe56997e8478fe6028c6f0a357"
+    },
+    "Alien_Foundry/scripts/rigging/AnatomicalInfluenceReducer.gd": {
+      "bytes": 2017,
+      "sha256": "26e38fffd8b581448290676e705cf1b674989fee8e305334e7ca95c9b4a42440"
+    },
+    "Alien_Foundry/scripts/rigging/AnatomicalInfluenceReducer.gd.uid": {
+      "bytes": 20,
+      "sha256": "a4bf2157436cd9aab001a1026f52385384cc1b6ffe36473692c89bf007439c14"
+    },
+    "Alien_Foundry/scripts/rigging/AnatomicalSurfaceContext.gd": {
+      "bytes": 5886,
+      "sha256": "1b9aa1b8226a6a542b83e775267a6ca7fc5f309ddd3d7e86af4096e7d625fab3"
+    },
+    "Alien_Foundry/scripts/rigging/AnatomicalSurfaceContext.gd.uid": {
+      "bytes": 20,
+      "sha256": "9f3848902549663ef387c1463cd3b9574ba1e329ad16fbf60665e5eec0e0e53b"
+    },
+    "Alien_Foundry/scripts/rigging/AutomaticSkinning.gd": {
+      "bytes": 16011,
+      "sha256": "8b2379fafd7ab60d6506c0c4d3fbbfb21a9708a9d969091fc4b43ff5c64fc8c7"
+    },
+    "Alien_Foundry/scripts/rigging/AutomaticSkinning.gd.uid": {
+      "bytes": 20,
+      "sha256": "534998d5117345dbaf7fcc4ef668e524ab631e1cacf6236932fb283af9055d49"
+    },
+    "Alien_Foundry/scripts/rigging/BlobSacGroupFinalization.gd": {
+      "bytes": 7937,
+      "sha256": "c8178e191f00a2c14e109adc1d32dfb8d42e8ac47d3221025cf4eeee4d53703b"
+    },
+    "Alien_Foundry/scripts/rigging/BlobSacGroupFinalization.gd.uid": {
+      "bytes": 19,
+      "sha256": "c9e0b0e3d6e5f77adbcc911d3ed331430cd2be9de3e37293a430a4f70474ce62"
+    },
+    "Alien_Foundry/scripts/rigging/ExplicitSurfaceRootBinding.gd": {
+      "bytes": 2580,
+      "sha256": "3203a8366aed3bed605e4f25d0a8c499d1409b4d2e8e2423108310b4a3c76e5d"
+    },
+    "Alien_Foundry/scripts/rigging/ExplicitSurfaceRootBinding.gd.uid": {
+      "bytes": 20,
+      "sha256": "34f04853a7bd1075c4c7a978fb499b7afe1cd80ba543cba0b811df9aeab54dc8"
+    },
+    "Alien_Foundry/scripts/rigging/RigPreview.gd": {
+      "bytes": 5457,
+      "sha256": "18b60bf35cd4ef25ac8b53c9b268d278075f90f87b171d7a80d99603fbeae916"
+    },
+    "Alien_Foundry/scripts/rigging/RigPreview.gd.uid": {
+      "bytes": 20,
+      "sha256": "f202f3853705ae5d6bc27c90ffbd53c4e88addb45892b9fc78f17d3d458d05a3"
+    },
+    "Alien_Foundry/scripts/rigging/SkeletonGenerator.gd": {
+      "bytes": 8045,
+      "sha256": "1322581fcce55f85cab18c94189dd5b4e1e1267b812208da00d03f1e54a2a0b0"
+    },
+    "Alien_Foundry/scripts/rigging/SkeletonGenerator.gd.uid": {
+      "bytes": 20,
+      "sha256": "d6c5e00dfe0e5dcf484cb222d20ccf3bd1bad40b8eee05cb40df8fa13ae6db4a"
+    },
+    "Alien_Foundry/scripts/ui/GeneratorControls.gd": {
+      "bytes": 44546,
+      "sha256": "593d48cff9a8cebad8de776dd73f7fe0abf85cae8668afd7e5b1c60f5b6b43e3"
+    },
+    "Alien_Foundry/scripts/ui/GeneratorControls.gd.uid": {
+      "bytes": 20,
+      "sha256": "d41c2fa6592be73f1bdc1a1140de80b674864995dcb889d98b405f213d290418"
+    },
+    "Alien_Foundry/scripts/ui/Main.gd": {
+      "bytes": 42382,
+      "sha256": "40417a4151945eceb5dcad329516a933f01ce0f28a79d61f79475566c0bf21a8"
+    },
+    "Alien_Foundry/scripts/ui/Main.gd.uid": {
+      "bytes": 20,
+      "sha256": "39e7aabce1588945bb45cb8e972bbc7331ccf75e7d057268c6c265b3e886ea50"
+    },
+    "Alien_Foundry/scripts/ui/ViewerController.gd": {
+      "bytes": 10034,
+      "sha256": "30467d1a7b41b458a03078b35e87805835e3bb4769b6dc325db9efb4e06a59df"
+    },
+    "Alien_Foundry/scripts/ui/ViewerController.gd.uid": {
+      "bytes": 20,
+      "sha256": "0f824813a5908a7f26a7bb757e8780f45f26172a2c63340066a2b09b84a4eeaa"
+    },
+    "Alien_Foundry/standalone/PortableBlob232.gd": {
+      "bytes": 13143,
+      "sha256": "a7cd40a88917735611a75bb7152bf3f07e9c9f1d5cc9b764b7d15031e3b97b6d"
+    },
+    "Alien_Foundry/standalone/PortableBlob232.gd.uid": {
+      "bytes": 20,
+      "sha256": "f07ecc248474dc3ee296bd3bcf2306fb71e2eb91545f854c61b82b4793c8ad11"
+    },
+    "Alien_Foundry/standalone/PortableBlob232.tscn": {
+      "bytes": 298,
+      "sha256": "10523c550fbf151945ca3c547a842c543d2444af4b4f4a8c721c8e9e59a4fb1c"
+    },
+    "Alien_Foundry/standalone/PortableBlob232Smoke.gd": {
+      "bytes": 7361,
+      "sha256": "5f322da51155752a40aaaec77b3cb629b31c43c79af034024572bd1256e701e6"
+    },
+    "Alien_Foundry/standalone/PortableBlob232Smoke.gd.uid": {
+      "bytes": 20,
+      "sha256": "6c7c4aea01027746ae4737bb67e5091983e90472cf883307ac8a9b6d1297bdd6"
+    },
+    "Alien_Foundry/standalone/PortableBlobData232.gd": {
+      "bytes": 5610,
+      "sha256": "f682c1596ebe7ad182d6c62bd04b6b0844334de6bba13d476bc043be2a383b33"
+    },
+    "Alien_Foundry/standalone/PortableBlobData232.gd.uid": {
+      "bytes": 20,
+      "sha256": "a934d606b789921ce70ad3f4986d5df4dafb06ec2dcc76ca4bc3d3b7a5fef749"
+    },
+    "Alien_Foundry/standalone/PortableBuildControls232.gd": {
+      "bytes": 1114,
+      "sha256": "d5565458f3c1f5bf3704a27954229c4b365e8d9e0c4f777df6c58f1e2e1a64cf"
+    },
+    "Alien_Foundry/standalone/PortableBuildControls232.gd.uid": {
+      "bytes": 20,
+      "sha256": "473a9e621a011da10f97bf6dc51901b15e63e6e89bdcadc8fa16343d697595c6"
+    },
+    "Alien_Foundry/standalone/data/QUALIFICATION229.json": {
+      "bytes": 3601,
+      "sha256": "4ac1c2816f13b19e377c7049d57461315850d261e844b38e02767c63192e4ea4"
+    },
+    "Alien_Foundry/standalone/data/QUALIFICATION232.json": {
+      "bytes": 9047,
+      "sha256": "fc513f8b6cef5b7706e0d90f54f2d583d29c91cf6b1e7f44ab3dec60cc8b2922"
+    },
+    "Alien_Foundry/standalone/data/field224_rejected_raw.bin": {
+      "bytes": 18661292,
+      "sha256": "6140ac5eb9b49eebc67f78f521fc60dfb6655d1e1de05766b87abf944f82e572"
+    },
+    "Alien_Foundry/standalone/data/live_recipe232.json": {
+      "bytes": 3107,
+      "sha256": "de59647b901a1d9445a4cf56f952e73d3a482231c48f02417d9d189f012afef7"
+    },
+    "Alien_Foundry/standalone/data/retained229_raw.bin": {
+      "bytes": 13599720,
+      "sha256": "c8262763f42eaa76468f3467baff2a007307006a7b6cd32323949272bf2bb4ae"
+    },
+    "Alien_Foundry/standalone/licenses/GODOT_COPYRIGHT.txt": {
+      "bytes": 99790,
+      "sha256": "b3330849267d56ddd3d62a513817506606c2195034411fe05859f0140bff9d8a"
+    },
+    "Alien_Foundry/standalone/licenses/GODOT_LICENSE.txt": {
+      "bytes": 1149,
+      "sha256": "b0435e3b3e4e55238f05f4b306f30524a1b2e20147810d436eaa554fa6855c80"
+    },
+    "Alien_Foundry/tests/BlobLiveQuad232Contract.gd": {
+      "bytes": 15845,
+      "sha256": "994275e67a0530f53326cc5ab153d518b80e0d44180b4cc2840f1f5594b5a50a"
+    },
+    "Alien_Foundry/tests/BlobLiveQuad232Contract.gd.uid": {
+      "bytes": 20,
+      "sha256": "2114d1560fce3971e68055b8bf7858134133efe3321a893dfa3f36c1d830d956"
+    },
+    "Alien_Foundry/tests/BlobLiveQuadDispatchSpy232.gd": {
+      "bytes": 1535,
+      "sha256": "d7a0609d2ff1875e94e4f2097cf561047cd12034f139f16a8904bb8b62b1a894"
+    },
+    "Alien_Foundry/tests/BlobLiveQuadDispatchSpy232.gd.uid": {
+      "bytes": 20,
+      "sha256": "e060c72ae7520cd7914994bb75d4392c1b8d1f99e160d3216117740b04f88b7e"
+    },
+    "Alien_Foundry/tests/BlobLiveQuadRecipe232Contract.gd": {
+      "bytes": 16976,
+      "sha256": "da1081b6448ea846bcf949e238ab7c328c9d253ef95fd3ef1e68ed72fe5aec06"
+    },
+    "Alien_Foundry/tests/BlobLiveQuadRecipe232Contract.gd.uid": {
+      "bytes": 20,
+      "sha256": "4810c50464933115d16b1a7130397a666541c251a4dcb1fba2e878286d2b144f"
+    },
+    "Alien_Foundry/tests/BlobQuad229ContractRunner.gd": {
+      "bytes": 4195,
+      "sha256": "2e3553b03c2722297b4736c241f930689783f7b3fb634960c70b47ebef1d62da"
+    },
+    "Alien_Foundry/tests/BlobQuad229ContractRunner.gd.uid": {
+      "bytes": 20,
+      "sha256": "3651d9776badb0cc57015cb7532e2fc421c78203991c88f9c7971a1fcf2cb04d"
+    },
+    "Alien_Foundry/tests/BlobQuadChoice229Contract.gd": {
+      "bytes": 16127,
+      "sha256": "94a48d69e4464b07614e5792255802d16123e675f6cce9451d538afc8234ebf6"
+    },
+    "Alien_Foundry/tests/BlobQuadChoice229Contract.gd.uid": {
+      "bytes": 19,
+      "sha256": "095ba9789bfa5e7a876325e874808cfdd357067acfbb62c047c473b619e105dc"
+    },
+    "Alien_Foundry/tests/BlobQuadOwnership229Contract.gd": {
+      "bytes": 15933,
+      "sha256": "e2affd530668ca3a19ddf208221a40ea4a4987b6376c9dd22cfbdbbd7a5b3824"
+    },
+    "Alien_Foundry/tests/BlobQuadOwnership229Contract.gd.uid": {
+      "bytes": 20,
+      "sha256": "f99b89d3927dbdb5c14bd0a2dd1c055402701b96b4bf17aefcd7a6d8f2d191b1"
+    },
+    "Alien_Foundry/tests/BlobQuadRecipe229Contract.gd": {
+      "bytes": 5695,
+      "sha256": "37978c47a380f28c1250315d6683d79279f62868f8dcc7d4d05edc1105a81ba0"
+    },
+    "Alien_Foundry/tests/BlobQuadRecipe229Contract.gd.uid": {
+      "bytes": 20,
+      "sha256": "a268b9fe7012efa3894411cdcae764aaeea0a97971ea699feadfd9a8b2f6bac7"
+    }
+  },
+  "source_freeze_sha256": "c7fb81d5986107a23a83adf6541f5c31d08fba6035a065bc786a4e9611e7df95",
+  "production_edits": 0,
+  "excluded": [
+    "export_presets.cfg (workspace-specific build configuration)",
+    ".godot cache",
+    "generated outputs",
+    "Windows binaries/export templates"
+  ],
+  "static_fixed_resource_occurrences_resolved": 592,
+  "manifest_module_resources_resolved": 32,
+  "integration_into_user_game_tested": false,
+  "native_generation_runs_during_packaging": 0
+}
