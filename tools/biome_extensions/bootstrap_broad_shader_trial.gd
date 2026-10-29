@@ -1,0 +1,29 @@
+extends SceneTree
+## Private extension of the already tested source_for transform,not a change
+## to production's conservative supported-mask policy. Preserve branch bodies
+## and original ordered extension loop; never unroll or prune their bodies.
+func _initialize()->void:call_deferred("prepare")
+func replace_once(source:String,before:String,after:String)->String:
+	assert(source.count(before)==1,"Private fixture contract changed: "+before);return source.replace(before,after)
+func prepare()->void:
+	var original_path:String="res://tools/biome_extensions/render_terrain_shader_variants.gd"
+	var code:String=FileAccess.get_file_as_string(original_path)
+	code=replace_once(code,'var failures:Array=[]','var failures:Array=[]\nvar private_phase_times:Array=[]')
+	code=replace_once(code,'assert(DisplayServer.get_name()!="headless")','assert(DisplayServer.get_name()!="headless");DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_WINDOWED)')
+	code=replace_once(code,'var reference_only:bool=OS.get_cmdline_user_args().has("reference_only")','var reference_only:bool=false\n\tterrain.specialize_terrain_shader=false')
+	var before:String='var optimized:Shader=terrain._terrain_material.shader\n\tvar before_mask:int=Variants.configured_mask(terrain._settings_snapshot)\n\tassert((optimized!=original)==(not reference_only and Variants.supported(before_mask)))'
+	var after:String='var before_mask:int=Variants.configured_mask(terrain._settings_snapshot)\n\tvar optimized:=Shader.new();optimized.code=Variants.source_for(original.code,before_mask)\n\tassert(optimized.code!=original.code,"Configured dead-branch candidate must actually differ")'
+	after+='\n\tif OS.get_cmdline_user_args().has("cold_original"):\n\t\tvar tissue:String=FileAccess.get_file_as_string("res://shaders/biological_sampling.gdshaderinc").replace("biological_sample(","biological_sample_broad_control(")\n\t\tvar extension:String=FileAccess.get_file_as_string("res://shaders/biome_extensions.gdshaderinc").replace(\'#include "res://shaders/biological_sampling.gdshaderinc"\',tissue).replace("biological_sample(","biological_sample_broad_control(")\n\t\toptimized.code=original.code.replace(\'#include "res://shaders/biome_extensions.gdshaderinc"\',extension)\n\tprint("PRIVATE_BROAD_VARIANT_CODE ",optimized.code.sha256_text())'
+	code=replace_once(code,before,after)
+	code=replace_once(code,'scene=load("res://scenes/main.tscn").instantiate();camera=scene.get_node("FreeCamera")','hashes["res://tools/biome_extensions/bootstrap_broad_shader_trial.gd"]=FileAccess.get_sha256("res://tools/biome_extensions/bootstrap_broad_shader_trial.gd")\n\thashes["res://tools/biome_extensions/artifacts/broad_shader_trial_generated.txt"]=FileAccess.get_sha256("res://tools/biome_extensions/artifacts/broad_shader_trial_generated.txt")\n\tscene=load("res://scenes/main.tscn").instantiate();camera=scene.get_node("FreeCamera")')
+	code=code.replace('shader_variant_%s_%d_%s.png','broad_shader_trial_%s_%d_%s.png').replace('render_terrain_shader_variants_','render_broad_shader_trial_')
+	code=replace_once(code,'% [domain,debug,pair[0]]','% [("cold_original_"+domain if OS.get_cmdline_user_args().has("cold_original") else domain),debug,pair[0]]')
+	code=replace_once(code,'"render_broad_shader_trial_"+domain','"render_broad_shader_trial_"+("cold_original_" if OS.get_cmdline_user_args().has("cold_original") else "")+domain') if code.contains('"render_broad_shader_trial_"+domain') else code.replace('artifacts/render_broad_shader_trial_"+domain','artifacts/render_broad_shader_trial_"+("cold_original_" if OS.get_cmdline_user_args().has("cold_original") else "")+domain')
+	code=replace_once(code,'terrain.set_debug_view(debug);assign(original);var a:Image=await readback()','terrain.set_debug_view(debug);assign(original);var private_started:int=Time.get_ticks_usec();var a:Image=await readback();var reference_seconds:float=(Time.get_ticks_usec()-private_started)/1000000.0')
+	code=replace_once(code,'assign(optimized);var v:Image=await readback()','assign(optimized);private_started=Time.get_ticks_usec();var v:Image=await readback();var candidate_seconds:float=(Time.get_ticks_usec()-private_started)/1000000.0')
+	code=replace_once(code,'assign(original);var r:Image=await readback()','assign(original);private_started=Time.get_ticks_usec();var r:Image=await readback();private_phase_times.append({"debug":debug,"original_seconds":reference_seconds,"candidate_seconds":candidate_seconds,"return_seconds":(Time.get_ticks_usec()-private_started)/1000000.0})')
+	code=replace_once(code,'report["diagnostic_warmup"]=warmup','report["diagnostic_warmup"]=warmup\n\treport["production_registration"]=false\n\treport["private_broad_policy_trial"]=not OS.get_cmdline_user_args().has("cold_original")\n\treport["phase_seconds"]=private_phase_times\n\treport["generated_variant_sha256"]=optimized.code.sha256_text()\n\treport["cold_original_control"]=OS.get_cmdline_user_args().has("cold_original")\n\treport["scope"]="Private broader configured-mask transform OR arithmetic-identical function-renamed original control,without changing production policy. Original/private/original complete image bytes compared at five debug views; original fallback,ordered loop,branch bodies and lighting retained. Windowed960x540 fixture; fullLOD6 default/legacy_mix or boundedLOD3 mixed. Phase times include six process frames,readback,VSync and first-use compilation;not isolated GPU time or a frame-time gain. Driver cache not cleared. No production adoption or all-task completion inferred."')
+	var path:String="res://tools/biome_extensions/artifacts/broad_shader_trial_generated.txt";FileAccess.open(path,FileAccess.WRITE).store_string(code)
+	var script:=GDScript.new();script.source_code=code;assert(script.reload()==OK)
+	print("PRIVATE_BROAD_SHADER_FIXTURE ",code.sha256_text())
+	set_script(script);call_deferred("run")

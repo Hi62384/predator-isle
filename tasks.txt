@@ -1,29 +1,53 @@
 -------------------------------TERRAIN GENERATION
 -infinite chunk terrainAAAAAAAAAAAAAAAAAAAAAAAAAA
--biomes
+-biomesAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
 -caves
 -cave biomes
 -optimization
--environment objects
--monuments
 
--------------------------------PLAYER WALK AROUND TERRAIN SYSTEM WITH MULTIPLAYER SYNC
+-------------------------------PLAYER MOVEMENT SYSTEM AROUND TERRAIN SYSTEM WITH MULTIPLAYER SYNC
 -player walking in 3d world
 -other players synchronization
 -animations
+
+
+
+--------------------------------GRAPHICS, BIOME FOG, WATER, AND SKY
+
+
 
 -------------------------------INVENTORY, AND CRAFTING SYSTEM
 
 
 
--------------------------------ANIMALS AND ENEMIES
+-------------------------------ALIEN GENERATOR
+
+
+
+--------------------------------ITEMS, HARVESTING, MONUMENTS, AND ENVIRONMENTAL OBJECTS
+
+
+
+-------------------------------ANIMALS AND ENEMIES SPAWNING
+
+
+
+-------------------------------COMBAT
+
+
+
+--------------------------------TERRAIN OVERHAUL
 
 
 
 
---------------------------------ITEMS, HARVESTING, COMBAT
+--------------------------------DAYNIGHT CYCLE AND WEATHER SYSTEM
 
 
 
 
 --------------------------------BUILDING SYSTEM
+
+
+
+--------------------------------OCEAN, SWIMMING, WATER ANIMALS

@@ -3,7 +3,7 @@ extends RefCounted
 ## never edits a visible material or active collider. Only a validated complete
 ## transaction may exchange parent masks, ground shapes and cave patch bodies.
 const Cut=preload("res://scripts/caves/surface_cut.gd")
-const Collision=preload("res://scripts/terrain_collision.gd")
+var Collision=preload("res://scripts/csharp/terrain/TerrainCollision.cs").new()
 var records:Array=[]
 var patches:Array=[]
 var columns:Dictionary={}

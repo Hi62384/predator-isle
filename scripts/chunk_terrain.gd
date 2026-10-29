@@ -136,6 +136,7 @@ var _chunk_pool: Array[MeshInstance3D] = []
 var _pending_chunks: Array[Vector3i] = []
 var _partition = preload("res://scripts/csharp/terrain/TerrainPartition.cs").new()
 var _ready_cut = preload("res://scripts/csharp/terrain/TerrainReadyCut.cs").new()
+var _collision = preload("res://scripts/csharp/terrain/TerrainCollision.cs").new()
 var _staged: Dictionary = {}
 var _last_plan_position:=Vector2(INF,INF)
 var _last_plan_usec:int=0
@@ -1008,12 +1009,12 @@ func _dispatch_jobs() -> void:
 					var has_features:bool=builder._extras_enabled or (builder._tropical!=null and builder.settings.tropical.waterfall_frequency>0 and builder.settings.water_enabled)
 					var feature_mesher=preload("res://scripts/terrain_feature_meshes.gd").new()
 					var features:Dictionary=feature_mesher.build(builder,Vector2i(item.x,item.y)) if has_features else {}
-					if item.z<=1 and not features.is_empty() and not features.openings.is_empty():features["ground_collision"]=preload("res://scripts/terrain_collision.gd").clipped_ground(arrays,features.openings,item.w)
+					if item.z<=1 and not features.is_empty() and not features.openings.is_empty():features["ground_collision"]=_collision.clipped_ground(arrays,features.openings,item.w)
 					var structures:Array=preload("res://scripts/lod_biome_extension_structures.gd").new().build(builder,Vector2i(item.x,item.y),support_steps,feature_mesher.portal_sites) if builder._extras_enabled else []
 					var structure_flow:Dictionary={}
 					if structures.size()>2 and structures[2]!=null:
 						structure_flow=preload("res://scripts/alien_tissue_coordinates.gd").structure_atlas(builder,structures[2],Vector2(item.x,item.y)*builder.chunk_size)
-					var collision_data:Dictionary=preload("res://scripts/terrain_collision.gd").prepare(arrays,item.w,item.z<=1,structures,features,index_structures)
+					var collision_data:Dictionary=_collision.prepare(arrays,item.w,item.z<=1,structures,features,index_structures)
 					result.append({"key":Vector3i(item.x,item.y,item.z),"resolution":item.w,"arrays":arrays,"edge_profiles":edge_profiles,"swamp_water":builder.build_swamp_water(arrays,item.w),"extension_data":builder.built_extension_data,"extension_rows":builder.built_extension_rows,"alien_flow":builder.built_alien_tissue_flow,"alien_flow_rows":builder.built_alien_tissue_flow_rows,"structure_flow":structure_flow,"extension_mask":builder.built_extension_mask,"badlands_palette_slot":builder.built_badlands_palette_slot,"structures":structures,"features":features,"collision_data":collision_data,"begin":begin,"end":Time.get_ticks_usec()})
 			)
 			_jobs[key]=job
@@ -1165,15 +1166,15 @@ func _update_near_collision(node:MeshInstance3D,force:bool=false,active_position
 			near_structures=near_structures or data.cavity_bounds.grow(600).has_point(point)
 			state=Vector2i(int(near_terrain),int(near_structures))
 	if force or node.get_meta("collision_state",Vector2i(-1,-1))!=state:
-		preload("res://scripts/terrain_collision.gd").stage(node,chunk_size*float(1<<key.z),node.get_meta("resolution"),near_terrain,near_structures,local_point if spatial_structure_collision else Vector3.INF);node.set_meta("collision_state",state)
-		if _active_chunks.get(key)==node:preload("res://scripts/terrain_collision.gd").activate(node,terrain_collision_enabled)
+		_collision.stage(node,chunk_size*float(1<<key.z),node.get_meta("resolution"),near_terrain,near_structures,local_point if spatial_structure_collision else Vector3.INF);node.set_meta("collision_state",state)
+		if _active_chunks.get(key)==node:_collision.activate(node,terrain_collision_enabled)
 	elif spatial_structure_collision and (near_terrain or near_structures):
-		preload("res://scripts/terrain_collision.gd").refresh_structure_subset(node,local_point)
+		_collision.refresh_structure_subset(node,local_point)
 	if _cave_streamer!=null:_cave_streamer.apply_parent(node)
 
 func _release_node(node: MeshInstance3D) -> void:
 	if _cave_streamer!=null:_cave_streamer.release_parent(node)
-	preload("res://scripts/terrain_collision.gd").release(node)
+	_collision.release(node)
 	var key: Vector3i=node.get_meta("tile")
 	if cached_mesh_limit>0:
 		_mesh_cache[Vector4i(key.x,key.y,key.z,int(node.get_meta("resolution")))]=node.mesh
@@ -1215,7 +1216,7 @@ func _commit_partition() -> void:
 		if not next.has(key) or next[key]!=_active_chunks[key]: _release_node(_active_chunks[key])
 	for node: MeshInstance3D in next.values():
 		if not node.visible:node.set_meta("published_usec",Time.get_ticks_usec())
-		node.visible=true;_update_near_collision(node);preload("res://scripts/terrain_collision.gd").activate(node,terrain_collision_enabled)
+		node.visible=true;_update_near_collision(node);_collision.activate(node,terrain_collision_enabled)
 	_active_chunks=next
 	committed_revision=partition_revision
 	_ready_edge_certificates.clear()
@@ -1258,7 +1259,7 @@ func _commit_ready_region()->void:
 		_ready_edge_certificates[_ready_cut.edge_id(certificate.a,certificate.b)]=certificate
 	for key:Vector3i in change.add:
 		var node:MeshInstance3D=_active_chunks[key];node.set_meta("published_usec",Time.get_ticks_usec());node.visible=true
-		_update_near_collision(node);preload("res://scripts/terrain_collision.gd").activate(node,terrain_collision_enabled)
+		_update_near_collision(node);_collision.activate(node,terrain_collision_enabled)
 	if _cave_streamer!=null:_cave_streamer.partition_committed()
 	_last_incremental_frame=Engine.get_process_frames();incremental_cut_swaps+=1
 	if profile_streaming:max_partition_swap_ms=maxf(max_partition_swap_ms,(Time.get_ticks_usec()-began)/1000.0)
@@ -1292,7 +1293,7 @@ func _publish_startup_chunks() -> void:
 		node.set_meta("published_usec",Time.get_ticks_usec())
 		_active_chunks[key]=node;node.visible=true
 		_update_near_collision(node)
-		preload("res://scripts/terrain_collision.gd").activate(node,terrain_collision_enabled)
+		_collision.activate(node,terrain_collision_enabled)
 	if _cave_streamer!=null:_cave_streamer.partition_committed()
 
 

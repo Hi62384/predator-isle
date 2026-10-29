@@ -2,7 +2,7 @@
 
 ## Current configuration entry point
 
-Use `res://cliff_normals.tres`, not the fixed shader controls described below.
+Use `res://config/rendering/cliff_normals.tres`, not the fixed shader controls described below.
 This is now a list of up to 16 editable `CliffNormalLayer` resources with arbitrary
 normal textures and per-entry strength, texture size, noise size/cutoff/softness,
 breakup, seed, rotation and offset. Add/remove/replace entries in the Inspector.

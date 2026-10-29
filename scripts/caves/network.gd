@@ -2,7 +2,7 @@ extends RefCounted
 ## Cave core: shared underground dependency. Deterministic, locally generated
 ## regions with an explicitly exit-rooted graph; neighboring regions connect
 ## only through the same canonical solved edge. Pure descriptor generation; runtime installation is managed separately.
-const Solver=preload("res://scripts/caves/route_solver.gd")
+var Solver=preload("res://scripts/csharp/caves/RouteSolver.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
 const Basins=preload("res://scripts/caves/seepage_basins.gd")
 const REGION_METRES:float=1536

@@ -1,0 +1,39 @@
+{
+  "date": "2026-10-29",
+  "complete": false,
+  "priority": "Complete C# migration before new feature work",
+  "engine": "Godot 4.6.1 .NET",
+  "target_framework": "net8.0",
+  "original_runtime_gdscript_files": 142,
+  "source_project_exclusions": ["Hoogie code", "Hoogie textures"],
+  "integrated_ports": {
+    "scripts/world_startup.gd": "scripts/csharp/WorldStartup.cs",
+    "scripts/terrain_shader_preparation.gd": "scripts/csharp/rendering/TerrainShaderPreparation.cs",
+    "scripts/terrain_shader_variants.gd": "scripts/csharp/rendering/TerrainShaderVariants.cs",
+    "scripts/free_camera.gd": "scripts/csharp/player/FreeCamera.cs",
+    "scripts/player_scale_marker.gd": "scripts/csharp/player/PlayerScaleMarker.cs",
+    "scripts/terrain_partition.gd": "scripts/csharp/terrain/TerrainPartition.cs",
+    "scripts/terrain_ready_cut.gd": "scripts/csharp/terrain/TerrainReadyCut.cs",
+    "scripts/caves/mesher.gd": "scripts/csharp/caves/CaveMesher.cs",
+    "scripts/caves/portal_mesher.gd": "scripts/csharp/caves/PortalCaveMesher.cs"
+  },
+  "remaining": [
+    "Terrain controller and mesh builder",
+    "Biome samplers and structure geometry",
+    "Settings and material resources",
+    "Cave fields, graph generation, streaming, formations and biome providers",
+    "Collision generation and spatial indices",
+    "Blob generation, animation and workshop",
+    "Remaining diagnostic and asset-generation tooling"
+  ],
+  "verification": {
+    "build": "Godot.NET.Sdk 4.6.1 / .NET 8; zero warnings and errors",
+    "fixture_scene": "res://tools/csharp/migration_checks.tscn",
+    "checks_before_final_scene_binding": 53280,
+    "coverage": "Planner cut membership and coordinates; configured shader source comparisons and fail-open handling; skirt profiles and positive/negative curtain cases; native camera input; complete cave vertex/normal/color bytes and boundary samples; existing GDScript cave field adapter at 2m and 4m",
+    "actual_saved_startup": "First visible terrain chunk at 2.044 seconds; warm cache state uncontrolled. Not full surroundings, traversal or a universal loading claim.",
+    "known_environment_issue": "Sandboxed engine runs reported failure to read the Windows root certificate store. Geometry and input assertions still completed.",
+    "harness_repair": "First startup harness attempted reparenting while the parent was busy. It was rejected and its owned run was terminated by the resource/deadline watcher. Deferred reparenting fixed the fixture; the subsequent run passed. The failed attempt is not accepted startup evidence.",
+    "limits": "No full-world speedup, complete migration or reference-quality appearance claim. Original project result hashes are historical after this migration. Native C# field timing fixtures bypass the transitional GDScript adapter and do not measure production cave generation speed."
+  }
+}

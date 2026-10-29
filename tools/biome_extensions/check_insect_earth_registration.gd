@@ -1,0 +1,14 @@
+extends "res://tools/biome_extensions/check_all.gd"
+const ARCHIVE="res://tools/biome_extensions/artifacts/revisions/experiment_insect_earth_trial_6eec1813dcd5/sources/"
+func run()->void:
+	var guards:Dictionary={};var optical:String="res://shaders/insect_earth_optics.gdshaderinc";var shader:String="res://shaders/insect_earth.gdshader"
+	for path:String in [optical,shader,"res://scripts/biome_extension_settings.gd","res://scripts/chunk_terrain.gd","res://tools/biome_extensions/check_insect_earth_registration.gd",ARCHIVE+"tools/biome_extensions/insect_earth_candidate.gdshader.txt",ARCHIVE+"tools/biome_extensions/insect_earth_optics.gdshaderinc.txt"]:guards[path]=FileAccess.get_sha256(path)
+	check(FileAccess.get_file_as_string(optical).strip_edges()==FileAccess.get_file_as_string(ARCHIVE+"tools/biome_extensions/insect_earth_optics.gdshaderinc.txt").strip_edges(),"Exact accepted private optical functions")
+	var expected:String=FileAccess.get_file_as_string(ARCHIVE+"tools/biome_extensions/insect_earth_candidate.gdshader.txt").replace("res://tools/biome_extensions/insect_earth_optics.gdshaderinc","res://shaders/insect_earth_optics.gdshaderinc").replace("shader_type spatial;","shader_type spatial;\n// Retained semantic family tag for diagnostics; no other family uses this shader.\nuniform int family=6;")
+	check(FileAccess.get_file_as_string(shader).strip_edges()==expected.strip_edges(),"Exact frozen accepted shader except include path and unused semantic family tag")
+	var settings=preload("res://scripts/biome_extension_settings.gd").new();check(settings.nest_earth_material,"Independent new material enabled by default")
+	for enabled:bool in [false,true,false]:
+		settings.nest_earth_material=enabled;var path:String="res://tools/biome_extensions/artifacts/insect_earth_setting.tres";check(ResourceSaver.save(settings,path)==OK,"Saved actual Resource control")
+		var reloaded=ResourceLoader.load(path,"",ResourceLoader.CACHE_MODE_IGNORE);check(reloaded.nest_earth_material==enabled,"Actual saved bool roundtrip,not a test-only shader toggle")
+	for path:String in guards:check(FileAccess.get_sha256(path)==guards[path],"Stable earth registration source "+path)
+	FileAccess.open("res://tools/biome_extensions/artifacts/check_insect_earth_registration.json",FileAccess.WRITE).store_string(JSON.stringify({"passed":failures.is_empty(),"checks":checks,"failures":failures,"source_sha256":guards,"scope":"Registered independent saved/default-on nest_earth_material;exact accepted private shader/formula including signed common phase,physical-scale relief/normal guard/roughness. False restores original structure shader in actual controller. Resource false/true/false reloads. Complete worker/native material bindings and full geometry comparisons separate."},"  "));print("INSECT_EARTH_REGISTERED ",checks," failures=",failures);quit(0 if failures.is_empty() else 1)

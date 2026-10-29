@@ -18,7 +18,7 @@ func trial(blocks: int) -> Vector2:
 	while next<4*blocks or not jobs.is_empty():
 		while next<4*blocks and jobs.size()<4:
 			var builder=load("res://scripts/terrain_mesh_builder.gd").new()
-			builder.settings=load("res://terrain_settings.tres").duplicate(true)
+			builder.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 			builder._configure_noise()
 			var chunk:=next/blocks
 			var block:=next%blocks

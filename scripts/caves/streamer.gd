@@ -13,7 +13,7 @@ const Frontiers=preload("res://scripts/caves/stream_frontiers.gd")
 const BiomeRegions=preload("res://scripts/caves/biome_regions.gd")
 const BiomeMaterials=preload("res://scripts/caves/biome_materials.gd")
 const FeatureRenderer=preload("res://scripts/caves/feature_renderer.gd")
-const TraversalEnvelope=preload("res://scripts/caves/traversal_envelope.gd")
+var TraversalEnvelope=preload("res://scripts/csharp/caves/TraversalEnvelope.cs").new()
 const SurfacePolicy=preload("res://scripts/caves/surface_streaming_policy.gd")
 var host
 var configuration

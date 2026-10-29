@@ -80,7 +80,31 @@ varying vec3 world_position;
 varying vec3 world_normal;
 varying float view_distance;
 varying vec3 geology_control;
-
+varying vec3 jungle_control;
+varying vec3 forest_control;
+varying vec3 forest_ecology;
+varying vec2 forest_geology;
+varying vec3 forest_local_position;
+varying flat vec3 forest_origin;
+varying vec3 savanna_control;
+varying vec3 savanna_geology;
+varying vec3 savanna_water;
+varying vec3 savanna_surface;
+varying vec3 swamp_control;
+varying vec3 swamp_hydro;
+varying vec3 swamp_land;
+varying vec3 swamp_ecology;
+varying float swamp_water_level;
+varying vec3 mountain_control;
+varying vec3 mountain_geology;
+varying vec3 mountain_shape;
+varying float mountain_wet;
+varying vec2 terrain_surface;
+varying vec3 coast_control; // influence, regional appearance, wave exposure
+varying float coast_sediment;
+varying vec2 beach_control; // decoded sand fraction, sand regional identity
+varying vec3 tropical_control; // ownership, moisture, regional appearance
+varying vec2 badlands_control; // ownership, regional appearance
 float field(vec2 p) {
  vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
  vec4 h=fract(sin(vec4(dot(i,vec2(127.1,311.7)),dot(i+vec2(1,0),vec2(127.1,311.7)),dot(i+vec2(0,1),vec2(127.1,311.7)),dot(i+vec2(1,1),vec2(127.1,311.7))))*43758.5453);
@@ -99,11 +123,68 @@ float ground_field(vec2 p) {
  float footprint=max(length(dFdx(p)),length(dFdy(p)));
  return clamp(0.5+value*0.7*(1.0-smoothstep(0.3,1.0,footprint)),0.0,1.0);
 }
+#include "res://shaders/terrain_control_decode.gdshaderinc"
+uniform bool extension_payload_enabled=false;
+uniform sampler2D extension_payload:filter_linear,repeat_disable;
+uniform int extension_active_mask=0;
+uniform sampler2D cavity_portals:filter_nearest,repeat_disable;
+uniform int cavity_portal_count=0;
+uniform float extension_normals[8];
+uniform float extension_emission[8];
 void vertex() {
  world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
  world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);
  view_distance=length((VIEW_MATRIX*vec4(world_position,1.0)).xyz);
  geology_control=CUSTOM0.xyz;
+ jungle_control=unpack_control24(CUSTOM0.w);
+ badlands_control=vec2(0);
+ if(CUSTOM0.w<0.0){
+  jungle_control=unpack_control24(-CUSTOM0.w-1.0);
+  vec3 b=unpack_control24(UV.y);badlands_control=b.xy;
+  UV.y=(round(b.z*255.0)-127.0)/254.0;
+ }
+ forest_control=unpack_control24(CUSTOM1.x);
+ forest_ecology=unpack_control24(CUSTOM1.y);
+ forest_geology=CUSTOM1.zw;
+ coast_control=vec3(0);coast_sediment=0.0;beach_control=vec2(0);
+ if(CUSTOM1.z<0.0){vec3 a=unpack_control24(-CUSTOM1.z-1.0),b=unpack_control24(CUSTOM1.w);forest_geology=vec2(a.x,b.x);coast_control=vec3(a.yz,b.y);coast_sediment=b.z;}
+ if(CUSTOM1.z<0.0 && CUSTOM1.w<0.0){vec3 b=unpack_control24(-CUSTOM1.w-1.0);forest_geology.y=b.x;beach_control=b.yz;coast_control.z=.5;coast_sediment=0.0;}
+ forest_local_position=VERTEX;
+ forest_origin=MODEL_MATRIX[3].xyz;
+ savanna_control=unpack_control24(CUSTOM2.x);
+ savanna_geology=unpack_control24(CUSTOM2.y);
+ savanna_water=unpack_control24(CUSTOM2.z);
+ savanna_surface=unpack_control24(CUSTOM2.w);
+ swamp_control=unpack_control24(CUSTOM3.x);
+ swamp_hydro=unpack_control24(CUSTOM3.y);
+ swamp_land=unpack_control24(CUSTOM3.z);
+ swamp_ecology=unpack_control24(CUSTOM3.w);
+ tropical_control=vec3(0);
+ if(CUSTOM2.x<0.0){
+  vec3 s=unpack_control24(-CUSTOM2.x-1.0),w=unpack_control24(-CUSTOM3.x-1.0),f=unpack_control24(-CUSTOM1.x-1.0);
+  tropical_control=vec3(s.z,w.z,f.z);
+  savanna_control=vec3(s.xy,round(COLOR.b*255.0)/255.0);
+  swamp_control=vec3(w.xy,round(COLOR.a*255.0)/255.0);
+  forest_control=vec3(f.xy,round(COLOR.g*255.0)/255.0);
+ }
+ swamp_water_level=UV.x;
+ mountain_control=vec3(0);mountain_geology=vec3(0);mountain_shape=vec3(0);mountain_wet=0.0;
+ terrain_surface=UV2;
+ if(CUSTOM0.x<0.0){
+  geology_control=unpack_control24(-CUSTOM0.x-1.0);
+  mountain_control=unpack_control24(CUSTOM0.y);
+  mountain_geology=unpack_control24(CUSTOM0.z);
+  vec3 legacy_ridge=unpack_control24(UV2.x);
+  vec3 erosion_wet=unpack_control24(UV2.y);
+  terrain_surface=legacy_ridge.xy;
+  mountain_shape=vec3(legacy_ridge.z,erosion_wet.xy);
+  mountain_wet=erosion_wet.z;
+ }
+
+ if(extension_payload_enabled){
+  float old_total=COLOR.r+jungle_control.z+forest_control.z+savanna_control.z+swamp_control.z+mountain_control.z+tropical_control.x+badlands_control.x;
+  if(old_total>.0001){jungle_control.z/=old_total;forest_control.z/=old_total;savanna_control.z/=old_total;swamp_control.z/=old_total;mountain_control.z/=old_total;tropical_control.x/=old_total;badlands_control.x/=old_total;}
+ }
 }
 // Shared jittered junctions form a world-space graph. Adjacent regions evaluate
 // the same endpoints, so branches meet instead of becoming isolated scratches.
@@ -119,7 +200,7 @@ vec2 path_curve(vec2 a,vec2 c1,vec2 c2,vec2 b,float t) {
  float u=1.0-t;
  return a*u*u*u+3.0*c1*u*u*t+3.0*c2*u*t*t+b*t*t*t;
 }
-vec2 ground_trail(vec2 p,float size,float width,float pixel_width) {
+vec2 ground_trail(vec2 p,float size,float width,float pixel_width,float edge_falloff) {
  p=mat2(vec2(0.9135,0.4067),vec2(-0.4067,0.9135))*p;
  // Warp the entire connected network, including its junctions. Unlike moving
  // only the final closest point, this cannot tear the mask into broken bands.
@@ -165,7 +246,7 @@ vec2 ground_trail(vec2 p,float size,float width,float pixel_width) {
      float w=width*mix(0.78,1.28,path_hash(id+vec2(8.0,float(edge)*23.0)))*(0.92+0.12*sin(t*9.0+seed*19.0));
      float d=length(p-q)-(edge_noise-0.5)*w*path_edge_noise_strength;
      float aa=min(pixel_width,size*0.05);
-     float feather=max(path_edge_softness_metres,0.05)+aa;
+     float feather=max(edge_falloff,0.05)+aa;
      vec2 curve_mask=vec2(1.0-smoothstep(w*0.56,w+feather,d),1.0-smoothstep(w,w*2.15+feather,d));
      // Rounded endpoint unions let several links merge into a broad worn turn
      // instead of exposing a pointed, ruler-straight Y intersection.
@@ -244,6 +325,7 @@ void sample_layer(int id,vec3 p,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fin
   gradient+=vec3(t.x,t.y*sign(n.z),0.0)*projection.z;
  }
 }
+
 // Rotating coordinates requires the inverse rotation on the sampled slope.
 vec2 ambient_slope(int id,vec2 uv,vec2 dx,vec2 dy) {
  float angle=cliff_layer_transforms[id].x;
@@ -324,20 +406,114 @@ void ambient_band(bool macro_band,vec3 dx,vec3 dy,vec3 n,vec3 projection,out vec
   selected/=max(1.0,coverage);
  }
 }
+#include "res://shaders/jungle_material.gdshaderinc"
+#include "res://shaders/forest_material.gdshaderinc"
+#include "res://shaders/savanna_material.gdshaderinc"
+#include "res://shaders/swamp_material.gdshaderinc"
+#include "res://shaders/mountain_material.gdshaderinc"
+#include "res://shaders/rocky_coast_material.gdshaderinc"
+#include "res://shaders/beach_material.gdshaderinc"
+#include "res://shaders/tropical_material.gdshaderinc"
+#include "res://shaders/badlands_material.gdshaderinc"
+#include "res://shaders/biome_extensions.gdshaderinc"
 void fragment() {
+ for(int i=0;i<cavity_portal_count;i++){
+  vec4 portal=texelFetch(cavity_portals,ivec2(i,0),0);
+  vec2 q=forest_local_position.xz-portal.xy;float a=atan(q.y,q.x);
+  float radius=portal.z*(1.0+.1*sin(a*3.0+portal.w)+.06*sin(a*7.0-portal.w));
+  if(length(q)<radius)discard;
+ }
+ vec4 extension_weights_a=vec4(0),extension_weights_b=vec4(0);
+ if(extension_payload_enabled){for(int i=0;i<8;i++){if((extension_active_mask & (1<<i))==0)continue;float w=extension_texel(i).x;if(i<4)extension_weights_a[i]=w;else extension_weights_b[i-4]=w;}}
  // Derivatives must be evaluated before divergent material/projection branches.
  vec3 position_dx=dFdx(world_position),position_dy=dFdy(world_position);
+ vec3 forest_dx=dFdx(forest_local_position),forest_dy=dFdy(forest_local_position);
  vec3 n=normalize(world_normal);
  vec3 projection=pow(abs(n),vec3(6.0)); projection/=dot(projection,vec3(1.0));
  float fine=1.0-smoothstep(detail_distance*0.35,detail_distance,view_distance);
  if(debug_view==7 || debug_view==18 || diagnostic_surface==2) fine=0.0;
+
+vec3 cache_badlands_color=vec3(0),cache_badlands_gradient=vec3(0),cache_badlands_materials=vec3(0),cache_badlands_extra=vec3(0);float cache_badlands_rough=1.0;
+if(.001<badlands_control.x && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999){shade_badlands(n,forest_dx,forest_dy,projection,fine,cache_badlands_color,cache_badlands_rough,cache_badlands_gradient,cache_badlands_materials,cache_badlands_extra);}
+vec3 cache_tropical_color=vec3(0),cache_tropical_gradient=vec3(0),cache_tropical_materials=vec3(0),cache_tropical_extra=vec3(0);float cache_tropical_rough=1.0;
+if(.001<tropical_control.x && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999){shade_tropical(n,forest_dx,forest_dy,projection,fine,cache_tropical_color,cache_tropical_rough,cache_tropical_gradient,cache_tropical_materials,cache_tropical_extra);}
+vec3 cache_mountain_color=vec3(0),cache_mountain_gradient=vec3(0),cache_mountain_materials=vec3(0),cache_mountain_extra=vec3(0);float cache_mountain_rough=1.0;
+if(.001<mountain_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999 && tropical_control.x<=.999){shade_mountain(n,forest_dx,forest_dy,projection,fine,cache_mountain_color,cache_mountain_rough,cache_mountain_gradient,cache_mountain_materials,cache_mountain_extra);}
+vec3 cache_swamp_color=vec3(0),cache_swamp_gradient=vec3(0),cache_swamp_materials=vec3(0),cache_swamp_extra=vec3(0);float cache_swamp_rough=1.0;
+if(.001<swamp_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999 && tropical_control.x<=.999 && mountain_control.z<=.999){shade_swamp(n,forest_dx,forest_dy,projection,fine,cache_swamp_color,cache_swamp_rough,cache_swamp_gradient,cache_swamp_materials,cache_swamp_extra);}
+vec3 cache_savanna_color=vec3(0),cache_savanna_gradient=vec3(0),cache_savanna_materials=vec3(0),cache_savanna_extra=vec3(0);float cache_savanna_rough=1.0;
+if(.001<savanna_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999 && tropical_control.x<=.999 && mountain_control.z<=.999 && swamp_control.z<=.999){shade_savanna(n,forest_dx,forest_dy,projection,fine,cache_savanna_color,cache_savanna_rough,cache_savanna_gradient,cache_savanna_materials,cache_savanna_extra);}
+vec3 cache_forest_color=vec3(0),cache_forest_gradient=vec3(0),cache_forest_materials=vec3(0),cache_forest_extra=vec3(0);float cache_forest_rough=1.0;
+if(.001<forest_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999 && tropical_control.x<=.999 && mountain_control.z<=.999 && swamp_control.z<=.999 && savanna_control.z<=.999){shade_forest(n,forest_dx,forest_dy,projection,fine,cache_forest_color,cache_forest_rough,cache_forest_gradient,cache_forest_materials,cache_forest_extra);}
+vec3 cache_jungle_color=vec3(0),cache_jungle_gradient=vec3(0),cache_jungle_materials=vec3(0),cache_jungle_extra=vec3(0);float cache_jungle_rough=1.0;
+if(.001<jungle_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))<=.999 && badlands_control.x<=.999 && tropical_control.x<=.999 && mountain_control.z<=.999 && swamp_control.z<=.999 && savanna_control.z<=.999 && forest_control.z<=.999){shade_jungle(n,position_dx,position_dy,projection,fine,cache_jungle_color,cache_jungle_rough,cache_jungle_gradient,cache_jungle_materials);}
+ if(coast_control.x>.999){ALBEDO=vec3(0);NORMAL=normalize((VIEW_MATRIX*vec4(n,0)).xyz);}
+ else if(dot(extension_weights_a,vec4(1))+dot(extension_weights_b,vec4(1))>.999){ALBEDO=vec3(0);ROUGHNESS=1.0;NORMAL=normalize((VIEW_MATRIX*vec4(n,0)).xyz);}
+ else if(badlands_control.x>.999){
+  vec3 color,gradient,materials,masks;float rough;
+  color=cache_badlands_color;rough=cache_badlands_rough;gradient=cache_badlands_gradient;materials=cache_badlands_materials;masks=cache_badlands_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.12;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=240 && debug_view<=247){ALBEDO=vec3(0);EMISSION=badlands_debug(n,mapped,materials,masks);SPECULAR=0.0;}
+ }else if(tropical_control.x>.999){
+  vec3 color,gradient,materials,masks;float rough;
+  color=cache_tropical_color;rough=cache_tropical_rough;gradient=cache_tropical_gradient;materials=cache_tropical_materials;masks=cache_tropical_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.15;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=220 && debug_view<=229){ALBEDO=vec3(0);EMISSION=tropical_debug(n,mapped,materials,masks);SPECULAR=0.0;}
+ }else if(mountain_control.z>.999){
+  vec3 color,gradient,materials,overlays;float rough;
+  color=cache_mountain_color;rough=cache_mountain_rough;gradient=cache_mountain_gradient;materials=cache_mountain_materials;overlays=cache_mountain_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.2;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=160 && debug_view<=177){ALBEDO=vec3(0);EMISSION=mountain_debug(n,mapped,materials,overlays);SPECULAR=0.0;}
+ }else if(swamp_control.z>.999){
+  vec3 color,gradient,materials,masks;float rough;
+  color=cache_swamp_color;rough=cache_swamp_rough;gradient=cache_swamp_gradient;materials=cache_swamp_materials;masks=cache_swamp_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.25;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=140 && debug_view<=159){ALBEDO=vec3(0);EMISSION=swamp_debug(n,mapped,materials,masks);SPECULAR=0.0;}
+ }else if(savanna_control.z>.999){
+  vec3 color,gradient,materials,masks;float rough;
+  color=cache_savanna_color;rough=cache_savanna_rough;gradient=cache_savanna_gradient;materials=cache_savanna_materials;masks=cache_savanna_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.15;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=120 && debug_view<=133){ALBEDO=vec3(0);EMISSION=savanna_debug(n,mapped,materials,masks);SPECULAR=0.0;}
+ }else if(forest_control.z>.999){
+  vec3 color,gradient,materials,diagnostics;float rough;
+  color=cache_forest_color;rough=cache_forest_rough;gradient=cache_forest_gradient;materials=cache_forest_materials;diagnostics=cache_forest_extra;
+  vec3 mapped=normalize(n+gradient);ALBEDO=color;ROUGHNESS=rough;SPECULAR=.16;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=100 && debug_view<=110){ALBEDO=vec3(0);EMISSION=forest_debug(mapped,materials,diagnostics);SPECULAR=0.0;}
+ }else if(jungle_control.z>.999){
+  vec3 color,gradient,weights;float rough;
+  color=cache_jungle_color;rough=cache_jungle_rough;gradient=cache_jungle_gradient;weights=cache_jungle_materials;
+  vec3 mapped=normalize(n+gradient);
+  ALBEDO=color;ROUGHNESS=rough;SPECULAR=.22;
+  NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=color;}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=80 && debug_view<=87){ALBEDO=vec3(0);EMISSION=jungle_debug(mapped,weights);SPECULAR=0.0;}
+ }else{
  float broad=field(world_position.xz/580.0+vec2(37,71));
  float patch=field(world_position.xz/74.0+vec2(broad*2.0,19.0));
  float breakup=field(world_position.xz/11.0+vec2(59,13));
  float slope=1.0-n.y;
  float concave=smoothstep(0.03,0.35,UV.y);
  float convex=smoothstep(0.03,0.35,-UV.y);
- float highland=UV2.x, drainage=UV2.y;
+ float highland=terrain_surface.x, drainage=terrain_surface.y;
  // Broad terrain-following folds. Height bends the pattern across contours;
  // exposure/drainage determine its role rather than a world-wide color mask.
  // All bands coexist at immutable world scales. Height bends the grass flow
@@ -438,7 +614,7 @@ void fragment() {
  float ridge_soil=0.0; // Removed: curvature-colored ridge blotches.
  float broken_soil=smoothstep(0.68,0.87,sward)*sparse_family*ground_dirt_coverage*0.4;
  vec2 trail=vec2(0.0);
- if(slope<0.22 && ground_path_coverage>0.0) trail=ground_trail(gp,max(ground_wear_size,40.0)*2.5,ground_wear_width,max(length(position_dx.xz),length(position_dy.xz)));
+ if(slope<0.22 && ground_path_coverage>0.0) trail=ground_trail(gp,max(ground_wear_size,40.0)*2.5,ground_wear_width,max(length(position_dx.xz),length(position_dy.xz)),path_edge_softness_metres);
  trail*= (1.0-smoothstep(0.10,0.22,slope))*(1.0-shoreline)*(1.0-underwater);
  float worn=(trail.x+trail.y*0.22)*ground_path_coverage;
  // Shore succession replaces inland soil instead of adding random patches to it.
@@ -453,15 +629,13 @@ void fragment() {
  sediment=mix(sediment,shoreline*deposit*0.5,ground_only);
  wear=mix(wear,worn,ground_only);
  bank=mix(bank,damp_margin,ground_only);
- float biome_peak=max(max(COLOR.r,COLOR.g),max(COLOR.b,COLOR.a));
- vec4 biome=pow(max(COLOR/max(biome_peak,0.000001),vec4(0.000001)),vec4(texture_blend_sharpness)); biome/=max(dot(biome,vec4(1.0)),0.000001);
- float ground=biome.x*(1.0-rock);
- float rock_family=biome.w+(1.0-biome.w)*rock;
+ float ground=1.0-rock;
+ float rock_family=rock;
  float dark_rock=clamp(concave*0.12+drainage*0.15+(patch-0.5)*0.12,0.0,0.23);
  float w[8];
  w[0]=ground*(1.0-soil)*(1.0-gravel)*(1.0-dry);
- w[1]=(biome.y+biome.x*sediment)*(1.0-rock);
- w[2]=biome.z*(1.0-rock);
+ w[1]=sediment*(1.0-rock);
+ w[2]=0.0; // Reserved palette index; Snow biome removed.
  w[3]=rock_family*(1.0-dark_rock);
  w[4]=ground*(1.0-soil)*(1.0-gravel)*dry;
  w[5]=ground*soil*(1.0-gravel);
@@ -516,7 +690,7 @@ void fragment() {
   vec3 tint=vec3(1.0);
   if(id==0) {surface.rgb=mix(vec3(dot(surface.rgb,vec3(0.2126,0.7152,0.0722))),surface.rgb,0.76);tint=mix(vec3(0.67,0.76,0.57),vec3(0.77,0.79,0.60),broad);tint*=mix(vec3(1.0),vec3(0.72,0.85,0.74),drainage*0.65);g*=grass_normal_scale;surface.a=max(surface.a,grass_roughness_floor);}
   if(id==4) {tint=vec3(0.38,0.46,0.32);g*=0.65;surface.a=max(surface.a,0.88);}
-  if(id==1) tint=mix(sand_tint,vec3(0.79,0.76,0.65),biome.x);
+  if(id==1) tint=mix(sand_tint,vec3(0.79,0.76,0.65),1.0);
   if(id==5) {tint=mix(vec3(1.08,0.95,0.83),vec3(0.67,0.72,0.68),bank);surface.a=mix(surface.a,0.55,bank);}
   if(id==6) {tint=vec3(0.70,0.67,0.61);surface.a=max(surface.a,0.85);}
   if(id==7) tint=vec3(1.35,1.29,1.16);
@@ -592,7 +766,21 @@ void fragment() {
   debug_weights=mix(debug_weights,id_color(8),cliff*0.93);
  }
  if(diagnostic_surface==1) {albedo=vec3(0.3);gradient=vec3(0.0);}
- ALBEDO=albedo; ROUGHNESS=clamp(roughness,0.35,1.0);
+ vec3 jungle_weights=vec3(0);
+ if(jungle_control.z>.001){vec3 jc,jg;float jr;jc=cache_jungle_color;jr=cache_jungle_rough;jg=cache_jungle_gradient;jungle_weights=cache_jungle_materials;float j=jungle_control.z/max(1.0-forest_control.z-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001);if(savanna_control.z+swamp_control.z+mountain_control.z+tropical_control.x>.001)j=clamp(j,0.0,1.0);albedo=mix(albedo,jc,j);roughness=mix(roughness,jr,j);gradient=mix(gradient,jg,j);}
+ vec3 forest_material_mix=vec3(0),forest_diagnostics=vec3(0);
+ if(forest_control.z>.001){vec3 fc,fg;float fr;fc=cache_forest_color;fr=cache_forest_rough;fg=cache_forest_gradient;forest_material_mix=cache_forest_materials;forest_diagnostics=cache_forest_extra;float f=clamp(forest_control.z/max(1.0-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,fc,f);roughness=mix(roughness,fr,f);gradient=mix(gradient,fg,f);}
+ vec3 savanna_material_mix=vec3(0),savanna_masks=vec3(0);
+ if(savanna_control.z>.001){vec3 sc,sg;float sr;sc=cache_savanna_color;sr=cache_savanna_rough;sg=cache_savanna_gradient;savanna_material_mix=cache_savanna_materials;savanna_masks=cache_savanna_extra;float fraction=clamp(savanna_control.z/max(1.0-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
+ vec3 swamp_material_mix=vec3(0),swamp_masks=vec3(0);
+ if(swamp_control.z>.001){vec3 sc,sg;float sr;sc=cache_swamp_color;sr=cache_swamp_rough;sg=cache_swamp_gradient;swamp_material_mix=cache_swamp_materials;swamp_masks=cache_swamp_extra;float fraction=clamp(swamp_control.z/max(1.0-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
+ vec3 mountain_material_mix=vec3(0),mountain_overlays=vec3(0);
+ if(mountain_control.z>.001){vec3 mc,mg;float mr;mc=cache_mountain_color;mr=cache_mountain_rough;mg=cache_mountain_gradient;mountain_material_mix=cache_mountain_materials;mountain_overlays=cache_mountain_extra;float fraction=clamp(mountain_control.z/max(1.0-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,mc,fraction);roughness=mix(roughness,mr,fraction);gradient=mix(gradient,mg,fraction);}
+ vec3 tropical_material_mix=vec3(0),tropical_masks=vec3(0);
+ if(tropical_control.x>.001){vec3 tc,tg;float tr;tc=cache_tropical_color;tr=cache_tropical_rough;tg=cache_tropical_gradient;tropical_material_mix=cache_tropical_materials;tropical_masks=cache_tropical_extra;float fraction=clamp(tropical_control.x/max(1.0-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,tc,fraction);roughness=mix(roughness,tr,fraction);gradient=mix(gradient,tg,fraction);}
+ vec3 badlands_material_mix=vec3(0),badlands_masks=vec3(0);
+ if(badlands_control.x>.001){vec3 bc,bg;float br;bc=cache_badlands_color;br=cache_badlands_rough;bg=cache_badlands_gradient;badlands_material_mix=cache_badlands_materials;badlands_masks=cache_badlands_extra;albedo=mix(albedo,bc,badlands_control.x);roughness=mix(roughness,br,badlands_control.x);gradient=mix(gradient,bg,badlands_control.x);}
+ ALBEDO=albedo; ROUGHNESS=clamp(roughness,mix(.35,.16,swamp_control.z),1.0);
  SPECULAR=mix(0.22,grass_specular,ground);
  vec3 mapped_normal=normalize(n+gradient);
  NORMAL=normalize((VIEW_MATRIX*vec4(mapped_normal,0.0)).xyz);
@@ -653,4 +841,45 @@ void fragment() {
   }
   ALBEDO=vec3(0.0); EMISSION=debug_color; ROUGHNESS=1.0; SPECULAR=0.0;
  }
+ if(debug_view>=80 && debug_view<=87){ALBEDO=vec3(0);EMISSION=jungle_debug(mapped_normal,jungle_weights);SPECULAR=0.0;}
+ if(debug_view>=100 && debug_view<=110){ALBEDO=vec3(0);EMISSION=forest_debug(mapped_normal,forest_material_mix,forest_diagnostics);SPECULAR=0.0;}
+ if(debug_view>=120 && debug_view<=133){ALBEDO=vec3(0);EMISSION=savanna_debug(n,mapped_normal,savanna_material_mix,savanna_masks);SPECULAR=0.0;}
+ if(debug_view>=140 && debug_view<=159){ALBEDO=vec3(0);EMISSION=swamp_debug(n,mapped_normal,swamp_material_mix,swamp_masks);SPECULAR=0.0;}
+ if(debug_view>=160 && debug_view<=177){ALBEDO=vec3(0);EMISSION=mountain_debug(n,mapped_normal,mountain_material_mix,mountain_overlays);SPECULAR=0.0;}
+ if(debug_view>=220 && debug_view<=229){ALBEDO=vec3(0);EMISSION=tropical_debug(n,mapped_normal,tropical_material_mix,tropical_masks);SPECULAR=0.0;}
+ if(debug_view>=240 && debug_view<=247){ALBEDO=vec3(0);EMISSION=badlands_debug(n,mapped_normal,badlands_material_mix,badlands_masks);SPECULAR=0.0;}
+ }
+ if(extension_payload_enabled){
+  vec3 ec=vec3(0),eg=vec3(0),ee=vec3(0);float er=0.0,total=0.0;
+  for(int i=0;i<8;i++){
+   float weight=i<4?extension_weights_a[i]:extension_weights_b[i-4];if(weight<.001)continue;
+   vec3 c,g,e;float r;shade_extension(i,extension_control(i),n,forest_dx,forest_dy,projection,fine,c,r,g,e);
+   ec+=c*weight;eg+=g*weight;ee+=e*weight;er+=r*weight;total+=weight;
+  }
+  if(total>.001){
+   float amount=clamp(total,0.0,1.0);ec/=total;eg/=total;ee/=total;er/=total;
+   vec3 previous=normalize((INV_VIEW_MATRIX*vec4(NORMAL,0)).xyz);vec3 mapped=normalize(n+eg);
+   ALBEDO=mix(ALBEDO,ec,amount);ROUGHNESS=mix(ROUGHNESS,er,amount);SPECULAR=mix(SPECULAR,.2,amount);EMISSION=mix(EMISSION,ee,amount);
+   NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(previous,mapped,amount)),0)).xyz);
+   if(debug_view==3){ALBEDO=vec3(0);EMISSION=ec;}
+   if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  }
+ }
+ if(coast_control.x>.001){
+  vec3 cc=vec3(0),cg=vec3(0),cm=vec3(0);float cr=1.0;
+  if(beach_control.x<.999)shade_coast(n,forest_dx,forest_dy,projection,fine,cc,cr,cg,cm);
+  if(beach_control.x>.001){vec3 sc,sg,sm;float sr;shade_beach(n,forest_dx,forest_dy,projection,fine,sc,sr,sg,sm);cc=mix(cc,sc,beach_control.x);cr=mix(cr,sr,beach_control.x);cg=mix(cg,sg,beach_control.x);cm=mix(cm,sm,beach_control.x);}
+  vec3 previous=normalize((INV_VIEW_MATRIX*vec4(NORMAL,0)).xyz);
+  vec3 mapped=normalize(n+cg);float amount=coast_control.x;
+  ALBEDO=mix(ALBEDO,cc,amount);ROUGHNESS=mix(ROUGHNESS,cr,amount);SPECULAR=mix(SPECULAR,.22,amount);
+  NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(previous,mapped,amount)),0)).xyz);
+  if(debug_view==3){ALBEDO=vec3(0);EMISSION=mix(EMISSION,cc,amount);}
+  if(debug_view==4 || debug_view==8){ALBEDO=vec3(0);EMISSION=(debug_view==4?n:mapped)*.5+.5;}
+  if(debug_view>=180 && debug_view<=199){ALBEDO=vec3(0);EMISSION=coast_debug(n,mapped,cm);SPECULAR=0.0;}
+  if(debug_view>=200 && debug_view<=211){ALBEDO=vec3(0);EMISSION=beach_debug(n,mapped,cm);SPECULAR=0.0;}
+ }
+
+ // Overlay blending must not restore physical lighting to emitted-value views.
+ // Keep physical shading and both normal-off modes unchanged.
+ if(debug_view==3 || debug_view==4 || debug_view==8 || (debug_view>=260 && debug_view<=264)){ALBEDO=vec3(0);ROUGHNESS=1.0;SPECULAR=0.0;}
 }

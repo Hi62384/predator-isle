@@ -28,7 +28,7 @@ func settle(terrain: Node) -> float:
 	return (Time.get_ticks_usec()-start)/1000000.0
 
 func run() -> void:
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	var terrain=scene.get_node("Terrain");terrain.profile_streaming=true
 	root.add_child(scene)
 	var camera=scene.get_node("FreeCamera");camera.set_process(false)

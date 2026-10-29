@@ -1,7 +1,15 @@
 # Predator Isle
 
-Open `project.godot` in Godot 4.6.1 and press **F5** to run the game.
+Open `project.godot` in **Godot 4.6.1 .NET** and press **F5** to run the game.
+The standard editor cannot run the migrated C# systems. Install the .NET 8 SDK
+and build `PredatorIsle.csproj` before running outside the editor. The local
+.NET editor is under `.tools/Godot_v4.6.1-stable_mono_win64/` on this workstation.
 The launch scene is `scenes/world_startup.tscn`; the world is `scenes/main.tscn`.
+
+C# migration is the current first priority. New runtime code is under
+`scripts/csharp/`; preserved GDScript modules remain during the migration as
+dependencies and comparison references. The migration is not yet complete.
+The Hoogie project and its textures are excluded from this work.
 
 Mouse movement looks around. **Escape** releases the cursor; click the game
 to capture it again. **Backtick (`)** shows or hides terrain diagnostics.
