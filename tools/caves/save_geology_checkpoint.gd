@@ -1,0 +1,26 @@
+extends SceneTree
+## Scoped current-source dependency checkpoint,not full task completion.
+const REPORTS=["check_cave_live_deep_return","check_cave_geology_integration","check_cave_geological_morphology","check_cave_formation_contacts","check_cave_water_cache","check_cave_seepage_channels","check_cave_seepage_channel_gpu","check_cave_production_core","build_cave_palette"]
+var guards:Dictionary={}
+func bind(path:String,digest:String)->void:
+	assert(FileAccess.get_sha256(path)==digest,"Stale geology evidence "+path)
+	if guards.has(path):assert(guards[path]==digest,"Conflicting geology evidence "+path)
+	guards[path]=digest
+func _initialize()->void:call_deferred("run")
+func run()->void:
+	var summaries:Dictionary={};var pictures:Dictionary={};var deep:Dictionary={};var sources:Dictionary={}
+	for name:String in REPORTS:
+		var path:String="res://tools/biome_extensions/artifacts/"+name+".json";var report=JSON.parse_string(FileAccess.get_file_as_string(path));assert(report is Dictionary and report.get("passed",false) and report.get("failures",[]).is_empty(),"Missing geology acceptance "+name);bind(path,FileAccess.get_sha256(path))
+		for source:String in report.source_sha256:bind(source,report.source_sha256[source])
+		for picture:String in report.get("capture_sha256",{}):assert(FileAccess.get_sha256(picture)==report.capture_sha256[picture]);pictures[picture]=report.capture_sha256[picture]
+		summaries[name]={"report":path,"sha256":FileAccess.get_sha256(path),"checks":report.get("checks",0),"scope":report.get("scope","")}
+		if name=="check_cave_live_deep_return":deep=report
+		if name=="build_cave_palette":sources=report
+	var regression_path:String="res://data/surface_regression_20261018.json";var regression=JSON.parse_string(FileAccess.get_file_as_string(regression_path));assert(regression.passed and regression.test_count==31);bind(regression_path,FileAccess.get_sha256(regression_path))
+	for source:String in regression.source_sha256:bind("res://"+source.replace("\\","/"),regression.source_sha256[source])
+	for record:Dictionary in sources.records:
+		for map:Dictionary in record.maps:bind(map.path,map.sha256)
+	assert(FileAccess.get_sha256("res://scenes/main.tscn")=="5eb02b7c56d22b44757ba94ff29b0bbd20bfc81cdf1297b82bb4485e77d94699","Original main scene must remain unchanged")
+	assert(not load("res://config/caves/cave_settings.tres").enabled and deep.walk.finished and not deep.walk.failed and deep.walk.waypoint==deep.walk.waypoints and deep.walk.maximum_unsupported_drop_m<.75 and deep.walk.maximum_canonical_depth_m>300 and deep.walk.wall_seconds<=650 and deep.preload_seconds<=180 and deep.maximum_total_jobs<=4 and deep.maximum_simultaneous_portal_jobs>1)
+	bind("res://tools/caves/save_geology_checkpoint.gd",FileAccess.get_sha256("res://tools/caves/save_geology_checkpoint.gd"))
+	var result:Dictionary={"passed":true,"checks":guards.size()+REPORTS.size()+3,"failures":[],"created_utc":Time.get_datetime_string_from_system(true),"source_sha256":guards,"capture_sha256":pictures,"reports":summaries,"shared_regressions":31,"deep_walk":deep.walk,"initial_preload_seconds":deep.preload_seconds,"maximum_total_jobs":deep.maximum_total_jobs,"maximum_simultaneous_portal_jobs":deep.maximum_simultaneous_portal_jobs,"peak_resident_cells":deep.peak_resident_cells,"runtime_enabled_by_default":false,"chamber_profiles_live":true,"geological_cross_sections_live":true,"attached_formation_families_live":true,"retained_pools_and_feeders_live":true,"all_user_tasks_complete":false,"default_cave_phase_complete":false,"surface_reference_quality_complete":false,"insect_full_interior_complete":false,"alien_full_interior_complete":false,"frozen_implemented":false,"crystal_caverns_implemented":false,"magma_caverns_implemented":false,"external_watcher_observation_transcribed":{"sampled_peak_private_mib":2038.5,"predeclared_limit_mib":2048,"sampling_period_ms":500,"origin":"Native runner output in this task;not an engine-measured true peak or embedded structured receipt","note":"Very small remaining resource/time margins,not broad performance acceptance"},"scope":"Current-source opt-in Default geological dependency checkpoint. Original actual Spore full24.736km/surface→378.4mlocal-depth→same-surface native return,268real terrain cuts,unchanged650s/180s/1.8m/.4m/5mps/45degree/.75mdrop gates and four TOTAL workers. Actual joined chambers,fully supported formations/columns/flowstone/breakdown,real optional feeder/pool beds and bounded single water surfaces,dry-route controls,source-verified photographed PBR palette/cave-only2Knormal packing,actual feeder GPU view and31shared terrain checks. Fixed60Hz accelerated movement with explicit loading pauses/render-off motion;debug light separate/test-only. No all-world/custom-setting/art/LOD/uninterrupted-streaming/performance or full Default/biological/later-biome completion. Historical failed diagnostics and Jolt job warning retained."};var text:String=JSON.stringify(result,"  ");FileAccess.open("res://data/cave_default_geology_checkpoint.json",FileAccess.WRITE).store_string(text);FileAccess.open("res://tools/biome_extensions/artifacts/cave_default_geology_checkpoint.json",FileAccess.WRITE).store_string(text);print("CAVE_DEFAULT_GEOLOGY_CHECKPOINT reports=",REPORTS.size()," sources=",guards.size()," all_tasks_complete=false");quit()

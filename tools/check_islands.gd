@@ -6,7 +6,7 @@ func _initialize() -> void:
 	reference.settings = TerrainSettings.new()
 	reference._configure_noise()
 	var altered = builder.new()
-	altered.settings = reference.settings.duplicate(true)
+	altered.settings = reference.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	altered.settings.island_size = 6700.0
 	altered.settings.island_spacing = 1.0
 	altered._configure_noise()

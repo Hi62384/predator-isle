@@ -6,11 +6,11 @@ func _initialize() -> void:
 	small.settings = TerrainSettings.new()
 	small._configure_noise()
 	var large = script.new()
-	large.settings = small.settings.duplicate(true)
+	large.settings = small.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	large.settings.island_size = 12000.0
 	large._configure_noise()
 	var smooth = script.new()
-	smooth.settings = large.settings.duplicate(true)
+	smooth.settings = large.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	smooth.settings.shoreline_detail_strength = 0.0
 	smooth._configure_noise()
 	var differences := 0

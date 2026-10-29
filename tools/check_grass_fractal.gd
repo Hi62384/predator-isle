@@ -6,11 +6,11 @@ func _initialize() -> void:
 	layered.settings = TerrainSettings.new()
 	layered._configure_noise()
 	var single = script.new()
-	single.settings = layered.settings.duplicate(true)
+	single.settings = layered.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	single.settings.grass_fractal_octaves = 1
 	single._configure_noise()
 	var disabled = script.new()
-	disabled.settings = layered.settings.duplicate(true)
+	disabled.settings = layered.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	disabled.settings.grass_fractal_strength = 0.0
 	disabled._configure_noise()
 	var curvature := Vector2.ZERO

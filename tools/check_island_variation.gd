@@ -9,7 +9,7 @@ func _initialize() -> void:
 	base.settings.shoreline_detail_strength = 0.0
 	base._configure_noise()
 	var large = script.new()
-	large.settings = base.settings.duplicate(true)
+	large.settings = base.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	large.settings.island_size *= 2.0
 	large._configure_noise()
 	for i in range(1000):

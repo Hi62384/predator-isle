@@ -1,0 +1,22 @@
+extends SceneTree
+func _initialize()->void:
+	var original:String="res://tools/caves/check_actual_graph_native.gd";var frozen:String="res://tools/biome_extensions/artifacts/revisions/experiment_cave_foundation_preflight_9d1502c954fc/sources/tools/caves/cave_field_candidate.gd.txt";var source:String=FileAccess.get_file_as_string(original)
+	var marker:String='var field=Field.new();';assert(source.count(marker)==1)
+	source=source.replace(marker,'''b=make_builder(3,73921)
+	var reference_b=make_builder(3,73921);var reference_script:=GDScript.new();reference_script.source_code=FileAccess.get_file_as_string("'''+frozen+'''")+"\\nfunc has_chunk(key:Vector3i)->bool:return bins.has(key)\\n";assert(reference_script.reload()==OK);var reference=reference_script.new();var compile_start:int=Time.get_ticks_usec();check(reference.compile([data],reference_b._get_height),"Frozen64m query field compiles with only has_chunk capability adapter");var reference_compile_ms:float=(Time.get_ticks_usec()-compile_start)/1000.0
+	var paired_chunks:Array=[];var reference_total:float=0;var candidate_total:float=0
+	'''+marker)
+	var compile:String='check(field.compile([data],b._get_height),"Whole original region implicit field,not selected disjoint tunnel meshes")';assert(source.count(compile)==1)
+	source=source.replace(compile,'compile_start=Time.get_ticks_usec();'+compile+';var candidate_compile_ms:float=(Time.get_ticks_usec()-compile_start)/1000.0')
+	var mesh:String='var arrays:Array=Mesher.new().build(field,key,2);';assert(source.count(mesh)==1)
+	source=source.replace(mesh,'''var pair:Dictionary={}
+		for old:bool in ([true,false] if built%2==0 else [false,true]):
+			var started_mesh:int=Time.get_ticks_usec();var a:Array=Mesher.new().build(reference if old else field,key,2);var elapsed:float=(Time.get_ticks_usec()-started_mesh)/1000000.0;var h:=HashingContext.new();h.start(HashingContext.HASH_SHA256);h.update(var_to_bytes(a));pair[old]={"arrays":a,"sha256":h.finish().hex_encode(),"seconds":elapsed}
+		check(pair[false].sha256==pair[true].sha256,"Every complete actual original mesh position/normal/color array identical,not only triangle counts")
+		reference_total+=pair[true].seconds;candidate_total+=pair[false].seconds;paired_chunks.append({"key":str(key),"original64m_seconds":pair[true].seconds,"candidate16m_seconds":pair[false].seconds,"complete_arrays_sha256":pair[false].sha256,"equal":pair[false].sha256==pair[true].sha256});var arrays:Array=pair[false].arrays;''')
+	source=source.replace('check(keys.size()>8 and keys.size()<256,','check(keys.size()==216,')
+	source=source.replace('"largest_single_chunk_mesh_seconds":largest_chunk_seconds','"paired_chunks":paired_chunks,"reference64m_total_mesh_seconds":reference_total,"candidate16m_total_mesh_seconds":candidate_total,"candidate_reference_mesh_ratio":candidate_total/maxf(reference_total,.000001),"reference64m_compile_ms":reference_compile_ms,"candidate16m_compile_ms":candidate_compile_ms,"reference64m_numeric_array_bytes_excluding_keys_objects":reference.numeric_bytes(),"candidate16m_numeric_array_bytes_excluding_keys_objects":field.numeric_bytes(),"reference64m_query_buckets":reference.bins.size(),"candidate16m_query_buckets":field.bins.size(),"largest_combined_pair_seconds":largest_chunk_seconds')
+	source=source.replace('res://tools/caves/check_actual_graph_native.gd','res://tools/caves/profile_field_bins.gd').replace('check_cave_actual_graph_native.json','profile_cave_field_bins.json')
+	var guard:String='var guards:Dictionary={}';assert(source.count(guard)==1);source=source.replace(guard,guard+';guards["'+original+'"]=FileAccess.get_sha256("'+original+'");guards["'+frozen+'"]=FileAccess.get_sha256("'+frozen+'")')
+	source=source.replace('PRIVATE original actual canonical Spore surface geographic cell,Default-only17node/20edge3D implicit union.','PRIVATE exact frozen64m-versus-candidate16m query-bin comparison at original actual canonical Spore cell,Default-only17node/20edge3D implicit union.216fixedoriginalmeshcells,allcomplete mesh arrays must match;separate initially cold canonical samplers and alternating pair order. Only a has_chunk method is added to frozen source;numeric algorithms unchanged. Memory array bytes exclude keys/Dictionary/hash/object overhead. Query granularity alone changes,mesh grid remains2m/64mchunks. NON-ISOLATED single serial traversal,not repeated runtime/worker/startup gain.')
+	var script:=GDScript.new();script.source_code=source;assert(script.reload()==OK);set_script(script);call_deferred("run")

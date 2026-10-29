@@ -7,7 +7,7 @@ func _initialize() -> void:
 	river.settings.grass_lake_frequency = 0
 	river._configure_noise()
 	var dry = script.new()
-	dry.settings = river.settings.duplicate(true)
+	dry.settings = river.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	dry.settings.grass_river_frequency = 0
 	dry._configure_noise()
 	var curvature := 0.0

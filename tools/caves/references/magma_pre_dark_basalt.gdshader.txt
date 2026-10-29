@@ -1,0 +1,24 @@
+shader_type spatial;
+render_mode cull_back;
+#include "res://shaders/cave_vertex_projection.gdshaderinc"
+varying vec3 rock_position;
+uniform sampler2D volcanic_color:source_color,filter_linear_mipmap_anisotropic,repeat_enable;
+uniform sampler2D volcanic_normal:hint_normal,filter_linear_mipmap_anisotropic,repeat_enable;
+varying vec3 rock_world_normal;
+void vertex(){rock_position=VERTEX+mod(MODEL_MATRIX[3].xyz,vec3(3840.0));rock_world_normal=normalize((MODEL_NORMAL_MATRIX*NORMAL));POSITION=cave_project_vertex(VERTEX,MODEL_MATRIX,VIEW_MATRIX,INV_VIEW_MATRIX,PROJECTION_MATRIX,MODELVIEW_MATRIX);}
+vec3 normal_xy(vec2 p){vec2 xy=texture(volcanic_normal,p).rg*2.0-1.0;return vec3(xy,sqrt(max(.001,1.0-dot(xy,xy))));}
+void fragment(){
+	float family=floor(UV.x+.01);
+	bool glass=family>1.5&&family<2.5;
+	vec3 n=normalize(rock_world_normal),w=pow(abs(n),vec3(5.0));w/=max(dot(w,vec3(1.0)),.00001);
+	vec3 p=rock_position*.25;
+	vec4 detail=texture(volcanic_color,p.zy)*w.x+texture(volcanic_color,p.xz)*w.y+texture(volcanic_color,p.xy)*w.z;
+	float grain=clamp(dot(detail.rgb,vec3(.3,.5,.2))*2.1,.38,1.35);
+	float joints=pow(.5+.5*cos(rock_position.y*4.7+UV.y*6.0),24.0);
+	ALBEDO=(glass?vec3(.022,.025,.027):COLOR.rgb)*grain*(1.0-(family<.5?.16:0.0)*joints);
+	ROUGHNESS=glass?.24:clamp(detail.a,.65,.96);
+	SPECULAR=glass?.47:.29;
+	vec3 a=normal_xy(p.zy),b=normal_xy(p.xz),c=normal_xy(p.xy);
+	vec3 mapped=normalize(vec3(a.z*sign(n.x),a.y,a.x)*w.x+vec3(b.x,b.z*sign(n.y),b.y)*w.y+vec3(c.x,c.y,c.z*sign(n.z))*w.z);
+	NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(n,mapped,glass?.13:.38)),0.0)).xyz);
+}

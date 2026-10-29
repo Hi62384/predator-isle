@@ -7,13 +7,11 @@ func _initialize() -> void:
 	var sampler = script.new()
 	sampler.settings = TerrainSettings.new()
 	sampler.settings.grass_coverage = 100
-	sampler.settings.desert_coverage = 0
-	sampler.settings.snow_coverage = 0
-	sampler.settings.stone_coverage = 0
+	for key:String in ["forest","savanna","swamp","jungle","mountain","tropical","badlands"]+TerrainSettings.EXTENSION_KEYS:sampler.settings.set(key+"_coverage",0)
 	sampler.settings.island_size = 12000
 	sampler._configure_noise()
 	var copy = script.new()
-	copy.settings = sampler.settings.duplicate(true)
+	copy.settings = sampler.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	copy._configure_noise()
 	var minimum := INF
 	var maximum := -INF

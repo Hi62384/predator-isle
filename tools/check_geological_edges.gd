@@ -3,7 +3,7 @@ extends SceneTree
 func _initialize() -> void:
 	var script=load("res://scripts/terrain_mesh_builder.gd")
 	var b=script.new();b.settings=TerrainSettings.new();b._configure_noise()
-	var uncut=script.new();uncut.settings=b.settings.duplicate(true);uncut.settings.grass_plateau_erosion=0;uncut._configure_noise()
+	var uncut=script.new();uncut.settings=b.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL);uncut.settings.grass_plateau_erosion=0;uncut._configure_noise()
 	var cuts:=0;var fans:=0;var walls:=0;var gentle:=0
 	var largest_cut:=0.0
 	var cap_min:=INF;var cap_max:=-INF

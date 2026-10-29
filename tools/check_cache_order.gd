@@ -6,7 +6,7 @@ func _initialize() -> void:
 	warm.settings=TerrainSettings.new()
 	warm._configure_noise()
 	var cold=script.new()
-	cold.settings=warm.settings.duplicate(true)
+	cold.settings=warm.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	cold._configure_noise()
 	var points: Array[Vector2]=[]
 	var values: Array[Vector3]=[]
@@ -41,10 +41,15 @@ func _initialize() -> void:
 		var fx:=smoothstep(0,1,p.x/step-cell.x)
 		var fz:=smoothstep(0,1,p.y/step-cell.y)
 		var expected:=Vector4.ZERO
-		expected[warm._grid_owner(cell.x,cell.y,step)]+=(1-fx)*(1-fz)
-		expected[warm._grid_owner(cell.x+1,cell.y,step)]+=fx*(1-fz)
-		expected[warm._grid_owner(cell.x,cell.y+1,step)]+=(1-fx)*fz
-		expected[warm._grid_owner(cell.x+1,cell.y+1,step)]+=fx*fz
+		var expected_jungle:float=0
+		var expected_mountain:float=0
+		for item in [[cell,(1-fx)*(1-fz)],[cell+Vector2i.RIGHT,fx*(1-fz)],[cell+Vector2i.DOWN,(1-fx)*fz],[cell+Vector2i.ONE,fx*fz]]:
+			var node:Vector2i=item[0];var mass:float=item[1];var owner:int=warm._grid_owner(node.x,node.y,step)
+			if owner==4:expected_jungle+=mass
+			elif owner==5:expected_mountain+=mass
+			else:expected[owner]+=mass
 		assert(expected.is_equal_approx(warm._biome_weights(p.x,p.y)))
+		assert(is_equal_approx(expected_jungle,warm._jungle_weight))
+		assert(is_equal_approx(expected_mountain,warm._mountain_weight))
 	print("PASS 3000 reverse-order heights/control fields and bounded cache sizes")
 	quit()

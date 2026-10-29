@@ -5,7 +5,7 @@ func final_height(p: Vector3) -> float:
 
 func _initialize() -> void:
 	var b=load("res://scripts/terrain_mesh_builder.gd").new()
-	b.settings=load("res://terrain_settings.tres").duplicate(true)
+	b.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	b._configure_noise()
 	var errors: Array[float]=[]
 	var max_error:=0.0
