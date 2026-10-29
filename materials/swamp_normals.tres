@@ -1,0 +1,8 @@
+[gd_resource type="Texture2DArray" load_steps=4 format=3]
+
+[ext_resource type="Image" path="res://materials/swamp_normal_Ground036.res" id="1"]
+[ext_resource type="Image" path="res://materials/swamp_normal_Ground083.res" id="2"]
+[ext_resource type="Image" path="res://materials/swamp_normal_Ground071.res" id="3"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3")])

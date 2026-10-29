@@ -1,0 +1,13 @@
+[gd_resource type="Texture2DArray" load_steps=9 format=3]
+
+[ext_resource type="Image" path="res://materials/savanna_color_dry_grass.res" id="1"]
+[ext_resource type="Image" path="res://materials/savanna_color_sparse_grassy_soil.res" id="2"]
+[ext_resource type="Image" path="res://materials/savanna_color_green_grass.res" id="3"]
+[ext_resource type="Image" path="res://materials/savanna_color_warm_red_weathered_soil.res" id="4"]
+[ext_resource type="Image" path="res://materials/savanna_color_clay_hardpan.res" id="5"]
+[ext_resource type="Image" path="res://materials/savanna_color_weathered_kopje_bedrock.res" id="6"]
+[ext_resource type="Image" path="res://materials/savanna_color_warm_layered_bedrock.res" id="7"]
+[ext_resource type="Image" path="res://materials/savanna_color_cracked_basin_soil.res" id="8"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6"), ExtResource("7"), ExtResource("8")])

@@ -1,0 +1,9 @@
+[gd_resource type="Texture2DArray" load_steps=5 format=3]
+
+[ext_resource type="Image" path="res://materials/snow_color_Snow005.res" id="1"]
+[ext_resource type="Image" path="res://materials/snow_color_Snow006.res" id="2"]
+[ext_resource type="Image" path="res://materials/snow_color_Snow014.res" id="3"]
+[ext_resource type="Image" path="res://materials/snow_color_Ice004.res" id="4"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4")])
