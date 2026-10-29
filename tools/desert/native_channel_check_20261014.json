@@ -1,0 +1,28 @@
+{
+  "actual_render": true,
+  "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "completed": true,
+  "cpu_fixture_negative": 1,
+  "cpu_fixture_positive": 119,
+  "decoder_sha256": "47be43e7a3aa524123eb729aaab7bae673e01e1689e8cbdb400e6904c5009d84",
+  "display": "Windows",
+  "draw_calls": 1.0,
+  "elapsed_s": 0.783,
+  "engine": "4.6.1-stable (official)",
+  "failures": [],
+  "gpu_memory_bytes": 10393083.0,
+  "max_pixel_error_bytes": 0,
+  "negative_cases": 1,
+  "negative_detected": true,
+  "pixel_checks": 360,
+  "positive_cases": 119,
+  "rendered_frames": 7,
+  "renderer": "gl_compatibility",
+  "scope": "Headless only validates structure; actual_render plus 360 framebuffer checks is required for GPU acceptance.",
+  "static_memory_bytes": 32171640,
+  "vertices": 480,
+  "viewport": [
+    960,
+    512
+  ]
+}

@@ -1,0 +1,704 @@
+{
+	"engine": "4.6.1-stable (official)",
+	"failures": [],
+	"meshes": [
+		{
+			"chunk_size_m": 256.0,
+			"coordinate": "(-18, 35)",
+			"resolution": 64,
+			"stage_ms": {
+				"height_and_noise_ms": 107.693,
+				"mesh_arrays_ms": 17.826,
+				"normal_field_ms": 4.02
+			},
+			"vertices": 4737
+		},
+		{
+			"chunk_size_m": 256.0,
+			"coordinate": "(72, 115)",
+			"resolution": 64,
+			"stage_ms": {
+				"height_and_noise_ms": 284.644,
+				"mesh_arrays_ms": 21.517,
+				"normal_field_ms": 2.022
+			},
+			"vertices": 4737
+		},
+		{
+			"chunk_size_m": 16384.0,
+			"coordinate": "(0, 1)",
+			"resolution": 16,
+			"stage_ms": {
+				"height_and_noise_ms": 34.866,
+				"mesh_arrays_ms": 1.086,
+				"normal_field_ms": 61.704
+			},
+			"vertices": 417
+		}
+	],
+	"note": "Nested instrumented times overlap and include timer overhead. Uninstrumented rows are single diagnostic sweeps, not baseline acceptance or a speedup claim.",
+	"os": "Windows",
+	"rows": [
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 137306.045248792,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "sand_sea",
+			"instrumented_us": 72505,
+			"origin": [
+				-4864.0,
+				8960.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 508,
+				"region_node_miss": 4,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 22534,
+				"region_node_hit": 575,
+				"region_node_miss": 106,
+				"region_weights_including_nested_descriptors": 13528,
+				"wind_coordinates": 7531
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 38160,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 137306.045248792,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "sand_sea",
+			"instrumented_us": 62749,
+			"origin": [
+				-4864.0,
+				8960.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 19913,
+				"region_node_hit": 554,
+				"region_weights_including_nested_descriptors": 11470,
+				"wind_coordinates": 6238
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 42304,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 203775.705333349,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "barchan_dunes",
+			"instrumented_us": 73899,
+			"origin": [
+				21504.0,
+				3072.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 5789,
+				"region_node_hit": 508,
+				"region_node_miss": 4,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 33499,
+				"isolated_dunes_nested_in_dunes": 14685,
+				"region_node_hit": 563,
+				"region_node_miss": 90,
+				"region_weights_including_nested_descriptors": 11263,
+				"wind_coordinates": 5813
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 52727,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 203775.705333349,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "barchan_dunes",
+			"instrumented_us": 82760,
+			"origin": [
+				21504.0,
+				3072.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 5789,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 37401,
+				"isolated_dunes_nested_in_dunes": 16292,
+				"region_node_hit": 553,
+				"region_weights_including_nested_descriptors": 12636,
+				"wind_coordinates": 6391
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 49881,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 203477.357239784,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "longitudinal_dunes",
+			"instrumented_us": 64482,
+			"origin": [
+				-5376.0,
+				9472.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 508,
+				"region_node_miss": 4,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 22293,
+				"region_node_hit": 756,
+				"region_node_miss": 73,
+				"region_weights_including_nested_descriptors": 11755,
+				"wind_coordinates": 6073
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 45766,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 0,
+				"regions": 4,
+				"sites": 9,
+				"tiles": 0
+			},
+			"checksum": 203477.357239784,
+			"drainage_calls": {
+
+			},
+			"drainage_nested_stage_us": {
+
+			},
+			"feature": "longitudinal_dunes",
+			"instrumented_us": 67674,
+			"origin": [
+				-5376.0,
+				9472.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 23523,
+				"region_node_hit": 597,
+				"region_weights_including_nested_descriptors": 12276,
+				"wind_coordinates": 6268
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 38842,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 4,
+				"regions": 326,
+				"sites": 30,
+				"tiles": 2
+			},
+			"checksum": 252614.325714356,
+			"drainage_calls": {
+				"catchment_hit": 4,
+				"catchment_miss_including_region_queries": 4,
+				"drainage_sample_including_descriptors": 4225,
+				"tile_miss_including_catchments": 2
+			},
+			"drainage_nested_stage_us": {
+				"catchment_hit": 7,
+				"catchment_miss_including_region_queries": 3776,
+				"drainage_sample_including_descriptors": 67127,
+				"tile_miss_including_catchments": 3853
+			},
+			"feature": "major_canyon",
+			"instrumented_us": 208708,
+			"origin": [
+				39424.0,
+				26368.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 6574,
+				"region_node_hit": 514,
+				"region_node_miss": 326,
+				"region_weights_including_nested_descriptors": 4307,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 39737,
+				"isolated_dunes_nested_in_dunes": 17171,
+				"region_node_hit": 571,
+				"region_node_miss": 2762,
+				"region_weights_including_nested_descriptors": 21132,
+				"wind_coordinates": 7018
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 201140,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 4,
+				"regions": 326,
+				"sites": 30,
+				"tiles": 2
+			},
+			"checksum": 252614.325714356,
+			"drainage_calls": {
+				"drainage_sample_including_descriptors": 4225,
+				"tile_hit": 2
+			},
+			"drainage_nested_stage_us": {
+				"drainage_sample_including_descriptors": 62169,
+				"tile_hit": 6
+			},
+			"feature": "major_canyon",
+			"instrumented_us": 202403,
+			"origin": [
+				39424.0,
+				26368.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 6574,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 39253,
+				"isolated_dunes_nested_in_dunes": 16911,
+				"region_node_hit": 597,
+				"region_weights_including_nested_descriptors": 17546,
+				"wind_coordinates": 6884
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 320533,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 4,
+				"regions": 327,
+				"sites": 30,
+				"tiles": 2
+			},
+			"checksum": 1599939.65733622,
+			"drainage_calls": {
+				"catchment_hit": 4,
+				"catchment_miss_including_region_queries": 4,
+				"drainage_sample_including_descriptors": 4225,
+				"tile_miss_including_catchments": 2
+			},
+			"drainage_nested_stage_us": {
+				"catchment_hit": 7,
+				"catchment_miss_including_region_queries": 3664,
+				"drainage_sample_including_descriptors": 15053,
+				"tile_miss_including_catchments": 3744
+			},
+			"feature": "sandstone_highlands",
+			"instrumented_us": 142330,
+			"origin": [
+				-19968.0,
+				35584.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 4225,
+				"region_node_hit": 521,
+				"region_node_miss": 327,
+				"region_weights_including_nested_descriptors": 4309,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 36101,
+				"isolated_dunes_nested_in_dunes": 13320,
+				"region_node_hit": 543,
+				"region_node_miss": 2615,
+				"region_weights_including_nested_descriptors": 16124,
+				"wind_coordinates": 6680
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 1124608,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 4,
+				"regions": 327,
+				"sites": 30,
+				"tiles": 2
+			},
+			"checksum": 1599939.65733622,
+			"drainage_calls": {
+				"drainage_sample_including_descriptors": 4225,
+				"tile_hit": 2
+			},
+			"drainage_nested_stage_us": {
+				"drainage_sample_including_descriptors": 12545,
+				"tile_hit": 5
+			},
+			"feature": "sandstone_highlands",
+			"instrumented_us": 152298,
+			"origin": [
+				-19968.0,
+				35584.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 4225,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 40144,
+				"isolated_dunes_nested_in_dunes": 14632,
+				"region_node_hit": 567,
+				"region_weights_including_nested_descriptors": 14111,
+				"wind_coordinates": 7281
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 106000,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 2,
+				"regions": 169,
+				"sites": 23,
+				"tiles": 1
+			},
+			"checksum": 650347.052441621,
+			"drainage_calls": {
+				"catchment_miss_including_region_queries": 2,
+				"drainage_sample_including_descriptors": 4225,
+				"tile_miss_including_catchments": 1
+			},
+			"drainage_nested_stage_us": {
+				"catchment_miss_including_region_queries": 2090,
+				"drainage_sample_including_descriptors": 16008,
+				"tile_miss_including_catchments": 2114
+			},
+			"feature": "badlands",
+			"instrumented_us": 145276,
+			"origin": [
+				22528.0,
+				-5632.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 4529,
+				"region_node_hit": 511,
+				"region_node_miss": 169,
+				"region_weights_including_nested_descriptors": 4267,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 34721,
+				"isolated_dunes_nested_in_dunes": 15022,
+				"region_node_hit": 522,
+				"region_node_miss": 1491,
+				"region_weights_including_nested_descriptors": 15204,
+				"wind_coordinates": 6770
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 120785,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 2,
+				"regions": 169,
+				"sites": 23,
+				"tiles": 1
+			},
+			"checksum": 650347.052441621,
+			"drainage_calls": {
+				"drainage_sample_including_descriptors": 4225
+			},
+			"drainage_nested_stage_us": {
+				"drainage_sample_including_descriptors": 14865
+			},
+			"feature": "badlands",
+			"instrumented_us": 150724,
+			"origin": [
+				22528.0,
+				-5632.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"isolated_dunes_nested_in_dunes": 4529,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 36247,
+				"isolated_dunes_nested_in_dunes": 15399,
+				"region_node_hit": 547,
+				"region_weights_including_nested_descriptors": 13817,
+				"wind_coordinates": 7052
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 118070,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 2,
+				"regions": 178,
+				"sites": 24,
+				"tiles": 1
+			},
+			"checksum": 194310.930376469,
+			"drainage_calls": {
+				"catchment_miss_including_region_queries": 2,
+				"drainage_sample_including_descriptors": 4225,
+				"tile_miss_including_catchments": 1
+			},
+			"drainage_nested_stage_us": {
+				"catchment_miss_including_region_queries": 1988,
+				"drainage_sample_including_descriptors": 73842,
+				"tile_miss_including_catchments": 2009
+			},
+			"feature": "alluvial_fan",
+			"instrumented_us": 193257,
+			"origin": [
+				7680.0,
+				27136.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 510,
+				"region_node_miss": 178,
+				"region_weights_including_nested_descriptors": 4269,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 21375,
+				"region_node_hit": 536,
+				"region_node_miss": 1455,
+				"region_weights_including_nested_descriptors": 18775,
+				"wind_coordinates": 6657
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 211205,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 2,
+				"regions": 178,
+				"sites": 24,
+				"tiles": 1
+			},
+			"checksum": 194310.930376469,
+			"drainage_calls": {
+				"drainage_sample_including_descriptors": 4225
+			},
+			"drainage_nested_stage_us": {
+				"drainage_sample_including_descriptors": 83651
+			},
+			"feature": "alluvial_fan",
+			"instrumented_us": 233877,
+			"origin": [
+				7680.0,
+				27136.0
+			],
+			"queries": 4225,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 4225,
+				"region_node_hit": 508,
+				"region_weights_including_nested_descriptors": 4225,
+				"wind_coordinates": 4225
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 25429,
+				"region_node_hit": 661,
+				"region_weights_including_nested_descriptors": 20844,
+				"wind_coordinates": 7671
+			},
+			"step_m": 4.0,
+			"uninstrumented_us": 207163,
+			"warm": true
+		},
+		{
+			"cache_sizes": {
+				"catchments": 9,
+				"regions": 1023,
+				"sites": 49,
+				"tiles": 288
+			},
+			"checksum": 30207.1964924903,
+			"drainage_calls": {
+				"catchment_hit": 799,
+				"catchment_miss_including_region_queries": 9,
+				"drainage_sample_including_descriptors": 288,
+				"tile_miss_including_catchments": 288
+			},
+			"drainage_nested_stage_us": {
+				"catchment_hit": 916,
+				"catchment_miss_including_region_queries": 8554,
+				"drainage_sample_including_descriptors": 15618,
+				"tile_miss_including_catchments": 13650
+			},
+			"feature": "far_1024m_step",
+			"instrumented_us": 28962,
+			"origin": [
+				0.0,
+				16384.0
+			],
+			"queries": 289,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 289,
+				"isolated_dunes_nested_in_dunes": 129,
+				"region_node_hit": 26,
+				"region_node_miss": 1023,
+				"region_weights_including_nested_descriptors": 479,
+				"wind_coordinates": 289
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 3878,
+				"isolated_dunes_nested_in_dunes": 2252,
+				"region_node_hit": 28,
+				"region_node_miss": 8891,
+				"region_weights_including_nested_descriptors": 11297,
+				"wind_coordinates": 479
+			},
+			"step_m": 1024.0,
+			"uninstrumented_us": 22735,
+			"warm": false
+		},
+		{
+			"cache_sizes": {
+				"catchments": 9,
+				"regions": 1023,
+				"sites": 49,
+				"tiles": 288
+			},
+			"checksum": 30207.1964924903,
+			"drainage_calls": {
+				"drainage_sample_including_descriptors": 288,
+				"tile_hit": 288
+			},
+			"drainage_nested_stage_us": {
+				"drainage_sample_including_descriptors": 2337,
+				"tile_hit": 341
+			},
+			"feature": "far_1024m_step",
+			"instrumented_us": 10804,
+			"origin": [
+				0.0,
+				16384.0
+			],
+			"queries": 289,
+			"sampler_calls": {
+				"dunes_including_isolated_candidates": 289,
+				"isolated_dunes_nested_in_dunes": 129,
+				"region_node_hit": 289,
+				"region_weights_including_nested_descriptors": 289,
+				"wind_coordinates": 289
+			},
+			"sampler_nested_stage_us": {
+				"dunes_including_isolated_candidates": 1946,
+				"isolated_dunes_nested_in_dunes": 393,
+				"region_node_hit": 338,
+				"region_weights_including_nested_descriptors": 1096,
+				"wind_coordinates": 457
+			},
+			"step_m": 1024.0,
+			"uninstrumented_us": 7879,
+			"warm": true
+		}
+	],
+	"seed": 73921.0
+}

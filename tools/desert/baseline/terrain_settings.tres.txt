@@ -1,0 +1,14 @@
+[gd_resource type="Resource" script_class="TerrainSettings" format=3 uid="uid://cfihspbq3uamk"]
+
+[ext_resource type="Script" uid="uid://dqunu7cu0q1oq" path="res://scripts/terrain_settings.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+biome_size = 4.7
+grass_region_size = 940000.0
+grass_coverage = 100.0
+height_blend = 12.0
+texture_blend_sharpness = 20.0
+island_size = 100400.0
+island_spacing = 585.0
+

@@ -1,0 +1,100 @@
+{
+  "engine": "4.6.3-stable (official)",
+  "os": "Linux",
+  "samples": [
+    {
+      "all_vertex_weights_pure_grass": false,
+      "chunk_size": 256.0,
+      "coordinate": "(0, 0)",
+      "exact_full_arrays": false,
+      "resolution": 64,
+      "timings": [
+        {
+          "all_ms": [
+            76.279,
+            76.995,
+            77.792,
+            78.26,
+            78.816
+          ],
+          "baseline": true,
+          "median_ms": 77.792
+        },
+        {
+          "all_ms": [
+            78.783,
+            79.16,
+            80.069,
+            80.941,
+            97.334
+          ],
+          "baseline": false,
+          "median_ms": 80.069
+        }
+      ]
+    },
+    {
+      "all_vertex_weights_pure_grass": true,
+      "chunk_size": 256.0,
+      "coordinate": "(-18, 35)",
+      "exact_full_arrays": true,
+      "resolution": 128,
+      "timings": [
+        {
+          "all_ms": [
+            136.832,
+            137.075,
+            153.083,
+            155.067,
+            155.632
+          ],
+          "baseline": true,
+          "median_ms": 153.083
+        },
+        {
+          "all_ms": [
+            147.842,
+            148.377,
+            149.877,
+            154.545,
+            158.542
+          ],
+          "baseline": false,
+          "median_ms": 149.877
+        }
+      ]
+    },
+    {
+      "all_vertex_weights_pure_grass": false,
+      "chunk_size": 16384.0,
+      "coordinate": "(0, 0)",
+      "exact_full_arrays": false,
+      "resolution": 16,
+      "timings": [
+        {
+          "all_ms": [
+            58.005,
+            58.209,
+            59.75,
+            60.007,
+            61.886
+          ],
+          "baseline": true,
+          "median_ms": 59.75
+        },
+        {
+          "all_ms": [
+            58.626,
+            58.917,
+            60.292,
+            60.593,
+            61.922
+          ],
+          "baseline": false,
+          "median_ms": 60.292
+        }
+      ]
+    }
+  ],
+  "settings": "Actual saved preset without coverage override"
+}

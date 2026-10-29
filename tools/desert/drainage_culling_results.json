@@ -1,0 +1,24 @@
+{
+	"cases": [
+		{
+			"culled_candidates_us": 313015,
+			"exact_samples": 8223,
+			"full_candidates_us": 331414,
+			"seed": 73921
+		},
+		{
+			"culled_candidates_us": 261271,
+			"exact_samples": 8223,
+			"full_candidates_us": 251732,
+			"seed": 12345
+		},
+		{
+			"culled_candidates_us": 289105,
+			"exact_samples": 8223,
+			"full_candidates_us": 291235,
+			"seed": -90317
+		}
+	],
+	"failures": [],
+	"note": "Exact heights and all dependent GPU controls, including 128/1024 m boundaries and cache eviction. Single-process timings are diagnostic, not a streaming claim."
+}

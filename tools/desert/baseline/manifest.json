@@ -1,0 +1,29 @@
+{
+  "note": "Source captured through text connector before edits. UTF-8 normalized text hashes, not a claim about Windows original newline bytes. Baseline execution pending; no measured performance yet.",
+  "files": {
+    "scripts/terrain_mesh_builder.gd": {
+      "sha256_normalized_utf8": "164fa0e90bf3f314e4ade5e9c7abe5a947c84550155a45eae6c3b4971de837cd",
+      "bytes_normalized_utf8": 49904
+    },
+    "scripts/chunk_terrain.gd": {
+      "sha256_normalized_utf8": "0f49d5f4f16708517720308cee3bb11f23ee57e43ddfc1409509bcd835d46bd1",
+      "bytes_normalized_utf8": 21844
+    },
+    "scripts/terrain_settings.gd": {
+      "sha256_normalized_utf8": "865388096dff72afd039d3c387c1031135117c34579f80b98a1e63629ce78666",
+      "bytes_normalized_utf8": 13449
+    },
+    "shaders/terrain_biomes.gdshader": {
+      "sha256_normalized_utf8": "2a1ca003bf2a1d38117c7e101859200993b000516a5faa65b162f25b08a5df82",
+      "bytes_normalized_utf8": 36878
+    },
+    "terrain_settings.tres": {
+      "sha256_normalized_utf8": "f4b100be96e4548bbec8b178accaac2956e697c71df6f01fcc0c361e9f9f208c",
+      "bytes_normalized_utf8": 405
+    },
+    "tools/benchmark_hierarchy.gd": {
+      "sha256_normalized_utf8": "cdf736de1b10b3a2866303f1034518099cfcfac2286ef25a2e71afea889cdb00",
+      "bytes_normalized_utf8": 3892
+    }
+  }
+}

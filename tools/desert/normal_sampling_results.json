@@ -1,0 +1,69 @@
+{
+	"cases": [
+		{
+			"central_ms": 93.254,
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 0.0,
+			"fast_ms": 91.634,
+			"span": 256.0
+		},
+		{
+			"central_ms": 111.925,
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 0.0,
+			"fast_ms": 115.152,
+			"span": 256.0
+		},
+		{
+			"central_ms": 50.659,
+			"coordinate": "(0, 1)",
+			"desert_coverage": 0.0,
+			"fast_ms": 42.882,
+			"span": 16384.0
+		},
+		{
+			"central_ms": 98.135,
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 50.0,
+			"fast_ms": 104.768,
+			"span": 256.0
+		},
+		{
+			"central_ms": 217.625,
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 50.0,
+			"fast_ms": 211.916,
+			"span": 256.0
+		},
+		{
+			"central_ms": 132.394,
+			"coordinate": "(0, 1)",
+			"desert_coverage": 50.0,
+			"fast_ms": 91.094,
+			"span": 16384.0
+		},
+		{
+			"central_ms": 99.361,
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 100.0,
+			"fast_ms": 113.679,
+			"span": 256.0
+		},
+		{
+			"central_ms": 184.131,
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 100.0,
+			"fast_ms": 225.663,
+			"span": 256.0
+		},
+		{
+			"central_ms": 90.109,
+			"coordinate": "(0, 1)",
+			"desert_coverage": 100.0,
+			"fast_ms": 60.062,
+			"span": 16384.0
+		}
+	],
+	"failures": [],
+	"note": "Vertex geometry, material payloads and water planes are exact across modes; pure Grass preserves EVERY channel. Desert lighting normals/unused Desert curvature intentionally differ. Existing hierarchy checks cover shared coordinates. Timing rows are diagnostic, not a streaming benchmark."
+}

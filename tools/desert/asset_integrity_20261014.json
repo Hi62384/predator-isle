@@ -1,0 +1,182 @@
+[
+  {
+    "id": "Ground054",
+    "file": "Ground054_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Ground054",
+    "license": "CC0 1.0",
+    "expected_sha256": "9f9459ae378584f568c9da887a30ab5987890df422af5a157763a51992e61245",
+    "actual_sha256": "9f9459ae378584f568c9da887a30ab5987890df422af5a157763a51992e61245",
+    "matches": true,
+    "bytes": 6859366
+  },
+  {
+    "id": "Ground054",
+    "file": "Ground054_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Ground054",
+    "license": "CC0 1.0",
+    "expected_sha256": "39fd2827adfdd4fe53ad58d3ebcae686f789eb9f171d996de8356431ec6fc90d",
+    "actual_sha256": "39fd2827adfdd4fe53ad58d3ebcae686f789eb9f171d996de8356431ec6fc90d",
+    "matches": true,
+    "bytes": 9053937
+  },
+  {
+    "id": "Ground054",
+    "file": "Ground054_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Ground054",
+    "license": "CC0 1.0",
+    "expected_sha256": "2f977986be51d4e07e7a3a03051e49049f9c94cefb0246a714400d2a076c8044",
+    "actual_sha256": "2f977986be51d4e07e7a3a03051e49049f9c94cefb0246a714400d2a076c8044",
+    "matches": true,
+    "bytes": 2896658
+  },
+  {
+    "id": "Rock061",
+    "file": "Rock061_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Rock061",
+    "license": "CC0 1.0",
+    "expected_sha256": "e5e3f7c1dfe274e5b1e4bb2fc06d7fbda0fe9e06463bc74ce5f2cb2af7550b86",
+    "actual_sha256": "e5e3f7c1dfe274e5b1e4bb2fc06d7fbda0fe9e06463bc74ce5f2cb2af7550b86",
+    "matches": true,
+    "bytes": 3686697
+  },
+  {
+    "id": "Rock061",
+    "file": "Rock061_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Rock061",
+    "license": "CC0 1.0",
+    "expected_sha256": "cfe36360a8c64bdcdcd8967aac03c46c3f51b5f02441ea60e678c1f050033cc7",
+    "actual_sha256": "cfe36360a8c64bdcdcd8967aac03c46c3f51b5f02441ea60e678c1f050033cc7",
+    "matches": true,
+    "bytes": 6571324
+  },
+  {
+    "id": "Rock061",
+    "file": "Rock061_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Rock061",
+    "license": "CC0 1.0",
+    "expected_sha256": "aba6b1656172044917273eb152644411e8cafb060222424ea899b2d6d7e97a13",
+    "actual_sha256": "aba6b1656172044917273eb152644411e8cafb060222424ea899b2d6d7e97a13",
+    "matches": true,
+    "bytes": 2794938
+  },
+  {
+    "id": "Ground033",
+    "file": "Ground033_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Ground033",
+    "license": "CC0 1.0",
+    "expected_sha256": "6cbea296b15322fbdf4b4d7b8366bad1918d6498bdd1162fdf7f2aba82b9ad34",
+    "actual_sha256": "6cbea296b15322fbdf4b4d7b8366bad1918d6498bdd1162fdf7f2aba82b9ad34",
+    "matches": true,
+    "bytes": 6190082
+  },
+  {
+    "id": "Ground033",
+    "file": "Ground033_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Ground033",
+    "license": "CC0 1.0",
+    "expected_sha256": "da113756882145cfd9808b82045a051c60edfc49573cc5c07417739c9074d51c",
+    "actual_sha256": "da113756882145cfd9808b82045a051c60edfc49573cc5c07417739c9074d51c",
+    "matches": true,
+    "bytes": 6712188
+  },
+  {
+    "id": "Ground033",
+    "file": "Ground033_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Ground033",
+    "license": "CC0 1.0",
+    "expected_sha256": "865b08503f136906a50faab29f32f8bfe9b757397ccceb7470f635818283d124",
+    "actual_sha256": "865b08503f136906a50faab29f32f8bfe9b757397ccceb7470f635818283d124",
+    "matches": true,
+    "bytes": 2779978
+  },
+  {
+    "id": "Ground092A",
+    "file": "Ground092A_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Ground092A",
+    "license": "CC0 1.0",
+    "expected_sha256": "c1c43fe0b2a8d2632f657c02d8db7cd0c9673bd30a7aadddd9eaa72fc5aef930",
+    "actual_sha256": "c1c43fe0b2a8d2632f657c02d8db7cd0c9673bd30a7aadddd9eaa72fc5aef930",
+    "matches": true,
+    "bytes": 3239580
+  },
+  {
+    "id": "Ground092A",
+    "file": "Ground092A_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Ground092A",
+    "license": "CC0 1.0",
+    "expected_sha256": "7f3dffa2264afae7549c15d1bf83dd88a7c091f7c644801aba50572a5f9fe0a7",
+    "actual_sha256": "7f3dffa2264afae7549c15d1bf83dd88a7c091f7c644801aba50572a5f9fe0a7",
+    "matches": true,
+    "bytes": 5625816
+  },
+  {
+    "id": "Ground092A",
+    "file": "Ground092A_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Ground092A",
+    "license": "CC0 1.0",
+    "expected_sha256": "94dbbf371fad74375335ba646935f3c2790091e37f8c03c7ebbdca85f589def0",
+    "actual_sha256": "94dbbf371fad74375335ba646935f3c2790091e37f8c03c7ebbdca85f589def0",
+    "matches": true,
+    "bytes": 2761414
+  },
+  {
+    "id": "Gravel020",
+    "file": "Gravel020_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Gravel020",
+    "license": "CC0 1.0",
+    "expected_sha256": "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9",
+    "actual_sha256": "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9",
+    "matches": true,
+    "bytes": 3797454
+  },
+  {
+    "id": "Gravel020",
+    "file": "Gravel020_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Gravel020",
+    "license": "CC0 1.0",
+    "expected_sha256": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb",
+    "actual_sha256": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb",
+    "matches": true,
+    "bytes": 9401398
+  },
+  {
+    "id": "Gravel020",
+    "file": "Gravel020_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Gravel020",
+    "license": "CC0 1.0",
+    "expected_sha256": "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6",
+    "actual_sha256": "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6",
+    "matches": true,
+    "bytes": 2383468
+  },
+  {
+    "id": "Ground031",
+    "file": "Ground031_2K-JPG_Color.jpg",
+    "source": "https://ambientcg.com/a/Ground031",
+    "license": "CC0 1.0",
+    "expected_sha256": "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b",
+    "actual_sha256": "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b",
+    "matches": true,
+    "bytes": 6254908
+  },
+  {
+    "id": "Ground031",
+    "file": "Ground031_2K-JPG_NormalGL.jpg",
+    "source": "https://ambientcg.com/a/Ground031",
+    "license": "CC0 1.0",
+    "expected_sha256": "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c",
+    "actual_sha256": "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c",
+    "matches": true,
+    "bytes": 8992674
+  },
+  {
+    "id": "Ground031",
+    "file": "Ground031_2K-JPG_Roughness.jpg",
+    "source": "https://ambientcg.com/a/Ground031",
+    "license": "CC0 1.0",
+    "expected_sha256": "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84",
+    "actual_sha256": "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84",
+    "matches": true,
+    "bytes": 2589289
+  }
+]

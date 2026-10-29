@@ -1,0 +1,149 @@
+PREDATOR ISLE — CURRENT PROJECT DELIVERY / 15 OCTOBER 2026
+
+FOLLOW-UP: this receipt records the earlier verification state. The subsequent
+artifact/performance fixes and final 18-check run are documented in
+FOLLOWUP_FIXES_20261015.txt and the regenerated final_verification.json.
+
+STATUS AND SCOPE
+Implementation and native functional checks are delivered in the actual writable
+project. The user re-enabled testing, then requested NO FURTHER EXPORTS. Exports
+and exported launches performed before that instruction are historical evidence;
+no further export was made after it. No commit, push, reset, clean or history
+rewrite was performed. Existing unrelated changes and the saved world preset
+were preserved. This receipt supersedes CONTINUATION_20261015.txt's no-tests state.
+
+This is not blanket acceptance of every subjective realism/performance target.
+Rock-heavy CPU generation remains slower than simple Desert. Some medium/far
+slopes still look smooth and some sand/rock boundaries patchy. Photographic
+parity, every possible seed, and absence of all repetition are NOT certified.
+The final contact review also shows dark striping on some steep near-camera
+faces. This is an unresolved visual defect, not a passed realism criterion;
+shadows-off and neutral-material comparisons isolate it to surface shading
+rather than shadows or bare geometry. Albedo-only retains stretched patterns;
+mapped normals amplify them. Diagnostic captures are retained in artifacts.
+
+IMPLEMENTED
+- scripts/desert_sampler.gd: bounded cached upwind obstacle envelope and sand
+  accumulation, independent bedrock recesses, rooted local badlands incision,
+  canonical pre-shelf bedding transport and dune-family/crest diagnostics.
+  Final geology pass narrows resistant-cap shoulders into mesa escarpments and
+  deepens the independent structural joints; the existing Grass path is intact.
+- scripts/desert_drainage.gd: at most four short rooted fine gully curves per
+  eligible catchment; exact parent joins/floors; smoothly varying canyon width.
+  Actual channel beds remain graded; broad valley masks no longer flatten all
+  canyon walls into ramps. Heights remain absolute-world-coordinate functions.
+- scripts/terrain_mesh_builder.gd: optional CUSTOM2 float4 transport, including
+  skirts and cached samples. Pure Grass allocates no extra Desert channels.
+- shaders/desert_material.gdshaderinc and shaders/terrain_biomes.gdshader:
+  transported bedding with footprint filtering, independent Rock050 fracture
+  normals, a second existing rock source, stronger mapped rock relief, original
+  salt crust, Desert-only reflectance calibration, and four extra debug views.
+- scripts/desert_settings.gd: meaningful fracture, shelter and albedo controls.
+- scripts/chunk_terrain.gd and scripts/free_camera.gd: feature starts, diagnostic
+  HUD, safe disabled selector and altitude-dependent near plane for distant
+  water-depth precision. Shared lighting and existing Grass material are intact.
+- Conservative isolated-dune subcell culling skips impossible candidates without
+  changing retained profiles. 63,000 exact comparisons pass across three signed
+  seeds, all isolated families, boundaries, cache eviction and reconfiguration.
+- Original salt PBR: tools/desert/bake_salt.gdshader and bake_salt.gd generate
+  color/roughness/height/OpenGL normals offline. Source maps are in
+  assets/textures/desert/original_salt; prepared images are
+  materials/desert_color_original_salt.res and desert_normal_original_salt.res.
+  The geology arrays keep seven shared prepared layers, not per-chunk textures.
+  This is ORIGINAL PROCEDURAL salt, not a scan. No new third-party salt asset
+  was downloaded, following the user's licensing direction. Existing third-party
+  assets and their provenance were not removed or relabeled.
+- Archived backup scripts have .gdignore markers so they cannot register duplicate
+  global classes and prevent project loading.
+- tools/check_cliff_config.gd and check_cliff_config_save.gd now test the user's
+  actual editable layer count rather than obsolete nine-layer/default-size
+  assumptions. The six-layer cliff preset itself was not changed.
+
+NATIVE CHECKS
+Godot 4.6.1 stable, Windows, OpenGL Compatibility, RTX 3060 Laptop GPU.
+tools/desert/project_test_run.json records the final 15-check project-only run.
+Reproduce without any export:
+  powershell -File tools/desert/verify_project.ps1 -Render
+
+Coverage includes core order/cache/reconfigure determinism (including CUSTOM2),
+13,117 canonical comparisons, 2,304 shared coordinates, 1,566 pure Grass neighbors,
+63,000 dune-culling equivalence comparisons, star-edge and seed-transport checks,
+finite unit normals, mesh skirts, exact shared heights, bounded caches, unchanged
+Grass arrays, six parent/child LOD levels, biome coverage, cliff save/reload and
+live add/remove/reorder/replace configuration, prepared assets, actual GPU channel
+transport, palette binding and repeated streamed unload/reload.
+
+The GPU test checks CUSTOM0, packed CUSTOM1 and new CUSTOM2 with 552 framebuffer
+channel comparisons, 183 positive cases and one intentionally broken negative
+case. Zero pixel-byte error was measured. Prepared-resource checks: 27 assertions.
+Sampler invariants report zero exact shared seam-height difference and zero
+pure-Grass height change. This does not prove every rendered LOD arrangement.
+
+The real game controller rendered all 13 requested features at ground, medium
+and aerial distances: 39 shaded views plus 33 debug views. All 72 images and
+preview_report.json are in tools/desert/artifacts. Four labeled review contact
+sheets are there as well. They were visually inspected; remaining smoothness and
+patchy boundary limitations above are deliberate disclosure, not passed art gates.
+Anchors are discovered from the actual generator, not sculpted; the barchan
+anchor now requires local isolated-dune relief instead of only sand coverage.
+Highland anchors require real local escarpment slope. Preview cameras clear
+intervening terrain without editing terrain. Capture source hashes are checked
+against the final production sources before the evidence receipt is generated.
+
+Repeated unload/reload checked five positions, bounded worker/pool/cache counts,
+and byte-identical origin vertices on return. Earlier failed exploratory checks
+were investigated, not counted as passes: stale fixture assumptions were fixed;
+incomplete selected-resource exports were rejected; final project-only logs pass.
+
+PERFORMANCE — DO NOT CLAIM ZERO REGRESSION
+Same renderer, seed 73921, pure Desert coverage, 1280 x 720, saved streaming/LOD
+settings. Native current/baseline reports are in tools/desert/artifacts.
+Uncontended full world fill: current 3.383 s; simple baseline 2.079 s (1.63x).
+Current regional teleport settle: 2.85–3.63 s; baseline 0.98–1.34 s.
+Current static frame p95: approximately 6.23–6.30 ms; GPU p95 1.98–3.13 ms.
+Current maximum measured partition swap: 9.213 ms; plan: 7.436 ms.
+These are measurements on this machine, not minimum-hardware guarantees.
+
+Raw rock-heavy sampling/chunks are still significantly more expensive than the
+old simple biome. Exact CPU rows and warm-query timings are retained in
+tools/desert/cpu_checks_windows.json and final_verification.json. The native
+streaming benchmark passed movement/teleport coverage, overlap, LOD balance and
+cache checks, but that does not erase the CPU regression. Timing runs made while
+other heavy validation jobs ran are not used for the 3.383 s comparison.
+
+CONFIGURING AND USING THE PROJECT
+Open main.tscn and select Terrain. Desert Preview makes a pure-Desert test world.
+Desert Preview Feature selects one of the 13 reproducible landmarks. Empty or
+Disabled retains the saved normal biome world. These do not rewrite presets.
+Expand Settings > Desert Landscape > Desert, or open desert_settings.tres.
+Tune regions/dunes/rock/basins/materials there; save and restart to apply.
+Fracture Strength changes bedrock recesses and mapped rock relief. Wind Shelter
+Strength controls sheltered deposition. Albedo Gain calibrates Desert brightness
+without changing Grass or scene lights. Ripple/micro/macro strengths are separate.
+Shift+F5 cycles Desert views; Ctrl+F5 returns to shaded. Dune debug colors:
+orange transverse, cyan longitudinal, yellow barchan, purple star, green irregular.
+Crest orientation is a field proxy, not exact local branching-ridge direction.
+WASD/QE move, Shift boosts, wheel changes speed, F7/P shows/places a scale marker.
+More usage detail: TERRAIN_TUNING.md.
+
+LIMITATIONS OF THE APPROXIMATIONS
+Shelter samples a cached uncarved bedrock envelope, not recursive full terrain.
+Gullies/drainage are finite rooted approximations, not hydraulic simulation.
+Star/parabolic forms are analytic approximations; mathematical existence does
+not certify every viewpoint's recognizability. Bedding coordinates interpolate
+over the actual mesh; no claim of exact sub-triangle stratigraphic surveying.
+Oases use eligible sea-level depressions, not elevated independent lake planes.
+No unsupported heightfield overhangs, foliage system or animal work was added.
+
+GIT / FILE SIZE
+No Git-eligible working file exceeds 50 MiB; the staged snapshot's largest file
+is 10.67 MiB. Current main/HEAD history has no >100 MiB blob. The old 155,227,707
+byte palette blob exists ONLY in retained backup history, including
+refs/original/refs/heads/main, not the current main branch. It was not deleted.
+Generated builds, shader cache and large QA captures are excluded from Git.
+Old generated build files remain local; no further export is requested or needed.
+
+SOURCE/RESULT FINGERPRINTS
+tools/desert/final_verification.json is generated from actual result files by
+collect_finish_verification.py. It contains source/asset hashes, exact benchmark
+data, the final project-only test run and historical exported-launch evidence.

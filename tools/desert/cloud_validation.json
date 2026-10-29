@@ -1,0 +1,78 @@
+{
+  "engine": "4.6.3.stable.official.7d41c59c4 Linux",
+  "source_sha256": {
+    "desert_settings.tres": "5dda030afc2e8bc843e8d1fcce9849409795ddff61785f24c501d12da45fa66e",
+    "scripts/chunk_terrain.gd": "3ad6f53980fdb51ea2558be7c4aaead6e914307ab1772d510d3519b41cf69270",
+    "scripts/desert_drainage.gd": "5704b71d6b4b9a9c943ac5ae6daf9df9653c199e93b637a4b1f8761b7c6798f3",
+    "scripts/desert_sampler.gd": "9d223ab654285adc1bb35d3f84bccc357251462b375f724a78f4f90c38fdeb3f",
+    "scripts/desert_settings.gd": "751d0a8c732fb1ea05fede555839badec3942d7e8532f293e82396667a4127ca",
+    "scripts/free_camera.gd": "9a0b099146058ddd0997629bfddcff5c8fc66b866977cb77e758bb0a668ee3c1",
+    "scripts/terrain_mesh_builder.gd": "7ca5468d0f5a1f088b221f8deec1f8d0c4ca52241a276f79aaad75a4ca0ad42c",
+    "scripts/terrain_settings.gd": "553a0b0d8c65b8cd894b440cfdbf2996235d2a27f0fa06e3c13672dae74f409f",
+    "shaders/desert_material.gdshaderinc": "1f573f585dd7420197274cbee7a886c25f35cb0e374220a8fff8766fbe39824c",
+    "shaders/terrain_biomes.gdshader": "b08ffb65262280c7a7abdbaf50556a802f89bcb0e54d45b272f2c82bd98aa363",
+    "tools/desert/audit_drainage_beds.gd": "c1b4c7d36137d2fcf26ce52548d759f374707be9c4e23698284aa1621fe9dc8b",
+    "tools/desert/audit_dune_slopes.gd": "d57595893f96b14460be300a0d1666f34e5c629d07ed5d7de43da7c1a2fb4993",
+    "tools/desert/audit_network_crossings.gd": "50a6a3fa2add9348b35e049430c3c26173e5d28913f1ad3704082dc07aa26f01",
+    "tools/desert/audit_sand_slopes.gd": "b63d8abd73df3ffd11d747e615ecfdaa5d7ba88aad5e236af34db717b763eaca",
+    "tools/desert/baseline/builder.gd": "164fa0e90bf3f314e4ade5e9c7abe5a947c84550155a45eae6c3b4971de837cd",
+    "tools/desert/baseline/controller.gd": "8f4091b438524a6bb7c038e4dc395b0554479c03f7cce6624ff2be2f8303587a",
+    "tools/desert/baseline/terrain.gdshader": "2a1ca003bf2a1d38117c7e101859200993b000516a5faa65b162f25b08a5df82",
+    "tools/desert/benchmark_desert_native.gd": "90ed1a2b92fefb7dbd5cac795e5694dee26ad114599300abdfab12a430d49923",
+    "tools/desert/build_palette.gd": "45d34d878eef48b1e99f1df3d3ef6609b186fce9e806bca9af23a2c10faa78d6",
+    "tools/desert/check_desert.gd": "394068b64a6a6d974d484ec45ed7e4aba88f640c584cc7ff1413f71b1e1aa10c",
+    "tools/desert/check_saved_preset.gd": "d25bd7de41d7f928569657a6546d89c66d5b01c04238883cf5b1c1cb7e930434",
+    "tools/desert/export_geometry_diagnostics.gd": "f0053ceb98b62229f3f5e21fbc06597aabebe255ee25c4d49617d897e6213e3d",
+    "tools/desert/fetch_assets.ps1": "4b2e0066b2f014e79850133aafa184df027ea5e3a5637831c079c6359e6469e1",
+    "tools/desert/find_previews.gd": "066dd96e741f70a80ca785d4c446f3f031914f40c47eb997fed6099d56d90fef",
+    "tools/desert/preview_desert.gd": "31e8db3da4dc5b554a6d6a72cf23dd6467bda0a63563637221bff02987eaed61",
+    "tools/desert/validate_desert.ps1": "2f4a5941bea33d6e973e000d4a3c63cd6cf692836d49eace3a020cf637888905"
+  },
+  "native_windows_executed": false,
+  "gpu_rendered": false,
+  "shader_uniform_count": 87,
+  "reduced_lod_stream_smoke": {
+    "maximum_lod": 3,
+    "commits": 3,
+    "leaves_each": 78,
+    "teleports": 2,
+    "synthetic_textures": true,
+    "passed": true
+  },
+  "dune_probe": {
+    "default_max_degrees": 32.424954825197,
+    "extreme_max_degrees": 34.0388165776773,
+    "global_proof": false
+  },
+  "hard_acceptance": "not_complete: old-Desert CPU nonregression failed; asset packing/pixel review and native rendering/performance pending",
+  "verified_utc": "2026-10-13T05:14Z",
+  "retained_candidate": "Exact sampling with dendritic graded drainage. Rejected 8m height lattice is separate and not staged.",
+  "full_lod_stream_smoke": {
+    "maximum_lod": 6,
+    "worker_count": 4,
+    "leaves_per_commit": [
+      150,
+      147,
+      150
+    ],
+    "teleports": 2,
+    "cache_limit": 64,
+    "synthetic_textures": true,
+    "headless": true,
+    "passed": true
+  },
+  "drainage": {
+    "shared_edges_checked": 314,
+    "max_junction_degree": 3,
+    "catchments_in_crossing_audit": 75,
+    "nonjunction_crossings": 0,
+    "dry_centerline_steps": 48156,
+    "dry_steps_with_downstream_rise_above_2m": 0,
+    "largest_dry_rise_m": 0.0264830589294434,
+    "largest_water_enabled_shore_rise_m": 2.74025464057922,
+    "global_hydrology_proven": false
+  },
+  "asset_download_native_executed": true,
+  "native_windows_executed_note": "This false flag is for Godot integration/performance/render tests. The separate PowerShell PBR download did execute successfully.",
+  "shader_optimization": "Inactive rock-strata and far-ripple work bypassed. Source parse only; no GPU speedup claim."
+}

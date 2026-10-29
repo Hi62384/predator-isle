@@ -12,7 +12,7 @@ func capture(scene: Node,label: String,mode: int) -> void:
 	image.save_png("res://tools/normal_repair_"+label+".png")
 
 func run() -> void:
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	scene.get_node("Interface").hide()

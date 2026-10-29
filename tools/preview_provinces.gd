@@ -2,7 +2,7 @@ extends "res://tools/preview_erosion.gd"
 
 func run() -> void:
 	var builder=load("res://scripts/terrain_mesh_builder.gd").new()
-	builder.settings=load("res://terrain_settings.tres").duplicate(true)
+	builder.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	builder.settings.grass_coverage=100
 	builder.settings.desert_coverage=0;builder.settings.snow_coverage=0;builder.settings.stone_coverage=0
 	builder._configure_noise()
@@ -19,7 +19,7 @@ func run() -> void:
 			for label in candidates:
 				var score: float=candidates[label]
 				if score>scores.get(label,-INF): scores[label]=score;sites[label]=Vector3(px,height,pz)
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene);scene.get_node("FreeCamera").set_process(false);scene.get_node("Interface").hide()
 	for label in sites:

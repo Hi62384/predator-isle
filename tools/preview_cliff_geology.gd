@@ -2,7 +2,7 @@ extends "res://tools/preview_erosion.gd"
 
 func run() -> void:
 	var builder=load("res://scripts/terrain_mesh_builder.gd").new()
-	builder.settings=load("res://terrain_settings.tres").duplicate(true)
+	builder.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	builder.settings.grass_coverage=100
 	builder.settings.desert_coverage=0
 	builder.settings.snow_coverage=0
@@ -30,7 +30,7 @@ func run() -> void:
 		push_error("Need five separated cliff sites; found %d" % sites.size())
 		quit(1)
 		return
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	scene.get_node("FreeCamera").set_process(false)

@@ -21,11 +21,11 @@ func capture(scene: Node, name: String, focus: Vector3, offset: Vector3) -> void
 
 func run() -> void:
 	var b=load("res://scripts/terrain_mesh_builder.gd").new()
-	b.settings=load("res://terrain_settings.tres").duplicate(true)
+	b.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	b.settings.grass_coverage=100;b.settings.desert_coverage=0;b.settings.snow_coverage=0;b.settings.stone_coverage=0
 	b._configure_noise()
 	var uncut=load("res://scripts/terrain_mesh_builder.gd").new()
-	uncut.settings=b.settings.duplicate(true);uncut.settings.grass_plateau_erosion=0;uncut._configure_noise()
+	uncut.settings=b.settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL);uncut.settings.grass_plateau_erosion=0;uncut._configure_noise()
 	var cliff:=Vector3.ZERO
 	var cut:=Vector3.ZERO
 	var peak:=Vector3.ZERO
@@ -50,7 +50,7 @@ func run() -> void:
 					if score>cliff_score: cliff_score=score;cliff=p;cliff_offset=direction*440+Vector3(55,145,30)
 	assert(cliff_score>-INF and cut_score>15,"No suitable geological test sites")
 	print("CUT depth score=",cut_score)
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	scene.get_node("FreeCamera").set_process(false)

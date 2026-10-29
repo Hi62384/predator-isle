@@ -1,0 +1,10 @@
+{
+	"albedo_changed_pixels": 0,
+	"exposed_rock_pixels": 176228,
+	"failures": [],
+	"source_hashes": {
+		"scripts/desert_settings.gd": "6bf958ce713a6ec3242c6ca623376515c85ca4589946587badfca6c4a69bf519",
+		"shaders/desert_material.gdshaderinc": "d17eb15fb6494e99a6b9be3c58d23c05b528ec29e5f6316cd58e1c96552be8d3"
+	},
+	"visibly_changed_normal_pixels": 158177
+}

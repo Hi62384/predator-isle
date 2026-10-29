@@ -1,0 +1,142 @@
+[
+  {
+    "script": "tools/desert/native_core_check.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\native_core_check.engine.log",
+    "rendered": false,
+    "elapsed_s": 8.0487383,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_canonical_neighbors.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_canonical_neighbors.engine.log",
+    "rendered": false,
+    "elapsed_s": 1.098741,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_dune_culling.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_dune_culling.engine.log",
+    "rendered": false,
+    "elapsed_s": 2.6801977,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_height_only.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_height_only.engine.log",
+    "rendered": false,
+    "elapsed_s": 4.2522603,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_normal_sampling.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_normal_sampling.engine.log",
+    "rendered": false,
+    "elapsed_s": 2.6734037,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_drainage_culling.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_drainage_culling.engine.log",
+    "rendered": false,
+    "elapsed_s": 2.7607379,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_sparse_halo.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_sparse_halo.engine.log",
+    "rendered": false,
+    "elapsed_s": 13.6890144,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_far_mesh_budget.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_far_mesh_budget.engine.log",
+    "rendered": false,
+    "elapsed_s": 1.0401036,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_desert_edge_cases.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_desert_edge_cases.engine.log",
+    "rendered": false,
+    "elapsed_s": 0.5632436,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_desert.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_desert.engine.log",
+    "rendered": false,
+    "elapsed_s": 12.6900307,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_saved_preset.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_saved_preset.engine.log",
+    "rendered": false,
+    "elapsed_s": 6.1132807,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_cache_order.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_cache_order.engine.log",
+    "rendered": false,
+    "elapsed_s": 2.8949766,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_hierarchical_mesh.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_hierarchical_mesh.engine.log",
+    "rendered": false,
+    "elapsed_s": 1.3212257,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_biome_coverage.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_biome_coverage.engine.log",
+    "rendered": false,
+    "elapsed_s": 2.4296071,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_cliff_config_save.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_cliff_config_save.engine.log",
+    "rendered": false,
+    "elapsed_s": 0.5820072,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_shader_assets.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_shader_assets.engine.log",
+    "rendered": true,
+    "elapsed_s": 3.8662892,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/desert/check_desert_gpu_channels.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_desert_gpu_channels.engine.log",
+    "rendered": true,
+    "elapsed_s": 1.3818933,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_material_binding.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_material_binding.engine.log",
+    "rendered": true,
+    "elapsed_s": 2.3674274,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_cliff_config.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_cliff_config.engine.log",
+    "rendered": true,
+    "elapsed_s": 4.8303906,
+    "exit_code": 0
+  },
+  {
+    "script": "tools/check_streaming_reload.gd",
+    "log": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\finish_verification\\check_streaming_reload.engine.log",
+    "rendered": true,
+    "elapsed_s": 12.6720054,
+    "exit_code": 0
+  }
+]

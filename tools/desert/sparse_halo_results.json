@@ -1,0 +1,8 @@
+{
+	"comparisons": 1053,
+	"failures": [],
+	"timings": {
+		"pruned_us": 6318083,
+		"reference_us": 6631173
+	}
+}

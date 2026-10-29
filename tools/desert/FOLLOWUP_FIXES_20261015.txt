@@ -1,0 +1,118 @@
+DESERT FOLLOW-UP FIXES — 15 OCTOBER 2026
+
+HISTORICAL RECEIPT: superseded by CLOSEOUT_20261015.txt (20 checks and expanded
+three-seed/five-family rendered review). The measurements below describe the
+previous delivery, not the latest source fingerprint.
+
+Scope: address steep-face texture stretching/striping, blotchy sand-rock
+transitions, overly smooth rock slopes, and generation bottlenecks. No exports,
+new third-party assets, commits, pushes or history rewrites were performed.
+
+RETAINED FIXES
+- shaders/desert_material.gdshaderinc: actual triangle derivatives correct the
+  projection axes where the canonical smooth normal disagrees with the rendered
+  escarpment. This removes long stretched ribbons without changing Grass.
+  Signed UV axes use that same corrected normal, including the case where a
+  smooth crest normal has a zero component but its triangle projection does not.
+  Multi-scale normal slopes have a bounded 48-degree tilt, avoiding black tangent
+  lighting when the overlapped maps add together. Diagnostic Surface 3 reproduces
+  the former projection for a controlled visual regression comparison.
+- Material weights now normalize their continuous physical contributions rather
+  than subtracting a ranked cutoff. In nearly tied mixtures, the old subtraction
+  amplified tiny variations into isolated flat-colored islands. Exact-zero and
+  sub-0.4% contributors still skip texture fetches. Typical surfaces use 2–4
+  families; boundary pixels can use up to six, an explicit GPU quality tradeoff.
+- Removed the extra curvature-derived sand coverage and reduced the 27 m rock
+  border perturbation. Canonical sheltered deposition still controls aprons.
+  Curvature/crest proxies no longer select albedo material families: compaction
+  follows canonical drainage, basin and deposition. A transported dune-elevation
+  proxy only modulates fine normal/ripple relief and restrained crest tint.
+  This removes small stencil-sized islands and prevents pale patches appearing
+  on sparse distant sand meshes, without flattening dunes or removing textures.
+- Added a footprint-filtered 380 m rock-normal relief band, alongside 28/95 m
+  detail, so distant faces retain readable geological variation.
+- scripts/desert_settings.gd / desert_sampler.gd: Rock Relief Metres exposes
+  the existing 95 m bedrock form field with a 24 m default amplitude before
+  ruggedness/exposure weighting. Connected drainage beds remain protected.
+- scripts/terrain_mesh_builder.gd: height-only derivative probes avoid material
+  payload construction. A separate bounded 8192-entry cache cannot poison vertex
+  metadata. Typed local values and unrolled scalar packing remove redundant
+  per-vertex Variant indexing without changing byte quantization.
+  Fast Normal Sampling uses two fixed-world 32 m forward probes in dry pure
+  Desert, with a smooth Desert-dominant transition. Pure Grass/water retain the
+  previous central derivative. Shared-coordinate normals remain canonical.
+  This changes Desert lighting normals, NOT terrain height, geometry or material
+  payloads. Its now-unused Desert curvature stencil fades out with that transition.
+  The central mode remains available for art comparison in desert_settings.tres.
+- scripts/desert_drainage.gd: bounded 128 m candidate subtiles conservatively
+  skip irrelevant descriptors. Profiles, ordering and Newton solves are retained.
+- scripts/chunk_terrain.gd: distant batches are bounded by estimated sampling
+  work (4096 probes) as well as the existing user chunk-count cap. This reduces
+  long-tail work imbalance without increasing worker count or changing meshes.
+- tools/desert/preview_desert.gd: debug parameters now update ALL active LOD
+  material duplicates. Previously only LOD0 changed, invalidating much of the
+  medium/aerial diagnostic evidence. The final full sweep replaces those views.
+
+VERIFICATION
+The final 18-check run is tools/desert/project_test_run.json. Three added checks:
+  check_height_only.gd: all returned mesh channels byte-identical to full-payload
+  derivative queries in Grass/mixed/Desert, plus independent legacy scalar packing.
+  check_drainage_culling.gd: 24,669 exact height/control comparisons over three
+  signed seeds, 128/1024 m boundaries, cache eviction and bounded cache sizes.
+  check_normal_sampling.gd: geometry/material bytes and water planes unchanged
+  between central and forward modes; every pure-Grass channel remains identical.
+Existing canonical, seam, Grass, LOD, GPU transport, shader/resource, configuration
+save/reload and streamed-reload checks remain included. No test is an export.
+
+Native timing reports and the source-fingerprinted final capture report are in
+tools/desert/artifacts. Timing results and review conclusions are summarized in
+final_verification.json after the last project-only runs complete.
+
+FINAL NATIVE RESULTS / REVIEW
+Godot 4.6.1, OpenGL Compatibility, RTX 3060 Laptop, 1280 x 720, four workers.
+Final full-world fill: 2.892 s (previous delivered run: 3.383 s).
+An otherwise identical central-normal reference filled in 3.262 s; the paired
+two-probe run reduced that measurement by 11.35%. Against the previous delivery,
+the measured reduction is 14.52%. These are single-run comparisons, NOT a
+statistically established general speedup. No worker count or mesh density cuts.
+Regional teleport settle: 2.591–3.462 s. Static frame p95: 6.280–6.387 ms;
+GPU p95: 2.021–3.214 ms. Maximum partition swap: 10.001 ms; plan: 6.074 ms.
+Coverage, visible-overlap, LOD-balance and cache checks: zero failures.
+The refreshed simple baseline filled in 1.270 s. Therefore baseline CPU parity
+is NOT reached (the richer biome is about 2.28x this refreshed reference).
+The earlier 1.63x comparison used the previous baseline run and is superseded.
+
+All 39 shaded and 33 diagnostic captures were refreshed after final geometry
+changes, and the four contact sheets were inspected. Long stretched near-face
+ribbons are corrected at the reviewed locations; continuous material mixing
+removes the ranked-mask amplification and softens the transitions. Wider rock
+relief is visible, although distant heightfield meshes still show faceting and
+some smooth or patchy areas remain. Barchan crests and longitudinal ridges are
+visible, but this is not blanket acceptance of every dune family/seed/viewpoint.
+The legacy-projection comparison uses the same final geometry/camera, not a
+different seed or lighting setup. Its captures have _legacy_projection suffixes.
+
+These are completed bug fixes and measured optimizations, not an assertion that
+all subjective art requirements or the original CPU nonregression target passed.
+
+An experimental 8 m interpolated dune cache was tested and REMOVED: its small
+microbenchmark benefit did not improve native loading. No approximate dune
+reconstruction or Dune Field Step option is shipped. The original analytic
+dunes, configured widths and saved-world compatibility remain intact.
+
+USE
+Select Terrain in main.tscn, then Settings > Desert Landscape > Desert. Rock
+Relief Metres is in Sandstone; existing Fracture Strength, Wind Shelter Strength,
+micro-normal, macro-detail and ripple controls remain independently editable.
+Save and restart to regenerate. Desert Preview Feature selects a landmark.
+Fast Normal Sampling is enabled by default; disable it to use the previous
+central derivative lighting at additional generation cost. It never changes
+the terrain's actual heights, PBR control payloads or saved biome geography.
+The saved biome preset and Grass source material remain unchanged.
+
+ACCEPTANCE BOUNDARY
+Functional correctness and the specific reviewed artifact fixes are distinct
+from photographic parity, every possible seed, or zero cost for richer geology.
+The richer biome is still more CPU-expensive than the simpler reference. Native
+benchmarks report that cost rather than presenting cache microbenchmarks as an
+end-to-end speedup. No export or additional asset download is needed.

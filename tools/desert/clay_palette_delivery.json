@@ -1,0 +1,85 @@
+﻿{
+    "state":  "prepared_published_not_rendered",
+    "run_directory":  "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\tools\\desert\\artifacts\\current_clay_20261014_184214_34b98218",
+    "outputs":  [
+                    {
+                        "path":  "materials/desert_color_polyhaven_clay.res",
+                        "sha256":  "abe6609de580c7056739ca1b036232914e9af1f09e9833ea5da783d148567016",
+                        "readback_verified":  true
+                    },
+                    {
+                        "path":  "materials/desert_normal_polyhaven_clay.res",
+                        "sha256":  "69f23e7e2825352d4bd1cdc27feb1d0e8456d226242dd42f6f775a5a5f8c22fc",
+                        "readback_verified":  true
+                    },
+                    {
+                        "path":  "materials/desert_color_roughness_clay.tres",
+                        "sha256":  "1f9187cf328a5cd9cdb4ec4520ef823ae2af1a40a959cbdf4660b0ddbfdb56e3",
+                        "readback_verified":  true
+                    },
+                    {
+                        "path":  "materials/desert_normals_clay.tres",
+                        "sha256":  "5745ba699ff4c2f2a85efc8874d319bb904bde0b9d3272f6a69efa0aca773f8b",
+                        "readback_verified":  true
+                    }
+                ],
+    "source_provenance":  "assets/textures/desert/polyhaven/mud_cracked_dry_riverbed_002/provenance.json",
+    "original_resource_hashes":  {
+                                     "desert_color_roughness.tres":  "5842a88a5e4248df4f824c4574bde6ffe0262ba7093fa3006b8975d71868d210",
+                                     "desert_color_Ground092A.res":  "214bfb6bf50813d50252979fd1f72978337d22e88e720d5a6392c153bc47a8e0",
+                                     "desert_normal_Ground031.res":  "073e7ef19c5ffcf9f298464026b7dee400a7566598168ee0b7dea5a4a71a29b9",
+                                     "desert_color_Ground031.res":  "6e8f0a948085c12665fc9e305cb8da2fb8eac038fd45308444ec9e3475d863f0",
+                                     "desert_normal_Ground092A.res":  "812fb55c83169bda482b8505613db36a2fe82d4acb00843ffa219ce87a307a69",
+                                     "desert_color_Ground033.res":  "f708a3668a92dfda0241fb7a3d32ca4736b06c5ac21c75600acc7d6fc2e209ac",
+                                     "desert_color_Rock061.res":  "4a5af237b49c742656119bc9db0ae419aace05d6ec6a0d6dc3e4fb67b9e400ae",
+                                     "desert_color_Ground054.res":  "e43bf1898f27e00a330eb6db6680c6762add42a11806e9d7e16a290c171b5a97",
+                                     "desert_normal_Rock061.res":  "c2676e522104d25a5275ceb5d704b0760e1e43af8ba9c2a53b3737688c3262fe",
+                                     "desert_normal_Ground054.res":  "4d50a8c1372805359b39ee28f64e1e525d2ff7cd470778040a17aa79a86505a5",
+                                     "desert_normal_Gravel020.res":  "a8cdeb5b5c9f4d6fa94a08cb7a3e4f35fe2d3f647894ea7a0bd6da485a415036",
+                                     "desert_normals.tres":  "ec599c655b7697574cb10f0090ee7612abd80da0c3e94b7b1155ba937fa33f42",
+                                     "desert_color_Gravel020.res":  "2388d4388aae0a52bff46b7ad5179c226f7694074ed2e648ffbc554ff90f29ea",
+                                     "desert_normal_Ground033.res":  "3774067e60aa6a0afc941c907d4dd3b17b0506c8e9e21b1b7595d7a5e6afe46d"
+                                 },
+    "preparation":  {
+                        "color_bytes":  5592432,
+                        "color_format":  "2K BC3 with linear roughness alpha",
+                        "license":  "CC0-1.0",
+                        "mipmaps":  true,
+                        "normal_bytes":  1398128,
+                        "normal_format":  "1K BC5 OpenGL XY",
+                        "original_resources_preserved":  true,
+                        "physical_repeat_metres":  2.0,
+                        "role":  "Cracked dry riverbed clay; not salt",
+                        "source":  "https://polyhaven.com/a/mud_cracked_dry_riverbed_002"
+                    },
+    "supervision":  [
+                        {
+
+                        },
+                        {
+
+                        },
+                        {
+
+                        },
+                        {
+
+                        },
+                        {
+                            "failure":  null,
+                            "minimum_free_bytes":  3813941248,
+                            "utc":  "2026-10-14T18:42:14.8628414Z",
+                            "elapsed_s":  0.97685669999999991,
+                            "peak_child_working_set_bytes":  143089664,
+                            "arguments":  "--headless --audio-driver Dummy --path \"C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\tools\\desert\\artifacts\\current_clay_20261014_184214_34b98218\" --script res://build_clay_palette.gd",
+                            "exit_code":  0,
+                            "limits":  {
+                                           "start_free_bytes":  805306368,
+                                           "child_cap_bytes":  402653184,
+                                           "seconds":  180,
+                                           "running_free_bytes":  402653184
+                                       },
+                            "free_before_bytes":  3934302208
+                        }
+                    ]
+}

@@ -1,0 +1,59 @@
+{
+  "kind": "local source delivery record, not test or acceptance evidence",
+  "date": "2026-10-14",
+  "software_tests_run": false,
+  "previews_run": false,
+  "benchmarks_run": false,
+  "parser_run": false,
+  "new_workers_started": 0,
+  "active_model_reasoning": "not exposed to worker; no override requested",
+  "source_review": "tools/desert/SOURCE_REVIEW_20261014.md",
+  "before_hash_scope": "Exact start-of-pass working-tree bytes where a temporary snapshot exists; null means not captured, not necessarily a new file.",
+  "files": [
+    {
+      "path": "scripts/desert_sampler.gd",
+      "before_sha256": "05cf6bd6d9167953d9648264003f597804d0fcb56465b8d0119680367097380e",
+      "after_sha256": "2ad0f49ced5d4c2e918a0c7c2dfc6ef154a47a4f5fea9fe8a298057e73be7ec1"
+    },
+    {
+      "path": "scripts/desert_drainage.gd",
+      "before_sha256": "2ba88ad90c5a251e1f4fd8368b3662102224030bd39bd6764e0ec48eea05fcb4",
+      "after_sha256": "746b6aa907804a98627dcffb60bff370f1921a428bb3851ec00e8b4e1b487766"
+    },
+    {
+      "path": "shaders/desert_material.gdshaderinc",
+      "before_sha256": "a764523f5554b543f2e33b48943c46feec3086bc72d2cb33aab3630ed11728bb",
+      "after_sha256": "44c8f5e93bb7a1f39583321cfad28d3a8a358e6115b84ea86f3202ee929d1c7b"
+    },
+    {
+      "path": "scripts/chunk_terrain.gd",
+      "before_sha256": "75a7382fdc1c1ab2a035295ec79034ad9ceea5e8d4520bcfcea449dd9f7a6c47",
+      "after_sha256": "086498002e9c834c77a7090ccc0626e9404b2e6ff002a13b62dd0dd036fed1a4"
+    },
+    {
+      "path": "scripts/free_camera.gd",
+      "before_sha256": "3b3ab0a0814abc4ca547102fffd2ca6b2a786e183714ddf06ce58a545e437249",
+      "after_sha256": "ec9552f6b153239fbcbda50c0cf41436e73968c9b5a81a3368dd138fc4d29807"
+    },
+    {
+      "path": "TERRAIN_TUNING.md",
+      "before_sha256": "d55f124ccd25e773b85bf35f1bf8270fb2c6798cc53d58eed40bb9d2a0c3e57e",
+      "after_sha256": "8933bcac421e8fda5b15787fe5a3f5d92a018952a06cc6e10b9573cfd4807d06"
+    },
+    {
+      "path": "tools/desert/ACCEPTANCE.md",
+      "before_sha256": null,
+      "after_sha256": "89ab726c13ebfdae1cfcff36af431e537ea5b61701f0ba018192aff1b1ffe6c9"
+    },
+    {
+      "path": "tools/desert/requirements_status.json",
+      "before_sha256": null,
+      "after_sha256": "d579f16f32bcecda7fd95773e7cd44cb4bc645ad984adc93ba66bffd9341f442"
+    },
+    {
+      "path": "tools/desert/SOURCE_REVIEW_20261014.md",
+      "before_sha256": null,
+      "after_sha256": "fbb0fa980f97ab1811e953d145cdf67f1bb9a727d065bcc310f6a18fbe7046ec"
+    }
+  ]
+}

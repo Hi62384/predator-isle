@@ -1,0 +1,91 @@
+{
+	"note": "Finite final-height probes, 25 catchments per configuration, approximately 25m spacing, inland active channels. Dry excludes oasis shore wetness >=0.01. Wet shore/pool intersections are reported separately, not hidden as dry passes. Not an exhaustive proof.",
+	"results": [
+		{
+			"all_downstream_uphill_steps_over_2m": 1,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 9997,
+			"seed": 73921,
+			"tested_centerline_steps": 10096,
+			"water_supported": true,
+			"worst_all_downstream_rise_m": 2.74025404453278,
+			"worst_dry": {
+				"catchment": "(-1, 0)",
+				"floor": 5.20891618728638,
+				"h": 5.15931177139282,
+				"nominal": 5.208915673456,
+				"previous_h": 5.18579530715942,
+				"region": "[0.0, 0.0, 0.50695061683655, 0.0, 0.0, 0.0, 0.49304938316345, 0.24961410462856, 0.88445556163788, 0.46662437915802, 0.13671980798244]",
+				"surface": "(0.248815, 1.0, 0.345135, 0.552129)",
+				"x": -8023.10693359375,
+				"z": 4398.22021484375
+			},
+			"worst_dry_downstream_rise_m": 0.0264835357666016
+		},
+		{
+			"all_downstream_uphill_steps_over_2m": 0,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 10117,
+			"seed": 73921,
+			"tested_centerline_steps": 10117,
+			"water_supported": false,
+			"worst_all_downstream_rise_m": 0.0,
+			"worst_dry": {
+
+			},
+			"worst_dry_downstream_rise_m": 0.0
+		},
+		{
+			"all_downstream_uphill_steps_over_2m": 0,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 6817,
+			"seed": 12345,
+			"tested_centerline_steps": 6817,
+			"water_supported": true,
+			"worst_all_downstream_rise_m": 0.0,
+			"worst_dry": {
+
+			},
+			"worst_dry_downstream_rise_m": 0.0
+		},
+		{
+			"all_downstream_uphill_steps_over_2m": 0,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 6817,
+			"seed": 12345,
+			"tested_centerline_steps": 6817,
+			"water_supported": false,
+			"worst_all_downstream_rise_m": 0.0,
+			"worst_dry": {
+
+			},
+			"worst_dry_downstream_rise_m": 0.0
+		},
+		{
+			"all_downstream_uphill_steps_over_2m": 0,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 7204,
+			"seed": 90317,
+			"tested_centerline_steps": 7204,
+			"water_supported": true,
+			"worst_all_downstream_rise_m": 0.0,
+			"worst_dry": {
+
+			},
+			"worst_dry_downstream_rise_m": 0.0
+		},
+		{
+			"all_downstream_uphill_steps_over_2m": 0,
+			"dry_downstream_uphill_steps_over_2m": 0,
+			"dry_steps": 7204,
+			"seed": 90317,
+			"tested_centerline_steps": 7204,
+			"water_supported": false,
+			"worst_all_downstream_rise_m": 0.0,
+			"worst_dry": {
+
+			},
+			"worst_dry_downstream_rise_m": 0.0
+		}
+	]
+}

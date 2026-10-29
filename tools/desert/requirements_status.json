@@ -1,0 +1,326 @@
+{
+  "current_source_review": "CLOSEOUT_20261015.txt",
+  "historical_entries_only": true,
+  "current_verification": "15 October closeout: 20 project-only checks passed, plus the rendered broad-rock-relief test (158177 visibly changed normal pixels, zero changed albedo pixels). Exact unused-halo pruning and selective payload memoization retain mesh bytes; close mesh density is unchanged. Ordinary-slope projection correction is limited to under-projected escarpments. Pure Desert far meshes use configurable bounded spacing, default 512m. Five dune families in three signed seeds at three distances supplement the 72 geographical/debug views, all source/pixel hashes verified. Editor import succeeds. Native fill measured 2.786s versus previous 2.892s and refreshed simple baseline 1.311s; CPU baseline parity remains unmet and angular heightfield silhouettes are not universally eliminated. See CLOSEOUT_20261015.txt and final_verification.json. No exports or downloads performed. Historical rows below are not blanket acceptance.",
+  "scope": "Historical per-section entries retained for audit. Current project checks are in final_verification.json; do not interpret historical rows as blanket artistic/performance acceptance.",
+  "sections": [
+    {
+      "section": 1,
+      "requirement": "DESERT GEOGRAPHIC VARIATION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Seven regions and landform families exist; geographic beauty not accepted."
+    },
+    {
+      "section": 2,
+      "requirement": "LARGE-SCALE REGIONAL IDENTITY",
+      "status": "cloud_field_checked",
+      "evidence_or_gap": "Deterministic 8 km regional identities; 256 m fixed control lattice."
+    },
+    {
+      "section": 3,
+      "requirement": "REGIONAL SCALE AND TRANSITIONS",
+      "status": "cloud_field_checked",
+      "evidence_or_gap": "Soft regional weights; grid independent of camera, chunk and LOD."
+    },
+    {
+      "section": 4,
+      "requirement": "REALISTIC SAND DUNE GENERATION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Five asymmetric families; grounded relief plots inspected; native recognition pending."
+    },
+    {
+      "section": 5,
+      "requirement": "WIND-DRIVEN DUNE GEOMETRY",
+      "status": "cloud_probes_passed",
+      "evidence_or_gap": "Shared bounded wind phase and repose-oriented width caps; no exhaustive global slope proof."
+    },
+    {
+      "section": 6,
+      "requirement": "DUNE GEOMETRIC DETAIL HIERARCHY",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Compound macro dunes, secondary crests and shader micro ripples; rendered scale review pending."
+    },
+    {
+      "section": 7,
+      "requirement": "SAND SEAS MUST LOOK BEAUTIFUL FROM FAR AWAY",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "Macro crests persist in canonical far sampling; horizon composition not accepted."
+    },
+    {
+      "section": 8,
+      "requirement": "DESERT PLAINS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Low relief rocky plains and sand sheets sampled; source texture review pending."
+    },
+    {
+      "section": 9,
+      "requirement": "ROCKY DESERT TERRAIN",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Rock exposures and outcrops generated; source maps and native visuals pending."
+    },
+    {
+      "section": 10,
+      "requirement": "SANDSTONE MOUNTAINS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Ridges/highlands and slope-safe heightfield relief; silhouettes need native review."
+    },
+    {
+      "section": 11,
+      "requirement": "CANYONS AND RAVINES",
+      "status": "cloud_geometry_checked",
+      "evidence_or_gap": "Meandering trunk, staggered tributaries, finite walls and graded beds; three-seed final-height profiles and 75-catchment crossing audit passed dry-channel thresholds. Native realism pending."
+    },
+    {
+      "section": 12,
+      "requirement": "SANDSTONE CLIFFS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Finite shelves/walls, triplanar rock and normal-source structure; actual maps pending."
+    },
+    {
+      "section": 13,
+      "requirement": "SANDSTONE STRATIFICATION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Tilted irregular tonal bedding. Geological coherence requires native multi-view review."
+    },
+    {
+      "section": 14,
+      "requirement": "CLIFF MACRO TEXTURING",
+      "status": "asset_pack_and_visual_pending",
+      "evidence_or_gap": "Rock061 source archive downloaded on Windows. Dedicated normals are staged at 5/28/95 m scales; actual packing/pixels/native rendering pending."
+    },
+    {
+      "section": 15,
+      "requirement": "IMPORTANT HEIGHTFIELD LIMITATION",
+      "status": "source_and_mesh_checked",
+      "evidence_or_gap": "No overhangs/caves/mushroom caps forced into terrain heightfield; finite unit mesh normals checked."
+    },
+    {
+      "section": 16,
+      "requirement": "BADLANDS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Ribbed badlands and dry incision exist; resemblance to banded reference remains a visual gate."
+    },
+    {
+      "section": 17,
+      "requirement": "DRY RIVERBEDS / WADIS",
+      "status": "cloud_dry_profiles_passed",
+      "evidence_or_gap": "314 shared graph edges, maximum junction degree 3; 48,156 dry centerline steps over three seeds and both water modes had no rise over 2 m. Water-disabled samples had no measured downstream rise. One larger oasis-shore carve is reported separately; no exhaustive hydraulic proof."
+    },
+    {
+      "section": 18,
+      "requirement": "ALLUVIAL FANS",
+      "status": "cloud_geometry_reviewed",
+      "evidence_or_gap": "Shallow fan deposition at tributary/basin junctions, excluded from the active bed. Updated height diagnostics no longer show the original carved high-rim wedges; native fan/material review pending."
+    },
+    {
+      "section": 19,
+      "requirement": "SALT FLATS AND DRY LAKEBEDS",
+      "status": "asset_pack_and_visual_pending",
+      "evidence_or_gap": "Dry basin/salt masks and low relief implemented. Ground031 cracked-ground and pale Ground033 source bytes downloaded; packing and appearance acceptance pending. Ground033 is not claimed to be salt photogrammetry."
+    },
+    {
+      "section": 20,
+      "requirement": "OASES",
+      "status": "cloud_water_gate_passed",
+      "evidence_or_gap": "Rare regional sea-level basins; tested disabled water removes wetness and depression carve; no vegetation added."
+    },
+    {
+      "section": 21,
+      "requirement": "SAND ACCUMULATION AROUND ROCKS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Sheltered drainage, lowlands and fan aprons gather sand. Lee obstruction realism needs native review."
+    },
+    {
+      "section": 22,
+      "requirement": "DESERT MATERIAL SYSTEM \u2014 MAJOR PRIORITY",
+      "status": "asset_and_visual_pending",
+      "evidence_or_gap": "Six structural families with optional shared PBR arrays; existing palette fallback is incomplete."
+    },
+    {
+      "section": 23,
+      "requirement": "USE REAL PBR TEXTURES",
+      "status": "downloaded_native_unpacked",
+      "evidence_or_gap": "Official ambientCG six-source job succeeded, exit 0, 2026-10-13 04:37:42Z. Color/NormalGL/Roughness source/license/hash manifest freshly read after return. Actual map pixels, archive-entry verification, packing and rendering pending."
+    },
+    {
+      "section": 24,
+      "requirement": "REALISTIC SAND TEXTURING",
+      "status": "asset_and_visual_pending",
+      "evidence_or_gap": "Multi-scale sand/grain source mapping; actual close texture quality not accepted."
+    },
+    {
+      "section": 25,
+      "requirement": "WIND RIPPLE NORMAL MAPS",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Shared-phase directional shader ripples with analytic footprint filtering; no tiny geometry ripples."
+    },
+    {
+      "section": 26,
+      "requirement": "SAND COLOR VARIATION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Restrained macro/meso sand tints and region palette; native visual review pending."
+    },
+    {
+      "section": 27,
+      "requirement": "DUNE MATERIAL DISTRIBUTION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Loose sand, lee ripple attenuation, basin/rock weighting; crest detail quality pending."
+    },
+    {
+      "section": 28,
+      "requirement": "MULTI-SCALE MATERIAL TEXTURING",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Macro regional fields, meso sediment, micro maps and rock macro normals implemented."
+    },
+    {
+      "section": 29,
+      "requirement": "MATERIAL DISTRIBUTION MUST FOLLOW GEOGRAPHY",
+      "status": "source_reviewed",
+      "evidence_or_gap": "Materials follow exposure, slope, drainage, basin, deposition and wetness; small perturbations only."
+    },
+    {
+      "section": 30,
+      "requirement": "NATURAL MATERIAL TRANSITIONS",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "Top-three structural weight blending and spatial anti-tiling require native seam/normal review."
+    },
+    {
+      "section": 31,
+      "requirement": "AVOID TEXTURE REPETITION",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "Rotated unequal-frequency near sampling plus coherent macro fields; no anti-repetition acceptance without actual maps."
+    },
+    {
+      "section": 32,
+      "requirement": "DIRECTIONAL DESERT DETAIL",
+      "status": "implemented_partial",
+      "evidence_or_gap": "CPU and shader share bounded wind phase; directional ripples retained at controlled scale."
+    },
+    {
+      "section": 33,
+      "requirement": "DESERT PATHS AND NATURAL GROUND ROUTES",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Natural compacted/gravel dry-wash corridors; no artificial roads or reused Grass trail paint in pure Desert."
+    },
+    {
+      "section": 34,
+      "requirement": "DISTINCT DESERT COLOR PALETTES",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Warm sand, muted rocky, red sandstone, pale basin and off-white salt palette controls."
+    },
+    {
+      "section": 35,
+      "requirement": "DESERT BIOME BOUNDARIES",
+      "status": "cloud_geometry_checked",
+      "evidence_or_gap": "Normal biome blending and continuous oasis floor; mixed transition preview located; native material blending pending."
+    },
+    {
+      "section": 36,
+      "requirement": "DESERT REGIONS MUST FEEL NATURAL, NOT FANTASTICAL",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "All 39 final scientific relief panels inspected. Fan and radial-junction artifacts corrected. Broad valley proportions, badlands erosion resemblance and sandstone silhouettes still require native visual acceptance."
+    },
+    {
+      "section": 37,
+      "requirement": "PRESERVE LARGE CALM REGIONS",
+      "status": "cloud_geometry_reviewed",
+      "evidence_or_gap": "Calm plains and basins deliberately retained; no detail density added everywhere."
+    },
+    {
+      "section": 38,
+      "requirement": "DISTANT TERRAIN QUALITY",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "Far macro geometry present and source albedo remains mipmapped; actual horizon/macro readability pending."
+    },
+    {
+      "section": 39,
+      "requirement": "LOD COMPATIBILITY",
+      "status": "cloud_invariants_passed",
+      "evidence_or_gap": "Canonical shared heights, parent-child LODs, control byte counts and unit normals tested; native seams pending."
+    },
+    {
+      "section": 40,
+      "requirement": "PERFORMANCE AND GENERATION SPEED",
+      "status": "failed_performance_gate",
+      "evidence_or_gap": "Retained exact-sampling candidate costs about 2.26\u20134.51x original simple Desert in latest same-process cloud inland chunk tests. Two exact-output optimization passes and a cheaper drainage topology retained. An 8m lattice experiment rejected for up to 3.24m geometric error. Native practical budget unmeasured."
+    },
+    {
+      "section": 41,
+      "requirement": "OPTIMIZED DUNE GENERATION",
+      "status": "cloud_source_and_cost_checked",
+      "evidence_or_gap": "At most nine isolated-dune descriptors, cached regional controls, inactive dune branch skip and bounded caches."
+    },
+    {
+      "section": 42,
+      "requirement": "LOD-AWARE DETAIL PROCESSING",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Canonical CPU geometry unchanged by LOD; shader micro detail footprint/distance filtered. Native cost/aliasing pending."
+    },
+    {
+      "section": 43,
+      "requirement": "SHADER OPTIMIZATION",
+      "status": "native_gpu_pending",
+      "evidence_or_gap": "Top-three families, sparse triplanar axes, shared arrays and explicit gradients. Inactive rock-strata, sand-boundary and distant-ripple branches skip work. Shader parsed (87 uniforms), but GPU timing/visual validation pending."
+    },
+    {
+      "section": 44,
+      "requirement": "THREADING",
+      "status": "cloud_full_lod_stream_passed",
+      "evidence_or_gap": "Actual controller/WorkerThreadPool source with maximum LOD6 and four workers committed 150/147/150-leaf balanced partitions and two teleports. Synthetic textures/headless fixture; no native performance claim."
+    },
+    {
+      "section": 45,
+      "requirement": "TERRAIN DEBUG VISUALIZATION",
+      "status": "implemented_partial",
+      "evidence_or_gap": "Ten Desert debug views added without renumbering old modes; GPU debug images pending."
+    },
+    {
+      "section": 46,
+      "requirement": "CONFIGURATION",
+      "status": "applied_source_checked",
+      "evidence_or_gap": "Compact DesertSettings resource, Inspector groups and preview overrides; saved coverage/settings remain unchanged."
+    },
+    {
+      "section": 47,
+      "requirement": "DESERT-SPECIFIC TESTING",
+      "status": "cloud_locations_found",
+      "evidence_or_gap": "13 seed-73921 procedural feature locations and capture harness; actual native captures pending."
+    },
+    {
+      "section": 48,
+      "requirement": "VISUAL VALIDATION",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "All 39 final scientific heightfield panels inspected at 256/2048/16384m spans, with final source hashes. These are plan-view relief diagnostics, not ground-perspective game/PBR screenshots."
+    },
+    {
+      "section": 49,
+      "requirement": "COMPARE PERFORMANCE",
+      "status": "partial_cloud_only",
+      "evidence_or_gap": "Captured pre-edit baseline sources measured after implementation, same engine/settings/inland coordinates; absolute sampling/chunk/memory data saved. Full-LOD functional streaming passed. Native commit/GPU/fill/VRAM and historical pre-edit runtime measurements absent."
+    },
+    {
+      "section": 50,
+      "requirement": "IMPLEMENTATION PROCESS",
+      "status": "applied_native_validation_pending",
+      "evidence_or_gap": "49-file checkpoint applied with fresh exact bases and readback verification, including five existing runtime integrations. Architecture and user saved settings preserved. Native import/performance/visual acceptance awaits RAM and approved serialized jobs."
+    },
+    {
+      "section": 51,
+      "requirement": "COMMON FAILURES TO AVOID",
+      "status": "not_fully_passed",
+      "evidence_or_gap": "Known hard gap: CPU regression. PBR source packing, true GPU/native integration and visual acceptance still incomplete. No full-completion claim."
+    },
+    {
+      "section": 52,
+      "requirement": "FINAL VISUAL TARGET",
+      "status": "native_visual_pending",
+      "evidence_or_gap": "Same procedural sampler supports the requested scene families, but beauty/realism of all seven scene targets not accepted."
+    },
+    {
+      "section": 53,
+      "requirement": "SUCCESS CRITERIA",
+      "status": "not_complete",
+      "evidence_or_gap": "Completion criteria not met until performance, actual assets, full native integration and multi-view visual validation pass."
+    }
+  ]
+}

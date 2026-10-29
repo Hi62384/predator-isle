@@ -1,6 +1,6 @@
 extends "res://tools/preview_erosion.gd"
 func run() -> void:
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	scene.get_node("FreeCamera").set_process(false)

@@ -6,7 +6,7 @@ func run() -> void:
 		quit(1)
 		return
 	print("PATH_PREVIEW_LOADING_SCENE")
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	print("PATH_PREVIEW_SCENE_INSTANTIATED")
 	var terrain=scene.get_node("Terrain")
 	terrain.grass_preview=true

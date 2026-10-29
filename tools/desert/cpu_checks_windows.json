@@ -1,0 +1,304 @@
+{
+	"baseline_note": "Baseline source captured before changes; measured in the same process after implementation. No historical baseline time is invented.",
+	"connected_graph_edges_checked": 314,
+	"cpu_chunks": [
+		{
+			"above_water_vertices": 0,
+			"all_ms": [
+				82.34,
+				84.792,
+				90.715
+			],
+			"baseline": true,
+			"case": "underwater_control",
+			"chunk_size_m": 256.0,
+			"coordinate": "(16, -12)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": -22.0134162902832,
+			"height_min_m": -26.073823928833,
+			"median_cold_ms": 84.792,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				44.465,
+				46.713,
+				48.257
+			],
+			"baseline": true,
+			"case": "sand_sea",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-18, 35)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": 27.4784374237061,
+			"height_min_m": 10.8565740585327,
+			"median_cold_ms": 46.713,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 16641,
+			"all_ms": [
+				159.806,
+				166.606,
+				184.297
+			],
+			"baseline": true,
+			"case": "sand_sea_close",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-18, 35)",
+			"estimated_array_payload_bytes": 1606724,
+			"height_max_m": 27.4874401092529,
+			"height_min_m": 10.8540258407593,
+			"median_cold_ms": 166.606,
+			"resolution": 128
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				45.704,
+				47.509,
+				54.754
+			],
+			"baseline": true,
+			"case": "canyon",
+			"chunk_size_m": 256.0,
+			"coordinate": "(62, 115)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": 28.1733245849609,
+			"height_min_m": 11.7770957946777,
+			"median_cold_ms": 47.509,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				46.091,
+				46.158,
+				49.879
+			],
+			"baseline": true,
+			"case": "highlands",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-97, 53)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": 27.9361915588379,
+			"height_min_m": 10.5685739517212,
+			"median_cold_ms": 46.158,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				48.752,
+				48.874,
+				54.09
+			],
+			"baseline": true,
+			"case": "badlands",
+			"chunk_size_m": 256.0,
+			"coordinate": "(9, 137)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": 26.9881000518799,
+			"height_min_m": 10.2834587097168,
+			"median_cold_ms": 48.874,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 289,
+			"all_ms": [
+				22.33,
+				22.492,
+				23.049
+			],
+			"baseline": true,
+			"case": "far_1024m_step",
+			"chunk_size_m": 16384.0,
+			"coordinate": "(0, 1)",
+			"estimated_array_payload_bytes": 36036,
+			"height_max_m": 26.966947555542,
+			"height_min_m": 10.4595918655396,
+			"median_cold_ms": 22.492,
+			"resolution": 16
+		},
+		{
+			"above_water_vertices": 0,
+			"all_ms": [
+				72.998,
+				76.39,
+				84.492
+			],
+			"baseline": false,
+			"case": "underwater_control",
+			"chunk_size_m": 256.0,
+			"coordinate": "(16, -12)",
+			"estimated_array_payload_bytes": 426564,
+			"height_max_m": -22.0134162902832,
+			"height_min_m": -26.073823928833,
+			"median_cold_ms": 76.39,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				116.53,
+				117.237,
+				117.718
+			],
+			"baseline": false,
+			"case": "sand_sea",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-18, 35)",
+			"estimated_array_payload_bytes": 578148,
+			"height_max_m": 32.2885818481445,
+			"height_min_m": 23.8392276763916,
+			"median_cold_ms": 117.237,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 16641,
+			"all_ms": [
+				368.625,
+				403.517,
+				414.672
+			],
+			"baseline": false,
+			"case": "sand_sea_close",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-18, 35)",
+			"estimated_array_payload_bytes": 2172004,
+			"height_max_m": 32.2885818481445,
+			"height_min_m": 23.8392276763916,
+			"median_cold_ms": 403.517,
+			"resolution": 128
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				189.121,
+				203.526,
+				211.723
+			],
+			"baseline": false,
+			"case": "canyon",
+			"chunk_size_m": 256.0,
+			"coordinate": "(62, 115)",
+			"estimated_array_payload_bytes": 578148,
+			"height_max_m": 151.027420043945,
+			"height_min_m": 52.6615982055664,
+			"median_cold_ms": 203.526,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				185.433,
+				188.878,
+				189.012
+			],
+			"baseline": false,
+			"case": "highlands",
+			"chunk_size_m": 256.0,
+			"coordinate": "(-97, 53)",
+			"estimated_array_payload_bytes": 578148,
+			"height_max_m": 460.732025146484,
+			"height_min_m": 156.993881225586,
+			"median_cold_ms": 188.878,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 4225,
+			"all_ms": [
+				185.361,
+				192.513,
+				210.535
+			],
+			"baseline": false,
+			"case": "badlands",
+			"chunk_size_m": 256.0,
+			"coordinate": "(9, 137)",
+			"estimated_array_payload_bytes": 578148,
+			"height_max_m": 181.154586791992,
+			"height_min_m": 85.9800567626953,
+			"median_cold_ms": 192.513,
+			"resolution": 64
+		},
+		{
+			"above_water_vertices": 288,
+			"all_ms": [
+				60.894,
+				61.325,
+				63.257
+			],
+			"baseline": false,
+			"case": "far_1024m_step",
+			"chunk_size_m": 16384.0,
+			"coordinate": "(0, 1)",
+			"estimated_array_payload_bytes": 49380,
+			"height_max_m": 432.505676269531,
+			"height_min_m": -0.3833247423172,
+			"median_cold_ms": 61.325,
+			"resolution": 16
+		}
+	],
+	"duration_s": 12.027065,
+	"engine": "4.6.1-stable (official)",
+	"failures": [],
+	"grass_max_height_delta_m": 0.0,
+	"max_drainage_junction_degree": 3,
+	"native_windows": true,
+	"oasis_water_gate": {
+		"disabled_height_m": 5.80703932747221,
+		"supported_height_m": -3.16137498617172,
+		"supported_wetness": 1.0
+	},
+	"os": "Windows",
+	"shared_seam_max_delta_m": 0.0,
+	"static_memory_mb": 29.1461248397827,
+	"terrain_sampling": [
+		{
+			"baseline": true,
+			"checksum": 177261.88763684,
+			"origin": "(-4608.0, 8960.0)",
+			"queries": 10000,
+			"warm_us_per_query": 6.5905
+		},
+		{
+			"baseline": true,
+			"checksum": 220498.591472428,
+			"origin": "(15872.0, 29440.0)",
+			"queries": 10000,
+			"warm_us_per_query": 6.9284
+		},
+		{
+			"baseline": true,
+			"checksum": 208806.05368286,
+			"origin": "(-24832.0, 13568.0)",
+			"queries": 10000,
+			"warm_us_per_query": 7.2423
+		},
+		{
+			"baseline": false,
+			"checksum": 291500.252479553,
+			"origin": "(-4608.0, 8960.0)",
+			"queries": 10000,
+			"warm_us_per_query": 18.5017
+		},
+		{
+			"baseline": false,
+			"checksum": 1017288.27627182,
+			"origin": "(15872.0, 29440.0)",
+			"queries": 10000,
+			"warm_us_per_query": 42.0268
+		},
+		{
+			"baseline": false,
+			"checksum": 2759952.63323975,
+			"origin": "(-24832.0, 13568.0)",
+			"queries": 10000,
+			"warm_us_per_query": 35.6881
+		}
+	],
+	"tile_boundary_2cm_max_control_delta": 0.000702136952895671,
+	"tile_boundary_2cm_max_height_delta_m": 0.143135309732713
+}

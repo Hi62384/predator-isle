@@ -1,0 +1,31 @@
+{
+    "batch":  "PredatorIsle/01_geometry_wind",
+    "archive_sha256":  "2e59c909aa76d804ffbe3f96aa663c6f2a8b07577ea8b9172d17e3d6841be400",
+    "patch_sha256":  "819eaa811a16d57fc8dfa4e5234a8b76fca199630003f6b7d468c812313329eb",
+    "precondition_target_count":  4,
+    "unchanged_dependencies":  11,
+    "postcondition_target_count":  4,
+    "backup":  "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\tools\\delivery_correctness_20261015\\backups\\batch01_geometry_wind_20261015_3188cd22a5344ffc9625061a589ba69c",
+    "targets":  [
+                    {
+                        "path":  "scripts/chunk_terrain.gd",
+                        "pre_sha256":  "ea84a9950a76cad0e74e50c6c9472f77953072c3f9b3c1169c526669c8bbe3f3",
+                        "post_sha256":  "66b460a61152ae20797535e6161db1811e4c6fc7de527fa6f3e9fcb22bf55dd8"
+                    },
+                    {
+                        "path":  "scripts/desert_sampler.gd",
+                        "pre_sha256":  "ce19b4357a9bf915b74271b9aeb10737fc453c5dc33991d5da02d1454bca245c",
+                        "post_sha256":  "d83518dcea7ee85a3f9590ed52f954d31326eabdb816229cb00871a4659aa381"
+                    },
+                    {
+                        "path":  "shaders/desert_material.gdshaderinc",
+                        "pre_sha256":  "55c0b00892b4928425efc9d9d485ed739188928d98467eef32c38a2a28b2083e",
+                        "post_sha256":  "04977dba5e4d9660ec1a1f59232ef3fea8a087c831a286941adae1ebbf10d303"
+                    },
+                    {
+                        "path":  "tools/desert/check_desert_edge_cases.gd",
+                        "pre_sha256":  null,
+                        "post_sha256":  "821c44339f138f3a03273f2601fb6983f4477efd799c23fc06f4bb075d93b1e8"
+                    }
+                ]
+}

@@ -5,7 +5,7 @@ func _initialize() -> void:
 
 func _run() -> void:
 	var sampler = load("res://scripts/terrain_mesh_builder.gd").new()
-	sampler.settings = load("res://terrain_settings.tres").duplicate(true)
+	sampler.settings = load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	sampler.settings.grass_coverage = 100
 	sampler.settings.desert_coverage = 0
 	sampler.settings.snow_coverage = 0
@@ -27,7 +27,7 @@ func _run() -> void:
 		var uploaded := Time.get_ticks_usec()
 		print("PROFILE resolution=",resolution," worker_arrays_ms=",(built-start)/1000.0," main_mesh_submit_ms=",(uploaded-built)/1000.0)
 		print("STAGES ",sampler.last_build_profile)
-	var scene = load("res://main.tscn").instantiate()
+	var scene = load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").settings = sampler.settings
 	root.add_child(scene)
 	if OS.get_cmdline_user_args().has("debug"):

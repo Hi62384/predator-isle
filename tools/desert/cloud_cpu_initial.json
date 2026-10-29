@@ -1,0 +1,81 @@
+{
+  "superseded": true,
+  "warning": "Underwater control coordinate only; these timings do not measure Desert terrain generation and describe an obsolete early implementation. Use cloud_cpu_final.json for inland comparisons.",
+  "baseline_note": "Baseline source captured before changes; measured in the same process after implementation. No historical baseline time is invented.",
+  "cpu_chunks": [
+    {
+      "all_ms": [
+        4.89,
+        4.907,
+        5.02
+      ],
+      "baseline": true,
+      "estimated_array_payload_bytes": 36036,
+      "median_cold_ms": 4.907,
+      "resolution": 16
+    },
+    {
+      "all_ms": [
+        54.143,
+        54.269,
+        54.467
+      ],
+      "baseline": true,
+      "estimated_array_payload_bytes": 426564,
+      "median_cold_ms": 54.269,
+      "resolution": 64
+    },
+    {
+      "all_ms": [
+        202.49,
+        210.884,
+        211.439
+      ],
+      "baseline": true,
+      "estimated_array_payload_bytes": 1606724,
+      "median_cold_ms": 210.884,
+      "resolution": 128
+    },
+    {
+      "all_ms": [
+        5.681,
+        5.961,
+        6.639
+      ],
+      "baseline": false,
+      "estimated_array_payload_bytes": 41040,
+      "median_cold_ms": 5.961,
+      "resolution": 16
+    },
+    {
+      "all_ms": [
+        57.946,
+        58.558,
+        61.889
+      ],
+      "baseline": false,
+      "estimated_array_payload_bytes": 483408,
+      "median_cold_ms": 58.558,
+      "resolution": 64
+    },
+    {
+      "all_ms": [
+        230.245,
+        233.055,
+        234.684
+      ],
+      "baseline": false,
+      "estimated_array_payload_bytes": 1818704,
+      "median_cold_ms": 233.055,
+      "resolution": 128
+    }
+  ],
+  "duration_s": 2.232832,
+  "engine": "4.6.3-stable (official)",
+  "failures": [],
+  "grass_max_height_delta_m": 0.0,
+  "native_windows": false,
+  "os": "Linux",
+  "shared_seam_max_delta_m": 0.0,
+  "static_memory_mb": 27.9047021865845
+}

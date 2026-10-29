@@ -1,0 +1,1856 @@
+start a max capability task in predator isle
+
+
+
+# PREDATOR ISLE — COMPLETE REALISTIC DESERT BIOME IMPLEMENTATION
+
+## OVERALL OBJECTIVE
+
+I want you to implement an **extremely realistic, visually beautiful, highly varied Desert biome** for my existing Godot 4 procedural terrain system.
+
+The terrain generator, infinite chunk streaming, biome selection, LOD system, terrain shaders, and Grass biome already exist.
+
+**DO NOT rebuild the terrain architecture from scratch.**
+
+Inspect the existing project and implement the Desert biome using the established systems.
+
+The Desert must look like a believable real-world desert landscape, not simply grass terrain recolored yellow.
+
+I want the Desert biome to contain enormous geographic variety, beautifully textured surfaces, realistic sand formations, eroded rock, and recognizable landforms.
+
+The result must remain compatible with the existing infinite chunked terrain system and must generate quickly.
+
+### PRIMARY PRIORITIES
+
+1. Extremely realistic desert terrain geometry.
+2. Enormous geographical variation.
+3. Beautiful, believable, non-repetitive texturing.
+4. Realistic dunes and wind-shaped sand.
+5. Natural sandstone cliffs, canyons, and eroded terrain.
+6. Distinct desert landscape regions.
+7. Seamless transitions between geographic features.
+8. Realistic macro, medium, and micro detail.
+9. Very large view distance.
+10. Fast, optimized, deterministic generation.
+
+The Desert should look convincing even without foliage, rocks placed as props, buildings, or other environmental decorations.
+
+**The terrain geometry and terrain materials alone must make the world beautiful.**
+
+---
+
+# 1. DESERT GEOGRAPHIC VARIATION
+
+The Desert biome must contain many distinct landscape types.
+
+I do NOT want the entire Desert to be:
+
+- flat yellow sand
+- endless generic dunes
+- random sandstone mountains
+- identical canyons
+- smooth terrain noise with a sand texture
+
+Instead, the Desert should naturally contain different geographic regions.
+
+### Required desert landscape types
+
+**SANDY DESERTS**
+
+- enormous open sandy plains
+- gently undulating sandy terrain
+- large sand seas
+- rolling dune fields
+- massive dunes
+- scattered isolated dunes
+- dunes surrounding rocky formations
+- wind-eroded sandy basins
+
+**ROCKY DESERTS**
+
+- barren rocky plains
+- desert pavement
+- gravel plains
+- exposed sandstone country
+- rocky foothills
+- broken rocky highlands
+- sandstone mountains
+- isolated rock formations
+
+**ERODED DESERTS**
+
+- canyons
+- ravines
+- dry river valleys
+- gullies
+- badlands
+- eroded ridgelines
+- narrow winding rock corridors
+- broad dry valleys
+
+**ELEVATED DESERT TERRAIN**
+
+- high sandstone plateaus
+- desert mesas where geographically appropriate
+- escarpments
+- flat-topped rock formations
+- cliff-edged highlands
+- terraced sandstone hills
+- steep exposed rock faces
+
+**LOW DESERT TERRAIN**
+
+- large basins
+- dry lakebeds
+- salt flats
+- cracked dry mud plains
+- sandy depressions
+- alluvial fans
+- dry drainage networks
+- occasional oases
+
+These should exist as large recognizable geographic regions, not tiny features randomly scattered everywhere.
+
+---
+
+# 2. LARGE-SCALE REGIONAL IDENTITY
+
+Create or extend a regional terrain identity system specifically for the Desert biome.
+
+A player traveling through the Desert should encounter areas that feel fundamentally different.
+
+For example:
+
+**REGION A — THE GREAT SAND SEA**
+
+Enormous rolling dunes stretching toward the horizon.
+
+Very little exposed stone.
+
+Broad flowing dune patterns.
+
+Warm golden sand.
+
+**REGION B — ROCKY WASTELAND**
+
+Mostly flat, hard rocky ground.
+
+Gravel and scattered exposed stone.
+
+Sparse dunes.
+
+Distant eroded mountains.
+
+**REGION C — SANDSTONE CANYON COUNTRY**
+
+Massive sandstone formations.
+
+Deep winding valleys.
+
+Tall layered cliffs.
+
+Rocky canyon floors.
+
+**REGION D — DRY BASIN**
+
+Enormous flat terrain.
+
+Pale compacted ground.
+
+Salt and dried mud.
+
+Small patches of fine sand.
+
+Distant mountains enclosing the basin.
+
+**REGION E — DESERT HIGHLANDS**
+
+Rugged sandstone ridges.
+
+Eroded hills.
+
+Exposed rocky slopes.
+
+Sand accumulating in sheltered low areas.
+
+**REGION F — BADLANDS**
+
+Densely eroded terrain.
+
+Irregular ridges.
+
+Layered sediment.
+
+Dry gullies.
+
+Sparse sand covering exposed rock.
+
+**REGION G — OASIS BASIN**
+
+A rare sheltered lowland.
+
+Small lake or pool where supported by the existing water system.
+
+Damp sand and darker sediment around water.
+
+Surrounding dry desert terrain.
+
+Each region should have different terrain-generation rules, material distribution, and surface characteristics.
+
+Do not simply multiply the same noise formula by different values.
+
+---
+
+# 3. REGIONAL SCALE AND TRANSITIONS
+
+Different desert regions should sometimes extend for kilometers.
+
+Do not switch terrain style every 100 meters.
+
+Use large deterministic world-space control fields to decide which geographic character dominates.
+
+Transitions should occur naturally.
+
+Examples:
+
+sand sea → sparse dunes → gravel plain → rocky foothills
+
+rocky highland → eroded valley → alluvial fan → flat basin
+
+sandstone mountains → canyon country → wide dry valley
+
+large dunes → low sandy basin → smaller scattered dunes
+
+Do not use abrupt rectangular or circular region boundaries.
+
+However, do not blend regions so much that they all become the same generic sandy-rocky landscape.
+
+**Regional identity must remain recognizable.**
+
+---
+
+# 4. REALISTIC SAND DUNE GENERATION
+
+This is one of the most important requirements.
+
+I want genuinely realistic sand dunes.
+
+Do not generate dunes simply by multiplying ordinary Perlin noise.
+
+Real dunes have recognizable shapes created by wind and sand accumulation.
+
+Implement several dune families.
+
+## A. BARCHAN DUNES
+
+Crescent-shaped dunes.
+
+Characteristics:
+
+- curved dune crests
+- gentle windward slopes
+- steeper slip faces
+- tapered horns
+- irregular spacing
+- variable height and width
+
+These should sometimes appear as isolated dunes across otherwise flatter sandy regions.
+
+## B. TRANSVERSE DUNES
+
+Long dune ridges generally oriented across the dominant wind.
+
+Characteristics:
+
+- large rolling sand ridges
+- connected dune crests
+- asymmetric sides
+- long continuous dune structures
+- valleys between dune ridges
+
+Some transverse dune fields should stretch across very large distances.
+
+## C. LONGITUDINAL DUNES
+
+Long, narrow dune ridges.
+
+Characteristics:
+
+- elongated forms
+- approximately aligned with prevailing wind conditions
+- broad corridors between dunes
+- irregular branching and merging
+- substantial variation in spacing
+
+Do not make them perfectly parallel.
+
+## D. STAR DUNES
+
+Large complex dunes with multiple arms.
+
+These should be relatively uncommon.
+
+Characteristics:
+
+- multiple ridge arms
+- a high central region
+- several intersecting dune faces
+- complex silhouette
+- influence from varying wind directions
+
+## E. PARABOLIC AND IRREGULAR DUNES
+
+Where environmental conditions make sense, create occasional irregular and partially stabilized dune shapes.
+
+Avoid making all sandy areas follow one consistent dune pattern.
+
+---
+
+# 5. WIND-DRIVEN DUNE GEOMETRY
+
+Dunes must look shaped by wind.
+
+Create a persistent, deterministic regional wind field.
+
+Wind should influence:
+
+- dune orientation
+- dune crest direction
+- dune asymmetry
+- sand ripple direction
+- sand accumulation
+- dune-field character
+
+Wind direction should vary gradually across large geographic regions.
+
+Avoid changing wind direction randomly every few meters.
+
+### Windward slopes
+
+Generally smoother and more gradual.
+
+### Slip faces
+
+Steeper.
+
+More sharply defined.
+
+### Dune crest
+
+Irregular but coherent.
+
+Do not generate perfectly sinusoidal dunes.
+
+A dune crest should sometimes:
+
+- split
+- bend
+- terminate
+- merge into neighboring dunes
+- vary in height
+- become broader or sharper
+
+Do not generate identical dunes at regular intervals.
+
+---
+
+# 6. DUNE GEOMETRIC DETAIL HIERARCHY
+
+Separate dune detail into several scales.
+
+### MACRO
+
+Major dune shape.
+
+Hundreds of meters where appropriate.
+
+Visible from great distances.
+
+### MEDIUM
+
+Secondary ridges.
+
+Small dune shoulders.
+
+Sand accumulation contours.
+
+Localized depressions.
+
+### LOCAL
+
+Minor dune irregularities.
+
+Small erosion features.
+
+### MICRO
+
+Tiny wind ripples.
+
+Fine sand ridges.
+
+Granular surface details.
+
+**Do not generate every tiny sand ripple using terrain vertices.**
+
+Micro ripples belong primarily in the shader's normal maps.
+
+Use actual geometry for dunes and ridges whose shape changes the landscape silhouette.
+
+---
+
+# 7. SAND SEAS MUST LOOK BEAUTIFUL FROM FAR AWAY
+
+Large dune regions should remain interesting when viewed from kilometers away.
+
+I want recognizable:
+
+- massive dunes
+- layered dune ridges
+- gentle windward slopes
+- steep slip faces
+- irregular crest lines
+- large shadowed valleys between dunes
+- broad shifts in sand coloration
+
+The Desert must not collapse into one flat yellow surface at long distances.
+
+Large structures must remain visible through the existing LOD system.
+
+---
+
+# 8. DESERT PLAINS
+
+Not every desert region should contain dunes.
+
+Create enormous relatively flat plains.
+
+Different plains can have different surface types.
+
+Examples:
+
+- fine sandy plains
+- compacted sand
+- gravel plains
+- rocky desert pavement
+- dry dusty earth
+- pale sediment plains
+
+The terrain can remain relatively flat while still having subtle:
+
+- broad elevation changes
+- shallow drainage
+- wind-shaped depressions
+- small sediment deposits
+- surface roughness variations
+
+These regions should provide visual contrast against dramatic dune fields and rocky mountains.
+
+---
+
+# 9. ROCKY DESERT TERRAIN
+
+Create desert regions dominated by exposed rock rather than sand.
+
+Include:
+
+- irregular rocky hills
+- long exposed ridges
+- fractured bedrock
+- sloping rock surfaces
+- gravel-covered lowlands
+- eroded rocky outcrops
+- sandstone hills
+- rugged highlands
+
+Do not cover everything in a uniform gray or orange rock material.
+
+Rocky desert terrain should contain natural mixtures of:
+
+- bare sandstone
+- weathered rock
+- gravel
+- sandy sediment
+- fine dust
+- compacted soil
+- accumulated sand
+
+Material distribution should follow terrain exposure, slope, erosion, and drainage.
+
+---
+
+# 10. SANDSTONE MOUNTAINS
+
+The Desert should have substantial mountainous regions.
+
+These must look distinctly different from the Grass biome mountains.
+
+I want:
+
+- sandstone ridges
+- eroded peaks
+- fractured mountain faces
+- layered rock slopes
+- dry valleys
+- exposed bedrock
+- sand accumulation in sheltered regions
+
+Avoid generic rounded mountain blobs.
+
+Use geological hierarchy:
+
+mountain region → major ridges → secondary ridges → eroded valleys → local erosion channels.
+
+Sandstone mountains should sometimes have broad layered faces.
+
+Others should have sharp broken ridges.
+
+Others can be heavily weathered and rounded.
+
+These different mountain characters should appear in separate regions.
+
+---
+
+# 11. CANYONS AND RAVINES
+
+Create realistic desert canyon terrain.
+
+Examples:
+
+- enormous broad canyons
+- narrow winding canyons
+- shallow desert ravines
+- dry river canyons
+- eroded sandstone corridors
+- branching canyon systems
+
+Canyons should look like terrain shaped by long-term erosion.
+
+They need:
+
+- recognizable canyon corridors
+- irregular widths
+- steep walls
+- side gullies
+- branching tributary valleys
+- erosion cuts
+- terraces
+- occasional broad canyon floors
+
+Avoid drawing a noisy line and subtracting height along it.
+
+The surrounding landscape must be shaped around the canyon.
+
+---
+
+# 12. SANDSTONE CLIFFS
+
+Implement highly realistic sandstone cliff appearances.
+
+The existing Grass biome cliff system has received substantial work.
+
+Inspect it and reuse compatible infrastructure, including its established normal-map layering and projection methods, without changing the Grass cliff look.
+
+However, Desert cliffs must have their own materials and geological character.
+
+I want:
+
+- layered sedimentary rock
+- irregular sandstone blocks
+- large recessed fractures
+- horizontal strata
+- erosion grooves
+- weathered shelves
+- rock ledges
+- large exposed stone masses
+- darker sheltered crevices
+- wind-eroded surfaces
+
+Do not create repetitive vertical scratch lines or artificial rock grids.
+
+Different cliff sections should have different geological detail combinations.
+
+---
+
+# 13. SANDSTONE STRATIFICATION
+
+This is an important feature.
+
+Desert rock should often display visible sedimentary layers.
+
+Use geological strata with:
+
+- changing layer thickness
+- occasional tilted beds
+- eroded boundaries
+- broken strata
+- variable rock coloration
+- softer and harder-looking layers
+- local missing or interrupted sections
+
+Do not make perfectly uniform horizontal stripes.
+
+Strata should follow coherent regional geological orientation, not randomly rotate between nearby chunks.
+
+The same geological layering should continue naturally across neighboring terrain chunks.
+
+---
+
+# 14. CLIFF MACRO TEXTURING
+
+Desert cliff faces need large detail visible from far away.
+
+Use several geological detail scales.
+
+### MACRO
+
+Huge fracture systems.
+
+Major sedimentary bands.
+
+Large erosion channels.
+
+Large weathering patterns.
+
+### MEDIUM
+
+Smaller fractures.
+
+Rock slabs.
+
+Block breakup.
+
+Recessed sections.
+
+Ledges.
+
+### MICRO
+
+Fine sandstone grain.
+
+Small cracks.
+
+Surface roughness.
+
+Normal-map detail.
+
+Use the existing layered-material approach where appropriate.
+
+Do not procedurally generate all geological features as black crack lines.
+
+Prefer reusable high-quality normal maps, material maps, and low-cost regional masks.
+
+---
+
+# 15. IMPORTANT HEIGHTFIELD LIMITATION
+
+The terrain is a heightfield.
+
+Do not generate effectively vertical height discontinuities that stretch triangles between adjacent vertices.
+
+Keep heightfield cliffs steep but geometrically representable at the relevant LOD.
+
+For true overhangs, natural bridges, arches, or horizontal cavities, evaluate whether separate optional procedural meshes can integrate safely with the existing system.
+
+Do not attempt to fake unsupported overhangs through impossible heightfield geometry.
+
+Prioritize the ordinary terrain implementation first.
+
+---
+
+# 16. BADLANDS
+
+Add dry eroded badlands regions.
+
+These should contain:
+
+- narrow ridges
+- eroded ribs
+- gullies
+- branching drainage channels
+- exposed sediment layers
+- steep eroded hillsides
+- small narrow valleys
+- weathered rock surfaces
+
+The visual rhythm should be much denser than ordinary desert plains.
+
+However, do not apply extremely dense erosion everywhere.
+
+Some areas should have broad smooth slopes.
+
+Other areas should have deeply incised terrain.
+
+---
+
+# 17. DRY RIVERBEDS / WADIS
+
+This is another important feature.
+
+Deserts should contain recognizable dry drainage systems.
+
+Create occasional:
+
+- dry streambeds
+- winding sandy channels
+- gravel-filled valleys
+- eroded wash corridors
+- branching drainage channels
+- broad dry riverbeds
+
+Most of these should NOT permanently contain water.
+
+They should look like areas that occasionally carry water.
+
+Use different material combinations:
+
+- sand
+- gravel
+- fine sediment
+- dry mud
+- exposed stone
+
+Dry riverbeds should connect logically with surrounding valleys and lowlands.
+
+Do not scatter disconnected channels randomly.
+
+---
+
+# 18. ALLUVIAL FANS
+
+Where mountain valleys open onto broad flat desert basins, occasionally generate fan-shaped sediment deposits.
+
+These should appear as:
+
+- broad gently sloping fans
+- branching sediment channels
+- lighter deposited sand
+- gravel bands
+- irregular dry drainage traces
+
+These features should visually connect mountains to the lower terrain.
+
+Approximate them procedurally without expensive real-time sediment simulation.
+
+---
+
+# 19. SALT FLATS AND DRY LAKEBEDS
+
+Add occasional enormous dry basins.
+
+I want some regions to resemble realistic salt flats and dry lakebeds.
+
+Include:
+
+- broad extremely flat terrain
+- pale salt deposits
+- compacted sediment
+- dried mud
+- occasional polygonal mud cracks
+- subtle surface depressions
+- irregular edges transitioning into surrounding desert
+
+The cracked ground should have real normal-map and roughness detail.
+
+Do not generate obvious oversized geometric hexagons everywhere.
+
+These basins should be geographically plausible low areas.
+
+---
+
+# 20. OASES
+
+Oases should be rare.
+
+Use the existing water architecture where appropriate.
+
+An oasis should occupy a believable lowland or water-supported basin.
+
+Its surrounding ground should contain:
+
+- darker damp sand
+- compacted wet soil
+- muddy patches
+- fine sediment
+- slightly different ground coloration
+
+Do not put water randomly on dune crests.
+
+For this implementation, focus on terrain and water integration.
+
+Do not add oasis vegetation or trees unless that system already exists and is explicitly part of the requested scope.
+
+---
+
+# 21. SAND ACCUMULATION AROUND ROCKS
+
+Sand should interact with the landscape.
+
+In rocky desert regions, create believable areas where sand collects:
+
+- at the bases of cliffs
+- against raised rocky slopes
+- in sheltered valleys
+- behind large terrain obstructions
+- in low depressions
+- along terraces
+
+Create occasional sand tongues or drifts extending around rock formations.
+
+Use regional wind direction and terrain sheltering where practical.
+
+Do not give every cliff an identical sand band.
+
+This is important for making Desert terrain feel physically connected.
+
+---
+
+# 22. DESERT MATERIAL SYSTEM — MAJOR PRIORITY
+
+The Desert must have much more than one yellow sand texture.
+
+Create a carefully selected set of realistic PBR material families.
+
+### SAND
+
+- fine golden sand
+- pale beige sand
+- warmer orange sand
+- reddish desert sand
+- compacted sand
+- coarse sandy ground
+- wind-rippled sand
+
+### ROCK
+
+- light sandstone
+- warm sandstone
+- reddish sandstone
+- weathered sandstone
+- layered sedimentary rock
+- darker fractured rock
+- rocky desert pavement
+
+### GROUND
+
+- dry soil
+- dusty earth
+- gravel
+- sandy gravel
+- fine sediment
+- dry mud
+- cracked clay
+- salt deposits
+
+These materials should not merely be the same texture recolored.
+
+They should contain genuinely different surface structure.
+
+---
+
+# 23. USE REAL PBR TEXTURES
+
+Inspect existing terrain assets first.
+
+If additional materials are needed, download appropriate PBR textures from:
+
+[https://ambientcg.com/](https://ambientcg.com/)
+
+Choose materials matching the intended desert geology and color palette.
+
+Prefer high-quality source textures rather than procedurally synthesizing everything using basic noise.
+
+Use appropriate:
+
+- albedo
+- normal
+- roughness
+- height information where useful and affordable
+
+Start with reasonable resolutions such as 2K.
+
+Only use larger textures where the visible improvement justifies the memory cost.
+
+Import normal maps correctly and enable suitable mipmapping/filtering.
+
+Organize all downloaded assets and record their source and license.
+
+Do not download assets at runtime.
+
+---
+
+# 24. REALISTIC SAND TEXTURING
+
+Sand should look like actual granular material.
+
+Near the player, I want visible:
+
+- sand grain structure
+- fine wind ripples
+- small surface ridges
+- differences between packed and loose sand
+- roughness variation
+
+Medium distance should show:
+
+- larger wind ripple systems
+- sand streaks
+- small dune shoulders
+- changing sand coverage
+- irregular sediment patterns
+
+Far distance should show:
+
+- major dune flow
+- large wind-oriented coloration
+- huge dune formations
+- sand/rock boundaries
+- broad regional color variation
+
+Do not use the same sand texture at one scale for everything.
+
+---
+
+# 25. WIND RIPPLE NORMAL MAPS
+
+Wind ripples are one of the defining features of realistic desert sand.
+
+Implement wind-oriented ripple detail using normal maps and/or reusable texture masks.
+
+Ripples should:
+
+- generally align with wind
+- change subtly with regional wind direction
+- vary in spacing
+- vary in amplitude
+- break up occasionally
+- fade on compacted surfaces
+- become stronger on exposed loose sand
+
+Do not make ripples mathematically perfect repeating parallel lines.
+
+Avoid obvious texture tiling.
+
+Use layered world-space projections with controlled variation.
+
+---
+
+# 26. SAND COLOR VARIATION
+
+A large sandy area should not be a single shade of yellow.
+
+Introduce natural broad variation such as:
+
+- golden sand
+- slightly reddish sand
+- pale beige regions
+- darker sheltered sand
+- lighter exposed dune crests
+- subtle differences in accumulated sediment
+
+These variations should occur over meaningful geographic scales.
+
+Do not create random yellow/orange camouflage blobs.
+
+Color should be coherent and visually restrained.
+
+---
+
+# 27. DUNE MATERIAL DISTRIBUTION
+
+Dune surface appearance should respond to dune geometry.
+
+For example:
+
+### Windward slope
+
+Smoother sand.
+
+Longer ripples.
+
+Subtle broad wind-driven coloration.
+
+### Slip face
+
+Steeper sand face.
+
+Different ripple character.
+
+Accumulation and gravity-driven surface patterns where appropriate.
+
+### Crest
+
+More exposed loose sand.
+
+Subtle highlights from its geometry and lighting.
+
+### Interdune basin
+
+More compacted sand.
+
+Occasional coarse sediment.
+
+Potentially exposed hard ground in some regions.
+
+The entire dune should not use identical material behavior.
+
+---
+
+# 28. MULTI-SCALE MATERIAL TEXTURING
+
+Use three major levels.
+
+## MACRO
+
+Approximately tens to hundreds of meters or more.
+
+Responsible for:
+
+- large sand color variations
+- rock exposure regions
+- wind-driven surface structure
+- dry basin coloration
+- dune-field patterns
+- sandstone weathering
+
+## MESO
+
+Approximately meters to tens of meters.
+
+Responsible for:
+
+- rippled sand patches
+- gravel deposits
+- exposed rock
+- sediment transitions
+- erosion streaks
+- small sandy drifts
+
+## MICRO
+
+Fine PBR detail.
+
+Responsible for:
+
+- sand grains
+- stone grain
+- tiny cracks
+- dry mud detail
+- roughness
+
+Each level must contribute something distinct.
+
+Do not enlarge a tiny texture and call it macro detail.
+
+---
+
+# 29. MATERIAL DISTRIBUTION MUST FOLLOW GEOGRAPHY
+
+Do not choose ground materials primarily using random noise.
+
+Material distribution should respond to:
+
+- desert region identity
+- slope
+- local curvature
+- terrain elevation
+- wind exposure
+- sand accumulation
+- rock exposure
+- drainage
+- proximity to water
+- dry basin classification
+- sediment deposition
+
+Examples:
+
+Steep sandstone face → exposed rock.
+
+Sheltered cliff base → accumulated sand.
+
+Rocky plateau top → exposed bedrock and gravel.
+
+Dune sea → mostly loose sand.
+
+Dry lakebed → compacted sediment and cracked mud.
+
+Wadi → sand/gravel/sediment mixture.
+
+Noise should mainly make boundaries irregular.
+
+---
+
+# 30. NATURAL MATERIAL TRANSITIONS
+
+Create smooth, believable transitions between:
+
+sand ↔ gravel
+
+sand ↔ compacted earth
+
+sand ↔ exposed rock
+
+gravel ↔ rocky desert pavement
+
+dry mud ↔ salt flats
+
+rock ↔ weathered sandstone
+
+Different transitions should have different characteristics.
+
+A sand drift covering bedrock should have a feathered, irregular accumulation boundary.
+
+A freshly exposed steep rock face can have a much sharper material boundary.
+
+Do not use the same universal blending rule for all materials.
+
+---
+
+# 31. AVOID TEXTURE REPETITION
+
+The Grass biome previously suffered from:
+
+- obvious tiling
+- checkerboard brown patches
+- repeated material masks
+- artificial procedural patterns
+
+Do not repeat those mistakes.
+
+The Desert is especially vulnerable to obvious texture repetition because large areas have relatively simple geometry.
+
+Implement efficient anti-tiling.
+
+Use techniques such as:
+
+- restrained multi-scale texture variation
+- stable world-space texture offsets
+- deterministic rotated variants
+- macro color modulation
+- sparse independent material masks
+
+Do not add excessive shader samples merely to hide repeating textures.
+
+Fix repeat patterns at their source.
+
+---
+
+# 32. DIRECTIONAL DESERT DETAIL
+
+Wind is a major environmental factor.
+
+Use the wind field to guide appropriate surface details.
+
+For example:
+
+- dune orientation
+- fine sand ripples
+- broad sand streaks
+- loose-sand accumulation patterns
+
+However, wind should not affect every material identically.
+
+Rock erosion, sediment deposition, and dry drainage can have different directional structure.
+
+Do not put parallel wind stripes across sandstone cliffs or dry mud indiscriminately.
+
+---
+
+# 33. DESERT PATHS AND NATURAL GROUND ROUTES
+
+The terrain may contain occasional natural route-like formations.
+
+These should be subtle, uncommon, and geographically believable.
+
+Examples:
+
+- compacted sandy tracks
+- narrow gravel trails
+- exposed hard-ground corridors
+- dry wash paths
+- wind-eroded linear patches
+
+Do not simply paint uniform brown lines.
+
+Where trails appear, blend them using:
+
+- compacted soil
+- loose sand
+- gravel
+- sparse rocky patches
+- worn edges
+
+Prefer low-gradient traversable terrain.
+
+Do not create artificial road networks unless the existing gameplay requires them.
+
+---
+
+# 34. DISTINCT DESERT COLOR PALETTES
+
+Different desert regions should have different visual identities.
+
+For example:
+
+### Golden dune sea
+
+Warm golden sand.
+
+Subtle orange shadows.
+
+Pale exposed crests.
+
+### Pale sandy basin
+
+Light beige ground.
+
+Compacted sediment.
+
+Sparse gravel.
+
+### Red sandstone country
+
+Warmer reddish-brown rock.
+
+Layered sediment.
+
+Sandstone erosion.
+
+### Rocky gray-brown desert
+
+Muted rock.
+
+Dust.
+
+Gravel.
+
+Pale sandy deposits.
+
+### Salt basin
+
+Pale off-white mineral surfaces.
+
+Tan dry mud.
+
+Muted surrounding desert.
+
+Use coherent regional palettes.
+
+Do not make the Desert one homogeneous yellow-orange environment.
+
+---
+
+# 35. DESERT BIOME BOUNDARIES
+
+The Desert must integrate with the existing biome system.
+
+Do not change how Grass, Jungle, Mesa, or other biomes generate unless a small compatibility fix is necessary.
+
+At the edge of Grass and Desert, create appropriate transitions using the existing biome blending system.
+
+For example:
+
+grassland → sparse/dry grassland → exposed dusty ground → sandy desert.
+
+Where Desert borders rocky or mesa-like biomes, preserve each biome's identity while blending height and materials appropriately.
+
+Do not abruptly switch geometry or textures at biome boundaries.
+
+Avoid modifying neighboring biome terrain at distant positions merely because Desert was added.
+
+---
+
+# 36. DESERT REGIONS MUST FEEL NATURAL, NOT FANTASTICAL
+
+I want realistic desert landscapes.
+
+Avoid:
+
+- dunes that look like perfect sine waves
+- impossible spikes everywhere
+- giant random cones
+- overly saturated orange sand
+- infinite identical canyons
+- floating rock formations
+- unnaturally steep sand walls
+- random water everywhere
+- artificial circular basins
+- repeating checker-pattern cracked mud
+
+Dramatic terrain can exist, but it should be rare enough to remain impressive.
+
+The majority of the Desert should be believable and geographically coherent.
+
+---
+
+# 37. PRESERVE LARGE CALM REGIONS
+
+Not every area should be spectacular.
+
+A realistic desert needs open space.
+
+Keep areas such as:
+
+- huge quiet sand plains
+- broad open dune corridors
+- flat gravel deserts
+- gentle basins
+- expansive dry valley floors
+
+These should contrast with:
+
+- massive dunes
+- sandstone mountains
+- deep canyons
+- rugged badlands
+- escarpments
+
+This is important for realism and exploration.
+
+---
+
+# 38. DISTANT TERRAIN QUALITY
+
+The existing terrain system can render large areas using hierarchical LOD chunks.
+
+Preserve this capability.
+
+The Desert should look beautiful from aerial and very long-distance views.
+
+Distant terrain must retain:
+
+- recognizable dune fields
+- dune ridgelines
+- sandstone mountains
+- canyon structures
+- plateaus
+- large rock exposure regions
+- dry basins
+- broad material palettes
+- macro wind patterns
+
+Do not let far terrain collapse into uniform yellow sand.
+
+LOD should remove fine details without destroying geographic identity.
+
+---
+
+# 39. LOD COMPATIBILITY
+
+All terrain sampling must be deterministic in absolute world coordinates.
+
+The same world position must return the same canonical terrain shape regardless of:
+
+- chunk size
+- LOD
+- camera position
+- generation order
+
+Do not create a different dune layout at each LOD.
+
+Do not allow dune ridges or canyon edges to shift when chunks change resolution.
+
+Use the existing quadtree/LOD seam system.
+
+Preserve gap-free terrain coverage.
+
+---
+
+# 40. PERFORMANCE AND GENERATION SPEED
+
+**Performance is a hard requirement.**
+
+The Desert biome must not significantly slow the existing infinite terrain system.
+
+Do not implement:
+
+- full-world hydraulic erosion simulation
+- expensive per-vertex dune searches
+- massive unique textures generated for every chunk
+- unbounded procedural caches
+- hundreds of noise samples per terrain vertex
+- extremely dense geometry everywhere
+- heavy shader calculations for imperceptible distant details
+
+Use deterministic procedural approximations.
+
+Reuse fields wherever possible.
+
+For example, the same regional wind field can influence:
+
+- dune geometry
+- ripple orientation
+- sand accumulation
+- material variation
+
+The same rock exposure field can influence:
+
+- height
+- rock material
+- gravel
+- sand coverage
+
+The same drainage information can influence:
+
+- dry riverbeds
+- sediment
+- basin classification
+
+Avoid repeating expensive calculations.
+
+---
+
+# 41. OPTIMIZED DUNE GENERATION
+
+Dunes should be efficient.
+
+Use regional dune control fields to determine where dune generation is actually necessary.
+
+In regions without dunes, skip expensive dune-specific sampling.
+
+Use low-cost mathematical dune profiles combined with large-scale shape controls where appropriate.
+
+Do not independently search thousands of possible dunes for each vertex.
+
+Use spatial organization, reusable descriptors, or another efficient deterministic technique if needed.
+
+Keep the number of relevant candidate dunes bounded for each sample.
+
+---
+
+# 42. LOD-AWARE DETAIL PROCESSING
+
+Do not calculate unnecessary detail for distant chunks.
+
+### Very far
+
+- macro elevation
+- dune fields
+- large rock formations
+- major canyons
+- broad material identity
+
+### Far
+
+- dune crest structure
+- secondary ridges
+- canyon detail
+- sandstone structure
+
+### Medium
+
+- smaller dune features
+- erosion channels
+- material transitions
+- sediment patches
+
+### Near
+
+- local geometry
+- full material blending
+- micro PBR normals
+- sand ripple detail
+
+Preserve one canonical terrain shape. Any distance filtering must not cause cracks or moving landforms at LOD boundaries.
+
+---
+
+# 43. SHADER OPTIMIZATION
+
+Avoid sampling every available desert texture for every pixel.
+
+Use an optimized material-selection strategy.
+
+Only a few materials should contribute significantly at a given location.
+
+Use:
+
+- shared texture resources
+- texture arrays where beneficial
+- compact control data
+- optimized world-space mapping
+- simplified distant shading
+
+Do not introduce unnecessary per-pixel procedural simulations.
+
+Maintain correct normal blending and avoid broken triplanar projections.
+
+---
+
+# 44. THREADING
+
+Preserve the existing WorkerThreadPool architecture.
+
+Keep heavy terrain calculations off the main thread where appropriate.
+
+Do not manipulate active SceneTree nodes from worker threads.
+
+Ensure the biome and dune sampling is safe for concurrent execution.
+
+Avoid shared mutable state that can produce inconsistent results.
+
+Use bounded caches and avoid allocations in critical sampling loops where practical.
+
+---
+
+# 45. TERRAIN DEBUG VISUALIZATION
+
+Add or extend useful debug modes.
+
+I want to inspect:
+
+- Desert regional identity
+- dune field coverage
+- dune orientation
+- wind direction
+- sandstone exposure
+- rock regions
+- dry drainage
+- basin classification
+- sand accumulation
+- material weights
+- LOD boundaries
+
+These debug modes should integrate with existing terrain debugging controls.
+
+Do not create an entirely separate debug application.
+
+---
+
+# 46. CONFIGURATION
+
+Expose useful Desert parameters through the existing terrain settings/resources architecture.
+
+Organize them by purpose.
+
+### REGIONS
+
+- regional scale
+- sandy region frequency
+- rocky region frequency
+- ruggedness
+
+### DUNES
+
+- dune frequency
+- dune maximum height
+- dune width range
+- dune spacing
+- dune asymmetry
+- slip-face sharpness
+- wind direction variation
+
+### ROCK TERRAIN
+
+- rock exposure
+- sandstone ruggedness
+- canyon depth
+- canyon frequency
+- erosion intensity
+
+### BASINS
+
+- basin size
+- dry lake frequency
+- salt-flat coverage
+- sediment variation
+
+### MATERIALS
+
+- sand color variation
+- ripple strength
+- gravel coverage
+- rock exposure
+- weathering
+- macro detail intensity
+
+Avoid exposing hundreds of parameters.
+
+Each exposed parameter should have a meaningful, understandable visual effect.
+
+---
+
+# 47. DESERT-SPECIFIC TESTING
+
+Create a repeatable way to preview and evaluate different Desert terrain regions.
+
+I want to inspect:
+
+1. A huge sand sea.
+2. A barchan dune field.
+3. A longitudinal dune field.
+4. A flat rocky desert.
+5. A sandstone mountain region.
+6. A major canyon.
+7. Badlands.
+8. A dry river valley.
+9. An alluvial fan.
+10. A salt flat.
+11. A dry lakebed.
+12. A rare oasis basin.
+13. A Desert/Grass transition.
+
+Use fixed seeds and reproducible coordinates.
+
+Do not manually sculpt these examples into static terrain.
+
+They must originate from the actual procedural generator.
+
+---
+
+# 48. VISUAL VALIDATION
+
+Evaluate the Desert at several viewing distances.
+
+### GROUND LEVEL
+
+Check:
+
+- sand looks granular
+- ripples have believable scale
+- rock textures are detailed
+- no obvious tiling
+- nearby ground looks physically plausible
+
+### MEDIUM DISTANCE
+
+Check:
+
+- dunes have recognizable forms
+- rock exposure looks natural
+- erosion and sediment patterns remain visible
+- terrain materials transition correctly
+
+### AERIAL / FAR DISTANCE
+
+Check:
+
+- dune seas form recognizable structures
+- sand regions vary naturally
+- major canyon systems are visible
+- sandstone mountains have strong silhouettes
+- different desert regions look distinct
+- material macro detail remains visible
+
+Do not tune only from one screenshot.
+
+---
+
+# 49. COMPARE PERFORMANCE
+
+Before making changes, establish a baseline using the existing terrain test.
+
+After implementation, compare:
+
+- chunk generation time
+- terrain sampling time
+- main-thread chunk commit time
+- shader/GPU cost
+- active terrain geometry
+- memory usage
+- time required to fill the visible world
+
+Use comparable seeds and LOD/view-distance settings.
+
+Report actual measured differences.
+
+Do not claim performance improvements without measurements.
+
+---
+
+# 50. IMPLEMENTATION PROCESS
+
+First inspect the existing architecture.
+
+Then implement the Desert in manageable stages.
+
+### STAGE 1 — Integration
+
+Add the Desert implementation through the existing biome system.
+
+### STAGE 2 — Regional identities
+
+Introduce or extend large-scale Desert terrain regions.
+
+### STAGE 3 — Macro geography
+
+Implement basins, rocky highlands, sandy plains, and broad elevation structure.
+
+### STAGE 4 — Sand dunes
+
+Implement the major dune families and wind-influenced formation logic.
+
+### STAGE 5 — Sandstone terrain
+
+Add rock formations, ridges, cliffs, and rocky desert country.
+
+### STAGE 6 — Erosion
+
+Add canyons, dry riverbeds, gullies, and badlands.
+
+### STAGE 7 — Special landforms
+
+Add salt flats, dry lakebeds, alluvial fans, and rare oasis terrain.
+
+### STAGE 8 — Materials
+
+Import and integrate realistic Desert PBR textures.
+
+### STAGE 9 — Macro and meso texturing
+
+Add large-scale sand, rock, sediment, weathering, and wind-driven patterns.
+
+### STAGE 10 — Micro detail
+
+Add fine sand ripples, granular normals, rock detail, and roughness.
+
+### STAGE 11 — Optimization
+
+Profile and remove unnecessary generation/shader cost.
+
+### STAGE 12 — Validation
+
+Verify biome transitions, chunk seams, LOD stability, determinism, material correctness, and performance.
+
+Test after each stage.
+
+Do not allow one unfinished feature to break the rest of the terrain system.
+
+---
+
+# 51. COMMON FAILURES TO AVOID
+
+The previous Grass biome implementation went through many iterations because some changes replaced one procedural-looking pattern with another.
+
+Do not repeat this mistake.
+
+Specifically avoid:
+
+**Smooth noise terrain**
+
+The Desert must not just be Perlin noise with sand.
+
+**Identical dunes**
+
+Dune fields must have real structural variation.
+
+**One orange texture**
+
+Use distinct surface materials and coherent regional color palettes.
+
+**Noise-painted rock**
+
+Rock exposure must correspond to terrain geology.
+
+**Overly complex everywhere**
+
+Keep substantial calm areas.
+
+**Repeated textures**
+
+No obvious sand, rock, or material-mask tiling.
+
+**Artificial cliff patterns**
+
+No grill-line cracks, scratch decals, sponge textures across every wall, or repeated rock tiles.
+
+**Uniform water density**
+
+Desert water must be rare and geographically supported.
+
+**Too much geometry**
+
+Tiny ripples and rock grain belong in normal maps, not dense terrain meshes.
+
+**Performance regressions**
+
+Do not trade away chunk-generation speed just to increase invisible detail.
+
+---
+
+# 52. FINAL VISUAL TARGET
+
+The finished Desert should be capable of naturally producing landscapes such as:
+
+**SCENE A**
+
+An enormous golden sand sea with hundreds of naturally organized dunes extending toward the horizon.
+
+**SCENE B**
+
+A rocky desert plain containing broad exposed sandstone areas and isolated dunes accumulating around the rock.
+
+**SCENE C**
+
+A massive canyon system with layered sandstone cliffs, dry riverbeds, and broad sediment deposits.
+
+**SCENE D**
+
+A pale dry basin surrounded by distant sandstone mountains, with cracked dry earth and occasional salt deposits.
+
+**SCENE E**
+
+A rugged desert highland containing weathered sandstone ridges, gullies, gravel, and sand accumulating in sheltered valleys.
+
+**SCENE F**
+
+A rare oasis basin surrounded by dry desert terrain, with realistic transitions between water, damp sediment, compacted sand, and surrounding dry ground.
+
+**SCENE G**
+
+A broad rolling sandy region gradually transitioning into long dune ridges and eventually a large dune sea.
+
+All these scenes must come from the SAME procedural Desert biome system.
+
+They should not be hand-built example scenes.
+
+---
+
+# 53. SUCCESS CRITERIA
+
+Do not consider the Desert implementation complete until:
+
+1. The Desert has recognizable large-scale geographic regions.
+2. Sandy deserts and rocky deserts look substantially different.
+3. Dune fields contain multiple realistic dune families.
+4. Dunes follow coherent wind-driven structures.
+5. Dune geometry has believable asymmetric slopes.
+6. Sand looks textured and granular up close.
+7. Sand ripples have natural directional behavior.
+8. Sand coloration varies subtly and coherently.
+9. Rock regions contain distinctive sandstone geology.
+10. Sandstone cliffs contain believable layers, weathering, and fractures.
+11. Canyons and dry riverbeds form coherent drainage structures.
+12. Salt flats and dry basins look visually distinct.
+13. Oases are rare and geographically sensible.
+14. Materials do not look like randomized color blobs.
+15. No obvious texture repetition exists.
+16. Desert material detail remains visible at long distance.
+17. Desert/Grass transitions remain natural.
+18. The Grass biome and its existing cliff implementation remain unchanged.
+19. Chunk boundaries remain seamless.
+20. LOD transitions do not move geographic features.
+21. The Desert remains compatible with infinite terrain streaming.
+22. Terrain generation speed remains practical and optimized.
+23. The Desert looks beautiful even with no foliage or decorations.
+
+---
+
+# FINAL INSTRUCTION
+
+Actually implement the Desert biome into the existing Godot 4 project.
+
+Do not simply provide a design document or pseudocode.
+
+Inspect existing scripts, resources, shaders, biome integration, and terrain-generation APIs.
+
+Reuse useful architecture.
+
+Implement the Desert-specific landforms, wind-shaped dunes, sandstone terrain, erosion, materials, regional identity, and optimization.
+
+Do not unnecessarily modify the working Grass biome.
+
+The objective is a **massive, beautiful, realistic desert world containing geographically distinct landscapes, convincing geology, highly detailed sand and rock materials, enormous view distance, and fast generation**.
+
+The Desert should feel like a real place shaped by wind, erosion, sediment deposition, and geological history—not a yellow version of the Grass biome.
+
+**Implement it, test it, optimize it, and evaluate its visual quality before declaring completion.**

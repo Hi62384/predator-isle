@@ -8,7 +8,7 @@ func _initialize() -> void:
 	# Right: same coverage with 10x larger stone regions, same 300 km view.
 	for panel in range(3):
 		var sampler = builder_script.new()
-		sampler.settings = load("res://terrain_settings.tres").duplicate(true) if panel == 0 else TerrainSettings.new()
+		sampler.settings = load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL) if panel == 0 else TerrainSettings.new()
 		var span := 4096.0 if panel == 0 else 300000.0
 		if panel > 0:
 			sampler.settings.grass_coverage = 90

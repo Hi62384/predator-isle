@@ -1,0 +1,26 @@
+[
+    {
+        "path":  "scripts/chunk_terrain.gd",
+        "existed":  true,
+        "bytes":  28732,
+        "sha256":  "ea84a9950a76cad0e74e50c6c9472f77953072c3f9b3c1169c526669c8bbe3f3"
+    },
+    {
+        "path":  "scripts/desert_sampler.gd",
+        "existed":  true,
+        "bytes":  28273,
+        "sha256":  "ce19b4357a9bf915b74271b9aeb10737fc453c5dc33991d5da02d1454bca245c"
+    },
+    {
+        "path":  "shaders/desert_material.gdshaderinc",
+        "existed":  true,
+        "bytes":  18097,
+        "sha256":  "55c0b00892b4928425efc9d9d485ed739188928d98467eef32c38a2a28b2083e"
+    },
+    {
+        "path":  "tools/desert/check_desert_edge_cases.gd",
+        "existed":  false,
+        "sha256":  null,
+        "bytes":  null
+    }
+]

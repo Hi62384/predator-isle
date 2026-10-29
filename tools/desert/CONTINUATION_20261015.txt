@@ -1,0 +1,158 @@
+DESERT CONTINUATION — 15 OCTOBER 2026
+
+STATUS
+Source implementation advanced; full Desert acceptance remains incomplete.
+No tests, engine/parser runs, imports, packing, game/editor scenes, benchmarks,
+captures or production builds were executed. This follows the explicit current
+handoff restriction, regardless of older authorization statements in this folder.
+The existing heavily modified/untracked working tree was preserved. No commit,
+push, reset, clean, application closure or ProjectBridge ZIP was performed.
+
+IMPLEMENTED IN THIS CONTINUATION (SOURCE MECHANISMS, NOT NATIVE ACCEPTANCE)
+1. Rooted fine badlands tributaries. Each eligible catchment adds at most four
+   short descriptor curves. A local branch ends at an existing tributary node;
+   its child joins the actual curved parent at t=.55 with the matching graded
+   floor. Fixed tile bounds cull candidates. Broad smooth support and head fades
+   keep these heightfield cuts finite. Main channel floors still take precedence.
+2. Within-segment channel width varies by up to 22%, with zero variation and
+   zero variation derivative at endpoints. Trunk topology is unchanged.
+3. Cached upstream shelter. Three evaluations of a common uncarved bedrock
+   envelope (current point, 96 m upwind, 288 m upwind) run only at eligible cached
+   256 m region nodes. Smooth interpolation drives lee sand supply, bounded
+   deposit relief, exposure and diagnostics. There is no recursive sample() or
+   per-vertex neighborhood terrain search.
+4. Independent bedrock recesses before sedimentary remapping, smoothly gated
+   by bedrock exposure and absent from lake floors/active channel beds. A
+   separate existing Rock050 normal source supplies medium/broad rock relief.
+5. Seven-layer Desert geology arrays reference the original six family assets
+   plus independent existing Rock030 color/normal images. Coherent rock
+   provinces blend across a broad boundary. The family selector still chooses
+   at most three structural families; a rock transition can sample two rock
+   sources. Complete older six-layer pairs remain fallback candidates.
+6. Canonical pre-shelf bedding is transported through CUSTOM2, the exact-height
+   cache, vertex samples and skirt copies. The material no longer tries to
+   reconstruct Desert strata by dividing final mixed/coastal height. Derivatives
+   are taken before material branches for footprint filtering. No extra Desert
+   channels allocate on pure Grass chunks.
+7. Four additional integrated debug views: dune-family weights, dominant crest
+   orientation proxy, upstream shelter and canonical bedding. Existing debug
+   indices remain unchanged. HUD reports upstream shelter and rooted gullies;
+   its pale-deposit reading is explicitly named Mineral mask, not genuine salt.
+8. Disabled Desert skips optional Desert palette/fracture binding. Inactive
+   dunes clear family diagnostics. Pure sand and bypassed drainage reset
+   published drainage details so stale prior queries cannot drive these fields.
+
+EXACT CHANGED PATHS FOR THIS CONTINUATION
+scripts/desert_sampler.gd
+scripts/desert_drainage.gd
+scripts/desert_settings.gd
+scripts/terrain_mesh_builder.gd
+scripts/chunk_terrain.gd
+scripts/free_camera.gd
+shaders/terrain_biomes.gdshader
+shaders/desert_material.gdshaderinc
+materials/desert_color_roughness_geology.tres (new)
+materials/desert_normals_geology.tres (new)
+tools/desert/check_desert.gd (channel contract updated; NOT run)
+tools/desert/render_material_review.gd (CUSTOM2 upload format updated; NOT run)
+tools/desert/requirements_status.json (current account pointer; historical rows retained)
+tools/desert/CONTINUATION_20261015.txt (this account)
+
+Saved terrain/desert presets and existing packed texture binaries were not edited.
+Other dirty files visible in git status predate this continuation.
+
+MATERIAL PROVENANCE / ASSET DELIVERY
+No new source texture was downloaded, synthesized, relabeled or repacked.
+The two new .tres files are external-reference arrays, not embedded GPU readbacks.
+Rock030: https://ambientcg.com/view?id=Rock030 ; CC0;
+  assets/textures/ambientcg/SOURCES.md and PALETTE_MANIFEST.md;
+  materials/palette_color_Rock030.res, palette_normal_Rock030.res.
+Rock050 normal: https://ambientcg.com/view?id=Rock050 ; CC0;
+  assets/terrain/cliff_normals/ambientcg/sources.json records source normal hash;
+  materials/cliff_texture_Rock050.res is the pre-existing prepared texture.
+These sources provide additional rock structure, not a newly scanned sandstone
+or salt material. Original source licenses/provenance remain alongside the assets.
+
+MISSING
+Authentic, freely licensed salt-crust PBR is still absent. Ground033 remains pale
+sediment and both clay sources remain clay. Searches of ambientCG, Poly Haven,
+TextureCan, cgbookcase/free-PBR and broader salt-crust sources did not yield a
+usable free licensed PBR set during this pass. Paid/login-gated salt materials,
+AI stock images and landscape photos were not passed off as scanned salt PBR.
+Finishing this requirement needs a suitable licensed albedo/NormalGL/roughness
+source set. Do not mark the full 53-section specification complete without it.
+
+PARTIAL / LIMITATIONS
+- Gullies are a bounded analytic hierarchy connected to the existing catchments,
+  not hydraulic erosion or a proof of globally monotone final-height flow.
+- Shelter uses a regional uncarved bedrock envelope. It does not raycast every
+  actual outcrop, dune or near-surface obstruction.
+- Bedding matches the canonical per-vertex coordinate. Interpolation cannot
+  recover shelves that coarse geometry does not resolve; coastal/mixed visual
+  alignment and skirt appearance still need native inspection.
+- Crest orientation view is the transported wind/longitudinal-family reference,
+  not a measured crest tangent for every barchan horn or star arm.
+- Parabolic/stabilized and star dunes remain mathematical constructions rather
+  than physical sand transport/stabilization simulations.
+- Canonical CPU detail is not removed by camera distance. Existing skirts and
+  streaming partition behavior are retained, not replaced with new stitching.
+- Added cost: two rock noise queries in eligible bedrock; bounded local gully
+  candidates; cached upwind envelopes; 16 extra vertex bytes on Desert chunks;
+  a seven-layer array and one shared fracture texture; a conditional second
+  rock source in transition pixels. No speed or memory regression result exists.
+- Historical richer-Desert CPU nonregression gate failed. This continuation does
+  not supersede that result or claim a measured optimization.
+
+53-SECTION ACCOUNTING DELTA
+Implementation advanced in 9–14,16–17,21–22,28,35,45. The geography constructions
+in 1–8,18,20,24–27,29–34,36–39,41–44,46 are inherited or extended mechanisms,
+not accepted appearances. 19 remains missing its salt asset. 40 and 49 retain
+the unresolved historical performance gate. 47–48 and 50–53 remain unaccepted.
+Every section still requires current native acceptance. The original request is
+tools/desert/USER_REQUIREMENTS.txt; earlier reports are historical evidence.
+
+PRACTICAL USE (WHEN THE USER CHOOSES TO RUN)
+Edit terrain_settings.tres -> Desert, or select Terrain -> Terrain Preset ->
+Settings -> Desert. Change settings while stopped, save and restart; snapshots
+are shared consistently with worker samplers. Existing saved names still work.
+Sandstone -> Fracture Strength controls recesses and mapped block relief.
+Sandstone -> Wind Shelter Strength controls cached lee accumulation.
+Sedimentary Bed Height remains the mean variable-layer spacing.
+Shift+F5 cycles Desert views; Ctrl+F5 returns to shading. New final views are
+families (orange transverse, cyan longitudinal, yellow barchan, purple star,
+green irregular), crest reference, upstream shelter and canonical bedding.
+Existing feature-start names/anchors remain available, but their old suitability
+is NOT requalified after these geometry changes.
+
+VERIFICATION ACTUALLY PERFORMED
+Read the original 53-section request, current handoff/evidence, local production
+sources/call sites, resource declarations, old CPU records and provenance. The
+installed sampler/shader initially matched the two supplied final SHA256 hashes.
+Reviewed modifications and data paths as source, including cache restore/reset,
+CUSTOM2 float formats, pre-interpolation decoding, skirt copies, debug mapping,
+palette fallback, geography gates and bounds. File readback and hashes identify
+delivery bytes only. No compilation, runtime, visual or performance pass claimed.
+The Git whitespace-only review reported existing trailing blank lines in dirty
+terrain source/settings files; these unrelated endings were preserved.
+
+PRODUCTION BUILD STEP — SEPARATE FROM TESTING
+The new palette arrays reference already prepared compressed image resources;
+they need no texture-packing step. Native Godot project import/resource loading
+and shader compilation are still required before a distributable game can be
+accepted. Use the project's intended Godot version (existing tools use 4.6.x).
+No export_presets.cfg is currently provided, so there is no defined production
+export command/target to run or claim completed. Create/select the intended
+export preset and matching export templates before a production export.
+
+OUTSTANDING MANUAL ACCEPTANCE — ONLY AFTER TESTS ARE RE-ENABLED
+1. Re-discover/requalify reproducible anchors for all 13 requested feature cases
+   using the actual generator, fixed seed and actual production settings.
+2. Inspect each at ground, medium and aerial distances. Inspect new debug views,
+   canyon/gully mouths, fracture scale, dune family recognition, bedding contacts,
+   coastal compression, mixed Grass/Desert and zero/extreme controls.
+3. Check exact shared-coordinate determinism across chunk sizes/LODs, order and
+   cache eviction, finite slopes, normal lighting, seams and pure Grass.
+4. Compare equivalent simple/richer-Desert sampling, chunks, commits, fill time,
+   geometry, RAM/VRAM and GPU cost. Record failures; no inferred speedup.
+5. Capture through the actual main scene/preview_desert.gd. The old broad
+   render_material_review.gd fixture is historical lighting, not final acceptance.

@@ -1,0 +1,103 @@
+REMAINING-TASK PASS — 15 OCTOBER 2026
+
+STATUS: functional checks pass; STRICT CPU BASELINE PARITY IS NOT ACHIEVED.
+This receipt does not mark the original 53-section art/performance brief complete.
+No export, asset download, commit, push or Git-history rewrite was performed.
+
+RETAINED CHANGES
+- terrain_mesh_builder.gd prunes unused sparse halos and does not allocate/cache
+  nine-Variant payloads for fine points that cannot be shared normal-field nodes.
+  Canonical heights and returned mesh bytes are unchanged; no approximation is
+  substituted. The bounded cache now retains useful 32m nodes rather than
+  churning thousands of fine interior payloads. Reference switches remain for
+  the byte-comparison test, not as Inspector controls.
+- DesertSettings Mesh Budget > Far Mesh Metres defaults to 512m. Larger parent
+  tiles receive extra canonical vertices, bounded at 64x64. 256m offers more
+  distant geometry at added CPU cost; 0 restores legacy parent resolutions.
+  The controller certifies EVERY biome-interpolation node covering a tile,
+  rather than assuming that Desert corners exclude a Grass enclave. Grass,
+  mixed tiles and ALL close mesh resolutions are unchanged. Certificates are
+  bounded and cleared when settings/seed are configured again.
+- desert_material.gdshaderinc only rotates its projection toward a triangle
+  when the smooth normal actually under-projects a steep escarpment. Ordinary
+  smooth-versus-triangle differences no longer rotate texture coordinates per
+  triangle, reducing the faceted-patch appearance on distant ordinary slopes.
+- Broad Rock Relief (Materials, default0.65) adds analytic continuous 180/620m
+  exposed-rock surface gradients after source normal-map grain mip-fades.
+  Footprint filtering removes unresolved contributions. It is normal-only,
+  not a material/color noise mask, and never changes Grass or terrain heights.
+  Setting it to0 disables this added relief. The final summed normal remains
+  bounded by the existing ~48-degree gradient limit.
+- review_dune_matrix.gd discovers NATURAL transverse, longitudinal, barchan,
+  star and parabolic landmarks in seeds73921,-91827,214748, then renders each
+  through the actual main scene/controller at ground, medium and aerial scales.
+  The public exact island mask is used for inland clearance: the height-query
+  fast path can return a saturated certificate, not a true shore distance.
+  No family selector or terrain height is forced to create a showcase scene.
+
+REJECTED EXPERIMENTS
+- Reducing near tessellation caused up to3.005m additional dune surface error
+  and10.767m on the tested highland. It was removed. Close density is retained.
+- An8m drainage reconstruction passed19,212 sampled error checks (maximum
+  height delta1.076m) and determinism, but INCREASED native fill time. Removed.
+- With the legacy mesh, isolated loading probes measured2.943s exact curves
+  versus3.319s for that cache. With256m far meshes, the probes were3.820s exact
+  and4.142s cached. Those are rejected-experiment results, not current delivery.
+  Reports remain only in ignored artifacts. No approximate drainage is shipped.
+
+VERIFICATION
+- 20 project checks: project_test_run.json. Includes native core, canonical
+  neighbors, culling, height-only probes, normal modes, Grass preservation,
+  LOD hierarchy, GPU channels, material binding, configuration save/reload and
+  bounded streaming/reload checks. All pass on the retained production changes.
+- check_sparse_halo.gd: 1,053 complete channel comparisons over three seeds,
+  Grass/mixed/Desert, dense64 and sparse16 meshes; zero byte differences.
+  Paired test timing6.815s pruned versus7.083s reference, not a streaming claim.
+- check_far_mesh_budget.gd: 288 cases, no false tested Desert certificates,
+  close density unchanged, parent bound and legacy toggle pass.
+- 72 refreshed geographical/diagnostic captures plus 45 five-family/three-seed
+  dune captures. Source and image digests are checked by the collector.
+  Finite sampling/review is not certification of every possible infinite seed.
+- check_rock_relief.gd separately measures actual framebuffer normal changes
+  on exposed-rock pixels and checks that diagnostic albedo does not change.
+  It found 158,177 visibly changed normal pixels among 176,228 exposed-rock
+  pixels, with ZERO changed diagnostic-albedo pixels. Results are recorded in
+  rock_relief_results.json. The final headless editor import also succeeded.
+- Dry drainage audit still reports zero dry downstream rises over2m; the
+  previously documented2.740m oasis-shore intersection remains separate.
+- Git-eligible files remain below50MiB; no current main/HEAD blob exceeds the
+  GitHub limit. The old large palette blob in backup refs is not rewritten.
+
+FINAL NATIVE MEASUREMENTS
+Godot4.6.1, Windows, OpenGL Compatibility, RTX3060 Laptop,1280x720, four workers.
+These runs were serialized, not overlapped with other heavy verification jobs.
+Current initial fill:2.786213s. Previous delivered measurement:2.892139s.
+Same-current central-normal reference:3.158061s; simple baseline:1.310935s.
+Current/simple ratio:about2.13x. CPU baseline parity remains FAILED.
+These are single-run comparisons, not statistically established speedups.
+Regional teleport settle:2.399–3.589s; static frame p95:6.287–6.319ms;
+GPU p95:2.121–3.306ms. Maximum partition commit:6.827ms; plan:7.505ms.
+Peak static memory:97,647,968bytes. Coverage/overlap/LOD/cache failures:zero.
+See artifacts/native_current.json, native_normal_reference.json and
+native_baseline.json for complete records, including travel and commit tails.
+
+VISUAL ACCEPTANCE BOUNDARY / WHAT IS STILL NOT COMPLETE
+All five families now have a finite multi-seed rendered review, rather than an
+untested claim based on selector values alone. The reviewed ordinary-slope
+projection patches are reduced, broad rock shading is present, and far Desert
+sampling is bounded more tightly. However, angular heightfield silhouettes and
+some smooth views still exist. The original photographic-quality target is not
+certified, and simple-baseline generation speed is still unmet. Adding ever
+denser far meshes or lowering close density was not presented as a free fix.
+
+USE / REPRODUCE
+Restart main.tscn from Godot; old exported executables are intentionally stale.
+Terrain > Settings > Desert Landscape > Desert:
+  Mesh Budget > Far Mesh Metres:512 default,256 more detail/cost,0 legacy.
+  Materials > Broad Rock Relief:0.65 default,0 disables new broad shading.
+  Sandstone > Rock Relief Metres:actual95m bedrock form, unchanged24m default.
+  Sandstone > Fast Normal Sampling:existing two-probe lighting/CPU trade-off.
+Saved coverage, Grass resources and architecture are preserved.
+tools/desert/closeout_verify.ps1 runs project tests, views and benchmarks ONLY.
+Then inspect QA contact sheets and run collect_finish_verification.py.
+Neither verification script contains an export or download operation.

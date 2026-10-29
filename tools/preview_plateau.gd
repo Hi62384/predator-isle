@@ -11,7 +11,7 @@ func capture(name: String) -> void:
 
 func run() -> void:
 	var b=load("res://scripts/terrain_mesh_builder.gd").new()
-	b.settings=load("res://terrain_settings.tres").duplicate(true)
+	b.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	b.settings.grass_coverage=100
 	b.settings.desert_coverage=0
 	b.settings.snow_coverage=0
@@ -32,7 +32,7 @@ func run() -> void:
 				var score: float=p.y-foot_height-p.length()*0.004
 				if score>best: best=score;top=p;facing=dir
 	print("PLATEAU_TEST top=",top," outward=",facing," score=",best)
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	var camera: Camera3D=scene.get_node("FreeCamera")

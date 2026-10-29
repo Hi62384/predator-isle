@@ -1,0 +1,415 @@
+{
+  "as_of_utc": "2026-10-14T02:23:18.209828+00:00",
+  "state": "Current applied transport fix, native GPU channel pass, wind material correction and exact-output pure-sand optimization; full visual/performance acceptance incomplete.",
+  "project_root": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle",
+  "existing_runtime_files_modified_on_windows": true,
+  "hash_convention": "SHA256 of exact UTF-8 connector-returned/sent text; Windows raw newline byte hashes may differ. This status file hash is in the external application manifest.",
+  "application_checks": {
+    "existing_targets_exact_base_matches": 23,
+    "new_paths_confirmed_absent": 26,
+    "writes_in_latest_application": 36,
+    "already_identical_retained": 13,
+    "saved_terrain_settings_tres_modified": false,
+    "baseline_sources_captured_before_edits": true,
+    "readback": "Every changed file exactly compared against the sent content; grouped reads checked as a complete string including all file boundaries."
+  },
+  "asset_download_job": {
+    "id": "03c6c2ad-1c01-4013-84d3-a43e3e944b62",
+    "request_id": "predator-desert-pbr-only-20261013-043445",
+    "approved_utc": "2026-10-13T04:35:14.800Z",
+    "completed_utc": "2026-10-13T04:37:42.452Z",
+    "state": "succeeded",
+    "exit_code": 0,
+    "source": "Official ambientCG six 2K-JPG archives",
+    "asset_ids": [
+      "Ground054",
+      "Rock061",
+      "Ground033",
+      "Ground092A",
+      "Gravel020",
+      "Ground031"
+    ],
+    "maps_per_asset": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "script_verification": "Exact allowlisted archive entries; expected archive byte sizes; source/map SHA256 and CC0 records written to downloaded_manifest.json; existing files preserved.",
+    "expected_generated_paths": [
+      "tools/desert/artifacts/downloads/Ground054_2K-JPG.zip",
+      "tools/desert/artifacts/downloads/Rock061_2K-JPG.zip",
+      "tools/desert/artifacts/downloads/Ground033_2K-JPG.zip",
+      "tools/desert/artifacts/downloads/Ground092A_2K-JPG.zip",
+      "tools/desert/artifacts/downloads/Gravel020_2K-JPG.zip",
+      "tools/desert/artifacts/downloads/Ground031_2K-JPG.zip",
+      "assets/textures/desert/Ground054/Ground054_2K-JPG_Color.jpg",
+      "assets/textures/desert/Ground054/Ground054_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Ground054/Ground054_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/Rock061/Rock061_2K-JPG_Color.jpg",
+      "assets/textures/desert/Rock061/Rock061_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Rock061/Rock061_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/Ground033/Ground033_2K-JPG_Color.jpg",
+      "assets/textures/desert/Ground033/Ground033_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Ground033/Ground033_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/Ground092A/Ground092A_2K-JPG_Color.jpg",
+      "assets/textures/desert/Ground092A/Ground092A_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Ground092A/Ground092A_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/Gravel020/Gravel020_2K-JPG_Color.jpg",
+      "assets/textures/desert/Gravel020/Gravel020_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Gravel020/Gravel020_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/Ground031/Ground031_2K-JPG_Color.jpg",
+      "assets/textures/desert/Ground031/Ground031_2K-JPG_NormalGL.jpg",
+      "assets/textures/desert/Ground031/Ground031_2K-JPG_Roughness.jpg",
+      "assets/textures/desert/downloaded_manifest.json"
+    ],
+    "verification_limit": "Job success and six-ID/18-map manifest readback verified. Actual source pixels and archive/map content identity revalidation remain pending in the approved native workflow."
+  },
+  "native_validation": {
+    "asset_packing": "passed 2026-10-13",
+    "asset_pixel_review": "all 18 source maps viewed 2026-10-13",
+    "native_core": "1839 checks passed; old wrapper status false failure",
+    "powershell_and_engine_preflight": "passed 2026-10-14",
+    "gpu_control_channels": "passed: 360 framebuffer checks, zero error, deliberate negative detected",
+    "lighting": "blocked before start by 1 GiB free-RAM guard",
+    "full_project_import": "not run",
+    "full_world_visual_performance": "not accepted"
+  },
+  "open_gates": [
+    "Hard CPU nonregression against original simple Desert still fails; focused pure-sand optimization reduces current richer cost but does not erase gap.",
+    "Detailed native material lighting/gameplay/Grass/water/streaming/GPU acceptance deferred under user request for less automated testing.",
+    "Historical large fixture renders clipped and failed memory guard; do not treat as accepted visuals."
+  ],
+  "resume_rule": "Preserve later user changes; compare fresh content before updates. Keep existing approval gates, serialize heavy jobs, never reset/commit/push or make a ProjectBridge ZIP without request.",
+  "initial_checkpoint_state": "49-file source checkpoint applied and connector readback verified; native validation and acceptance incomplete.",
+  "initial_checkpoint_files_count": 49,
+  "historical_files_excluding_this_status": [
+    {
+      "path": "assets/textures/desert/.gdignore",
+      "sha256_utf8": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "bytes_utf8": 0
+    },
+    {
+      "path": "assets/textures/desert/catalog.json",
+      "sha256_utf8": "38684ef32fd17da61bdd014007c269f92ce7b816a4b56058a3864543530317d6",
+      "bytes_utf8": 63502
+    },
+    {
+      "path": "assets/textures/desert/download_plan.json",
+      "sha256_utf8": "0163441fd2f0b699ea42c3bb502909ded40a2c8fb37122b50d9eb01fcb0ea3ff",
+      "bytes_utf8": 3545
+    },
+    {
+      "path": "desert_settings.tres",
+      "sha256_utf8": "5dda030afc2e8bc843e8d1fcce9849409795ddff61785f24c501d12da45fa66e",
+      "bytes_utf8": 197
+    },
+    {
+      "path": "scripts/chunk_terrain.gd",
+      "sha256_utf8": "3ad6f53980fdb51ea2558be7c4aaead6e914307ab1772d510d3519b41cf69270",
+      "bytes_utf8": 24787
+    },
+    {
+      "path": "scripts/desert_drainage.gd",
+      "sha256_utf8": "5704b71d6b4b9a9c943ac5ae6daf9df9653c199e93b637a4b1f8761b7c6798f3",
+      "bytes_utf8": 8880
+    },
+    {
+      "path": "scripts/desert_sampler.gd",
+      "sha256_utf8": "9d223ab654285adc1bb35d3f84bccc357251462b375f724a78f4f90c38fdeb3f",
+      "bytes_utf8": 20554
+    },
+    {
+      "path": "scripts/desert_settings.gd",
+      "sha256_utf8": "751d0a8c732fb1ea05fede555839badec3942d7e8532f293e82396667a4127ca",
+      "bytes_utf8": 2514
+    },
+    {
+      "path": "scripts/free_camera.gd",
+      "sha256_utf8": "9a0b099146058ddd0997629bfddcff5c8fc66b866977cb77e758bb0a668ee3c1",
+      "bytes_utf8": 5841
+    },
+    {
+      "path": "scripts/terrain_mesh_builder.gd",
+      "sha256_utf8": "7ca5468d0f5a1f088b221f8deec1f8d0c4ca52241a276f79aaad75a4ca0ad42c",
+      "bytes_utf8": 54092
+    },
+    {
+      "path": "scripts/terrain_settings.gd",
+      "sha256_utf8": "553a0b0d8c65b8cd894b440cfdbf2996235d2a27f0fa06e3c13672dae74f409f",
+      "bytes_utf8": 13652
+    },
+    {
+      "path": "shaders/desert_material.gdshaderinc",
+      "sha256_utf8": "1f573f585dd7420197274cbee7a886c25f35cb0e374220a8fff8766fbe39824c",
+      "bytes_utf8": 11307
+    },
+    {
+      "path": "shaders/terrain_biomes.gdshader",
+      "sha256_utf8": "b08ffb65262280c7a7abdbaf50556a802f89bcb0e54d45b272f2c82bd98aa363",
+      "bytes_utf8": 38360
+    },
+    {
+      "path": "tools/desert/ACCEPTANCE.md",
+      "sha256_utf8": "62d7855dad5450ea5ad28c484f64fd8d0e2e6d92be21f3ca310247028ff99d3e",
+      "bytes_utf8": 8476
+    },
+    {
+      "path": "tools/desert/NATIVE_WORKFLOW.json",
+      "sha256_utf8": "b68a186fac8cff463669226e1a402d52b2973d49ff4871303a750503f4e2e6c7",
+      "bytes_utf8": 3423
+    },
+    {
+      "path": "tools/desert/USER_REQUIREMENTS.txt",
+      "sha256_utf8": "10edd3245a3646fb94890660c45c025d6008d7d7c356d6bba83be33f6c0f8d28",
+      "bytes_utf8": 40477
+    },
+    {
+      "path": "tools/desert/artifacts/.gdignore",
+      "sha256_utf8": "35c237fe8d93a62df28dde527960f3efd498da1cffd842f8a55e5de96b3b3462",
+      "bytes_utf8": 62
+    },
+    {
+      "path": "tools/desert/audit_drainage_beds.gd",
+      "sha256_utf8": "c1b4c7d36137d2fcf26ce52548d759f374707be9c4e23698284aa1621fe9dc8b",
+      "bytes_utf8": 3390
+    },
+    {
+      "path": "tools/desert/audit_dune_slopes.gd",
+      "sha256_utf8": "d57595893f96b14460be300a0d1666f34e5c629d07ed5d7de43da7c1a2fb4993",
+      "bytes_utf8": 2250
+    },
+    {
+      "path": "tools/desert/audit_network_crossings.gd",
+      "sha256_utf8": "50a6a3fa2add9348b35e049430c3c26173e5d28913f1ad3704082dc07aa26f01",
+      "bytes_utf8": 1497
+    },
+    {
+      "path": "tools/desert/audit_sand_slopes.gd",
+      "sha256_utf8": "b63d8abd73df3ffd11d747e615ecfdaa5d7ba88aad5e236af34db717b763eaca",
+      "bytes_utf8": 1339
+    },
+    {
+      "path": "tools/desert/baseline/benchmark_hierarchy.gd.txt",
+      "sha256_utf8": "cdf736de1b10b3a2866303f1034518099cfcfac2286ef25a2e71afea889cdb00",
+      "bytes_utf8": 3892
+    },
+    {
+      "path": "tools/desert/baseline/builder.gd",
+      "sha256_utf8": "164fa0e90bf3f314e4ade5e9c7abe5a947c84550155a45eae6c3b4971de837cd",
+      "bytes_utf8": 49904
+    },
+    {
+      "path": "tools/desert/baseline/chunk_terrain.gd.txt",
+      "sha256_utf8": "0f49d5f4f16708517720308cee3bb11f23ee57e43ddfc1409509bcd835d46bd1",
+      "bytes_utf8": 21844
+    },
+    {
+      "path": "tools/desert/baseline/controller.gd",
+      "sha256_utf8": "8f4091b438524a6bb7c038e4dc395b0554479c03f7cce6624ff2be2f8303587a",
+      "bytes_utf8": 21902
+    },
+    {
+      "path": "tools/desert/baseline/manifest.json",
+      "sha256_utf8": "c42b8a36b0b70271c2e4945e7749d654f9a778172f3cc82fade5a2e210b0b50a",
+      "bytes_utf8": 1305
+    },
+    {
+      "path": "tools/desert/baseline/terrain.gdshader",
+      "sha256_utf8": "2a1ca003bf2a1d38117c7e101859200993b000516a5faa65b162f25b08a5df82",
+      "bytes_utf8": 36878
+    },
+    {
+      "path": "tools/desert/baseline/terrain_biomes.gdshader.txt",
+      "sha256_utf8": "2a1ca003bf2a1d38117c7e101859200993b000516a5faa65b162f25b08a5df82",
+      "bytes_utf8": 36878
+    },
+    {
+      "path": "tools/desert/baseline/terrain_mesh_builder.gd.txt",
+      "sha256_utf8": "164fa0e90bf3f314e4ade5e9c7abe5a947c84550155a45eae6c3b4971de837cd",
+      "bytes_utf8": 49904
+    },
+    {
+      "path": "tools/desert/baseline/terrain_settings.gd.txt",
+      "sha256_utf8": "865388096dff72afd039d3c387c1031135117c34579f80b98a1e63629ce78666",
+      "bytes_utf8": 13449
+    },
+    {
+      "path": "tools/desert/baseline/terrain_settings.tres.txt",
+      "sha256_utf8": "f4b100be96e4548bbec8b178accaac2956e697c71df6f01fcc0c361e9f9f208c",
+      "bytes_utf8": 405
+    },
+    {
+      "path": "tools/desert/benchmark_desert_native.gd",
+      "sha256_utf8": "90ed1a2b92fefb7dbd5cac795e5694dee26ad114599300abdfab12a430d49923",
+      "bytes_utf8": 6337
+    },
+    {
+      "path": "tools/desert/build_palette.gd",
+      "sha256_utf8": "45d34d878eef48b1e99f1df3d3ef6609b186fce9e806bca9af23a2c10faa78d6",
+      "bytes_utf8": 3905
+    },
+    {
+      "path": "tools/desert/check_desert.gd",
+      "sha256_utf8": "394068b64a6a6d974d484ec45ed7e4aba88f640c584cc7ff1413f71b1e1aa10c",
+      "bytes_utf8": 10894
+    },
+    {
+      "path": "tools/desert/check_saved_preset.gd",
+      "sha256_utf8": "d25bd7de41d7f928569657a6546d89c66d5b01c04238883cf5b1c1cb7e930434",
+      "bytes_utf8": 1446
+    },
+    {
+      "path": "tools/desert/cloud_cpu_final.json",
+      "sha256_utf8": "251f5be342ae08ab35b15c639244445972397d8c6e3b23deae04157b9a19929d",
+      "bytes_utf8": 7694
+    },
+    {
+      "path": "tools/desert/cloud_cpu_initial.json",
+      "sha256_utf8": "db114eb4dcf051bdae3b297c17edeaba1366ea5c0f1f57362cbff3d0115d9ac1",
+      "bytes_utf8": 1921
+    },
+    {
+      "path": "tools/desert/cloud_validation.json",
+      "sha256_utf8": "6668d2e44fdf8b3fe4d3ad53329ae36ac5f4e8c00370d55ec2ad2e980817be48",
+      "bytes_utf8": 4547
+    },
+    {
+      "path": "tools/desert/drainage_bed_audit.json",
+      "sha256_utf8": "8fed4b1b3331d00ccab99ef7d0993786a5ad8a0b03cd88234abe16fe96b5773b",
+      "bytes_utf8": 2546
+    },
+    {
+      "path": "tools/desert/export_geometry_diagnostics.gd",
+      "sha256_utf8": "f0053ceb98b62229f3f5e21fbc06597aabebe255ee25c4d49617d897e6213e3d",
+      "bytes_utf8": 1827
+    },
+    {
+      "path": "tools/desert/fetch_assets.ps1",
+      "sha256_utf8": "4b2e0066b2f014e79850133aafa184df027ea5e3a5637831c079c6359e6469e1",
+      "bytes_utf8": 3342
+    },
+    {
+      "path": "tools/desert/find_previews.gd",
+      "sha256_utf8": "066dd96e741f70a80ca785d4c446f3f031914f40c47eb997fed6099d56d90fef",
+      "bytes_utf8": 3391
+    },
+    {
+      "path": "tools/desert/network_crossings.json",
+      "sha256_utf8": "9088c5a45ccdd8944ab9759d4b6ba87aaf5e1d30b9bbdc23c2ef949bb5b56374",
+      "bytes_utf8": 100
+    },
+    {
+      "path": "tools/desert/preview_desert.gd",
+      "sha256_utf8": "31e8db3da4dc5b554a6d6a72cf23dd6467bda0a63563637221bff02987eaed61",
+      "bytes_utf8": 4031
+    },
+    {
+      "path": "tools/desert/preview_locations.json",
+      "sha256_utf8": "c652645cbd285ed1100c8f76a9b289016f893e5fc5db06dcd032e0ff173280a6",
+      "bytes_utf8": 5677
+    },
+    {
+      "path": "tools/desert/requirements_status.json",
+      "sha256_utf8": "7c5537d4ac8ea110f8f81684b707fbcd7ae4c378a3772e8ecc2be2ad917c3173",
+      "bytes_utf8": 14975
+    },
+    {
+      "path": "tools/desert/saved_preset_grass_cloud.json",
+      "sha256_utf8": "f616933e7bddd94815204b88d58f31723e202807b97ea67c68c585674beda4f8",
+      "bytes_utf8": 2034
+    },
+    {
+      "path": "tools/desert/validate_desert.ps1",
+      "sha256_utf8": "2f4a5941bea33d6e973e000d4a3c63cd6cf692836d49eace3a020cf637888905",
+      "bytes_utf8": 5993
+    }
+  ],
+  "current_change_files": [
+    {
+      "path": "scripts/chunk_terrain.gd",
+      "sha256_utf8": "17e1edb3b9a6c16c7033fcb8385e47791e63622cfaae0b0a9cea2f3667cfe871",
+      "bytes_utf8": 24646
+    },
+    {
+      "path": "scripts/terrain_mesh_builder.gd",
+      "sha256_utf8": "6fdf6373b5d6001c84ca31b7a5f7c41d8c3913fedcc3d1e15432a2cf6f4e111c",
+      "bytes_utf8": 54364
+    },
+    {
+      "path": "shaders/desert_control_decode.gdshaderinc",
+      "sha256_utf8": "47be43e7a3aa524123eb729aaab7bae673e01e1689e8cbdb400e6904c5009d84",
+      "bytes_utf8": 716
+    },
+    {
+      "path": "shaders/terrain_biomes.gdshader",
+      "sha256_utf8": "91c23857a622cce8f6c47fdf9a760dcbad6149f769c171d9bcb37aed2619b216",
+      "bytes_utf8": 38568
+    },
+    {
+      "path": "tools/desert/check_desert.gd",
+      "sha256_utf8": "39f4c6149c9d6b85e97c323f123a2c299a132b68de989a41e0e6f13301adf2b4",
+      "bytes_utf8": 11060
+    },
+    {
+      "path": "tools/desert/check_desert_gpu_channels.gd",
+      "sha256_utf8": "b85579ebd6b536e62cdd6a9ff61bd12e0d4156d0bac66303e4b6963d23154ed4",
+      "bytes_utf8": 7000
+    },
+    {
+      "path": "tools/desert/check_desert_lighting.gd",
+      "sha256_utf8": "0e327523ffe30048cd5e3283fa07246ad2255fa3692f294eb9f3a15ea39a2ad6",
+      "bytes_utf8": 8127
+    },
+    {
+      "path": "tools/desert/run_desert_optical_gates.ps1",
+      "sha256_utf8": "6c17f4481ca25913c7f2e1f720df9d0cbdcc07c40061bdd74fd731a222c40e98",
+      "bytes_utf8": 9544
+    },
+    {
+      "path": "scripts/desert_sampler.gd",
+      "sha256_utf8": "9e73437be2906d2a145d306a6eb7097af19070a4deb0333bbaeb2dc54258e0e4",
+      "bytes_utf8": 21402
+    },
+    {
+      "path": "shaders/desert_material.gdshaderinc",
+      "sha256_utf8": "d759fae6618b81dad44b3c6128cfca93029d374aea9ee9dee7e71a89aeacc244",
+      "bytes_utf8": 13185
+    },
+    {
+      "path": "tools/desert/ACCEPTANCE.md",
+      "sha256_utf8": "31b556cfb5c9c974bf3cf7fcc22bf45addadccd2ff3eb0516c891bf9c0e79418",
+      "bytes_utf8": 8911
+    },
+    {
+      "path": "tools/desert/RECOVERY_20261014.md",
+      "sha256_utf8": "12254d0edf015eae3d620fa6fe7262615350b76e9792d0ff3096ea533fd68e39",
+      "bytes_utf8": 4063
+    },
+    {
+      "path": "tools/desert/baseline/desert_material_before_wind.gdshaderinc",
+      "sha256_utf8": "1f573f585dd7420197274cbee7a886c25f35cb0e374220a8fff8766fbe39824c",
+      "bytes_utf8": 11307
+    },
+    {
+      "path": "tools/desert/fast_path_check_20261014.json",
+      "sha256_utf8": "ef2c46028938ddb36975af99e5413f9e505545d7df3fc0ae1582d6a43b48135a",
+      "bytes_utf8": 1489
+    },
+    {
+      "path": "tools/desert/native_channel_check_20261014.json",
+      "sha256_utf8": "ca76cb973fb1dd8bd8a98b88f53dd71d77b70bb27f228dd44c4208a22d8d1a14",
+      "bytes_utf8": 809
+    },
+    {
+      "path": "tools/desert/render_material_review.gd",
+      "sha256_utf8": "f8662dd01f1ebbe821aacabb7e85694dc8c4d60dd8f4a3ca3aa06c984893630f",
+      "bytes_utf8": 10080
+    },
+    {
+      "path": "tools/desert/run_bounded_visual.ps1",
+      "sha256_utf8": "cdd06344b2a1b56244a49e0a15f3a1e38fd3c879c9c6c512751a4867eedc3b69",
+      "bytes_utf8": 10675
+    }
+  ],
+  "current_details": "RECOVERY_20261014.md"
+}

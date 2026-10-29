@@ -1,0 +1,42 @@
+extends SceneTree
+func _initialize()->void:
+	var config:TerrainSettings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
+	var properties:Array=[]
+	for p:Dictionary in config.get_property_list():properties.append(p.name)
+	for name in ["desert_coverage","snow_coverage","stone_coverage","desert","snow","desert_region_size","snow_region_size","stone_region_size"]:assert(not properties.has(name),"Removed biome setting still present: "+name)
+	assert(config.jungle_coverage>0)
+	assert(ChunkTerrain.BIOME_NAMES.values().size()==16 and ChunkTerrain.BIOME_NAMES.values().has("Badlands") and ChunkTerrain.BIOME_NAMES.values().has("Tropical") and ChunkTerrain.BIOME_NAMES.values().has("Swamp") and ChunkTerrain.BIOME_NAMES.values().has("Savanna") and ChunkTerrain.BIOME_NAMES.values().has("Forest") and ChunkTerrain.BIOME_NAMES.values().has("Jungle") and ChunkTerrain.BIOME_NAMES.values().has("Grass"))
+	for id in range(8,16):assert(ChunkTerrain.BIOME_NAMES.has(id))
+	for key:String in TerrainSettings.EXTENSION_KEYS:assert(properties.has(key+"_coverage") and config.get(key)!=null)
+	var builder=preload("res://scripts/terrain_mesh_builder.gd").new();builder.settings=config;builder._configure_noise()
+	for i in range(500):
+		var p:=Vector2(i*7919%1000000-500000,i*11939%1000000-500000);var w:Vector4=builder._biome_weights(p.x,p.y)
+		assert(absf(w.x+w.y+w.z+w.w+builder._jungle_weight+builder._mountain_weight+builder._tropical_weight+builder._badlands_weight-1)<.00001)
+	var mesh:Array=builder.build(Vector2i.ZERO,16)
+	assert(mesh[Mesh.ARRAY_CUSTOM3]==null or mesh[Mesh.ARRAY_CUSTOM3].size()==mesh[Mesh.ARRAY_VERTEX].size()*4)
+	var shader:Shader=load("res://shaders/terrain_biomes.gdshader")
+	assert(not shader.code.contains("shade_snow") and not shader.code.contains("shade_desert") and not shader.code.contains("PREDATOR_SNOW_ONLY"))
+	var terrain=ChunkTerrain.new();terrain.settings=config;terrain._configure_noise();terrain.target=Node3D.new();terrain.start_in_jungle=true
+	var focus:Vector3=terrain.find_jungle_focus();assert(focus.is_finite() and focus.y>3)
+	assert(terrain.get_biome_name_at(focus)=="Jungle")
+	terrain._sampler._biome_weights(focus.x,focus.z);assert(terrain._sampler._jungle_weight>=.98)
+	var savanna_focus:Vector3=terrain.find_savanna_focus();assert(savanna_focus.is_finite() and savanna_focus.y>3)
+	var forest_focus:Vector3=terrain.find_forest_focus();assert(forest_focus.is_finite() and terrain.get_biome_name_at(forest_focus)=="Forest")
+	assert(terrain.get_biome_name_at(savanna_focus)=="Savanna")
+	var swamp_focus:Vector3=terrain.find_swamp_focus();assert(swamp_focus.is_finite())
+	assert(terrain.get_biome_name_at(swamp_focus)=="Swamp")
+	var coast_focus:Vector3=terrain.find_coast_focus();assert(coast_focus.is_finite())
+	assert(terrain.get_biome_name_at(coast_focus)=="Rocky Coast")
+	var beach_focus:Vector3=terrain.find_coast_focus(true);assert(beach_focus.is_finite())
+	assert(terrain.get_biome_name_at(beach_focus)=="Coastal Dunes / Beaches")
+	var mountain_focus:Vector3=terrain.find_mountain_focus();assert(mountain_focus.is_finite())
+	assert(terrain.get_biome_name_at(mountain_focus)=="Mountain Range")
+	terrain._sampler._biome_weights(mountain_focus.x,mountain_focus.z);assert(terrain._sampler._mountain_weight>=.98)
+	if config.tropical_coverage>0:
+		var tropical_focus:Vector3=terrain.find_tropical_focus();assert(tropical_focus.is_finite())
+		assert(terrain.get_biome_name_at(tropical_focus)=="Tropical")
+	if config.badlands_coverage>0:
+		var badlands_focus:Vector3=terrain.find_badlands_focus();assert(badlands_focus.is_finite())
+		assert(terrain.get_biome_name_at(badlands_focus)=="Badlands")
+	terrain.target.free();terrain.free()
+	print("ACTIVE_BIOMES_PASS sixteen available inland biomes plus Rocky Coast and Beach overlays; no retired settings/shader branches; enabled saved-world locators found");quit()

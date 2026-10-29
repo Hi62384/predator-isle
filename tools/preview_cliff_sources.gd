@@ -1,7 +1,7 @@
 extends "res://tools/preview_erosion.gd"
 const IDS=["Rock064","Rock058","Rock051","Rock060","Rock030","Rock061","Rock050","Rocks007","Rocks011"]
 func run() -> void:
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	scene.get_node("Terrain").grass_preview=true
 	root.add_child(scene)
 	scene.get_node("FreeCamera").set_process(false)

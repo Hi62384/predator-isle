@@ -1,0 +1,15 @@
+{
+	"comparisons": 63000,
+	"failures": [],
+	"scope": "Exact same analytic profiles, three signed seeds, all isolated families, subcell boundaries and cache eviction.",
+	"unculled_then_culled": [
+		{
+			"checksum": 43599.0864926748,
+			"us": 80449
+		},
+		{
+			"checksum": 43599.0864926748,
+			"us": 46201
+		}
+	]
+}

@@ -6,7 +6,7 @@ func _initialize() -> void:
 func run() -> void:
 	var shader: Shader = load("res://shaders/terrain_biomes.gdshader")
 	assert(shader != null)
-	var settings: GroundMaterialSettings = load("res://ground_materials.tres")
+	var settings: GroundMaterialSettings = load("res://config/rendering/ground_materials.tres")
 	var values := settings.uniforms()
 	assert(is_equal_approx(values.path_wander_strength, 0.82))
 	assert(is_equal_approx(values.path_edge_noise_metres, 7.0))

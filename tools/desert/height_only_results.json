@@ -1,0 +1,90 @@
+{
+	"cases": [
+		{
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 0.0,
+			"full_payload_ms": 104.329,
+			"height_only_ms": 90.293,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(72, 115)",
+			"desert_coverage": 0.0,
+			"full_payload_ms": 116.859,
+			"height_only_ms": 111.884,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 0.0,
+			"full_payload_ms": 131.07,
+			"height_only_ms": 120.242,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(0, 1)",
+			"desert_coverage": 0.0,
+			"full_payload_ms": 58.608,
+			"height_only_ms": 53.395,
+			"span": 16384.0
+		},
+		{
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 50.0,
+			"full_payload_ms": 118.652,
+			"height_only_ms": 111.963,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(72, 115)",
+			"desert_coverage": 50.0,
+			"full_payload_ms": 263.805,
+			"height_only_ms": 265.015,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 50.0,
+			"full_payload_ms": 224.582,
+			"height_only_ms": 227.831,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(0, 1)",
+			"desert_coverage": 50.0,
+			"full_payload_ms": 93.016,
+			"height_only_ms": 89.01,
+			"span": 16384.0
+		},
+		{
+			"coordinate": "(-18, 35)",
+			"desert_coverage": 100.0,
+			"full_payload_ms": 133.026,
+			"height_only_ms": 112.405,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(72, 115)",
+			"desert_coverage": 100.0,
+			"full_payload_ms": 280.363,
+			"height_only_ms": 282.996,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(-78, 139)",
+			"desert_coverage": 100.0,
+			"full_payload_ms": 216.274,
+			"height_only_ms": 202.503,
+			"span": 256.0
+		},
+		{
+			"coordinate": "(0, 1)",
+			"desert_coverage": 100.0,
+			"full_payload_ms": 64.714,
+			"height_only_ms": 61.818,
+			"span": 16384.0
+		}
+	],
+	"failures": [],
+	"note": "Every returned mesh channel must be byte-identical. Same process, cold builders; timings diagnostic, not a streaming benchmark."
+}

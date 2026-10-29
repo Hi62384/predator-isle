@@ -1,0 +1,982 @@
+[
+  {
+    "id": "aerial_mud_1",
+    "name": "Aerial Mud 1",
+    "tags": [
+      "mud",
+      "tracks",
+      "tire tracks",
+      "wet soil",
+      "uneven surface",
+      "ruts",
+      "surface depressions"
+    ],
+    "categories": [
+      "terrain",
+      "road",
+      "outdoor",
+      "natural",
+      "aerial"
+    ],
+    "source": "https://polyhaven.com/a/aerial_mud_1",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud",
+    "name": "Brown Mud",
+    "tags": [
+      "mud",
+      "dirt",
+      "stones",
+      "dry",
+      "ground",
+      "soil",
+      "plant debris",
+      "granular",
+      "organic matter",
+      "earthy",
+      "twigs",
+      "earth"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud_02",
+    "name": "Brown Mud 02",
+    "tags": [
+      "mud",
+      "dirt",
+      "stones",
+      "dry",
+      "ground",
+      "footprints",
+      "soil",
+      "compact soil",
+      "wet soil",
+      "plant debris",
+      "roots",
+      "sticks",
+      "earth"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud_02",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud_03",
+    "name": "Brown Mud 03",
+    "tags": [
+      "mud",
+      "dirt",
+      "stones",
+      "dry",
+      "ground",
+      "soil",
+      "wet soil",
+      "footprints",
+      "earth",
+      "muddy surface",
+      "wet patches",
+      "mud clumps",
+      "loose earth"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud_03",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud_dry",
+    "name": "Brown Mud Dry",
+    "tags": [
+      "mud",
+      "dirt",
+      "stones",
+      "dry",
+      "ground"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor",
+      "collection: the_shed"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud_dry",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud_leaves_01",
+    "name": "Brown Mud Leaves 01",
+    "tags": [
+      "grass",
+      "mud",
+      "moss",
+      "stones",
+      "orange",
+      "forest"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud_leaves_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "brown_mud_rocks_01",
+    "name": "Brown Mud Rocks 01",
+    "tags": [
+      "gravel",
+      "mud",
+      "moss",
+      "stones",
+      "forest",
+      "rocks",
+      "loose stones",
+      "plants",
+      "weeds",
+      "scattered weeds",
+      "plant debris",
+      "riverbank",
+      "organic matter",
+      "rocky soil",
+      "wet ground"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/brown_mud_rocks_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "coast_land_rocks_01",
+    "name": "Coast Land Rocks 01",
+    "tags": [
+      "rough",
+      "uneven",
+      "stones",
+      "moss",
+      "rock",
+      "dirt",
+      "cracked",
+      "seaside",
+      "ocean",
+      "costal",
+      "rocks",
+      "brown",
+      "gravel",
+      "nature",
+      "ground",
+      "cliff"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "terrain",
+      "aerial",
+      "sand",
+      "collection: smugglers_cove"
+    ],
+    "source": "https://polyhaven.com/a/coast_land_rocks_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "coral_mud_01",
+    "name": "Coral Mud 01",
+    "tags": [
+      "coral",
+      "ground",
+      "costal",
+      "stones",
+      "gravel",
+      "gravelly",
+      "coastal sediment",
+      "rock fragments",
+      "coastline",
+      "ocean",
+      "exposed seabed"
+    ],
+    "categories": [
+      "terrain",
+      "outdoor",
+      "road",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/coral_mud_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "cracked_red_ground",
+    "name": "Cracked Red Ground",
+    "tags": [
+      "rough",
+      "uneven",
+      "old",
+      "weathered",
+      "worn",
+      "cracked",
+      "brown",
+      "dirty",
+      "stones",
+      "dry",
+      "ground",
+      "dirt",
+      "rocks",
+      "red",
+      "clay",
+      "cracks",
+      "eroded",
+      "nature",
+      "floor",
+      "sand"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "dirty",
+      "floor",
+      "sand"
+    ],
+    "source": "https://polyhaven.com/a/cracked_red_ground",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "dark_rock",
+    "name": "Dark Rock",
+    "tags": [
+      "uneven",
+      "rough",
+      "weathered",
+      "rock",
+      "fissured",
+      "cracked",
+      "craggy",
+      "striated",
+      "geological",
+      "rock formation",
+      "veined",
+      "stone",
+      "fractured",
+      "metamorphic",
+      "striations",
+      "exposed rock"
+    ],
+    "categories": [
+      "natural",
+      "outdoor",
+      "rock"
+    ],
+    "source": "https://polyhaven.com/a/dark_rock",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "dry_ground_01",
+    "name": "Dry Ground 01",
+    "tags": [
+      "dry",
+      "sand",
+      "mud",
+      "cracked",
+      "desert",
+      "baked",
+      "rough",
+      "fissured",
+      "baked earth",
+      "compact",
+      "brittle",
+      "parched"
+    ],
+    "categories": [
+      "terrain",
+      "outdoor",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/dry_ground_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "dry_ground_rocks",
+    "name": "Dry Ground Rocks",
+    "tags": [
+      "mud",
+      "rocks",
+      "cracked",
+      "ground",
+      "dry",
+      "parched",
+      "soil",
+      "dirt",
+      "stones",
+      "rough",
+      "stony"
+    ],
+    "categories": [
+      "terrain",
+      "outdoor",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/dry_ground_rocks",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "dry_mud_field_001",
+    "name": "Dry Mud Field 001",
+    "tags": [
+      "road",
+      "mud",
+      "dry",
+      "uneven",
+      "dirt",
+      "farm",
+      "ground",
+      "rough",
+      "brown"
+    ],
+    "categories": [
+      "outdoor",
+      "terrain",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/dry_mud_field_001",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "dry_riverbed_rock",
+    "name": "Dry Riverbed Rock",
+    "tags": [
+      "rough",
+      "rock face",
+      "uneven",
+      "weathered",
+      "cracked",
+      "stone"
+    ],
+    "categories": [
+      "floor",
+      "natural",
+      "terrain",
+      "rock",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/dry_riverbed_rock",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_01",
+    "name": "Marble Cliff 01",
+    "tags": [
+      "uneven",
+      "weathered",
+      "marble",
+      "cliff",
+      "discolored",
+      "cracked",
+      "fractured",
+      "metamorphic",
+      "fissured",
+      "crag",
+      "cleft",
+      "sedimentary",
+      "strata"
+    ],
+    "categories": [
+      "natural",
+      "rock",
+      "aerial"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_02",
+    "name": "Marble Cliff 02",
+    "tags": [
+      "rough",
+      "weathered",
+      "uneven",
+      "rock",
+      "cracked",
+      "sedimentary",
+      "sedimentary",
+      "fissured",
+      "marble",
+      "craggy",
+      "drone",
+      "dusty",
+      "brown"
+    ],
+    "categories": [
+      "natural",
+      "rock",
+      "outdoor",
+      "aerial"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_02",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_03",
+    "name": "Marble Cliff 03",
+    "tags": [
+      "rough",
+      "weathered",
+      "uneven",
+      "cliff",
+      "marble",
+      "rock",
+      "craggy",
+      "sedimentary",
+      "fractured",
+      "cracked",
+      "rock wall",
+      "strata",
+      "cracks",
+      "drone"
+    ],
+    "categories": [
+      "outdoor",
+      "rock",
+      "natural",
+      "aerial"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_03",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_04",
+    "name": "Marble Cliff 04",
+    "tags": [
+      "uneven",
+      "rough",
+      "weathered",
+      "cracked",
+      "rock face",
+      "rock",
+      "cliff",
+      "stratified",
+      "veined",
+      "marble",
+      "geological",
+      "fissured",
+      "striated",
+      "stone",
+      "fractured"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "rock",
+      "aerial"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_04",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_05",
+    "name": "Marble Cliff 05",
+    "tags": [
+      "rough",
+      "weathered",
+      "uneven",
+      "rock",
+      "chipped",
+      "stone",
+      "marble",
+      "striated",
+      "veined",
+      "fractured",
+      "cracked",
+      "cliff",
+      "craggy",
+      "fissured",
+      "striations",
+      "rock face",
+      "rock formation",
+      "exposed rock"
+    ],
+    "categories": [
+      "aerial",
+      "rock",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_05",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_cliff_06",
+    "name": "Marble Cliff 06",
+    "tags": [
+      "rough",
+      "uneven",
+      "rock",
+      "cracked",
+      "stone",
+      "marble",
+      "cliff",
+      "veined",
+      "striations",
+      "rock formation",
+      "geological",
+      "exposed rock",
+      "stratified",
+      "pitted",
+      "eroded",
+      "crag",
+      "fractured",
+      "fissured"
+    ],
+    "categories": [
+      "outdoor",
+      "aerial",
+      "natural",
+      "rock"
+    ],
+    "source": "https://polyhaven.com/a/marble_cliff_06",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_rock_01",
+    "name": "Marble Rock 01",
+    "tags": [
+      "uneven",
+      "rock",
+      "rock face",
+      "geological",
+      "cracked",
+      "boulder",
+      "craggy",
+      "marble",
+      "veined",
+      "weathered",
+      "striated"
+    ],
+    "categories": [
+      "outdoor",
+      "rock",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/marble_rock_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_rock_02",
+    "name": "Marble Rock 02",
+    "tags": [
+      "uneven",
+      "rock",
+      "cracked",
+      "weathered",
+      "marble",
+      "craggy",
+      "stone",
+      "rock face",
+      "chipped",
+      "striated",
+      "rugged",
+      "fissured",
+      "rock formation",
+      "veined"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "rock"
+    ],
+    "source": "https://polyhaven.com/a/marble_rock_02",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "marble_rock_03",
+    "name": "Marble Rock 03",
+    "tags": [
+      "uneven",
+      "weathered",
+      "cracked",
+      "worn",
+      "rock face",
+      "rock",
+      "dirty",
+      "marble",
+      "rock formation",
+      "exposed rock",
+      "striated",
+      "craggy",
+      "fissured",
+      "veined",
+      "geological",
+      "stratified",
+      "fractured",
+      "striations",
+      "cliff"
+    ],
+    "categories": [
+      "rock",
+      "outdoor",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/marble_rock_03",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "mossy_rock",
+    "name": "Mossy Rock",
+    "tags": [
+      "rough",
+      "moss",
+      "rock face",
+      "cracked",
+      "lichen",
+      "striations",
+      "striated",
+      "mosscovered",
+      "mossy",
+      "uneven",
+      "rock"
+    ],
+    "categories": [
+      "rock",
+      "natural",
+      "outdoor",
+      "terrain"
+    ],
+    "source": "https://polyhaven.com/a/mossy_rock",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "mud_cracked_dry_03",
+    "name": "Mud Cracked Dry 03",
+    "tags": [
+      "dry",
+      "mud",
+      "sand",
+      "uneven",
+      "ground",
+      "cracked",
+      "cracks",
+      "nature"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "terrain",
+      "sand"
+    ],
+    "source": "https://polyhaven.com/a/mud_cracked_dry_03",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "mud_cracked_dry_riverbed_002",
+    "name": "Mud Cracked Dry Riverbed 002",
+    "tags": [
+      "weathered",
+      "cracked",
+      "rough",
+      "ground",
+      "dry",
+      "uneven",
+      "mud",
+      "cracks",
+      "nature",
+      "flaked",
+      "lake"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "terrain",
+      "sand"
+    ],
+    "source": "https://polyhaven.com/a/mud_cracked_dry_riverbed_002",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "mud_forest",
+    "name": "Mud Forest",
+    "tags": [
+      "brown",
+      "ground",
+      "dirty",
+      "leaves",
+      "mud",
+      "forest",
+      "sticks"
+    ],
+    "categories": [
+      "outdoor",
+      "floor",
+      "natural",
+      "dirty"
+    ],
+    "source": "https://polyhaven.com/a/mud_forest",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "muddy_tracks",
+    "name": "Muddy Tracks",
+    "tags": [
+      "mud",
+      "muddy surface",
+      "tracks",
+      "tire tracks",
+      "wet",
+      "organic",
+      "outdoor",
+      "earth",
+      "dirty",
+      "earthy",
+      "loose earth",
+      "soil",
+      "moist ground",
+      "muddy terrain",
+      "off-road"
+    ],
+    "categories": [
+      "floor",
+      "natural",
+      "outdoor",
+      "sand",
+      "dirty"
+    ],
+    "source": "https://polyhaven.com/a/muddy_tracks",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "red_dirt_mud_01",
+    "name": "Red Dirt Mud 01",
+    "tags": [
+      "gravel",
+      "mud",
+      "dirt",
+      "rough",
+      "pathway",
+      "path",
+      "road",
+      "village"
+    ],
+    "categories": [
+      "terrain",
+      "outdoor",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/red_dirt_mud_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "red_mud_stones",
+    "name": "Red Mud Stones",
+    "tags": [
+      "mud",
+      "dirt",
+      "flat",
+      "dry",
+      "rocks",
+      "compact soil",
+      "organic debris",
+      "roots",
+      "gothic",
+      "soil",
+      "cracked",
+      "earthy",
+      "plant debris"
+    ],
+    "categories": [
+      "terrain",
+      "outdoor",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/red_mud_stones",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rock_boulder_cracked",
+    "name": "Rock Boulder Cracked",
+    "tags": [
+      "rough",
+      "weathered",
+      "rock face",
+      "rock",
+      "orange",
+      "cliff",
+      "cave",
+      "stone",
+      "uneven",
+      "eroded"
+    ],
+    "categories": [
+      "outdoor",
+      "terrain",
+      "rock",
+      "natural"
+    ],
+    "source": "https://polyhaven.com/a/rock_boulder_cracked",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rock_boulder_dry",
+    "name": "Rock Boulder Dry",
+    "tags": [
+      "weathered",
+      "chipped",
+      "rocks",
+      "boulder",
+      "stone",
+      "flat",
+      "damaged",
+      "eroded",
+      "cracked",
+      "rough",
+      "uneven"
+    ],
+    "categories": [
+      "rock",
+      "outdoor",
+      "natural",
+      "terrain"
+    ],
+    "source": "https://polyhaven.com/a/rock_boulder_dry",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rock_face_03",
+    "name": "Rock Face 03",
+    "tags": [
+      "rough",
+      "rock",
+      "cliff",
+      "uneven",
+      "weathered",
+      "wall",
+      "cracked",
+      "stone",
+      "rock face",
+      "rugged",
+      "chipped",
+      "eroded",
+      "cracks",
+      "rocks"
+    ],
+    "categories": [
+      "natural",
+      "terrain",
+      "rock",
+      "outdoor",
+      "collection: verdant_trail"
+    ],
+    "source": "https://polyhaven.com/a/rock_face_03",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rock_face_04",
+    "name": "Rock Face 04",
+    "tags": [
+      "rough",
+      "uneven",
+      "weathered",
+      "old",
+      "cracked",
+      "chipped",
+      "rock face",
+      "rock",
+      "leaves",
+      "dry leaves",
+      "fallen leaves",
+      "cracks",
+      "striated",
+      "geological"
+    ],
+    "categories": [
+      "outdoor",
+      "natural",
+      "rock"
+    ],
+    "source": "https://polyhaven.com/a/rock_face_04",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rock_pitted_mossy",
+    "name": "Rock Pitted Mossy",
+    "tags": [
+      "cracked",
+      "weathered",
+      "rock face",
+      "rock",
+      "boulder",
+      "red",
+      "discolored",
+      "eroded",
+      "moss",
+      "stone",
+      "uneven",
+      "rough",
+      "orange"
+    ],
+    "categories": [
+      "outdoor",
+      "rock",
+      "terrain",
+      "natural",
+      "sandstone"
+    ],
+    "source": "https://polyhaven.com/a/rock_pitted_mossy",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rocks_ground_01",
+    "name": "Rocks Ground 01",
+    "tags": [
+      "rough",
+      "rock",
+      "cracked",
+      "stones"
+    ],
+    "categories": [
+      "terrain",
+      "natural",
+      "outdoor",
+      "rock",
+      "collection: verdant_trail"
+    ],
+    "source": "https://polyhaven.com/a/rocks_ground_01",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  },
+  {
+    "id": "rough_wood",
+    "name": "Rough Wood",
+    "tags": [
+      "rough",
+      "weathered",
+      "old",
+      "uneven",
+      "aged",
+      "cracked",
+      "natural grain",
+      "natural wood",
+      "natural",
+      "timber"
+    ],
+    "categories": [
+      "wood",
+      "natural",
+      "outdoor"
+    ],
+    "source": "https://polyhaven.com/a/rough_wood",
+    "official_catalog": "https://api.polyhaven.com/assets?t=textures"
+  }
+]

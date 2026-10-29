@@ -1,0 +1,82 @@
+{
+  "benchmarks": [
+    {
+      "after_ms": [
+        132.479,
+        149.151,
+        150.807,
+        165.512,
+        187.036
+      ],
+      "before_ms": [
+        182.477,
+        200.309,
+        207.768,
+        244.432,
+        253.756
+      ],
+      "case": "sand64",
+      "median_ratio": 0.72584324823842
+    },
+    {
+      "after_ms": [
+        316.888,
+        546.271,
+        549.029,
+        565.784,
+        573.718
+      ],
+      "before_ms": [
+        432.009,
+        451.118,
+        740.656,
+        744.407,
+        769.514
+      ],
+      "case": "sand128",
+      "median_ratio": 0.741273951740079
+    },
+    {
+      "after_ms": [
+        192.333,
+        214.749,
+        268.903,
+        269.431,
+        341.064
+      ],
+      "before_ms": [
+        199.962,
+        272.59,
+        276.106,
+        278.245,
+        295.145
+      ],
+      "case": "canyon64",
+      "median_ratio": 0.973912193143213
+    },
+    {
+      "after_ms": [
+        109.772,
+        113.742,
+        116.481,
+        130.235,
+        132.427
+      ],
+      "before_ms": [
+        119.1,
+        119.144,
+        121.855,
+        125.729,
+        128.924
+      ],
+      "case": "grass64",
+      "median_ratio": 0.95589840384063
+    }
+  ],
+  "engine": "4.6.3-stable (official)",
+  "errors": [],
+  "paired_meshes": 60,
+  "pure_sand_checks": 5417,
+  "scalar_checks": 20817,
+  "scope": "Targeted exact-output optimization check. No original-baseline performance acceptance or visual claim."
+}

@@ -1,0 +1,102 @@
+{
+	"engine": "4.6.1-stable (official)",
+	"failures": [],
+	"os": "Windows",
+	"samples": [
+		{
+			"all_vertex_weights_pure_grass": false,
+			"chunk_size": 256.0,
+			"coordinate": "(0, 0)",
+			"exact_full_arrays": false,
+			"resolution": 64,
+			"timings": [
+				{
+					"all_ms": [
+						158.023,
+						163.01,
+						163.411,
+						168.697,
+						172.591
+					],
+					"baseline": true,
+					"median_ms": 163.411
+				},
+				{
+					"all_ms": [
+						160.24,
+						163.189,
+						173.223,
+						179.517,
+						182.438
+					],
+					"baseline": false,
+					"median_ms": 173.223
+				}
+			]
+		},
+		{
+			"all_vertex_weights_pure_grass": true,
+			"chunk_size": 256.0,
+			"coordinate": "(-18, 35)",
+			"exact_full_arrays": true,
+			"resolution": 128,
+			"timings": [
+				{
+					"all_ms": [
+						262.37,
+						263.029,
+						270.042,
+						279.408,
+						281.582
+					],
+					"baseline": true,
+					"median_ms": 270.042
+				},
+				{
+					"all_ms": [
+						229.239,
+						255.309,
+						257.25,
+						257.625,
+						262.26
+					],
+					"baseline": false,
+					"median_ms": 257.25
+				}
+			]
+		},
+		{
+			"all_vertex_weights_pure_grass": false,
+			"chunk_size": 16384.0,
+			"coordinate": "(0, 0)",
+			"exact_full_arrays": false,
+			"resolution": 16,
+			"timings": [
+				{
+					"all_ms": [
+						96.504,
+						104.552,
+						104.979,
+						105.978,
+						109.962
+					],
+					"baseline": true,
+					"median_ms": 104.979
+				},
+				{
+					"all_ms": [
+						95.264,
+						98.575,
+						103.799,
+						107.17,
+						111.807
+					],
+					"baseline": false,
+					"median_ms": 103.799
+				}
+			]
+		}
+	],
+	"scope": "Exact CPU mesh-array regression at recorded saved-preset locations; no rendered Grass acceptance.",
+	"settings": "Actual saved preset without coverage override"
+}

@@ -1,0 +1,128 @@
+JUNGLE IMPLEMENTATION — 2026-10-16
+
+CURRENT UPDATE — LEGACY BIOME RETIREMENT / GREEN JUNGLE
+The report below is a historical record of the initial implementation and its
+benchmark run. Current runtime supports ONLY Grass and Jungle. Stone, Desert
+and Snow generation, Inspector properties, previews and shader branches have
+been removed. Their inactive source tools/assets are retained, especially maps
+shared by living biome materials; they are not loaded by the current controller.
+The normal mixed world starts above genuine Jungle land. F8 finds Jungle again;
+Start In Jungle can be disabled. Existing saved Grass coverage/region size are
+preserved. Jungle coverage defaults to a nonzero 30 if the preset omits it.
+Green Tint / Green Coverage / Albedo Gain in jungle_settings.tres control the
+new dominant vibrant green CC0 ground-cover blend. Soil, litter, mud, gravel
+and rock remain separate secondary materials. sRGB-to-linear tint conversion
+is explicit. No global lighting, sky, ocean shader or export changed.
+Current checks: 8,694 two-biome invariants; active-biome/settings/channel/shader
+retirement assertions; deterministic placement and PBR checks; 3,000 reverse
+cache-order samples; parent/child height/normal/surface agreement across six
+LODs. Rendered normal strength checks pass for floor, rock and floodplain;
+animated water is frozen only in that test to avoid temporal shoreline errors.
+Current review renders cover ground/medium/aerial/material/normal at the lowland
+start; older 80-view sweep predates the green color adjustment. Older performance
+numbers below also predate legacy shader retirement and are not current claims.
+No populated tree canopy or waterfall renderer has been added by this update.
+See the CURRENT BUILD section at the top of TERRAIN_TUNING.md for instructions.
+
+HISTORICAL INITIAL IMPLEMENTATION REPORT
+
+DELIVERED IN SOURCE
+Fifth biome, keeping Grass/Desert/Snow/Stone. Existing saved coverage preserved;
+enable Jungle coverage or use tools/jungle/launch_preview.ps1.
+13 blended, seeded regional identities with canonical 64 m Hermite geography:
+lowland rainforest, rolling jungle, rugged hills, foothills, mountain ridges,
+river rainforest, floodplain, rocky jungle, karst-like terrain, plateaus,
+gorges, humid basins, and uplands. These are terrain identities, not forest assets.
+Worker-owned bounded caches; existing mesh/worker/upload/LOD architecture retained.
+Shared world river carriers, terrain valleys, tributaries, floodplain terraces,
+lake beds and bank wetness; no second water renderer or flow solver.
+Seven shared CC0 AmbientCG PBR sets with source checksums and offline packing.
+World-space triplanar normals, source-offset blending, environmental material
+selection, broad low-amplitude variation; no noise-generated surface texture.
+Jungle geometry/material/placement settings and runtime-only preview controls.
+Eight Jungle diagnostic views (F6); 16 discovered feature starts.
+Deterministic bounded vegetation placement API, with canopy/understory/ground
+cover/emergent/clearing masks; excludes submerged and unsuitable steep ground.
+
+NOT IMPLEMENTED / NOT CLAIMED
+Populated rainforest, layered canopy, trees, ferns, vines, foliage wind/LOD,
+foliage collisions: no vegetation renderer or Jungle plant assets existed.
+The brief permits terrain-side masks/spawn interfaces in this case; those are
+implemented and tested. Screenshots deliberately show bare terrain, not a
+fabricated photoreal forest. This is NOT the complete photographic rainforest.
+Elevated rivers/lakes, actual flowing waterfalls, waterfall spray and foam:
+the existing water renderer is sea-level only. Downhill/drop/drainage query
+data is exposed; no rendered waterfalls are claimed.
+Tropical / Swamp transitions: those biomes are absent. Grass/Jungle blending
+is implemented. Jungle coverage is selected by regional weights, not humidity
+or warm-climate eligibility; existing climate gating of Desert/Snow is retained.
+Terrain collision generation, caves and walking-character physics: absent in
+the existing project; heightfield checks are not collision certification.
+No exports, builds, commits, pushes, source-asset deletions or history rewrites.
+
+VALIDATION / LOCAL EVIDENCE
+tools/jungle/verify_project.ps1 runs assertions with process timeouts and error
+log monitoring. -Review uses the actual native renderer, not headless screenshots.
+artifacts/invariants.json: 8,698 checks covering three seeds, finite heights,
+height-only equality, cache order/eviction, C1 knots, neighboring chunks,
+LOD heights/normals/controls, water toggle, bounded caches and five-biome mass.
+All four disabled-Jungle legacy biome mesh arrays exactly match the local
+pre-Jungle snapshot. Snapshot is ignored and available only in this checkout;
+without it, that comparison is explicitly reported unavailable.
+check_materials.gd: seven CC0 sources, 21 SHA256 source checks, nonconstant PBR
+channels, BC3/BC5 mipmaps; 48,933,920 shared texture bytes.
+check_placement.gd: stable repeat queries, paginated unique global cells,
+bounded probes/results, bounds/water exclusion and density-zero behavior.
+artifacts/gpu_channels.json: actual CUSTOM0.w 24-bit decoding, byte endpoints,
+all three channels, 23 positive tiles and one intentional failing tile.
+artifacts/render_review.json and views/: 16 canonical feature starts across
+ground, medium, aerial, material and normal views; original environment.
+artifacts/normal_visibility.json: actual PBR normal on/off versus zero-strength
+renders. Separate source-map tests verify detail, not screenshots alone.
+artifacts/benchmark_baseline.json, benchmark_grass.json, benchmark_jungle.json:
+matched cold chunk CPU tests, height query cost, native fill/teleport, frame/GPU
+timing, memory, active chunks and upload spikes. Baseline uses local pre-Jungle
+builder for CPU and pre-Jungle shader for GPU; current controller/settings used
+throughout. Cold shader-cache/driver startup can affect initial fill. Null GPU
+timing is unavailable, not zero. No foliage/collision performance is claimed.
+Final sequential native run, 1280x720, RTX 3060 Laptop, Compatibility, same
+159-leaf starting partition and maximum LOD 6 / 50,000 m camera far plane:
+  Pre-Jungle Grass: full fill 4.200 s; GPU static median 6.558 ms;
+                   cold 128-resolution chunk median 370.380 ms.
+  Current Grass:    full fill 4.235 s; GPU static median 6.820 ms;
+                   cold 128-resolution chunk median 358.140 ms.
+  Current Jungle:   full fill 18.307 s; GPU static median 5.157 ms;
+                   cold 128-resolution chunk median 876.212 ms.
+Jungle static frame p95 16.750 ms (vsync-limited near 60 FPS), full teleport
+settle 7.979 s, worst recorded main-thread partition commit 9.008 ms. Increased
+far mesh density has a substantial startup/streaming cost; no across-biome
+performance improvement or eliminated startup wait is claimed. Set Jungle
+Far Mesh Metres to 0 to compare legacy parent density, at reduced feature
+fidelity. No change to view distance is required for this tradeoff.
+Jungle normal on/off: three terrain classes passed; zero-strength versus
+normal-off maximum error exactly zero on tested Jungle pixels. Sky, ocean and
+legacy coast pixels are excluded so Jungle controls need not disable unrelated
+normal maps. Rendered ground, rock and wet-floor differences remain visible.
+Snow verification: five checks passed, including actual GPU channels and
+normal visibility. Existing project suite: all 20 checks passed.
+
+KNOWN LIMITATIONS FOUND DURING VALIDATION
+At the farthest LOD, channels narrower than vertex spacing may still become
+disconnected-looking; denser Jungle-only parent meshes improve but do not
+eliminate this fixed-resolution limit. No view-distance reduction was made.
+Regional geometry remains a heightfield approximation. Karst-like hills are
+not true caves/overhangs, and tropical weathering is heuristic, not simulated.
+Bare ground cannot resemble the reference canopy from aerial viewpoints.
+Native tests do not certify an export; no export was requested or performed.
+The full editor import scan completed but emitted unrelated animal glTF
+animation-weight import errors. Animal sources were not modified. Direct game
+launches and Jungle/legacy rendering tests do not load those unused models;
+they do not certify every animal asset's editor import.
+Current Git-eligible file audit found no file above 100 MiB. This is a working
+tree audit, not a certification that all old Git-history blobs are under limit.
+
+CONFIGURATION
+See TERRAIN_TUNING.md Jungle section. Edit jungle_settings.tres, save/restart.
+For immediate source preview: tools/jungle/launch_preview.ps1 -Feature karst
+For mixed world: edit Terrain Settings Jungle Coverage and existing relative
+weights. Runtime preview flags never overwrite the saved world preset.

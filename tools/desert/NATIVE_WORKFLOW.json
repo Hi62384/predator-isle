@@ -1,0 +1,59 @@
+{
+  "state": "Source applied. Await at least 3 GiB free RAM and parent clearance for one locally approved serialized command at a time.",
+  "project_root": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle",
+  "engine_path_recorded_not_freshly_verified": "C:\\Users\\User1\\Documents\\Godot_v4.6.1-stable_win64\\Godot_v4.6.1-stable_win64.exe",
+  "preconditions": [
+    "Fresh allowed-root connection and user return authorization",
+    "Fresh exact base checks and conflict-safe staged source application",
+    "No unexpected preexisting generated materials/desert_* resources; packing refuses overwrite",
+    "Inspect downloaded_manifest.json and original maps/license records",
+    "No simultaneous heavy project jobs; at least 3 GiB free RAM; keep mandatory local command approval"
+  ],
+  "phase_1": {
+    "purpose": "Native import, canonical/Grass/LOD/drainage checks, source integrity, offline PBR packing and source-map previews",
+    "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-NonInteractive",
+      "-File",
+      "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\tools\\desert\\validate_desert.ps1",
+      "-FetchAssets"
+    ],
+    "suggested_outer_timeout_seconds": 2700,
+    "note": "Six archives are already downloaded. Existing manifest skips network fetch; archives/maps are rechecked. Review 18 generated source-map previews before accepting appearance. Repeated packing refuses existing generated resources rather than overwriting them."
+  },
+  "phase_2": {
+    "purpose": "Sequential native baseline/current streaming/GPU/memory tests and 13-feature ground/medium/aerial captures plus debug views",
+    "executable": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.exe",
+    "args": [
+      "-NoProfile",
+      "-NonInteractive",
+      "-File",
+      "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\tools\\desert\\validate_desert.ps1",
+      "-Render"
+    ],
+    "suggested_outer_timeout_seconds": 4200,
+    "note": "Keep phases serialized. Check runner timeout support before submitting; split into the three fixed Godot commands in the script if necessary. No blank future approval or approval bypass."
+  },
+  "outputs": [
+    "tools/desert/artifacts/*.stdout.log",
+    "tools/desert/artifacts/*.stderr.log",
+    "tools/desert/artifacts/native_environment.json",
+    "tools/desert/artifacts/palette_memory.json",
+    "tools/desert/artifacts/*_source.png",
+    "materials/desert_color_roughness.tres",
+    "materials/desert_normals.tres",
+    "materials/desert_color_*.res",
+    "materials/desert_normal_*.res",
+    "tools/desert/artifacts/preview_report.json",
+    "tools/desert/artifacts/*_ground.png",
+    "tools/desert/artifacts/*_medium.png",
+    "tools/desert/artifacts/*_aerial.png"
+  ],
+  "acceptance_after_execution": [
+    "Inspect real source-map Color/NormalGL/Roughness pixels and normal orientation",
+    "Inspect native ground/medium/aerial materials, dune silhouette and slip faces, layered canyon and badlands, fan deposition, basin/oasis and transitions",
+    "Compare absolute CPU chunk/query, cold fill, upload/commit, steady/travel/teleport frame p95, GPU and memory values; unavailable counters stay null",
+    "Reject unresolved seam/normal/anti-tiling/LOD artifacts; do not mark original hard performance gate passed merely because native run finishes"
+  ]
+}

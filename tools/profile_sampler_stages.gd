@@ -33,7 +33,7 @@ class Profiled extends "res://scripts/terrain_mesh_builder.gd":
 
 func _initialize() -> void:
 	var sampler:=Profiled.new()
-	sampler.settings=load("res://terrain_settings.tres").duplicate(true)
+	sampler.settings=load("res://config/world/terrain_settings.tres").duplicate_deep(Resource.DEEP_DUPLICATE_ALL)
 	sampler.settings.grass_coverage=100
 	sampler.settings.desert_coverage=0
 	sampler.settings.snow_coverage=0

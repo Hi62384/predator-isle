@@ -1,0 +1,144 @@
+PREDATOR ISLE - SNOW BIOME / CC0 MATERIAL CLOSEOUT
+2026-10-16, updated after explicit permission to use CC0 AmbientCG assets
+
+DELIVERY
+Implemented directly in the source project. No export, commit, push, ZIP
+delivery, history rewrite or unrelated animal-source edits were performed.
+The Snow implementation and CC0 material integration are functional and tested.
+This record does not certify an exact photoreal match to photographic references,
+nor a clean import of every unrelated asset in the entire dirty checkout.
+
+IMPLEMENTED
+- Eight coherent world-space regions: plains, tundra, alpine, glacial highlands,
+  lake districts, rocky Arctic, plateaus and glacial valleys.
+- Terrain-driven accumulation/retention, wind exposure and geometric broad
+  drifts, finite valley glaciers, lateral moraines and shallow crevasse relief.
+- Existing lake/river carriers reused for full/partial freezing; local coastal
+  ice; wave-safe solid-ice heights and continuous carved-bank transitions.
+- Fixed 64 m structural field and common world-space normal field across LOD;
+  bounded caches; optional far refinement; pure-Snow shader specialization.
+- Twelve diagnostic views, 17 repeatable previews, existing 1.80 m scale marker.
+- Startup free-camera clearance above terrain/water, including normal world.
+- Stronger alpine backbones and irregular structural spurs using reused fields.
+- Fixed repeated shelves: regional interpolation no longer flattens tangents
+  at every 512 m cell. Hermite node derivatives include changing region weights;
+  no settlement-height correction is applied after tangent computation.
+
+TEXTURE-LED MATERIALS
+Runtime arrays use four reviewed AmbientCG CC0-1.0 sets:
+  Snow005 - clean powder, photogrammetry
+  Snow006 - compacted crust, photogrammetry
+  Snow014 - directional meso/wind-detail normal, photogrammetry
+  Ice004  - cracked ice, an AmbientCG pre-baked procedural asset
+Existing Rock035/Gravel020 maps remain for exposed stone/mineral ground.
+There is NO runtime analytic fracture, cosine-ripple or synthetic snow-relief
+surface generator. Procedural geography/accumulation and low-cost scan-sample
+blending masks remain; they do not replace the sourced surface detail.
+Glacier ice coordinates follow the published flow field; normals transform back
+to world space before blending. Frozen-lake ice retains its own world repeat.
+Independent powder/crust/ground/rock/ice strengths and scales remain available.
+Sample-offset blending suppresses square repeats at medium range as well as near.
+
+Provenance and SHA-256 checksums: data/snow_material_sources.json
+Licence information: https://docs.ambientcg.com/license/
+Source pages: https://ambientcg.com/a/Snow005
+              https://ambientcg.com/a/Snow006
+              https://ambientcg.com/a/Snow014
+              https://ambientcg.com/a/Ice004
+Prepared shared GPU data: 30,758,496 bytes (29.33 MiB).
+2K BC3 colour + linear roughness; 1K BC5 OpenGL normal XY; 1K BC4 height.
+All mipmapped. Shader samplers use anisotropic filtering. External Image
+resources avoid a single oversized binary. Source JPGs are retained under
+assets/textures/snow/.gdignore and are not runtime-converted/re-imported.
+Rejected grassy Snow015 and boot-printed Snow013 candidates, created during
+this pass, were moved to .godot/snow_downloads/rejected_candidates/ (recoverable).
+They are not runtime dependencies or Git-eligible assets.
+
+CONFIGURATION / VIEWING
+Open snow_settings.tres in the Godot Inspector, or Terrain > Settings > Snow
+Terrain > Snow. Restart the running scene after editing immutable worker settings.
+Scale values are metres per repeat. Master Normal Strength = 0 disables every
+Snow overlay. Macro Strength controls sourced wind-detail normals, not synthetic
+ribs; old procedural ripple controls are removed.
+Enable Terrain's Snow Preview and choose Snow Preview Feature. The saved world
+preset remains Grass-only: a normal launch does not silently switch it to Snow.
+Alt+F5 cycles Snow diagnostics; Ctrl+F5 restores shaded; F7/P toggle/place scale.
+See TERRAIN_TUNING.md for details and offline rebuild commands.
+Preview measurements were refreshed without moving the 17 tested coordinates.
+
+LIGHTING DIAGNOSIS CORRECTION
+The initial proposed Sun correction was based on a misreading of the scene's
+serialized transform. A runtime basis check proved the original Sun already
+emits downward: (0.289036, -0.788011, -0.543597). The temporary flip was restored.
+Final main.tscn has no change. A dedicated lighting-direction regression test
+now checks the actual runtime basis. Sky, Sun intensity/colour, shadows and ocean
+shader remain unchanged. Final renders/tests use the original verified daylight.
+
+FINAL VERIFICATION
+Godot 4.6.1 stable, Windows, RTX 3060 Laptop GPU, Compatibility renderer.
+tools/snow/verify_project.ps1 -Render -Benchmark -Review -AllProjectChecks
+- All SEVEN Snow check scripts passed.
+- 11,047 terrain assertions across seeds 73921, 17 and 92881.
+- 66 CC0 provenance, checksum, format, mip and source-variation assertions.
+- Runtime Sun emission-direction test passed.
+- Twelve packed GPU channels checked, including deliberate negative control.
+- Four native close-up normal on/off checks passed visible-difference gates.
+  Changed terrain pixels (>0.01 mean RGB delta): powder 2.70%, tundra 8.14%,
+  illuminated exposed rock 7.77%, glacier 7.42%.
+- Master normal strength zero matched normal-off exactly in all four cases.
+- General/specialized shader pixels matched exactly in all four cases;
+  117 specialized active surfaces were confirmed.
+- 85 native captures: 17 features x ground/medium/aerial/regions/normals.
+- All 20 existing project check scripts passed.
+- Three final source-game launches passed with valid arrays and camera clearance:
+  normal Grass world: 117 chunks, 2.327 s smoke interval;
+  pure Snow preview: 117 chunks, 1.678 s smoke interval;
+  partial frozen lake: 153 chunks, 2.589 s smoke interval.
+  All report exported=false, empty failure strings, exit 0.
+- git diff --check passed. Git-eligible working-tree audit found no file
+  >=100,000,000 bytes. New Snow source/prepared files are each below 10 MB.
+  Unrelated animal .blend files now exist in the checkout; they were preserved.
+  This audit does not certify historical Git objects or ignored engine caches.
+
+PERFORMANCE - MEASURED, NOT A PARITY CLAIM
+Same saved view/streaming configuration; camera follows terrain/water +80 m,
+fixed pitch, same renderer and original scene lighting. One matched run:
+                              Old Snow baseline      Final Snow
+Initial visible terrain fill  0.976022 s             1.226894 s
+First static GPU median       2.655 ms               0.871 ms
+First static GPU p95          3.140 ms               2.449 ms
+First static frame p95        6.281 ms               6.358 ms
+Peak reported static memory   58,068,252 bytes       77,954,202 bytes
+Maximum partition swap                              10.505 ms
+Streaming, partition coverage, LOD balance and bounded-cache checks passed.
+CPU fill and memory remain above the much simpler old Snow baseline; no strict
+CPU/memory parity claim. Results are single-run measurements, not statistical
+certification or full cold-start timings. First-time shader/resource compilation
+can add startup time. View distance was not reduced.
+
+PROJECT-SCOPE LIMITS / UNRELATED IMPORT ISSUE
+- Full-project editor validation encountered missing animal texture references
+  and animation-node errors while importing newly added models/animals/*.blend.
+  That owned validation was stopped; no clean final editor-import claim is made.
+  Snow scripts/shaders compile and source-game launches pass independently.
+  Animal import repair is separate from this Snow biome task.
+- Existing project has no terrain collision generator or walking character.
+  Heightfield tests do not certify collision/walking.
+- Water remains the existing sea-level system, not new elevated alpine lakes.
+  Crevasses are bounded heightfield depressions and shading, not tunnels or
+  overhangs. No glacier/snow physics simulation or decoration system was added.
+- Art quality is reviewed through the native captures; heightfield/LOD silhouette
+  simplifications remain. Automated tests do not certify photorealism or beauty.
+
+EVIDENCE (generated local files are Git-ignored)
+tools/snow/artifacts/{invariants,materials,gpu_channels,normal_visibility}.json
+tools/snow/artifacts/{native_baseline,native_current,render_review,test_run}.json
+test_run.json describes the most recent invocation (a three-script static
+rerun after preview-metadata refresh); full native evidence remains in each
+per-case JSON/log and the seven-script + 20-check final run output.
+tools/snow/artifacts/views/contact_{ground,medium,aerial,regions,normals}.png
+.godot/snow_verification/*.engine.log
+.godot/snow_smoke_{world,preview,feature}.{log,json,png}
+.godot/snow_cc0_editor_final.log (unrelated animal import errors)
+Local baseline snapshots remain under ignored tools/snow/baseline/.
+Source tests, resources, manifests and this report remain publishable.

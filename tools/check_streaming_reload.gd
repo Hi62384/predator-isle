@@ -4,7 +4,7 @@ func _initialize() -> void:
 	call_deferred("run")
 
 func run() -> void:
-	var scene=load("res://main.tscn").instantiate()
+	var scene=load("res://scenes/main.tscn").instantiate()
 	root.add_child(scene)
 	var camera=scene.get_node("FreeCamera")
 	var terrain=scene.get_node("Terrain")

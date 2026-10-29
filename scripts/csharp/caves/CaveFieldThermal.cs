@@ -47,7 +47,7 @@ internal static class CaveFieldThermal
             foreach (int index in bucket)
             {
                 if (!visited.Add(index)) continue;
-                var source = f.thermal_sources[index].AsGodotDictionary(); var point = source["point"].AsVector3(); point.Y += (float)(Num(source, "height") * .5);
+                var source = f.thermal_sources[index].AsGodotDictionary(); var point = source["point"].AsVector3(); point.Y = (float)(point.Y + Num(source, "height") * .5);
                 point = point.Clamp(bounds.Position, bounds.End);
                 if (SourceHeat(source, point) > threshold) return true;
             }
