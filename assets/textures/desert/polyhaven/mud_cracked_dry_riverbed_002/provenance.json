@@ -1,0 +1,97 @@
+{
+  "id": "mud_cracked_dry_riverbed_002",
+  "source": "https://polyhaven.com/a/mud_cracked_dry_riverbed_002",
+  "metadata_api": "https://api.polyhaven.com/info/mud_cracked_dry_riverbed_002",
+  "files_api": "https://api.polyhaven.com/files/mud_cracked_dry_riverbed_002",
+  "license": "CC0-1.0",
+  "license_url": "https://polyhaven.com/license",
+  "license_source_sha256": "9fb8b55b063f46301d876df5a51dc632d0358c3af984d7c60e6aeaf7aee443e0",
+  "downloaded_utc": "2026-10-14T18:32:19.7089047Z",
+  "role": "Authentic cracked dry riverbed clay, not salt-crust photogrammetry",
+  "official_asset_info": {
+    "categories": [
+      "outdoor",
+      "natural",
+      "terrain",
+      "sand"
+    ],
+    "type": 1,
+    "tags": [
+      "weathered",
+      "cracked",
+      "rough",
+      "ground",
+      "dry",
+      "uneven",
+      "mud",
+      "cracks",
+      "nature",
+      "flaked",
+      "lake"
+    ],
+    "dimensions": [
+      2000,
+      2000
+    ],
+    "date_published": 1654732800,
+    "staging": null,
+    "name": "Mud Cracked Dry Riverbed 002",
+    "max_resolution": [
+      8192,
+      8192
+    ],
+    "files_hash": "f2e98edc195840c54be1b2447a8fe5fea7e23395",
+    "authors": {
+      "Dario Barresi": "Processing",
+      "Dimitrios Savva": "Photography"
+    },
+    "description": "Free 8K texture of cracked dry riverbed mud: rough, weathered, flaky plates with deep fissures and clayey brown, uneven surface.",
+    "category_id": "804988d5-eb1b-5364-afc9-ce19b3edc12d",
+    "category": "Ground & Terrain/Soil & Mud/Cracked Dry Mud & Clay",
+    "attributes": {
+      "surface_use": "ground",
+      "condition": [
+        "cracked",
+        "weathered",
+        "damaged"
+      ],
+      "origin": "natural",
+      "setting": "outdoor"
+    },
+    "img_version": "f276c506",
+    "sponsors": [
+      "121968951"
+    ],
+    "download_count": 29258,
+    "thumbnail_url": "https://cdn.polyhaven.com/asset_img/thumbs/mud_cracked_dry_riverbed_002.png?width=256&height=256&format=webp&v=f276c506"
+  },
+  "maps": [
+    {
+      "kind": "Diffuse",
+      "file": "mud_cracked_dry_riverbed_002_diff_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/mud_cracked_dry_riverbed_002/mud_cracked_dry_riverbed_002_diff_2k.jpg",
+      "bytes": 3199788,
+      "official_md5": "76518525a0fadcb9446078bd74127dc7",
+      "sha256": "c72035416915d7990ae9cd6a421c5d33f14ed07893f1fc39f8e485964fc17504",
+      "official_size_md5_verified": true
+    },
+    {
+      "kind": "nor_gl",
+      "file": "mud_cracked_dry_riverbed_002_nor_gl_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/mud_cracked_dry_riverbed_002/mud_cracked_dry_riverbed_002_nor_gl_2k.jpg",
+      "bytes": 5622981,
+      "official_md5": "ef1e3b1bc8e1b7d6727379e40fb75232",
+      "sha256": "d491dfe0403d5854ded62b532317ee0b2e8791512014a706b58e199542e1143f",
+      "official_size_md5_verified": true
+    },
+    {
+      "kind": "Rough",
+      "file": "mud_cracked_dry_riverbed_002_rough_2k.jpg",
+      "url": "https://dl.polyhaven.org/file/ph-assets/Textures/jpg/2k/mud_cracked_dry_riverbed_002/mud_cracked_dry_riverbed_002_rough_2k.jpg",
+      "bytes": 1735011,
+      "official_md5": "515d932106ec3dd346cf8937484e2222",
+      "sha256": "34c3f2edcfb4c966afd5331f6b15745030af5d7cb64b022d2ff047fec3aa1ad8",
+      "official_size_md5_verified": true
+    }
+  ]
+}

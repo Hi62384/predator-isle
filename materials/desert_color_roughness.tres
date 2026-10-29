@@ -1,0 +1,11 @@
+[gd_resource type="Texture2DArray" load_steps=7 format=3]
+
+[ext_resource type="Image" path="res://materials/desert_color_Ground092A.res" id="1"]
+[ext_resource type="Image" path="res://materials/desert_color_Ground054.res" id="2"]
+[ext_resource type="Image" path="res://materials/desert_color_Gravel020.res" id="3"]
+[ext_resource type="Image" path="res://materials/desert_color_Rock061.res" id="4"]
+[ext_resource type="Image" path="res://materials/desert_color_Ground031.res" id="5"]
+[ext_resource type="Image" path="res://materials/desert_color_Ground033.res" id="6"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5"), ExtResource("6")])

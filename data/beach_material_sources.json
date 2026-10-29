@@ -1,0 +1,106 @@
+[
+	{
+		"color_resource": "res://materials/beach_color_fine_sand.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground055S",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/beach/Ground055S/Ground055S_2K-JPG_Color.jpg",
+				"sha256": "a175f12698dbe45457891e15d1ea9af5f7c60b3fdaf907132a48196865c88cce"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground055S/Ground055S_2K-JPG_NormalGL.jpg",
+				"sha256": "96ef1da7739647ffd23ce4ad119b62a096d24adc16fb081219d08c3054ad767b"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground055S/Ground055S_2K-JPG_Roughness.jpg",
+				"sha256": "af2d7eac69e64d444d5f09da49200ae1651aa1e1c49d7f31075ab64878afd86c"
+			}
+		],
+		"normal_resource": "res://materials/beach_normal_Ground055S.res",
+		"note": "Photographed sand surfaces; no synthesized bitmap. Wetness and wind projection are runtime material controls.",
+		"role": "fine_sand",
+		"source": "https://ambientcg.com/a/Ground055S",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/beach_color_compacted_wet_sand.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground059",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/beach/Ground059/Ground059_2K-JPG_Color.jpg",
+				"sha256": "5a10fe7a6f1a854eb407aece21670edbedb6c9cede5e23e7b1e212bd086ed1fa"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground059/Ground059_2K-JPG_NormalGL.jpg",
+				"sha256": "b7c4b921506192e408f95ede321eb5fb134af944bb7846b576086f0ce7798cf4"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground059/Ground059_2K-JPG_Roughness.jpg",
+				"sha256": "4a229874ef75e1460d4435c48fa4078fee0a4fbb332e581c68fa04cab5189e7a"
+			}
+		],
+		"normal_resource": "res://materials/beach_normal_Ground059.res",
+		"note": "Photographed sand surfaces; no synthesized bitmap. Wetness and wind projection are runtime material controls.",
+		"role": "compacted_wet_sand",
+		"source": "https://ambientcg.com/a/Ground059",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/beach_color_coarse_shell_sand.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground060",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/beach/Ground060/Ground060_2K-JPG_Color.jpg",
+				"sha256": "8951fac5d176a34c6b1a64af912b00ce960f8fb9efd28ad712624c00ab802901"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground060/Ground060_2K-JPG_NormalGL.jpg",
+				"sha256": "a676f58f46b2ce09b714f3b56c68a6eccff4d44f39e7f9f54c41cd12a77e801f"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground060/Ground060_2K-JPG_Roughness.jpg",
+				"sha256": "d119ca6c6d54a8a95b7e838d46da7319b0a5020362ec3beb4ee449d2ddad95af"
+			}
+		],
+		"normal_resource": "res://materials/beach_normal_Ground060.res",
+		"note": "Photographed sand surfaces; no synthesized bitmap. Wetness and wind projection are runtime material controls.",
+		"role": "coarse_shell_sand",
+		"source": "https://ambientcg.com/a/Ground060",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/beach_color_rippled_sand.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground080",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/beach/Ground080/Ground080_2K-JPG_Color.jpg",
+				"sha256": "1be49b1728e2f43a04b7ea59f5ff646483b41d110d362de27fa49a3fa11c2106"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground080/Ground080_2K-JPG_NormalGL.jpg",
+				"sha256": "3b850541cd1d3757f43b6673ede5eb862ff2de72b3d93a600b3798c531eeb95f"
+			},
+			{
+				"path": "res://assets/textures/beach/Ground080/Ground080_2K-JPG_Roughness.jpg",
+				"sha256": "773546e350717f45c9a1597d459cbaac6c1059bc390e20ab79a56f40ee73f0fc"
+			}
+		],
+		"normal_resource": "res://materials/beach_normal_Ground080.res",
+		"note": "Photographed sand surfaces; no synthesized bitmap. Wetness and wind projection are runtime material controls.",
+		"role": "rippled_sand",
+		"source": "https://ambientcg.com/a/Ground080",
+		"treatment": "natural"
+	}
+]

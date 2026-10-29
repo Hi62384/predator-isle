@@ -1,0 +1,80 @@
+[
+	{
+		"color_resource": "res://materials/mountain_color_massive_rock.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Rock051",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_Color.jpg",
+				"sha256": "62f0e799649b03a29e627021fc4023dbe86415af98bb89887eba0bd13dd6a431"
+			},
+			{
+				"path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_NormalGL.jpg",
+				"sha256": "3ce30cda8bf3f8652de9df97f61e74cab3d5e23d3e3537cb2faf02e281b118e5"
+			},
+			{
+				"path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_Roughness.jpg",
+				"sha256": "aa23e66b4f7a354151a6d728a4ed83842fb1d5e034462ea55ead8ecaa48dad91"
+			}
+		],
+		"normal_resource": "res://materials/mountain_normal_Rock051.res",
+		"note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+		"role": "massive_rock",
+		"source": "https://ambientcg.com/a/Rock051",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/mountain_color_coarse_talus.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground108",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Color.jpg",
+				"sha256": "ab087d6e2bae96b740d45702665d3cee224d9fcaa6d8395af2e64fe933502676"
+			},
+			{
+				"path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_NormalGL.jpg",
+				"sha256": "282facdd61ec1423962727540d2eebe24ecb74c6637855c3c934bd318f145ffc"
+			},
+			{
+				"path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Roughness.jpg",
+				"sha256": "fc8bcc3835537aa614e7d5e39a5cefcfaf9b26a39fd9189bea7e0c8c1fe865f0"
+			}
+		],
+		"normal_resource": "res://materials/mountain_normal_Ground108.res",
+		"note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+		"role": "coarse_talus",
+		"source": "https://ambientcg.com/a/Ground108",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/mountain_color_angular_scree.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Gravel040",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_Color.jpg",
+				"sha256": "b8fc5746b429e869266d06bfcf5a5dfe6cdf8e0d720fa78d492a86b17ab5e70c"
+			},
+			{
+				"path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_NormalGL.jpg",
+				"sha256": "d24c0338792c95e43cb6a02be9e4c26fa166759e65e1e4ea99113d7dbe523445"
+			},
+			{
+				"path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_Roughness.jpg",
+				"sha256": "cdb485ef15e4154f12a57f1993450d8760b56ca97db2f4f3376844577f1e630a"
+			}
+		],
+		"normal_resource": "res://materials/mountain_normal_Gravel040.res",
+		"note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+		"role": "angular_scree",
+		"source": "https://ambientcg.com/a/Gravel040",
+		"treatment": "natural"
+	}
+]

@@ -1,0 +1,231 @@
+{
+	"features": {
+		"floodplain": {
+			"controls": {
+				"drainage": 0.883424084090417,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.890044905113387
+			},
+			"height": 5.16964811755763,
+			"region": 6,
+			"score": 0.983424084090417,
+			"x": 172500.0,
+			"z": -36250.0
+		},
+		"foothills": {
+			"controls": {
+				"drainage": 0.0556040778756142,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.33936805720441
+			},
+			"height": 65.1263220273831,
+			"region": 3,
+			"score": 1.0,
+			"x": -106250.0,
+			"z": -190000.0
+		},
+		"grass_jungle_transition": {
+			"controls": {
+				"jungle": 0.488016264513135
+			},
+			"height": 135.728222005993,
+			"region": 0,
+			"score": 0.97603252902627,
+			"x": -24600.0,
+			"z": 18150.0
+		},
+		"humid_basin": {
+			"controls": {
+				"drainage": 0.5,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.647768161084969
+			},
+			"height": 13.4822105267856,
+			"region": 11,
+			"score": 1.0,
+			"x": 183750.0,
+			"z": -193750.0
+		},
+		"jungle_gorge": {
+			"controls": {
+				"drainage": 0.284051389933609,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.600000023841858,
+				"wetness": 0.348697902059564
+			},
+			"height": 58.0817942326549,
+			"region": 10,
+			"score": 1.0,
+			"x": -141250.0,
+			"z": -172500.0
+		},
+		"jungle_lake": {
+			"controls": {
+				"drainage": 1.0,
+				"lake": 1.0,
+				"river": 0.999205472384381,
+				"rock": 0.449999988079071,
+				"wetness": 0.83189706633566
+			},
+			"height": -16.0,
+			"region": 9,
+			"score": 1.0,
+			"x": -113750.0,
+			"z": -187500.0
+		},
+		"jungle_mountains": {
+			"controls": {
+				"drainage": 0.160501599311829,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.550000011920929,
+				"wetness": 0.289975849489565
+			},
+			"height": 906.962259233862,
+			"region": 4,
+			"score": 1.13370282404233,
+			"x": -88750.0,
+			"z": -191250.0
+		},
+		"jungle_plateau": {
+			"controls": {
+				"drainage": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.449999988079071,
+				"wetness": 0.429790721507743
+			},
+			"height": 372.386898342185,
+			"region": 9,
+			"score": 1.24128966114062,
+			"x": -141250.0,
+			"z": 75000.0
+		},
+		"jungle_river": {
+			"controls": {
+				"drainage": 1.0,
+				"lake": 0.0,
+				"river": 1.0,
+				"rock": 0.0,
+				"wetness": 0.942173250642372
+			},
+			"height": -16.0,
+			"region": 1,
+			"score": 1.0,
+			"x": -106250.0,
+			"z": -196250.0
+		},
+		"karst": {
+			"controls": {
+				"drainage": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.850000023841858,
+				"wetness": 0.350485514383763
+			},
+			"height": 377.135042361449,
+			"region": 8,
+			"score": 1.2571168078715,
+			"x": 70000.0,
+			"z": -117500.0
+		},
+		"lowland_rainforest": {
+			"controls": {
+				"drainage": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.603073839098215
+			},
+			"height": 29.8966525178403,
+			"region": 0,
+			"score": 1.0,
+			"x": -122500.0,
+			"z": -200000.0
+		},
+		"river_rainforest": {
+			"controls": {
+				"drainage": 0.929376236969893,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.760711802563874
+			},
+			"height": 5.08689106224244,
+			"region": 5,
+			"score": 1.02937623696989,
+			"x": -102500.0,
+			"z": -112500.0
+		},
+		"rocky_jungle": {
+			"controls": {
+				"drainage": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.699999988079071,
+				"wetness": 0.100000001490116
+			},
+			"height": 506.648929455107,
+			"region": 7,
+			"score": 1.68882976485036,
+			"x": 8750.0,
+			"z": 11250.0
+		},
+		"rolling_jungle": {
+			"controls": {
+				"drainage": 0.0368888084316267,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.386205700496316
+			},
+			"height": 64.9063941002645,
+			"region": 1,
+			"score": 1.0,
+			"x": -108750.0,
+			"z": -200000.0
+		},
+		"rugged_hills": {
+			"controls": {
+				"drainage": 0.750140050740385,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.200000002980232,
+				"wetness": 0.702371196139126
+			},
+			"height": 38.324358531289,
+			"region": 2,
+			"score": 1.0,
+			"x": -183750.0,
+			"z": -200000.0
+		},
+		"upland_rainforest": {
+			"controls": {
+				"drainage": 0.716292010107707,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"wetness": 0.441609768094435
+			},
+			"height": 85.7010566381807,
+			"region": 12,
+			"score": 1.0,
+			"x": -70000.0,
+			"z": -140000.0
+		}
+	},
+	"note": "Canonical discovered coordinates, not sculpted showcase geometry. Jungle preview overrides coverage only at runtime.",
+	"seed": 73921,
+	"unsupported": [
+		"Populated forest/canopy (no foliage renderer or plant assets)",
+		"Tropical and Swamp transitions (biomes absent)",
+		"Rendered waterfalls/elevated water (sea-level ocean only)"
+	]
+}

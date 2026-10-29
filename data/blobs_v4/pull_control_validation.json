@@ -1,0 +1,57 @@
+{
+	"failed": false,
+	"runs": [
+		{
+			"contact_cycles": 6,
+			"gait_enabled": true,
+			"mean_step_us": 16504.5416666667,
+			"mode": "vine",
+			"net_position": "(0.0, 0.0, -0.680017)",
+			"path_length": 0.680017471313477,
+			"phases": [
+				"release",
+				"recover",
+				"reach",
+				"plant",
+				"pull"
+			],
+			"seed": 5101
+		},
+		{
+			"contact_cycles": 0,
+			"gait_enabled": false,
+			"mean_step_us": 5344.3875,
+			"mode": "vine",
+			"net_position": "(0.0, 0.0, 0.0)",
+			"path_length": 0.0,
+			"phases": [],
+			"seed": 5101
+		},
+		{
+			"contact_cycles": 11,
+			"gait_enabled": true,
+			"mean_step_us": 17652.5541666667,
+			"mode": "limb",
+			"net_position": "(0.0, 0.0, -0.303835)",
+			"path_length": 0.303835362195969,
+			"phases": [
+				"release",
+				"recover",
+				"reach",
+				"plant",
+				"pull"
+			],
+			"seed": 5102
+		},
+		{
+			"contact_cycles": 0,
+			"gait_enabled": false,
+			"mean_step_us": 6301.29583333333,
+			"mode": "limb",
+			"net_position": "(0.0, 0.0, 0.0)",
+			"path_length": 0.0,
+			"phases": [],
+			"seed": 5102
+		}
+	]
+}

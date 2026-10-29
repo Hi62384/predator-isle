@@ -1,0 +1,23 @@
+[gd_resource type="Resource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/caves/biome_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/caves/magma_surface.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/caves/magma_features.gd" id="3"]
+
+[resource]
+script = ExtResource("1")
+biome_id = &"magma"
+display_name = "Magma Caverns"
+spawn_chance_percent = 22.0
+minimum_extent_metres = 300.0
+maximum_extent_metres = 1100.0
+depth_preferences = PackedFloat32Array(0, 5, 30, 80, 100)
+exclude_zero_depth_bands = true
+surface_preferences = {"volcanic": 100.0, "mountain": 35.0, "badlands": 20.0, "quarry": 15.0, "radiation_wasteland": 15.0, "desert": 10.0, "rocky_coast": 5.0}
+transition_metres = 48.0
+independent_suitability_admission = true
+material_configuration = {"cooled_strength": 0.85, "lava_lighting": true, "lava_light_energy": 0.9, "lava_emission_strength": 1.9, "lava_animation_speed": 1.0, "lava_crust_strength": 1.0, "lava_normal_strength": 1.0, "lava_detail_quality": 1}
+feature_configuration = {"density": 0.65, "chamber_growth": true, "mesh_lods": true, "source_heat": true, "active_pool_chance": 0.14, "geological_intrusions": true, "cooled_tubes": true, "large_lake_chambers": true, "large_lake_chance": 0.08, "cooled_deposits": true, "deposit_height": 0.45, "cooled_intrusions": true, "chamber_variety": true, "molten_cascades": true, "molten_cascade_chance": 0.06, "column_frequency": 0.75, "obsidian_lens_chance": 0.12, "tube_frequency": 1.0, "fissure_frequency": 0.12, "intrusion_frequency": 0.55, "lava_drip_frequency": 0.1}
+surface_provider = ExtResource("2")
+feature_provider = ExtResource("3")
+debug_color = Color(0.65, 0.24, 0.09, 1)

@@ -1,0 +1,9 @@
+[gd_resource type="Texture2DArray" load_steps=5 format=3]
+
+[ext_resource type="Image" path="res://materials/beach_color_fine_sand.res" id="1"]
+[ext_resource type="Image" path="res://materials/beach_color_compacted_wet_sand.res" id="2"]
+[ext_resource type="Image" path="res://materials/beach_color_coarse_shell_sand.res" id="3"]
+[ext_resource type="Image" path="res://materials/beach_color_rippled_sand.res" id="4"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4")])

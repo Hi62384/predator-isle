@@ -1,0 +1,170 @@
+[
+	{
+		"gpu_bytes": 6990560,
+		"id": "Ground023",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/jungle/Ground023/Ground023_2K-JPG_Color.jpg",
+				"sha256": "79b3c6d2f8369c671315a87bb0d364b4ac0025db76ad93cd2e87e2695da6070e"
+			},
+			{
+				"path": "res://assets/textures/jungle/Ground023/Ground023_2K-JPG_NormalGL.jpg",
+				"sha256": "ebaa7bbf0271dc64e8086026cce9411029f07280041020e744858a5a06140f5d"
+			},
+			{
+				"path": "res://assets/textures/jungle/Ground023/Ground023_2K-JPG_Roughness.jpg",
+				"sha256": "492628f2623ca5fda0434d9d4181c35b37ff81129df8874ea0422546ef24953b"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "leaf_litter",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Ground023"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Ground048",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_Color.jpg",
+				"sha256": "318d8a406a954234f9e8715d74913fcab39d5f736f0a85c18d25b6d437c1a0d1"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_NormalGL.jpg",
+				"sha256": "55ecc35cd86e1d6ee484de4aa4999fcc5bc36308ade0863ff08b6cd12d190f7d"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_Roughness.jpg",
+				"sha256": "f4703745b49ca4f6561a38f4fbd64b546c773e3e381f6465827359a7dc486030"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "organic_soil",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Ground048"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Ground031",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Color.jpg",
+				"sha256": "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b"
+			},
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_NormalGL.jpg",
+				"sha256": "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c"
+			},
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Roughness.jpg",
+				"sha256": "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "mud_silt",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Ground031"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Gravel020",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Color.jpg",
+				"sha256": "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_NormalGL.jpg",
+				"sha256": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Roughness.jpg",
+				"sha256": "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "river_gravel",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Gravel020"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Rock030",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_Color.jpg",
+				"sha256": "c7169827afa47148833a3d778bd2827f12b124852efcabf3364910b1cb6d4beb"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_NormalGL.jpg",
+				"sha256": "bf4b029b98fc771887e80807e28f97488c3a8936369152bd1020b2535415a5af"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_Roughness.jpg",
+				"sha256": "a057169aa693438170a969249eb7e1113078f04c38b3fc2766fdccf21d5a918f"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "exposed_rock",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Rock030"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Rock064",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_Color.jpg",
+				"sha256": "2d6d40d58d4a5feedd900c0b3076b07aec9a76990bfa21f8f30176c9e0da7c84"
+			},
+			{
+				"path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_NormalGL.jpg",
+				"sha256": "053fc6b0867e69f472b6de5904050d409722c07fa7276be79bc9fc4664b98508"
+			},
+			{
+				"path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_Roughness.jpg",
+				"sha256": "e7647cc5f16e33fc9ce8e2b9146835eabc6982004527baa7d2194251055a5d76"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "mossy_rock",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Rock064"
+	},
+	{
+		"gpu_bytes": 6990560,
+		"id": "Ground037",
+		"license": "CC0-1.0",
+		"license_url": "https://docs.ambientcg.com/license/",
+		"maps": [
+			{
+				"path": "res://assets/textures/ambientcg/Ground037/Ground037_2K-JPG_Color.jpg",
+				"sha256": "86af35a54593548543a291a54bddfd3568fd90268f8f65d0f8e743b37d714782"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Ground037/Ground037_2K-JPG_NormalGL.jpg",
+				"sha256": "99743f03f5f818d4a0ee3dca289d5c6f125b1e05f1e624a541455e2f7fb29eec"
+			},
+			{
+				"path": "res://assets/textures/ambientcg/Ground037/Ground037_2K-JPG_Roughness.jpg",
+				"sha256": "5484c117706e5937afa103c82795cbacb6c3b76d1a056b47942ca91d00efbbb9"
+			}
+		],
+		"normal_convention": "OpenGL positive Y XY BC5",
+		"role": "moss_ground",
+		"roughness": "linear alpha; albedo sRGB",
+		"source": "https://ambientcg.com/a/Ground037"
+	}
+]

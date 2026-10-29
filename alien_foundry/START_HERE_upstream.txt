@@ -1,0 +1,53 @@
+PREDATOR ISLE BLOB 232 - GODOT PROJECT SOURCE
+
+1. Extract this ordinary ZIP to a NEW folder.
+2. In Godot4.6.3 (standard single precision), import Alien_Foundry/project.godot.
+3. Press F5. The default scene is standalone/PortableBlob232.tscn.
+
+This is the latest validated portable-app source, including the current232
+clay viewer, fixed-seed Generate button and separate inherited generator lab.
+It is NOT a drop-in Godot plugin. No EXE or engine installation is bundled.
+
+ADDING IT TO YOUR EXISTING GAME
+Do not overwrite your game's project.godot, export presets or main scene.
+Many scripts/scenes load absolute res://scripts, res://assets, res://scenes
+and res://standalone paths. Placing Alien_Foundry inside an arbitrary subfolder
+of your game will break those references unless they are rewritten consistently.
+
+First make a backup/branch of your game. Review collisions before merging
+scripts/, assets/, scenes/ and standalone/ into your game project root.
+Preserve their internal layout and included .uid sidecars, data and licenses.
+Do not blindly overwrite same-name files or conflicting global class names.
+After a reviewed merge, instantiate res://standalone/PortableBlob232.tscn
+as the full-screen viewer/generator, or integrate the API below. Keep your own
+project.godot and choose where the scene belongs in your game's UI/navigation.
+A root-folder merge has not been tested against your game. Namespacing this
+package under a new subfolder requires a separate path/global-class review.
+The packaged scene manages app close behavior, so adapt that integration before
+using it as an embedded menu in a larger game.
+
+CURRENT232 API
+scripts/pipeline/BlobLiveQuadPipeline232.gd
+scripts/geometry/BlobLiveQuadPolicy232.gd
+The working application integration is in standalone/PortableBlobData232.gd
+and standalone/PortableBlob232.gd. It loads the exact bundled recipe/input,
+runs one real build on a cancellable worker and creates render resources on
+the main thread. Required standalone/data files are included. The older
+examples/GenerateLiveBlob232.gd launcher expects the original checkpoint's
+external recipes/evidence layout; use the portable scene/Data wrapper here,
+not that older CLI as the entrypoint for this reorganized project package.
+
+LIMITS AND TESTING
+Fixed seed22 / Stage5, unfinished clay, no final materials/rig. Initial preview
+is retained229 geometry with exact recorded232 parity, not a new build.
+The packaged source passed headless import/parsers and36 lifecycle checks;
+the exported pack passed those checks and one real Generate-button build.
+Windows graphical execution and integration into YOUR game were not tested.
+The single real run's test-only int-vs-JSON-float comparison fault was reconciled
+strictly against saved output, without regeneration. Original evidence retained.
+
+Godot/third-party notices: standalone/licenses/ and in-app About / Licenses.
+The workspace-specific Windows export preset is intentionally omitted; create
+your own export preset if needed. No .godot cache, Windows EXE, vendor template
+or generated run output is included. Godot will rebuild its import cache.
+See PACKAGE_MANIFEST.json for byte-exact source inventory and provenance.

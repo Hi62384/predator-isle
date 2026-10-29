@@ -1,0 +1,34 @@
+[
+	{
+		"draw_calls": 220.0,
+		"frame_ms_including_viewports_and_vsync": 25.2849,
+		"sheet": "clay_24.png",
+		"simultaneous_blobs": 24,
+		"static_memory_bytes": 1002521252,
+		"video_memory_bytes": 185499891.0
+	},
+	{
+		"draw_calls": 110.0,
+		"frame_ms_including_viewports_and_vsync": 16.5937,
+		"sheet": "biology_12.png",
+		"simultaneous_blobs": 12,
+		"static_memory_bytes": 687122377,
+		"video_memory_bytes": 174863247.0
+	},
+	{
+		"draw_calls": 58.0,
+		"frame_ms_including_viewports_and_vsync": 16.155,
+		"sheet": "geometry_clay_6.png",
+		"simultaneous_blobs": 6,
+		"static_memory_bytes": 481375898,
+		"video_memory_bytes": 131000187.0
+	},
+	{
+		"draw_calls": 58.0,
+		"frame_ms_including_viewports_and_vsync": 16.1745,
+		"sheet": "tissue_closeups_6.png",
+		"simultaneous_blobs": 6,
+		"static_memory_bytes": 481376730,
+		"video_memory_bytes": 131000187.0
+	}
+]

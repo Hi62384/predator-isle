@@ -1,0 +1,22 @@
+[gd_resource type="Resource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/caves/biome_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/caves/crystal_surface.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/caves/crystal_features.gd" id="3"]
+
+[resource]
+script = ExtResource("1")
+biome_id = &"crystal"
+display_name = "Crystal Caverns"
+spawn_chance_percent = 18.0
+minimum_extent_metres = 350.0
+maximum_extent_metres = 1500.0
+depth_preferences = PackedFloat32Array(5, 20, 50, 80, 100)
+surface_preferences = {"crystal_wastes": 100.0, "quarry": 65.0, "mountain": 50.0, "wise_mountains": 40.0, "badlands": 30.0, "volcanic": 25.0, "radiation_wasteland": 25.0, "desert": 15.0, "rocky_coast": 10.0}
+transition_metres = 48.0
+independent_suitability_admission = true
+material_configuration = {"mineral_strength": 0.65, "sediment_strength": 0.38, "localized_veins": true, "luminous_strength": 0.025, "ambient_shelter": 0.08}
+feature_configuration = {"density": 0.65, "giant_chance": 0.18, "maximum_height": 32.0, "chamber_growth": true, "selective_transmission": true, "mesh_lods": true, "geode_frequency": 0.15, "ravine_frequency": 0.08, "large_lake_frequency": 0.12, "geode_lining": true, "spanning_crystals": true, "spanning_chance": 0.15, "crystal_debris": true, "debris_chance": 0.35, "localized_veins": true, "corridor_growth": true, "lake_chambers": true, "luminous_minerals": true, "luminous_region_chance": 0.005, "luminous_form_chance": 0.12, "shallow_chambers": true, "floor_ridges": true, "floor_ridge_height": 0.65}
+surface_provider = ExtResource("2")
+feature_provider = ExtResource("3")
+debug_color = Color(0.65, 0.5, 0.85, 1)

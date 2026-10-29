@@ -1,0 +1,248 @@
+{
+	"features": {
+		"backdunes": {
+			"coast_distance": 460.038336634636,
+			"height": 30.2760355587471,
+			"outward_x": 0.10326611250639,
+			"outward_z": 0.994653701782227,
+			"region": 4,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -79827.71875,
+			"z": -147626.875
+		},
+		"barrier_beach": {
+			"coast_distance": 659.965766847134,
+			"height": 15.0385415419713,
+			"outward_x": -0.963400185108185,
+			"outward_z": 0.268067598342896,
+			"region": 7,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -124276.1171875,
+			"z": -196679.609375
+		},
+		"dune_field": {
+			"coast_distance": 462.40535945975,
+			"height": 22.5019234488119,
+			"outward_x": 0.0901388227939606,
+			"outward_z": 0.995929181575775,
+			"region": 2,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -119769.9296875,
+			"z": -145355.328125
+		},
+		"forest_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"grass_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"high_foredunes": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"jungle_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"lagoon": {
+			"coast_distance": 660.6945053339,
+			"height": -1.5,
+			"outward_x": -0.261219203472137,
+			"outward_z": 0.965279459953308,
+			"region": 9,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 195235.625,
+			"z": -186570.5
+		},
+		"low_sandy_island": {
+			"coast_distance": 119.927663892508,
+			"height": 5.8695470169151,
+			"outward_x": -0.468940645456314,
+			"outward_z": -0.883229672908783,
+			"region": 12,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -84339.609375,
+			"z": -141086.46875
+		},
+		"mixed_rock_sand": {
+			"coast_distance": 120.213710378899,
+			"height": 4.56103740534998,
+			"outward_x": 0.668491303920746,
+			"outward_z": 0.743719935417175,
+			"region": 14,
+			"sand": 0.457618032254024,
+			"score": 1.0,
+			"x": -94960.8359375,
+			"z": -145579.265625
+		},
+		"mountain_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"narrow_beach": {
+			"coast_distance": 121.23538039159,
+			"height": 8.7215889802988,
+			"outward_x": -0.201227799057961,
+			"outward_z": 0.979544520378113,
+			"region": 1,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -107606.4921875,
+			"z": -151334.375
+		},
+		"parabolic_dunes": {
+			"coast_distance": 459.852089801803,
+			"height": 50.9797196008375,
+			"outward_x": -0.329901278018951,
+			"outward_z": -0.944015443325043,
+			"region": 5,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 177561.203125,
+			"z": -192452.625
+		},
+		"sand_spit": {
+			"coast_distance": 120.597536814035,
+			"height": 7.54385438079041,
+			"outward_x": 0.879705727100372,
+			"outward_z": 0.475518554449081,
+			"region": 8,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -56524.05859375,
+			"z": -179617.03125
+		},
+		"sandbars": {
+			"coast_distance": -201.186555380933,
+			"height": -8.03561217681653,
+			"outward_x": -0.055070485919714,
+			"outward_z": -0.998482465744019,
+			"region": 15,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 171694.421875,
+			"z": -192933.6875
+		},
+		"sandy_cove": {
+			"coast_distance": 119.48356082532,
+			"height": 0.818446099129784,
+			"outward_x": -0.888354659080505,
+			"outward_z": -0.459157854318619,
+			"region": 6,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -139739.015625,
+			"z": -184697.703125
+		},
+		"sandy_estuary": {
+			"coast_distance": 120.589018771425,
+			"height": 4.32687173304603,
+			"outward_x": -0.434145450592041,
+			"outward_z": -0.900842785835266,
+			"region": 11,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -153077.546875,
+			"z": -158752.75
+		},
+		"savanna_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"storm_scarps": {
+			"coast_distance": 460.158087253571,
+			"height": 23.6598560851232,
+			"outward_x": 0.34610840678215,
+			"outward_z": 0.938194453716278,
+			"region": 13,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -186010.328125,
+			"z": -196873.375
+		},
+		"swamp_beach_transition": {
+			"coast_distance": 462.432096461533,
+			"height": 64.335260232274,
+			"outward_x": 0.998330295085907,
+			"outward_z": 0.0577638708055019,
+			"region": 3,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": 186941.515625,
+			"z": -186143.765625
+		},
+		"tidal_flat": {
+			"coast_distance": 120.080418419093,
+			"height": 0.0272301956913306,
+			"outward_x": 0.440249383449554,
+			"outward_z": -0.897875487804413,
+			"region": 10,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -70481.1328125,
+			"z": -192163.59375
+		},
+		"wide_beach": {
+			"coast_distance": 120.10872445628,
+			"height": 3.63473809667837,
+			"outward_x": 0.558942019939423,
+			"outward_z": 0.829206705093384,
+			"region": 0,
+			"sand": 1.0,
+			"score": 1.0,
+			"x": -69124.5390625,
+			"z": -196564.03125
+		}
+	},
+	"seed": 73921,
+	"source": "Actual canonical shoreline and regional sampler; previews override only sand/coast coverage and inland biome, never sculpt heights."
+}

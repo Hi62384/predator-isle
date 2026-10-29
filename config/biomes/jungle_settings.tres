@@ -1,0 +1,6 @@
+[gd_resource type="Resource" script_class="JungleSettings" format=3 uid="uid://cgqn82xbvmau4"]
+
+[ext_resource type="Script" uid="uid://bdgnlrylr0tam" path="res://scripts/jungle_settings.gd" id="1"]
+
+[resource]
+script = ExtResource("1")

@@ -1,0 +1,21 @@
+[gd_resource type="Resource" load_steps=4 format=3]
+
+[ext_resource type="Script" path="res://scripts/caves/biome_definition.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/caves/frozen_surface.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/caves/frozen_features.gd" id="3"]
+
+[resource]
+script = ExtResource("1")
+biome_id = &"frozen"
+display_name = "Frozen Caverns"
+spawn_chance_percent = 45.0
+minimum_extent_metres = 150.0
+maximum_extent_metres = 700.0
+depth_preferences = PackedFloat32Array(100, 80, 40, 5, 0)
+surface_preferences = {"snow": 100.0, "mountain": 50.0, "wise_mountains": 25.0, "forest": 5.0, "grass": 5.0}
+transition_metres = 32.0
+material_configuration = {"texture_metres": 6.0, "normal_strength": 0.35}
+feature_configuration = {"density": 0.6, "curtain_chance": 0.2, "lake_ice": true, "large_lakes": true, "lake_radius_multiplier": 1.8, "lake_radius_minimum": 8.0, "lake_radius_maximum": 12.0, "smooth_normals": true}
+surface_provider = ExtResource("2")
+feature_provider = ExtResource("3")
+debug_color = Color(0.3, 0.75, 0.95, 1)

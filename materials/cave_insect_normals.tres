@@ -1,0 +1,4 @@
+[gd_resource type="Texture2DArray" load_steps=2 format=3]
+[ext_resource type="Image" path="res://materials/cave_normal_Ground026.res" id="1"]
+[resource]
+_images = Array[Image]([ExtResource("1")])

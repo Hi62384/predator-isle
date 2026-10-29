@@ -1,0 +1,15 @@
+[gd_resource type="Resource" script_class="TerrainSettings" format=3 uid="uid://cfihspbq3uamk"]
+
+[ext_resource type="Script" uid="uid://dqunu7cu0q1oq" path="res://scripts/terrain_settings.gd" id="1"]
+[ext_resource type="Resource" uid="uid://cgqn82xbvmau4" path="res://config/biomes/jungle_settings.tres" id="2_qsvvu"]
+
+[resource]
+script = ExtResource("1")
+beaches_enabled = true
+tropical_coverage = 20.0
+grass_region_size = 940000.0
+grass_coverage = 100.0
+height_blend = 3.0
+texture_blend_sharpness = 20.0
+island_size = 100400.0
+island_spacing = 585.0

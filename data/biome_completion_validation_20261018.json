@@ -1,0 +1,647 @@
+{
+  "date": "2026-10-18",
+  "status": "completion_pass_in_progress",
+  "full_reference_quality_complete": false,
+  "scope": "Surface-biome completion continuation; new Infinite Default Cave request remains queued until prior work is actually complete.",
+  "implemented": [
+    "Finite irregular portals, actual cavity floors/walls/ceilings and short galleries",
+    "Worker-produced clipped portal ground collision; inward-facing cavity collision and capsule fixtures",
+    "Dedicated retained crater lava and separate organic pools; default-frequency basin clipping",
+    "Outlet-connected Wise tributaries and waterfall sheets",
+    "Screen-space crystal refraction with absorption/Fresnel (not complete internal ray tracing)",
+    "Sharper Wise joints, denser/smoothed earthen mounds, lower ground-conforming alien conduits",
+    "World-space macro/meso shading, patchier fungal coverage and reused scan detail at outcrop scale",
+    "Separate downwind fallout and analytic outlet drainage in Radiation",
+    "Wider conservative quarry ramp construction; no comprehensive interpolated grade certification",
+    "Mixed-leaf refinement, bounded FIFO node cache and exact-lattice fast path",
+    "Corrected published packed-array aliasing and independent dense seam regression"
+  ],
+  "numerical_native_physics": {
+    "check_all": {
+      "checks": 48392,
+      "failures": []
+    },
+    "check_integration": {
+      "checks": 151981,
+      "collision": "Native PhysicsDirectSpaceState3D downward rays at canonical mesh vertices",
+      "failures": [],
+      "ownership": "Exact world-space major geometry multiset, parent versus four children"
+    },
+    "check_sample_alias": {
+      "checks": 1056,
+      "failures": [],
+      "scope": "Cached node aliasing and dense fractional height/normal seams with independent samplers"
+    },
+    "check_features": {
+      "cavity_cases": [
+        {
+          "family": 1,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 1,
+            "floor": 31.184792117069,
+            "half": 96,
+            "id": "1:12:-2",
+            "kind": "rock_cavern",
+            "owner": "(103776.0, -12672.0)",
+            "phase": 2.25205679357936,
+            "position": "(103776.0, -12672.0)",
+            "roof": 51.184792117069,
+            "top": 227.899235737112
+          },
+          "vertices": 2766
+        },
+        {
+          "family": 2,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 2,
+            "floor": 8,
+            "half": 96,
+            "id": "2:-15:-1",
+            "kind": "lava_tube",
+            "owner": "(-118528.0, -5920.0)",
+            "phase": 3.89458010574736,
+            "position": "(-118528.0, -5920.0)",
+            "roof": 28,
+            "top": 57.6913118575478
+          },
+          "vertices": 1038
+        },
+        {
+          "family": 6,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 6,
+            "floor": 8,
+            "half": 96,
+            "id": "6:2:2",
+            "kind": "burrow",
+            "owner": "(20896.0, 21248.0)",
+            "phase": 3.45185390686939,
+            "position": "(20896.0, 21248.0)",
+            "roof": 28,
+            "top": 67.3293854472393
+          },
+          "vertices": 1614
+        },
+        {
+          "family": 7,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 7,
+            "floor": 8,
+            "half": 96,
+            "id": "7:-15:-1",
+            "kind": "hive_chamber",
+            "owner": "(-117952.0, -5088.0)",
+            "phase": 2.77850338035794,
+            "position": "(-117952.0, -5088.0)",
+            "roof": 28,
+            "top": 63.8946342766285
+          },
+          "vertices": 1614
+        }
+      ],
+      "checks": 36,
+      "failures": [],
+      "fixture_cave_frequency": 0.5,
+      "note": "Native rays plus four-second capsule traversals in four cavity fixtures; not exhaustive world traversal"
+    },
+    "check_liquids": {
+      "active_lava_frequency": 0.04,
+      "cases": [
+        {
+          "family": 2,
+          "id": "2:33:-14",
+          "position": "(241955.0, -97306.7)"
+        },
+        {
+          "family": 2,
+          "id": "2:35:-3",
+          "position": "(253826.8, -18163.32)"
+        },
+        {
+          "family": 7,
+          "id": "7:-58:-59",
+          "position": "(-235825.0, -239911.4)"
+        },
+        {
+          "family": 7,
+          "id": "7:-55:-59",
+          "position": "(-223827.3, -239837.3)"
+        }
+      ],
+      "checks": 8312,
+      "failures": [],
+      "note": "Default production source frequency and clipping; not a fluid simulation"
+    },
+    "check_waterfalls": {
+      "cases": [
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34,
+          "outlet": "(8264.859, -1077.567)",
+          "position": "(8264.859, -577.5667)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34,
+          "outlet": "(12115.39, -4295.563)",
+          "position": "(12115.39, -4795.563)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34,
+          "outlet": "(12115.39, -580.5667)",
+          "position": "(12115.39, -80.56664)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34,
+          "outlet": "(16355.62, -4450.519)",
+          "position": "(16355.62, -3950.518)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34,
+          "outlet": "(16355.62, -556.285)",
+          "position": "(16355.62, -56.28502)"
+        }
+      ],
+      "checks": 511,
+      "failures": []
+    }
+  },
+  "counted_numerical_integration_and_feature_assertions": 210288,
+  "gpu_transport": {
+    "cases": 24,
+    "negative_control_detected": true,
+    "failures": [],
+    "max_raw_rgb_error": 0.00392156839370728
+  },
+  "render_audit": {
+    "artistic_signoff": false,
+    "captures_audited": 143,
+    "feature_captures": 13,
+    "infinite_cave_system_complete": false,
+    "png_hashes_dimensions_and_committed_cuts": true,
+    "regional_day_night_captures": 96,
+    "source_hashes_current": true
+  },
+  "native_performance": {
+    "renderer": "gl_compatibility",
+    "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "resolution": [
+      1280,
+      720
+    ],
+    "view_distance_metres": 50000,
+    "maximum_lod": 6,
+    "gpu_view_median_range_ms": [
+      3.94799995422363,
+      12.8120002746582
+    ],
+    "frame_view_median_range_ms": [
+      16.652,
+      16.675
+    ],
+    "initial_scene_stream_fill_range_s": [
+      4.896769,
+      110.770753
+    ],
+    "stream_wait_frame_max_range_ms": [
+      3.071,
+      129.699
+    ],
+    "video_bytes_range": [
+      378876213,
+      545184001
+    ],
+    "notes": [
+      "VSync-limited medians are not uncapped FPS",
+      "Initial scene fill can include shader compilation, excludes process launch",
+      "Stream-wait maxima include visible spikes; not a stall-free certification",
+      "Counts/integrity checks are not reference-quality visual sign-off"
+    ]
+  },
+  "cpu_profile": {
+    "cases": {
+      "alien_infected": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 187.434,
+          "repeats_ms": [
+            184.37,
+            187.434,
+            193.611
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 593.892,
+          "repeats_ms": [
+            572.592,
+            593.892,
+            605.806
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1366.392,
+          "repeats_ms": [
+            1366.392
+          ],
+          "resolution": 64
+        }
+      ],
+      "crystal_wastes": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 162.649,
+          "repeats_ms": [
+            162.631,
+            162.649,
+            175.495
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 614.21,
+          "repeats_ms": [
+            563.236,
+            614.21,
+            615.815
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 967.219,
+          "repeats_ms": [
+            967.219
+          ],
+          "resolution": 64
+        }
+      ],
+      "grass": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 149.667,
+          "repeats_ms": [
+            139.99,
+            149.667,
+            174.415
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 340.741,
+          "repeats_ms": [
+            333.304,
+            340.741,
+            341.97
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 527.768,
+          "repeats_ms": [
+            527.768
+          ],
+          "resolution": 64
+        }
+      ],
+      "insect_colony": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 172.098,
+          "repeats_ms": [
+            167.45,
+            172.098,
+            182.265
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 577.882,
+          "repeats_ms": [
+            569.166,
+            577.882,
+            595.156
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1148.013,
+          "repeats_ms": [
+            1148.013
+          ],
+          "resolution": 64
+        }
+      ],
+      "quarry": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 100.685,
+          "repeats_ms": [
+            94.308,
+            100.685,
+            102.71
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 324.38,
+          "repeats_ms": [
+            322.36,
+            324.38,
+            336.215
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 646.862,
+          "repeats_ms": [
+            646.862
+          ],
+          "resolution": 64
+        }
+      ],
+      "radiation_wasteland": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 167.901,
+          "repeats_ms": [
+            167.076,
+            167.901,
+            176.36
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 565.394,
+          "repeats_ms": [
+            564.637,
+            565.394,
+            623.688
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1219.118,
+          "repeats_ms": [
+            1219.118
+          ],
+          "resolution": 64
+        }
+      ],
+      "spore_forest": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 166.459,
+          "repeats_ms": [
+            164.26,
+            166.459,
+            190.579
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 550.687,
+          "repeats_ms": [
+            529.904,
+            550.687,
+            581.391
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 923.542,
+          "repeats_ms": [
+            923.542
+          ],
+          "resolution": 64
+        }
+      ],
+      "volcanic": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 96.323,
+          "repeats_ms": [
+            93.895,
+            96.323,
+            96.354
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 336.259,
+          "repeats_ms": [
+            326.307,
+            336.259,
+            343.122
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 809.679,
+          "repeats_ms": [
+            809.679
+          ],
+          "resolution": 64
+        }
+      ],
+      "wise_mountains": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 100.452,
+          "repeats_ms": [
+            97.178,
+            100.452,
+            101.353
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 317.919,
+          "repeats_ms": [
+            315.693,
+            317.919,
+            327.048
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 507.923,
+          "repeats_ms": [
+            507.923
+          ],
+          "resolution": 64
+        }
+      ]
+    },
+    "note": "Isolated numerical work; fresh sampler for every mesh repeat. Same coordinates and settings except ownership. No rendering concurrently. Milliseconds, not FPS."
+  },
+  "source_game_launches": {
+    "all_extensions": {
+      "badlands_preview": false,
+      "beach_preview": false,
+      "biome": "Coastal Dunes / Beaches",
+      "coast_preview": false,
+      "elapsed_s": 30.8699999999996,
+      "engine": "4.6.1-stable (official)",
+      "exported": false,
+      "extension_debug_smoke": true,
+      "extension_preview": "",
+      "failure": "",
+      "feature": "",
+      "forest_preview": false,
+      "ground_height": 13.1399422486535,
+      "jungle_preview": false,
+      "loaded_chunks": 117,
+      "local_water_level": 0,
+      "mountain_preview": false,
+      "position": "(6.834559, 113.1399, 69.68923)",
+      "revision": 1,
+      "savanna_preview": false,
+      "swamp_preview": false,
+      "swamp_water_tiles": 30,
+      "tropical_preview": false
+    },
+    "alien_infected": {
+      "badlands_preview": false,
+      "beach_preview": false,
+      "biome": "Alien-Infected",
+      "coast_preview": false,
+      "elapsed_s": 11.6504006666668,
+      "engine": "4.6.1-stable (official)",
+      "exported": false,
+      "extension_debug_smoke": true,
+      "extension_preview": "alien_infected",
+      "failure": "",
+      "feature": "",
+      "forest_preview": false,
+      "ground_height": 122.228349552553,
+      "jungle_preview": false,
+      "loaded_chunks": 153,
+      "local_water_level": 0,
+      "mountain_preview": false,
+      "position": "(14000.0, 722.2283, 5180.0)",
+      "revision": 1,
+      "savanna_preview": false,
+      "swamp_preview": false,
+      "swamp_water_tiles": 82,
+      "tropical_preview": false
+    }
+  },
+  "regressions": {
+    "passed": [
+      "jungle/check_invariants",
+      "jungle/check_materials",
+      "jungle/check_active_biomes",
+      "forest/check_invariants",
+      "forest/check_materials",
+      "savanna/check_invariants",
+      "savanna/check_materials",
+      "swamp/check_invariants",
+      "mountain/check_invariants",
+      "rocky_coast/check_invariants",
+      "beach/check_invariants",
+      "tropical/check_invariants",
+      "tropical/check_assets",
+      "badlands/check_invariants",
+      "badlands/check_assets",
+      "biome_extensions/check_assets"
+    ],
+    "scope": "Numerical/resource suites, not full fresh older-biome visual sweeps"
+  },
+  "evidence": {
+    "directory": "tools/biome_extensions/artifacts",
+    "native_reports": [
+      "render_all.json",
+      "render_mixed.json",
+      "render_features.json",
+      "render_regions_quarry.json",
+      "render_regions_wise_mountains.json",
+      "render_regions_volcanic.json",
+      "render_regions_spore_forest.json",
+      "render_regions_radiation_wasteland.json",
+      "render_regions_crystal_wastes.json",
+      "render_regions_insect_colony.json",
+      "render_regions_alien_infected.json"
+    ],
+    "generated_locally": true,
+    "ignored": true
+  },
+  "limitations": [
+    "Reference-quality visual gates remain open: smoothed silhouettes, broad geological bands and surface repetition",
+    "Only six current major families per addition, not all conceptual/scenic targets",
+    "Finite prototype cavities are not interconnected deep networks or brain chambers",
+    "Gallery capsule tests do not certify two-way surface entrance, spiral ramp or every rim/LOD seam",
+    "Quarry grades require final dense-mesh traversal certification",
+    "Screen-space refraction cannot include off-screen or other transparent geometry reliably",
+    "Lava/organic pools and waterfalls are static surfaces with animated shading, not hydrodynamics",
+    "Cold shader compilation/initial fill and 40+ ms streaming-frame spikes remain performance work",
+    "No multiplayer, all-hardware or multi-seed full-world traversal certification"
+  ],
+  "next_requested_system": {
+    "name": "Infinite Default Cave",
+    "status": "queued_after_current_surface_completion",
+    "brief": "C:/Users/User1/.codex/attachments/7458d124-72ab-46a6-a2ae-7948bc3bfe6a/Pasted text.txt",
+    "brief_read_in_full": true,
+    "complete": false
+  },
+  "snapshot_status": "earlier_20261018_phase_superseded_by_followup",
+  "latest_followup_report": "data/biome_completion_followup_20261018.json",
+  "earlier_phase_core_source_sha256": {
+    "res://alien_infected_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://crystal_wastes_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://insect_colony_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://quarry_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://radiation_wasteland_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://scripts/alien_infected_sampler.gd": "9a46aa6ec282de6697e7e34c1d39ce365e4835debcfa6287950c92a1ae525ea2",
+    "res://scripts/badlands_sampler.gd": "a841fd25e61a19bee0c11d3c5a251285be85bbfba92a5e1eeaae7efa804194eb",
+    "res://scripts/biome_extension_sampler.gd": "449bb18615251d54eceeab3290eea26d2b4ad52cb8a02d8162db8004181c82f8",
+    "res://scripts/biome_extension_settings.gd": "bda1e668b6579206feacb2e5e1a52d6e6ab185aa0895f323856847c42255ccfb",
+    "res://scripts/biome_extension_structures.gd": "e182af1199c49a52a4cb5e45329f30335949245b5a8807d5b937ca1f68bcd360",
+    "res://scripts/chunk_terrain.gd": "dc1ad10fa67a8fbab7b5624b78623b371c5ae70e59922f7c2b4fe34056b1bc5f",
+    "res://scripts/crystal_wastes_sampler.gd": "93c5763bdff74ffa342c5188262612bc06e5b524f1b85fe744b734c9fd75d384",
+    "res://scripts/insect_colony_sampler.gd": "e114e94b5b66af860a40d04f91df8aad47221a13f9d6a0fa228fa1cb461fb046",
+    "res://scripts/quarry_sampler.gd": "f72032848619577158f572f2563cadca914ab2384ea151217df62797c6c4349c",
+    "res://scripts/radiation_wasteland_sampler.gd": "6c4eb166d0b07c3bc32e18e3647bd2f7b3bead358e56cb7c4e365dba05f366c6",
+    "res://scripts/spore_forest_sampler.gd": "d7c0ca563cd5fbbd6aba507096b33d1214e0f478d86eae3e665508a71cf28782",
+    "res://scripts/terrain_collision.gd": "54519179687c15b3ce23b399a3b9fa28665fe7f79aa93a229c75b3d356d43a66",
+    "res://scripts/terrain_feature_meshes.gd": "bfa30b3efcdfbb3f069ad210d1bb6420daaab6962c6f20217de2d5432596e633",
+    "res://scripts/terrain_mesh_builder.gd": "de249f2e6bf0973499345bf18c6f577c1453ec5c409538e5ee10841e6ac87941",
+    "res://scripts/terrain_settings.gd": "725a21569373dabb8926ded69a06a69bc913a7aaccb5f41add71a84c9ff8ca1f",
+    "res://scripts/volcanic_sampler.gd": "2bcf41535d4a93a093fe591f41f0d7d2ab23ad8fe026b8e2a5fea296a8574c24",
+    "res://scripts/wise_mountains_sampler.gd": "2795af2b510a43d5bd678bd4ff23ddc2d6bce90ad70db0c2055fa3bc55070eda",
+    "res://shaders/badlands_material.gdshaderinc": "a99e7b9d4a3100e3494fba0a59b67c0fc33ccb031b29c5015fbe67c85e602d7b",
+    "res://shaders/biome_extensions.gdshaderinc": "38d5b2182a29903a86e76dc2ca9b5774b6af1f36ad58fef2780b13cc4e75214e",
+    "res://shaders/biome_structures.gdshader": "65adbaf49e9ea18fcc5b37a9021ae2796493188ce857dffbda3546de01c7b7a9",
+    "res://shaders/crystal_transmission.gdshader": "dba0a557bed0d96e2775c22225c927858d55b6f8081c9e540d26d250c4e0c8d1",
+    "res://shaders/terrain_biomes.gdshader": "691ecb1d93fb3979f6043acde06c95bb28528235516872e5107a84bab48a3af3",
+    "res://shaders/terrain_features.gdshader": "978b916072fdb8bcc259550e73c0c1352b6adb1f388068e2c1e0a199e6edfa5d",
+    "res://spore_forest_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://volcanic_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://wise_mountains_settings.tres": "0fa99cfd16973e1b8a4d14d789c8ba86878eb28aeb359886dddca8974023f307"
+  }
+}

@@ -1,0 +1,81 @@
+{
+  "schema": "predator_isle_blob229_user_checkpoint_v1",
+  "status": "retained_geometry_technical_checkpoint_under_explicit_finite_local_profile",
+  "scope": "Exact retained224 root positions/normals with versioned229 quad connectivity. This is not qualified fresh field extraction, an ordinary generator/UI mode, or final art.",
+  "production_source_manifest_sha256": "dc3f908de502f2c0fc0ccc5bcc5b6bc395baf2a2e57645c88e9700ab6b4b6a62",
+  "packaged_project_files": 344,
+  "original_project_files": 503,
+  "omitted_legacy_test_files": 162,
+  "all_packaged_project_files_byte_exact": true,
+  "cheap_contracts": {
+    "new_godot_parser_gates": 9,
+    "chooser_assertions": 301,
+    "ownership_entry_assertions": 474,
+    "public_recipe_assertions": 108,
+    "total_godot_assertions": 883,
+    "finite_local_python_test_methods": 36
+  },
+  "retained_geometry": {
+    "vertices": 17958,
+    "faces": 35912,
+    "quads_considered": 8566,
+    "alternate_quads": 3873,
+    "legacy_quads": 4693,
+    "single_triangle_tetrahedra_unchanged": 18780,
+    "positions_normals_unchanged": true,
+    "all_native_faces_positive": true,
+    "minimum_native_alignment_cosine": 0.2679764119734382,
+    "native_retained_checks": 37,
+    "full_ownership_replays": 3
+  },
+  "physical_qualification": {
+    "topology_volume": true,
+    "support_and_unapplied_provenance_checks": 124,
+    "cavity_visibility_rays": 13,
+    "wall_area_and_width": true,
+    "fine_normal_witnesses_passed": 201,
+    "original_directional_probe_checks": 1191,
+    "original_directional_probe_status": "rejected",
+    "original_directional_probe_failed_witness": 196,
+    "finite_local_profile": "finite_local_directional_bracket_v1",
+    "carried_original_position_passes": 200,
+    "new_local_bracket_passes": 1,
+    "strict_endpoint_distance_limit_m": 5e-05,
+    "selected_requested_half_span_m": 1.25e-05,
+    "selected_actual_endpoint_distance_scalar64_m": 1.2487030825111904e-05,
+    "requested_50um_pair_rejected": true,
+    "new_field_calls_for_profile_closure": 0,
+    "formal_continuity_proof": false,
+    "global_nearest_surface_claim": false
+  },
+  "historical_status": {
+    "original224_rejection_preserved": true,
+    "original201_rejection_preserved": true,
+    "retained229_binary_status": "retained_retriangulation229_unqualified",
+    "artifact_status_not_rewritten": true,
+    "separate_qualification_receipt": true
+  },
+  "limitations": {
+    "generator_ui_integrated": false,
+    "fresh_field_extractor_qualified": false,
+    "material_context_applied": false,
+    "new_geometry_features": false,
+    "game_lod_claim": false,
+    "artistic_acceptance": false,
+    "rim_still_visually_rough": true
+  },
+  "proof_hashes": {
+    "cheap_summary": "787a0227a923f0879575ae21039e9dfbdb0428bc65de6e10a7a64888ffd65de9",
+    "retained_summary": "6266cd61c0dcdcd16959b19bf879b51e0552c4a283ae12856fb791cc44b75230",
+    "finite_local_qualification_summary": "4c40ee68eca904d89b43697d7c302269e0e131896f53b64ebf2be67ab6f0cd99",
+    "finite_local_report": "4303ccbe433cd5369d6c8d3e6c05f0e03a9bd31c76bd874ae797d50b548e97ac"
+  },
+  "packaging_validation": "Copied files and Python syntax checked only. Packaging does not rerun the native gates. Historical tests are evidence, not a claim every omitted legacy test is portable.",
+  "additional_existing_texture_dependencies": 3,
+  "portable_packtest": "pending; no standalone runtime claim before separate QA receipt",
+  "compatibility": {
+    "recorded_native_engine": "Godot4.6.3 single precision",
+    "project_declared_target": "Godot4.3 or newer",
+    "other_versions_tested": false
+  }
+}

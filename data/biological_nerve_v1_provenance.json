@@ -1,0 +1,12 @@
+{
+  "name": "nerve",
+  "source": "res://assets/textures/biological/nerve_albedo_v1.png",
+  "sha256": "117a445b33f7d3e47e8f23c3d393f4c6da75a1aa74636a4317013d5fd2152853",
+  "packed": "res://materials/biological_color_nerve.res",
+  "array": "res://materials/biological_colors_v2.tres",
+  "native_dimensions": [1254,1254],
+  "production_dimensions": [2048,2048],
+  "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+  "prompt": "Use case: stylized-concept. Asset type: photorealistic seamless tileable albedo material for Alien-Infected terrain in a realistic survival game. Single square 2048x2048 image, perfectly orthographic top-down, full bleed flat material swatch, uniformly diffuse neutral lighting without directional baked shadows. A dense, physically substantial surface of pale gray-pink and muted cream nerve fascicles embedded in dark desaturated maroon-brown connective tissue. Long irregular sheathed fibrous bundles divide and rejoin at different scales, with subtle fine longitudinal fibers, small layered connective membranes and changing thickness. Coherent biological hierarchy, a tough and slightly damp surface, not blood or gore. Restrained biological-horror material, not fungal mycelium, not soil, not red rock. Rough and smooth sections; moderate contrast. Seamless four edges; no regular repeat, arrows, perfect parallel waves, grids, hexagons, neon, emission, mushrooms, creatures, eyes, eggs, isolated organs, text, labels, watermark, borders or objects. Single albedo texture only, no landscape, perspective render, or map montage.",
+  "note": "Original v1 record retained when the current manifest's nerve slot changed to v3. These original source/packed/array files remain untouched. Prompt resolution is a request, not the returned native image resolution."
+}

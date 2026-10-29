@@ -1,0 +1,26 @@
+[
+	{
+		"edges_over_4x": 1504,
+		"maximum_edge_stretch": 15.2642626037424,
+		"seed": 3000,
+		"triangles_below_2percent_area": 1
+	},
+	{
+		"edges_over_4x": 19974,
+		"maximum_edge_stretch": 80.0944112433765,
+		"seed": 3002,
+		"triangles_below_2percent_area": 7
+	},
+	{
+		"edges_over_4x": 36202,
+		"maximum_edge_stretch": 475.451869937077,
+		"seed": 3004,
+		"triangles_below_2percent_area": 5
+	},
+	{
+		"edges_over_4x": 63166,
+		"maximum_edge_stretch": 230.607241877992,
+		"seed": 3011,
+		"triangles_below_2percent_area": 12
+	}
+]

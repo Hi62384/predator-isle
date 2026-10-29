@@ -1,0 +1,126 @@
+﻿[
+    {
+        "download":  "https://ambientcg.com/get?file=Snow005_2K-JPG.zip",
+        "id":  "Snow005",
+        "license":  "CC0-1.0",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Snow005",
+        "archive_sha256":  "768AA080B299A0EDF9C9F04F53A4A9C752392FBA39BDED5581939E292F9BCA8D",
+        "maps":  [
+                     {
+                         "sha256":  "593F6845ABCE150781F48DA51BB96D168C2CE2DFC5B91AC7B1E78DAD69196F8E",
+                         "file":  "Snow005_2K-JPG_Color.jpg",
+                         "bytes":  2352272
+                     },
+                     {
+                         "sha256":  "887ED9FC93C0763A39357430B79E41EE4AE05072F350683B253CF2AE79F06BE3",
+                         "file":  "Snow005_2K-JPG_NormalGL.jpg",
+                         "bytes":  8904417
+                     },
+                     {
+                         "sha256":  "DA88CA9504EEB74E5DA3A84ECDE9C219070A5E096172C90287F84821F1B0E0D6",
+                         "file":  "Snow005_2K-JPG_Roughness.jpg",
+                         "bytes":  2508374
+                     },
+                     {
+                         "sha256":  "48ECD40EDAD6B4825E89E1231DFDCB0910A472C510918C720425B4BBC9649C5A",
+                         "file":  "Snow005_2K-JPG_Displacement.jpg",
+                         "bytes":  2463102
+                     }
+                 ],
+        "creation_method":  "PBRPhotogrammetry"
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Snow006_2K-JPG.zip",
+        "id":  "Snow006",
+        "license":  "CC0-1.0",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Snow006",
+        "archive_sha256":  "40F7AD9659FFA54312DF8CD9AD387BF9522559935D7072F7E73780D9892C71B8",
+        "maps":  [
+                     {
+                         "sha256":  "931FD2C5A486877DE79890018AB94E65D9EE57D67CA3E0F92F23B46D3BFF5FFC",
+                         "file":  "Snow006_2K-JPG_Color.jpg",
+                         "bytes":  2686797
+                     },
+                     {
+                         "sha256":  "CAE6ED862B9DE94CC8C0ED1AD1175FED4985145331D8C42A03021232B2D58026",
+                         "file":  "Snow006_2K-JPG_NormalGL.jpg",
+                         "bytes":  9311873
+                     },
+                     {
+                         "sha256":  "39B9482A5AC372E7255CA5B2D439585A43E1C0BDB4794F160BDA70C34C404F6F",
+                         "file":  "Snow006_2K-JPG_Roughness.jpg",
+                         "bytes":  2650977
+                     },
+                     {
+                         "sha256":  "9254B36FC5154F6F9AE27318818E019CD0D3314BA57F77E714E80A479476089E",
+                         "file":  "Snow006_2K-JPG_Displacement.jpg",
+                         "bytes":  1671115
+                     }
+                 ],
+        "creation_method":  "PBRPhotogrammetry"
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Snow014_2K-JPG.zip",
+        "id":  "Snow014",
+        "license":  "CC0-1.0",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Snow014",
+        "archive_sha256":  "363CECEED3287D14E8D7F7C118A6C9F76370CD3E9930E7FF5CB7BEF477EF5330",
+        "maps":  [
+                     {
+                         "sha256":  "2885AF19A9B62859D8F5659CECA1787B505CF02F9CC66C6EBB9C2D25E9A98491",
+                         "file":  "Snow014_2K-JPG_Color.jpg",
+                         "bytes":  2895289
+                     },
+                     {
+                         "sha256":  "FD12FE765C3B842803FC9F2111A27B58C7236533A54F1A70A670DE96F254D720",
+                         "file":  "Snow014_2K-JPG_NormalGL.jpg",
+                         "bytes":  7156989
+                     },
+                     {
+                         "sha256":  "CFCE4EEE9187E57F8EBDDD38125D7C12976D57A0A71A48C11C8748088C4D62DA",
+                         "file":  "Snow014_2K-JPG_Roughness.jpg",
+                         "bytes":  3097132
+                     },
+                     {
+                         "sha256":  "1BA460B46C9FF06DC0D72A95188319972B2019E1D6C353964FD5CEE737718F97",
+                         "file":  "Snow014_2K-JPG_Displacement.jpg",
+                         "bytes":  1329462
+                     }
+                 ],
+        "creation_method":  "PBRPhotogrammetry"
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Ice004_2K-JPG.zip",
+        "id":  "Ice004",
+        "license":  "CC0-1.0",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Ice004",
+        "archive_sha256":  "D648880717CFF4F6DD739E6AC9C2EA6080B6AA6642A659049679347102D6CA13",
+        "maps":  [
+                     {
+                         "sha256":  "FE7BFA014EBFF2BBE198BBC96B72F04AF4AF670F408F331FE622349FA1B05EE8",
+                         "file":  "Ice004_2K-JPG_Color.jpg",
+                         "bytes":  3655370
+                     },
+                     {
+                         "sha256":  "5F27A3BE7711C00B05FC042FD9356F50C7141C585F08510D1F437AFB7BF3BA23",
+                         "file":  "Ice004_2K-JPG_NormalGL.jpg",
+                         "bytes":  4989314
+                     },
+                     {
+                         "sha256":  "7CFA58006B5FE4D0EEFF182A316FD749419EE14458B6C98A089AF51137045CB9",
+                         "file":  "Ice004_2K-JPG_Roughness.jpg",
+                         "bytes":  1660103
+                     },
+                     {
+                         "sha256":  "E10D9AF387F3277F05FC0CD36F283DC50015C88F849E1FED39DCF5A88693881D",
+                         "file":  "Ice004_2K-JPG_Displacement.jpg",
+                         "bytes":  1846192
+                     }
+                 ],
+        "creation_method":  "PBRProcedural"
+    }
+]

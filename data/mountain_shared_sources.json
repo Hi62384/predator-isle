@@ -1,0 +1,154 @@
+[
+  {
+    "color_resource": "res://materials/savanna_color_sparse_grassy_soil.res",
+    "creation_method": "PBRPhotogrammetry",
+    "gpu_bytes": 6990560,
+    "id": "Ground030",
+    "license": "CC0-1.0",
+    "maps": [
+      {
+        "path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_Color.jpg",
+        "sha256": "9de11b0005e7bb89351c396d9bb36de6bbc20b117776ab26180c48e52437948f"
+      },
+      {
+        "path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_NormalGL.jpg",
+        "sha256": "1e62c2865e759d91a0d4841dccd65ebf5d073211e9c36096e49c43d9c8c319f2"
+      },
+      {
+        "path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_Roughness.jpg",
+        "sha256": "ecfc40a08f5034e81ef73c12f1ba87785730a0cabed3ae2fca3e1a27dd3df51d"
+      }
+    ],
+    "normal_resource": "res://materials/savanna_normal_Ground030.res",
+    "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+    "role": "sparse_grassy_soil",
+    "source": "https://ambientcg.com/a/Ground030",
+    "treatment": "natural"
+  },
+  {
+    "color_resource": "res://materials/savanna_color_clay_hardpan.res",
+    "creation_method": "PBRPhotogrammetry",
+    "gpu_bytes": 6990560,
+    "id": "Ground026",
+    "license": "CC0-1.0",
+    "maps": [
+      {
+        "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Color.jpg",
+        "sha256": "965df353dd3c08e7097ee6451a35bebf7f3fdb045ad2913bff05b5b608b7aa13"
+      },
+      {
+        "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_NormalGL.jpg",
+        "sha256": "6801609594ee0776013c254cb28536ecc6aae7d49083c38280968222f9237929"
+      },
+      {
+        "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Roughness.jpg",
+        "sha256": "a4fdac74637bb004512288b66d93f203722c0633de6fea1e22112f0c408b19b3"
+      }
+    ],
+    "normal_resource": "res://materials/savanna_normal_Ground026.res",
+    "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+    "role": "clay_hardpan",
+    "source": "https://ambientcg.com/a/Ground026",
+    "treatment": "natural"
+  },
+  {
+    "color_resource": "res://materials/savanna_color_weathered_kopje_bedrock.res",
+    "creation_method": "PBRPhotogrammetry",
+    "gpu_bytes": 6990560,
+    "id": "Rock042L",
+    "license": "CC0-1.0",
+    "maps": [
+      {
+        "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Color.jpg",
+        "sha256": "17f7a88fa38576bf7dc6db09f053b01bbaecfdf8256fddc7ca986ad1c1d279ba"
+      },
+      {
+        "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_NormalGL.jpg",
+        "sha256": "71453893e960997913438c948379c1e0a635b4d5a40d96573ce036d7120d1844"
+      },
+      {
+        "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Roughness.jpg",
+        "sha256": "fe83adfacb8a0451aa7b49987d5b0add7e7e2d05152fbc474f596777ca238835"
+      }
+    ],
+    "normal_resource": "res://materials/savanna_normal_Rock042L.res",
+    "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+    "role": "weathered_kopje_bedrock",
+    "source": "https://ambientcg.com/a/Rock042L",
+    "treatment": "natural"
+  },
+  {
+    "color_resource": "res://materials/savanna_color_warm_layered_bedrock.res",
+    "creation_method": "PBRPhotogrammetry",
+    "gpu_bytes": 6990560,
+    "id": "Rock055",
+    "license": "CC0-1.0",
+    "maps": [
+      {
+        "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Color.jpg",
+        "sha256": "c3c4fb15f1a99ef4e96e8f2f1bafb3335a94fc13d0ffc0bce4e97957d347edba"
+      },
+      {
+        "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_NormalGL.jpg",
+        "sha256": "72f715a154c01a0441a6de091375376da55de3c44ca7371680e8cdefb3ece03f"
+      },
+      {
+        "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Roughness.jpg",
+        "sha256": "1ced7dca92b82d00398321ed856560863dd7a05caa195460d88bfa20c77f98ff"
+      }
+    ],
+    "normal_resource": "res://materials/savanna_normal_Rock055.res",
+    "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+    "role": "warm_layered_bedrock",
+    "source": "https://ambientcg.com/a/Rock055",
+    "treatment": "natural"
+  },
+  {
+    "gpu_bytes": 6990560,
+    "id": "Ground048",
+    "license": "CC0-1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "maps": [
+      {
+        "path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_Color.jpg",
+        "sha256": "318d8a406a954234f9e8715d74913fcab39d5f736f0a85c18d25b6d437c1a0d1"
+      },
+      {
+        "path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_NormalGL.jpg",
+        "sha256": "55ecc35cd86e1d6ee484de4aa4999fcc5bc36308ade0863ff08b6cd12d190f7d"
+      },
+      {
+        "path": "res://assets/textures/ambientcg/Ground048/Ground048_2K-JPG_Roughness.jpg",
+        "sha256": "f4703745b49ca4f6561a38f4fbd64b546c773e3e381f6465827359a7dc486030"
+      }
+    ],
+    "normal_convention": "OpenGL positive Y XY BC5",
+    "role": "organic_soil",
+    "roughness": "linear alpha; albedo sRGB",
+    "source": "https://ambientcg.com/a/Ground048"
+  },
+  {
+    "gpu_bytes": 6990560,
+    "id": "Rock064",
+    "license": "CC0-1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "maps": [
+      {
+        "path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_Color.jpg",
+        "sha256": "2d6d40d58d4a5feedd900c0b3076b07aec9a76990bfa21f8f30176c9e0da7c84"
+      },
+      {
+        "path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_NormalGL.jpg",
+        "sha256": "053fc6b0867e69f472b6de5904050d409722c07fa7276be79bc9fc4664b98508"
+      },
+      {
+        "path": "res://assets/textures/jungle/Rock064/Rock064_2K-JPG_Roughness.jpg",
+        "sha256": "e7647cc5f16e33fc9ce8e2b9146835eabc6982004527baa7d2194251055a5d76"
+      }
+    ],
+    "normal_convention": "OpenGL positive Y XY BC5",
+    "role": "mossy_rock",
+    "roughness": "linear alpha; albedo sRGB",
+    "source": "https://ambientcg.com/a/Rock064"
+  }
+]

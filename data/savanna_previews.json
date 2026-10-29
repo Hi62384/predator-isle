@@ -1,0 +1,374 @@
+{
+	"features": {
+		"basin_country": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.400000005960464,
+				"laterite": 0.0,
+				"region": 12,
+				"rock": 0.0,
+				"soil": 0.18000000089407,
+				"water": 0.0,
+				"wetness": 0.579999983310699
+			},
+			"height": 22.3263025283813,
+			"score": 1.0,
+			"x": -100000.0,
+			"z": -80400.0
+		},
+		"cracked_basin": {
+			"controls": {
+				"basin": 0.558978882416045,
+				"channel": 0.0,
+				"drainage": 0.233822003006935,
+				"laterite": 0.0,
+				"region": 12,
+				"rock": 0.0,
+				"soil": 0.27970678254962,
+				"water": 0.0,
+				"wetness": 0.369781984086577
+			},
+			"height": 7.80900418059305,
+			"score": 0.352278562213742,
+			"x": -100000.0,
+			"z": -71300.0
+		},
+		"dry_riverbed": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.8,
+				"drainage": 0.8,
+				"laterite": 0.0,
+				"region": 7,
+				"rock": 0.0,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.260000007152557
+			},
+			"height": 10.4829898446798,
+			"score": 0.96,
+			"x": -94400.0,
+			"z": -92300.0
+		},
+		"dry_rocky": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.35,
+				"region": 2,
+				"rock": 0.600000023841858,
+				"soil": 0.2775,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 151.647117435932,
+			"score": 1.0,
+			"x": -83900.0,
+			"z": -100000.0
+		},
+		"dry_valley": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.460862874984741,
+				"laterite": 0.0,
+				"region": 7,
+				"rock": 0.0,
+				"soil": 0.189129431247711,
+				"water": 0.0,
+				"wetness": 0.387388294097036
+			},
+			"height": 21.2607680733781,
+			"score": 1.0,
+			"x": -87400.0,
+			"z": -97900.0
+		},
+		"escarpment": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.2,
+				"region": 11,
+				"rock": 0.947107255458832,
+				"soil": 0.21,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 293.787923336029,
+			"score": 1.14710725545883,
+			"x": 98800.0,
+			"z": -34200.0
+		},
+		"floodplain": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.75,
+				"laterite": 0.0,
+				"region": 8,
+				"rock": 0.0,
+				"soil": 0.2325,
+				"water": 0.0,
+				"wetness": 0.906055473490422
+			},
+			"height": 7.26638108468287,
+			"score": 1.0,
+			"x": 2200.0,
+			"z": -70600.0
+		},
+		"forest_savanna_transition": {
+			"controls": {
+				"savanna": 0.5
+			},
+			"height": 25.7987883605322,
+			"score": 1.0,
+			"x": 7250.0,
+			"z": -2200.0
+		},
+		"golden_plains": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.24103732407093,
+				"laterite": 0.0,
+				"region": 0,
+				"rock": 0.0,
+				"soil": 0.15615559861064,
+				"water": 0.0,
+				"wetness": 0.383911021053791
+			},
+			"height": 18.515813395381,
+			"score": 1.0,
+			"x": -27900.0,
+			"z": -100000.0
+		},
+		"grass_savanna_transition": {
+			"controls": {
+				"savanna": 0.493622869253159
+			},
+			"height": 26.5472634880139,
+			"score": 0.987245738506317,
+			"x": 37400.0,
+			"z": 38300.0
+		},
+		"highlands": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.78138437565403,
+				"laterite": 0.0,
+				"region": 6,
+				"rock": 0.891061067581177,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.178933007620262
+			},
+			"height": 877.93270403825,
+			"score": 1.25363803093973,
+			"x": -90200.0,
+			"z": -59400.0
+		},
+		"isolated_kopje": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.0,
+				"region": 5,
+				"rock": 1.0,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 127.891412899829,
+			"score": 0.852609419332196,
+			"x": -53100.0,
+			"z": -79000.0
+		},
+		"jungle_savanna_transition": {
+			"controls": {
+				"savanna": 0.502548158168793
+			},
+			"height": 71.5103284460727,
+			"score": 0.994903683662415,
+			"x": 35600.0,
+			"z": 16700.0
+		},
+		"kopje_country": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.0,
+				"region": 5,
+				"rock": 1.0,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 127.891412899829,
+			"score": 0.852609419332196,
+			"x": -53100.0,
+			"z": -79000.0
+		},
+		"laterite": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 1.0,
+				"region": 10,
+				"rock": 0.0,
+				"soil": 0.57,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 153.949199020863,
+			"score": 1.0,
+			"x": -72700.0,
+			"z": -100000.0
+		},
+		"lush": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.0,
+				"region": 3,
+				"rock": 0.0,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.629999995231628
+			},
+			"height": 22.5709737613797,
+			"score": 1.0,
+			"x": -58700.0,
+			"z": -100000.0
+		},
+		"perennial_river": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.8,
+				"drainage": 0.8,
+				"laterite": 0.0,
+				"region": 8,
+				"rock": 0.0,
+				"soil": 0.2325,
+				"water": 1.0,
+				"wetness": 1.0
+			},
+			"height": -6.0,
+			"score": 0.8,
+			"x": 17600.0,
+			"z": -56600.0
+		},
+		"rocky_soil_transition": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.676312565803528,
+				"laterite": 0.460280388593674,
+				"region": 6,
+				"rock": 0.423150300979614,
+				"soil": 0.428573059737682,
+				"water": 0.0,
+				"wetness": 0.456550639230001
+			},
+			"height": 379.388036438412,
+			"score": 0.104612165484016,
+			"x": -39100.0,
+			"z": -50300.0
+		},
+		"rolling": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.0,
+				"region": 1,
+				"rock": 0.0,
+				"soil": 0.12,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 50.3688403367996,
+			"score": 1.0,
+			"x": 91800.0,
+			"z": -100000.0
+		},
+		"rugged_hills": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.25,
+				"region": 4,
+				"rock": 0.00273451954126358,
+				"soil": 0.2325,
+				"water": 0.0,
+				"wetness": 0.180000007152557
+			},
+			"height": 65.5630851984024,
+			"score": 1.0,
+			"x": -23700.0,
+			"z": -100000.0
+		},
+		"seasonal_lake": {
+			"controls": {
+				"basin": 0.552754699680484,
+				"channel": 0.8,
+				"drainage": 0.8,
+				"laterite": 0.0,
+				"region": 8,
+				"rock": 0.0,
+				"soil": 0.2325,
+				"water": 1.0,
+				"wetness": 1.0
+			},
+			"height": -6.0,
+			"score": 0.552754699680484,
+			"x": -17400.0,
+			"z": 23200.0
+		},
+		"semi_arid": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.0,
+				"laterite": 0.0,
+				"region": 9,
+				"rock": 0.0,
+				"soil": 0.42,
+				"water": 0.0,
+				"wetness": 0.0399999991059303
+			},
+			"height": 24.4468097686768,
+			"score": 1.0,
+			"x": -100000.0,
+			"z": -100000.0
+		},
+		"worn_trail": {
+			"controls": {
+				"basin": 0.0,
+				"channel": 0.0,
+				"drainage": 0.24103732407093,
+				"laterite": 0.0,
+				"region": 0,
+				"rock": 0.0,
+				"soil": 0.15615559861064,
+				"water": 0.0,
+				"wetness": 0.383911021053791
+			},
+			"height": 18.515813395381,
+			"score": 1.0,
+			"x": -27900.0,
+			"z": -100000.0
+		}
+	},
+	"scope": "Terrain only; no props, foliage or collision. Desert/Snow retired; Mesa absent. Water uses existing sea-level renderer; season changes materials, never canonical geometry.",
+	"seed": 73921,
+	"trail_note": "worn_trail marks a suitable plain; render_review searches the actual shader path mask for its ground-level trail view."
+}

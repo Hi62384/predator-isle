@@ -1,0 +1,9 @@
+[gd_resource type="Texture2DArray" load_steps=5 format=3]
+
+[ext_resource type="Image" path="res://materials/biological_color_mycelium.res" id="1"]
+[ext_resource type="Image" path="res://materials/biological_color_nerve.res" id="2"]
+[ext_resource type="Image" path="res://materials/biological_color_carapace.res" id="3"]
+[ext_resource type="Image" path="res://materials/biological_color_membrane.res" id="4"]
+
+[resource]
+_images = Array[Image]([ExtResource("1"), ExtResource("2"), ExtResource("3"), ExtResource("4")])

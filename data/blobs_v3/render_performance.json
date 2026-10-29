@@ -1,0 +1,18 @@
+[
+	{
+		"draw_calls": 220.0,
+		"frame_ms_including_viewports_and_vsync": 121.8806,
+		"sheet": "clay_24.png",
+		"simultaneous_blobs": 24,
+		"static_memory_bytes": 1013050933,
+		"video_memory_bytes": 254931219.0
+	},
+	{
+		"draw_calls": 110.0,
+		"frame_ms_including_viewports_and_vsync": 61.0137333333333,
+		"sheet": "biology_12.png",
+		"simultaneous_blobs": 12,
+		"static_memory_bytes": 715228898,
+		"video_memory_bytes": 240293587.0
+	}
+]

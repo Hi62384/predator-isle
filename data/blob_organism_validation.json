@@ -1,0 +1,38 @@
+{
+	"checks": 1531,
+	"failures": [],
+	"seeds": [
+		{
+			"cavity_vertices": 331,
+			"elapsed_ms": 2839,
+			"features": 108,
+			"seed": 20,
+			"triangles": 26896,
+			"vertices": 13446
+		},
+		{
+			"cavity_vertices": 1431,
+			"elapsed_ms": 7889,
+			"features": 261,
+			"seed": 21,
+			"triangles": 23992,
+			"vertices": 11972
+		},
+		{
+			"cavity_vertices": 1021,
+			"elapsed_ms": 7780,
+			"features": 226,
+			"seed": 22,
+			"triangles": 26084,
+			"vertices": 13030
+		},
+		{
+			"cavity_vertices": 477,
+			"elapsed_ms": 6124,
+			"features": 137,
+			"seed": 23,
+			"triangles": 29064,
+			"vertices": 14530
+		}
+	]
+}

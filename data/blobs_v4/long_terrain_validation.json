@@ -1,0 +1,65 @@
+{
+	"failures": [],
+	"runs": [
+		{
+			"inverted_triangles": 0,
+			"maximum_edge_stretch": 1.42322712432669,
+			"maximum_stance_error": 0.0,
+			"minimum_dense_body_clearance": -0.0461477749048811,
+			"mode": "roll",
+			"net_travel": "(0.99852, -0.362991, -2.881042)",
+			"path_length": 18.0300173749565,
+			"seconds": 24.0,
+			"seed": 5100,
+			"signed_circulation": 1.57085670223474
+		},
+		{
+			"inverted_triangles": 0,
+			"maximum_edge_stretch": 2.01082607521746,
+			"maximum_stance_error": 0.0,
+			"minimum_dense_body_clearance": 0.0550818309260634,
+			"mode": "contractile",
+			"net_travel": "(0.01123, -0.03438, -0.545654)",
+			"path_length": 1.44420948988409,
+			"seconds": 8.0,
+			"seed": 5101,
+			"signed_circulation": 0.0
+		},
+		{
+			"inverted_triangles": 0,
+			"maximum_edge_stretch": 2.19941573265807,
+			"maximum_stance_error": 0.0149449603632092,
+			"minimum_dense_body_clearance": -0.0159145183631644,
+			"mode": "limb",
+			"net_travel": "(-0.542404, -0.045555, -0.886383)",
+			"path_length": 1.33870192619634,
+			"seconds": 8.0,
+			"seed": 5102,
+			"signed_circulation": 0.0
+		},
+		{
+			"inverted_triangles": 0,
+			"maximum_edge_stretch": 1.53500131748322,
+			"maximum_stance_error": 0.0117197362706065,
+			"minimum_dense_body_clearance": -0.0272950579275957,
+			"mode": "contractile",
+			"net_travel": "(-0.424965, -0.060194, -1.021454)",
+			"path_length": 1.46609726805582,
+			"seconds": 8.0,
+			"seed": 5103,
+			"signed_circulation": 0.0
+		},
+		{
+			"inverted_triangles": 0,
+			"maximum_edge_stretch": 1.2849235974834,
+			"maximum_stance_error": 0.0,
+			"minimum_dense_body_clearance": -0.0123711233792179,
+			"mode": "roll",
+			"net_travel": "(0.99852, -0.362991, -2.881042)",
+			"path_length": 18.0300173749565,
+			"seconds": 24.0,
+			"seed": 5120,
+			"signed_circulation": 2.19266945465849
+		}
+	]
+}

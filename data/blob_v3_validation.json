@@ -1,0 +1,270 @@
+{
+	"checks": 11106,
+	"failures": [],
+	"models": [
+		{
+			"chains": 1,
+			"evidence_load_ms": 9,
+			"groups": 18,
+			"max_lock_error": 0.0000000298023223876953,
+			"max_segment_error": 0.000000104308128356934,
+			"max_step_us": 5103,
+			"minimum_thickness": 1.0,
+			"seed": 3000,
+			"triangles": 28812
+		},
+		{
+			"chains": 3,
+			"evidence_load_ms": 16,
+			"groups": 12,
+			"max_lock_error": 0.0000000745058059692383,
+			"max_segment_error": 0.000000119209289550781,
+			"max_step_us": 5274,
+			"minimum_thickness": 0.881966841862643,
+			"seed": 3001,
+			"triangles": 39482
+		},
+		{
+			"chains": 3,
+			"evidence_load_ms": 19,
+			"groups": 10,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 6537,
+			"minimum_thickness": 1.0,
+			"seed": 3002,
+			"triangles": 26250
+		},
+		{
+			"chains": 7,
+			"evidence_load_ms": 10,
+			"groups": 7,
+			"max_lock_error": 0.0000000636577865975596,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 5656,
+			"minimum_thickness": 0.835514409706999,
+			"seed": 3003,
+			"triangles": 27002
+		},
+		{
+			"chains": 2,
+			"evidence_load_ms": 10,
+			"groups": 11,
+			"max_lock_error": 0.000000153597653707038,
+			"max_segment_error": 0.000000208616256713867,
+			"max_step_us": 28254,
+			"minimum_thickness": 0.789932231660365,
+			"seed": 3004,
+			"triangles": 20054
+		},
+		{
+			"chains": 6,
+			"evidence_load_ms": 14,
+			"groups": 15,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000178813934326172,
+			"max_step_us": 6560,
+			"minimum_thickness": 1.0,
+			"seed": 3005,
+			"triangles": 28988
+		},
+		{
+			"chains": 6,
+			"evidence_load_ms": 14,
+			"groups": 8,
+			"max_lock_error": 0.0000000298023223876953,
+			"max_segment_error": 0.000000163912773132324,
+			"max_step_us": 5572,
+			"minimum_thickness": 0.773283697595114,
+			"seed": 3006,
+			"triangles": 30556
+		},
+		{
+			"chains": 1,
+			"evidence_load_ms": 12,
+			"groups": 24,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000134110450744629,
+			"max_step_us": 6332,
+			"minimum_thickness": 1.0,
+			"seed": 3007,
+			"triangles": 36592
+		},
+		{
+			"chains": 4,
+			"evidence_load_ms": 15,
+			"groups": 12,
+			"max_lock_error": 0.0000000333200098623365,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 5566,
+			"minimum_thickness": 0.896396453367625,
+			"seed": 3008,
+			"triangles": 23960
+		},
+		{
+			"chains": 11,
+			"evidence_load_ms": 17,
+			"groups": 14,
+			"max_lock_error": 0.000000107453800524127,
+			"max_segment_error": 0.00000025331974029541,
+			"max_step_us": 7650,
+			"minimum_thickness": 0.895438902771808,
+			"seed": 3009,
+			"triangles": 43810
+		},
+		{
+			"chains": 1,
+			"evidence_load_ms": 11,
+			"groups": 4,
+			"max_lock_error": 0.0000000298023223876953,
+			"max_segment_error": 0.0000000894069671630859,
+			"max_step_us": 9922,
+			"minimum_thickness": 1.0,
+			"seed": 3010,
+			"triangles": 22296
+		},
+		{
+			"chains": 9,
+			"evidence_load_ms": 27,
+			"groups": 26,
+			"max_lock_error": 0.0000000745058059692383,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 15985,
+			"minimum_thickness": 0.740000952119496,
+			"seed": 3011,
+			"triangles": 55292
+		},
+		{
+			"chains": 1,
+			"evidence_load_ms": 25,
+			"groups": 16,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000119209289550781,
+			"max_step_us": 5400,
+			"minimum_thickness": 1.0,
+			"seed": 3012,
+			"triangles": 24316
+		},
+		{
+			"chains": 2,
+			"evidence_load_ms": 20,
+			"groups": 13,
+			"max_lock_error": 0.0000000298023223876953,
+			"max_segment_error": 0.000000178813934326172,
+			"max_step_us": 5864,
+			"minimum_thickness": 1.0,
+			"seed": 3013,
+			"triangles": 38498
+		},
+		{
+			"chains": 3,
+			"evidence_load_ms": 21,
+			"groups": 16,
+			"max_lock_error": 0.0000000333200098623365,
+			"max_segment_error": 0.000000119209289550781,
+			"max_step_us": 6181,
+			"minimum_thickness": 0.794096791752775,
+			"seed": 3014,
+			"triangles": 31438
+		},
+		{
+			"chains": 7,
+			"evidence_load_ms": 12,
+			"groups": 7,
+			"max_lock_error": 0.0000000636577865975596,
+			"max_segment_error": 0.000000134110450744629,
+			"max_step_us": 6677,
+			"minimum_thickness": 1.0,
+			"seed": 3015,
+			"triangles": 25818
+		},
+		{
+			"chains": 4,
+			"evidence_load_ms": 17,
+			"groups": 20,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000119209289550781,
+			"max_step_us": 6164,
+			"minimum_thickness": 1.0,
+			"seed": 3016,
+			"triangles": 44966
+		},
+		{
+			"chains": 7,
+			"evidence_load_ms": 18,
+			"groups": 23,
+			"max_lock_error": 0.0000000333200098623365,
+			"max_segment_error": 0.000000178813934326172,
+			"max_step_us": 11182,
+			"minimum_thickness": 0.770840036876929,
+			"seed": 3017,
+			"triangles": 38636
+		},
+		{
+			"chains": 4,
+			"evidence_load_ms": 11,
+			"groups": 5,
+			"max_lock_error": 0.0000000333200098623365,
+			"max_segment_error": 0.000000119209289550781,
+			"max_step_us": 6113,
+			"minimum_thickness": 0.77982982143342,
+			"seed": 3018,
+			"triangles": 19636
+		},
+		{
+			"chains": 1,
+			"evidence_load_ms": 10,
+			"groups": 14,
+			"max_lock_error": 0.0000000149011611938477,
+			"max_segment_error": 0.000000134110450744629,
+			"max_step_us": 5026,
+			"minimum_thickness": 1.0,
+			"seed": 3019,
+			"triangles": 31500
+		},
+		{
+			"chains": 4,
+			"evidence_load_ms": 16,
+			"groups": 9,
+			"max_lock_error": 0.000000110760844052038,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 5561,
+			"minimum_thickness": 1.0,
+			"seed": 3020,
+			"triangles": 30908
+		},
+		{
+			"chains": 8,
+			"evidence_load_ms": 16,
+			"groups": 10,
+			"max_lock_error": 0.0000000596046447753906,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 6293,
+			"minimum_thickness": 0.805103740031799,
+			"seed": 3021,
+			"triangles": 29394
+		},
+		{
+			"chains": 1,
+			"evidence_load_ms": 10,
+			"groups": 3,
+			"max_lock_error": 0.0,
+			"max_segment_error": 0.000000149011611938477,
+			"max_step_us": 17986,
+			"minimum_thickness": 1.0,
+			"seed": 3022,
+			"triangles": 15232
+		},
+		{
+			"chains": 12,
+			"evidence_load_ms": 32,
+			"groups": 32,
+			"max_lock_error": 0.0000000596046447753906,
+			"max_segment_error": 0.000000178813934326172,
+			"max_step_us": 9017,
+			"minimum_thickness": 0.800965241011337,
+			"seed": 3023,
+			"triangles": 62544
+		}
+	]
+}

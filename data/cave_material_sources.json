@@ -1,0 +1,305 @@
+{
+  "failures": [],
+  "normal_array_compressed_bytes": 44739456,
+  "passed": true,
+  "records": [
+    {
+      "cave_role": "massive rock",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/mountain_color_massive_rock.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Rock051",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_Color.jpg",
+          "sha256": "62f0e799649b03a29e627021fc4023dbe86415af98bb89887eba0bd13dd6a431"
+        },
+        {
+          "path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_NormalGL.jpg",
+          "sha256": "3ce30cda8bf3f8652de9df97f61e74cab3d5e23d3e3537cb2faf02e281b118e5"
+        },
+        {
+          "path": "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_Roughness.jpg",
+          "sha256": "aa23e66b4f7a354151a6d728a4ed83842fb1d5e034462ea55ead8ecaa48dad91"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Rock051.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+      "role": "massive_rock",
+      "source": "https://ambientcg.com/a/Rock051",
+      "treatment": "natural"
+    },
+    {
+      "cave_role": "weathered bedrock appearance",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/savanna_color_weathered_kopje_bedrock.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Rock042L",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Color.jpg",
+          "sha256": "17f7a88fa38576bf7dc6db09f053b01bbaecfdf8256fddc7ca986ad1c1d279ba"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_NormalGL.jpg",
+          "sha256": "71453893e960997913438c948379c1e0a635b4d5a40d96573ce036d7120d1844"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Roughness.jpg",
+          "sha256": "fe83adfacb8a0451aa7b49987d5b0add7e7e2d05152fbc474f596777ca238835"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Rock042L.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "weathered_kopje_bedrock",
+      "source": "https://ambientcg.com/a/Rock042L",
+      "treatment": "natural"
+    },
+    {
+      "cave_role": "layered bedrock appearance",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/savanna_color_warm_layered_bedrock.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Rock055",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Color.jpg",
+          "sha256": "c3c4fb15f1a99ef4e96e8f2f1bafb3335a94fc13d0ffc0bce4e97957d347edba"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_NormalGL.jpg",
+          "sha256": "72f715a154c01a0441a6de091375376da55de3c44ca7371680e8cdefb3ece03f"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Roughness.jpg",
+          "sha256": "1ced7dca92b82d00398321ed856560863dd7a05caa195460d88bfa20c77f98ff"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Rock055.res",
+      "normal_source_dimensions": [
+        2048,
+        1024
+      ],
+      "normal_square_resampled": true,
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "warm_layered_bedrock",
+      "source": "https://ambientcg.com/a/Rock055",
+      "treatment": "natural"
+    },
+    {
+      "cave_role": "granular rock",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/jungle_color_Rock030.res",
+      "gpu_bytes": 6990560.0,
+      "id": "Rock030",
+      "license": "CC0-1.0",
+      "license_url": "https://docs.ambientcg.com/license/",
+      "maps": [
+        {
+          "path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_Color.jpg",
+          "sha256": "c7169827afa47148833a3d778bd2827f12b124852efcabf3364910b1cb6d4beb"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_NormalGL.jpg",
+          "sha256": "bf4b029b98fc771887e80807e28f97488c3a8936369152bd1020b2535415a5af"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_Roughness.jpg",
+          "sha256": "a057169aa693438170a969249eb7e1113078f04c38b3fc2766fdccf21d5a918f"
+        }
+      ],
+      "normal_convention": "OpenGL positive Y XY BC5",
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Rock030.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "role": "exposed_rock",
+      "roughness": "linear alpha; albedo sRGB",
+      "source": "https://ambientcg.com/a/Rock030"
+    },
+    {
+      "cave_role": "talus floor",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/mountain_color_coarse_talus.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Ground108",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Color.jpg",
+          "sha256": "ab087d6e2bae96b740d45702665d3cee224d9fcaa6d8395af2e64fe933502676"
+        },
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_NormalGL.jpg",
+          "sha256": "282facdd61ec1423962727540d2eebe24ecb74c6637855c3c934bd318f145ffc"
+        },
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Roughness.jpg",
+          "sha256": "fc8bcc3835537aa614e7d5e39a5cefcfaf9b26a39fd9189bea7e0c8c1fe865f0"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Ground108.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+      "role": "coarse_talus",
+      "source": "https://ambientcg.com/a/Ground108",
+      "treatment": "natural"
+    },
+    {
+      "cave_role": "gravel floor",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/jungle_color_Gravel020.res",
+      "gpu_bytes": 6990560.0,
+      "id": "Gravel020",
+      "license": "CC0-1.0",
+      "license_url": "https://docs.ambientcg.com/license/",
+      "maps": [
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Color.jpg",
+          "sha256": "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_NormalGL.jpg",
+          "sha256": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Roughness.jpg",
+          "sha256": "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6"
+        }
+      ],
+      "normal_convention": "OpenGL positive Y XY BC5",
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Gravel020.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "role": "river_gravel",
+      "roughness": "linear alpha; albedo sRGB",
+      "source": "https://ambientcg.com/a/Gravel020"
+    },
+    {
+      "cave_role": "slate-like gravel floor",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/mountain_color_angular_scree.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Gravel040",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_Color.jpg",
+          "sha256": "b8fc5746b429e869266d06bfcf5a5dfe6cdf8e0d720fa78d492a86b17ab5e70c"
+        },
+        {
+          "path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_NormalGL.jpg",
+          "sha256": "d24c0338792c95e43cb6a02be9e4c26fa166759e65e1e4ea99113d7dbe523445"
+        },
+        {
+          "path": "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_Roughness.jpg",
+          "sha256": "cdb485ef15e4154f12a57f1993450d8760b56ca97db2f4f3376844577f1e630a"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Gravel040.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+      "role": "angular_scree",
+      "source": "https://ambientcg.com/a/Gravel040",
+      "treatment": "natural"
+    },
+    {
+      "cave_role": "clay floor",
+      "color_packing": "Exact existing2048color+roughness image resource;no regrading",
+      "color_resource": "res://materials/savanna_color_clay_hardpan.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560.0,
+      "id": "Ground026",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Color.jpg",
+          "sha256": "965df353dd3c08e7097ee6451a35bebf7f3fdb045ad2913bff05b5b608b7aa13"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_NormalGL.jpg",
+          "sha256": "6801609594ee0776013c254cb28536ecc6aae7d49083c38280968222f9237929"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Roughness.jpg",
+          "sha256": "a4fdac74637bb004512288b66d93f203722c0633de6fea1e22112f0c408b19b3"
+        }
+      ],
+      "normal_packing": "OpenGL XY BC5,2048square/full11mips. Rectangular sources resampled to match existing square color;no new source detail claimed. Existing1024packed surface normals unchanged.",
+      "normal_resource": "res://materials/cave_normal_Ground026.res",
+      "normal_source_dimensions": [
+        2048,
+        2048
+      ],
+      "normal_square_resampled": false,
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "clay_hardpan",
+      "source": "https://ambientcg.com/a/Ground026",
+      "treatment": "natural"
+    }
+  ],
+  "scope": "Offline packing only,eight preexisting verified nominal2KOpenGL source maps into cave-only2048squareBC5XY/fullmip resources. Original dimensions and any rectangular-to-square interpolation explicitly recorded;not new native detail on an interpolated axis. No new photography,semantic image edits,downloads,surface texture changes or whole-cave completion claim.",
+  "source_sha256": {
+    "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_NormalGL.jpg": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb",
+    "res://assets/textures/ambientcg/Rock030/Rock030_2K-JPG_NormalGL.jpg": "bf4b029b98fc771887e80807e28f97488c3a8936369152bd1020b2535415a5af",
+    "res://assets/textures/mountain/Gravel040/Gravel040_2K-JPG_NormalGL.jpg": "d24c0338792c95e43cb6a02be9e4c26fa166759e65e1e4ea99113d7dbe523445",
+    "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_NormalGL.jpg": "282facdd61ec1423962727540d2eebe24ecb74c6637855c3c934bd318f145ffc",
+    "res://assets/textures/mountain/Rock051/Rock051_2K-JPG_NormalGL.jpg": "3ce30cda8bf3f8652de9df97f61e74cab3d5e23d3e3537cb2faf02e281b118e5",
+    "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_NormalGL.jpg": "6801609594ee0776013c254cb28536ecc6aae7d49083c38280968222f9237929",
+    "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_NormalGL.jpg": "71453893e960997913438c948379c1e0a635b4d5a40d96573ce036d7120d1844",
+    "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_NormalGL.jpg": "72f715a154c01a0441a6de091375376da55de3c44ca7371680e8cdefb3ece03f",
+    "res://data/jungle_material_sources.json": "5397b0b63eafc42dfd901c18b1814a0a29514e9ac20ca3b00bcdd1306615bb8f",
+    "res://data/mountain_material_sources.json": "2aa1a9906427a1f2b8d6dfd9d66457602e9e38d390f3b659eaa70b9684dc204d",
+    "res://data/savanna_material_sources.json": "9bf082ae02ff7e1af9122e2402d7e41e675accffdd69721540e978e256c6d52e",
+    "res://materials/cave_colors.tres": "3c412a07e99facda1bd610507aecd04ef800b700a702e4303865b7a749cb998f",
+    "res://materials/cave_normal_Gravel020.res": "2abe3fdf6dff060d773622770a438c97faec3c9f9d4dffbf8b0ea8099f3f41fb",
+    "res://materials/cave_normal_Gravel040.res": "1ad9dfa32c04aea703cf4f033bc8fd272ae4fb81393a6ff27decd28397eb0bc0",
+    "res://materials/cave_normal_Ground026.res": "30345c25aa14f6083d8485c61278120fa9d08b8e8bc3043bb8e12da2fa872911",
+    "res://materials/cave_normal_Ground108.res": "47506e97df6402f3bef8dc45ea458191709e143a1169a6f5f99fba5526e220c1",
+    "res://materials/cave_normal_Rock030.res": "364ef1b706d1a9ebd3c95dec7ee3ebcdccd5a832842086e840e8ab85aa30a454",
+    "res://materials/cave_normal_Rock042L.res": "6fdad99ae7aa6f74a53669f10c2fb63d14fe8fc4c1652cc2ad126d015b555ea6",
+    "res://materials/cave_normal_Rock051.res": "86b57fedb8aef74b09c22813ac8412c8dfd199593e0122f806e0a65557cd4948",
+    "res://materials/cave_normal_Rock055.res": "89d1e6a2835cb2752f19a5626f52efcdf1b647755ce20126f802660d289b3633",
+    "res://materials/cave_normals.tres": "42d9c46f6e97dea65015946eafc4864568c7df0cf94c79668e78be9849353c20",
+    "res://scripts/caves/material_palette.gd": "b5319a2f7060ff47c77e6017ca0b39c5973b2de782db66764fcd899cac1429c8",
+    "res://tools/caves/build_cave_palette.gd": "ed87e56e32f9c892dcd7f1dd2ed3b988ba941b675b7b845144813514fbb12ffd"
+  }
+}

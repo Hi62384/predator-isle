@@ -1,0 +1,326 @@
+{
+	"features": {
+		"boulder_shingle": {
+			"distance_to_original_coast": 239.9140625,
+			"height": 31.3202803444309,
+			"outward_x": -0.599464297294617,
+			"outward_z": -0.800401508808136,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 164864.0,
+			"z": -193536.0
+		},
+		"broad_platform": {
+			"distance_to_original_coast": 147.924942016602,
+			"height": 2.34767602443696,
+			"outward_x": -0.670765340328217,
+			"outward_z": 0.741669654846191,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -81920.0,
+			"z": -147456.0
+		},
+		"coastal_plateau": {
+			"distance_to_original_coast": 269.387969970703,
+			"height": 101.293923268914,
+			"outward_x": -0.346053212881088,
+			"outward_z": -0.938214898109436,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -152576.0,
+			"z": -158720.0
+		},
+		"coastal_ravines": {
+			"distance_to_original_coast": -12.7256174087524,
+			"height": 10.348802247879,
+			"outward_x": -0.882441818714142,
+			"outward_z": -0.470421493053436,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 163840.0,
+			"z": -187392.0
+		},
+		"connected_pools": {
+			"distance_to_original_coast": 0.000589941220823675,
+			"height": 1.3062003135775,
+			"outward_x": 0.977661669254303,
+			"outward_z": 0.210184991359711,
+			"score": 0.269019888114373,
+			"water": 1.8,
+			"x": -182272.0,
+			"z": -25600.0
+		},
+		"dark_rocky_coast": {
+			"distance_to_original_coast": 347.596069335938,
+			"height": 89.1652745132072,
+			"outward_x": 0.971532762050629,
+			"outward_z": -0.236905440688133,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 98304.0,
+			"z": -196608.0
+		},
+		"fjord_inlets": {
+			"distance_to_original_coast": 437.478515625,
+			"height": 153.315040584718,
+			"outward_x": -0.0151939876377583,
+			"outward_z": -0.99988454580307,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -69632.0,
+			"z": -191488.0
+		},
+		"forest_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"granite_highlands": {
+			"distance_to_original_coast": 301.603515625,
+			"height": 127.202589915083,
+			"outward_x": -0.211352303624153,
+			"outward_z": 0.977409899234772,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 169984.0,
+			"z": -186368.0
+		},
+		"grass_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"headlands": {
+			"distance_to_original_coast": 414.019836425781,
+			"height": 145.845137098461,
+			"outward_x": 0.706099510192871,
+			"outward_z": -0.708112716674805,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 52224.0,
+			"z": -132096.0
+		},
+		"isolated_stack": {
+			"distance_to_original_coast": -374.8681640625,
+			"height": 102.464447022726,
+			"outward_x": -0.334099143743515,
+			"outward_z": 0.942537903785706,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 89344.0,
+			"z": -196864.0
+		},
+		"jungle_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"low_islands": {
+			"distance_to_original_coast": -137.3818359375,
+			"height": 48.7337553548129,
+			"outward_x": 0.774462163448334,
+			"outward_z": -0.63262015581131,
+			"score": 0.788,
+			"water": 0.0,
+			"x": -44032.0,
+			"z": -68608.0
+		},
+		"mountain_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"offshore_group": {
+			"distance_to_original_coast": -269.873809814453,
+			"height": 71.2939491004319,
+			"outward_x": -0.812094509601593,
+			"outward_z": 0.583525955677032,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 99200.0,
+			"z": 20992.0
+		},
+		"river_mouth": {
+			"distance_to_original_coast": -276.4052734375,
+			"height": -1.2,
+			"outward_x": -0.287812560796738,
+			"outward_z": -0.95768678188324,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -129024.0,
+			"z": -184320.0
+		},
+		"rocky_estuary": {
+			"distance_to_original_coast": -127.315170288086,
+			"height": -1.2,
+			"outward_x": 0.755939364433289,
+			"outward_z": 0.654641628265381,
+			"score": 0.847061020880937,
+			"water": 0.0,
+			"x": 186368.0,
+			"z": -184320.0
+		},
+		"rocky_islets": {
+			"distance_to_original_coast": -582.712585449219,
+			"height": 90.4208967320938,
+			"outward_x": -0.977166593074799,
+			"outward_z": 0.212474659085274,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -125568.0,
+			"z": -196864.0
+		},
+		"rugged_shore": {
+			"distance_to_original_coast": 331.11328125,
+			"height": 26.3291190793279,
+			"outward_x": 0.448627173900604,
+			"outward_z": 0.893719077110291,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -108544.0,
+			"z": -151552.0
+		},
+		"savanna_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"sea_stacks": {
+			"distance_to_original_coast": 310.18359375,
+			"height": 119.600917455024,
+			"outward_x": -0.930620491504669,
+			"outward_z": -0.365985870361328,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -139264.0,
+			"z": -184320.0
+		},
+		"sedimentary_cliffs": {
+			"distance_to_original_coast": 241.9326171875,
+			"height": 173.834262997583,
+			"outward_x": 0.994067668914795,
+			"outward_z": -0.108763612806797,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -56320.0,
+			"z": -181248.0
+		},
+		"sheltered_coves": {
+			"distance_to_original_coast": 394.109893798828,
+			"height": 33.7764096451729,
+			"outward_x": 0.999948740005493,
+			"outward_z": -0.0101269036531448,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 187392.0,
+			"z": -186368.0
+		},
+		"sheltered_inlets": {
+			"distance_to_original_coast": 251.01171875,
+			"height": 34.4714158999668,
+			"outward_x": 0.340487539768219,
+			"outward_z": 0.940249025821686,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -186368.0,
+			"z": -196608.0
+		},
+		"submerged_platform": {
+			"distance_to_original_coast": -160.61376953125,
+			"height": -4.76713151530403,
+			"outward_x": 0.952399909496307,
+			"outward_z": -0.304851472377777,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 69632.0,
+			"z": -139264.0
+		},
+		"swamp_coast_transition": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"tide_pools": {
+			"distance_to_original_coast": 50.3587684631348,
+			"height": 1.25600819354496,
+			"outward_x": 0.999392509460449,
+			"outward_z": -0.0348514579236507,
+			"score": 0.786659838712533,
+			"water": 1.8,
+			"x": 121856.0,
+			"z": -103424.0
+		},
+		"towering_cliffs": {
+			"distance_to_original_coast": 209.386566162109,
+			"height": 205.658299039743,
+			"outward_x": -0.588409066200256,
+			"outward_z": 0.808563411235809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -191488.0,
+			"z": -195584.0
+		},
+		"underwater_cliff": {
+			"distance_to_original_coast": -19.6082592010498,
+			"height": -15.961712729121,
+			"outward_x": -0.812267005443573,
+			"outward_z": 0.583285808563232,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 163840.0,
+			"z": -188416.0
+		},
+		"wave_battered": {
+			"distance_to_original_coast": 244.609375,
+			"height": 116.039871613412,
+			"outward_x": 0.123892061412334,
+			"outward_z": -0.992295682430267,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -80896.0,
+			"z": -141312.0
+		},
+		"wave_cut_platforms": {
+			"distance_to_original_coast": 141.004898071289,
+			"height": 5.28770834682388,
+			"outward_x": 0.778383553028107,
+			"outward_z": -0.627788960933685,
+			"score": 0.907919066487046,
+			"water": 0.0,
+			"x": 118784.0,
+			"z": -119808.0
+		}
+	},
+	"seed": 73921,
+	"source": "Actual island/coast sampler; preview overrides only coastal coverage and underlying biome coverage"
+}

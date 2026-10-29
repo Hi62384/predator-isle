@@ -1,0 +1,12 @@
+[gd_resource type="Resource" load_steps=2 format=3]
+
+[ext_resource type="Script" path="res://scripts/caves/biome_definition.gd" id="1"]
+
+[resource]
+script = ExtResource("1")
+biome_id = &"default"
+display_name = "Default Cave"
+spawn_chance_percent = 100.0
+minimum_extent_metres = 200.0
+maximum_extent_metres = 1200.0
+depth_preferences = PackedFloat32Array(100, 85, 65, 40, 15)

@@ -1,0 +1,158 @@
+﻿[
+    {
+        "download":  "https://ambientcg.com/get?file=Ground054_2K-JPG.zip",
+        "id":  "Ground054",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:35:45.2972510Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Ground054",
+        "archive_sha256":  "643e7c8689bac041f17c660eff6a5459bfe0535d4466737beb0e64902b23235a",
+        "maps":  [
+                     {
+                         "sha256":  "9f9459ae378584f568c9da887a30ab5987890df422af5a157763a51992e61245",
+                         "file":  "Ground054_2K-JPG_Color.jpg",
+                         "bytes":  6859366
+                     },
+                     {
+                         "sha256":  "39fd2827adfdd4fe53ad58d3ebcae686f789eb9f171d996de8356431ec6fc90d",
+                         "file":  "Ground054_2K-JPG_NormalGL.jpg",
+                         "bytes":  9053937
+                     },
+                     {
+                         "sha256":  "2f977986be51d4e07e7a3a03051e49049f9c94cefb0246a714400d2a076c8044",
+                         "file":  "Ground054_2K-JPG_Roughness.jpg",
+                         "bytes":  2896658
+                     }
+                 ]
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Rock061_2K-JPG.zip",
+        "id":  "Rock061",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:36:05.5787244Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Rock061",
+        "archive_sha256":  "34d15ee39ed72be031adf88d6218e4ddbaf2e6560116ccb3a928e3b64a2228c3",
+        "maps":  [
+                     {
+                         "sha256":  "e5e3f7c1dfe274e5b1e4bb2fc06d7fbda0fe9e06463bc74ce5f2cb2af7550b86",
+                         "file":  "Rock061_2K-JPG_Color.jpg",
+                         "bytes":  3686697
+                     },
+                     {
+                         "sha256":  "cfe36360a8c64bdcdcd8967aac03c46c3f51b5f02441ea60e678c1f050033cc7",
+                         "file":  "Rock061_2K-JPG_NormalGL.jpg",
+                         "bytes":  6571324
+                     },
+                     {
+                         "sha256":  "aba6b1656172044917273eb152644411e8cafb060222424ea899b2d6d7e97a13",
+                         "file":  "Rock061_2K-JPG_Roughness.jpg",
+                         "bytes":  2794938
+                     }
+                 ]
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Ground033_2K-JPG.zip",
+        "id":  "Ground033",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:36:28.2824660Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Ground033",
+        "archive_sha256":  "a89f7c7940cae49435eaa582c37fd754f28096ce240d5f24001f74c6b652f023",
+        "maps":  [
+                     {
+                         "sha256":  "6cbea296b15322fbdf4b4d7b8366bad1918d6498bdd1162fdf7f2aba82b9ad34",
+                         "file":  "Ground033_2K-JPG_Color.jpg",
+                         "bytes":  6190082
+                     },
+                     {
+                         "sha256":  "da113756882145cfd9808b82045a051c60edfc49573cc5c07417739c9074d51c",
+                         "file":  "Ground033_2K-JPG_NormalGL.jpg",
+                         "bytes":  6712188
+                     },
+                     {
+                         "sha256":  "865b08503f136906a50faab29f32f8bfe9b757397ccceb7470f635818283d124",
+                         "file":  "Ground033_2K-JPG_Roughness.jpg",
+                         "bytes":  2779978
+                     }
+                 ]
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Ground092A_2K-JPG.zip",
+        "id":  "Ground092A",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:36:46.0657581Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Ground092A",
+        "archive_sha256":  "4238105a21a6698ad7b6b0f88c14453a437e863f4088fe6952351fbe317fe9d5",
+        "maps":  [
+                     {
+                         "sha256":  "c1c43fe0b2a8d2632f657c02d8db7cd0c9673bd30a7aadddd9eaa72fc5aef930",
+                         "file":  "Ground092A_2K-JPG_Color.jpg",
+                         "bytes":  3239580
+                     },
+                     {
+                         "sha256":  "7f3dffa2264afae7549c15d1bf83dd88a7c091f7c644801aba50572a5f9fe0a7",
+                         "file":  "Ground092A_2K-JPG_NormalGL.jpg",
+                         "bytes":  5625816
+                     },
+                     {
+                         "sha256":  "94dbbf371fad74375335ba646935f3c2790091e37f8c03c7ebbdca85f589def0",
+                         "file":  "Ground092A_2K-JPG_Roughness.jpg",
+                         "bytes":  2761414
+                     }
+                 ]
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Gravel020_2K-JPG.zip",
+        "id":  "Gravel020",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:37:15.6653427Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Gravel020",
+        "archive_sha256":  "ec96a0688696aa127a5c2226d057f4a31e4dd0186f359f53cfa694ae2e49526b",
+        "maps":  [
+                     {
+                         "sha256":  "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9",
+                         "file":  "Gravel020_2K-JPG_Color.jpg",
+                         "bytes":  3797454
+                     },
+                     {
+                         "sha256":  "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb",
+                         "file":  "Gravel020_2K-JPG_NormalGL.jpg",
+                         "bytes":  9401398
+                     },
+                     {
+                         "sha256":  "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6",
+                         "file":  "Gravel020_2K-JPG_Roughness.jpg",
+                         "bytes":  2383468
+                     }
+                 ]
+    },
+    {
+        "download":  "https://ambientcg.com/get?file=Ground031_2K-JPG.zip",
+        "id":  "Ground031",
+        "license":  "CC0 1.0",
+        "downloaded_utc":  "2026-10-13T04:37:42.3662472Z",
+        "license_url":  "https://docs.ambientcg.com/license/",
+        "source":  "https://ambientcg.com/a/Ground031",
+        "archive_sha256":  "f6f0895ee706eb5e88a2f7bcaeb8f2b240d9bcd09b9d218a976de928f513f115",
+        "maps":  [
+                     {
+                         "sha256":  "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b",
+                         "file":  "Ground031_2K-JPG_Color.jpg",
+                         "bytes":  6254908
+                     },
+                     {
+                         "sha256":  "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c",
+                         "file":  "Ground031_2K-JPG_NormalGL.jpg",
+                         "bytes":  8992674
+                     },
+                     {
+                         "sha256":  "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84",
+                         "file":  "Ground031_2K-JPG_Roughness.jpg",
+                         "bytes":  2589289
+                     }
+                 ]
+    }
+]

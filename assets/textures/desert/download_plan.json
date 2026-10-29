@@ -1,0 +1,98 @@
+[
+  {
+    "id": "Ground054",
+    "source": "https://ambientcg.com/a/Ground054",
+    "download": "https://ambientcg.com/get?file=Ground054_2K-JPG.zip",
+    "archive_bytes": 32987812,
+    "archive_name": "Ground054_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  },
+  {
+    "id": "Rock061",
+    "source": "https://ambientcg.com/a/Rock061",
+    "download": "https://ambientcg.com/get?file=Rock061_2K-JPG.zip",
+    "archive_bytes": 23589857,
+    "archive_name": "Rock061_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  },
+  {
+    "id": "Ground033",
+    "source": "https://ambientcg.com/a/Ground033",
+    "download": "https://ambientcg.com/get?file=Ground033_2K-JPG.zip",
+    "archive_bytes": 26578704,
+    "archive_name": "Ground033_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  },
+  {
+    "id": "Ground092A",
+    "source": "https://ambientcg.com/a/Ground092A",
+    "download": "https://ambientcg.com/get?file=Ground092A_2K-JPG.zip",
+    "archive_bytes": 20876957,
+    "archive_name": "Ground092A_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  },
+  {
+    "id": "Gravel020",
+    "source": "https://ambientcg.com/a/Gravel020",
+    "download": "https://ambientcg.com/get?file=Gravel020_2K-JPG.zip",
+    "archive_bytes": 34901507,
+    "archive_name": "Gravel020_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  },
+  {
+    "id": "Ground031",
+    "source": "https://ambientcg.com/a/Ground031",
+    "download": "https://ambientcg.com/get?file=Ground031_2K-JPG.zip",
+    "archive_bytes": 31824472,
+    "archive_name": "Ground031_2K-JPG.zip",
+    "license": "CC0 1.0",
+    "license_url": "https://docs.ambientcg.com/license/",
+    "status": "not_downloaded",
+    "maps": [
+      "Color",
+      "NormalGL",
+      "Roughness"
+    ],
+    "blocked_reason": "Official archive route returned HTTP 403 on the first cloud attempt; remaining archive downloads are deferred, not individually claimed as attempted."
+  }
+]

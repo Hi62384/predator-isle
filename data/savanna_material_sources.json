@@ -1,0 +1,210 @@
+[
+	{
+		"color_resource": "res://materials/savanna_color_dry_grass.res",
+		"creation_method": "PBRProcedural",
+		"gpu_bytes": 6990560,
+		"id": "Grass003",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_Color.jpg",
+				"sha256": "8e0af561323475c31b645c57c8d15e97be7c3b1eaa56af1deeba95ca861767cf"
+			},
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_NormalGL.jpg",
+				"sha256": "3702ee3ac420515fd42ae31d3c24e92172a6783cfa6e55d672a524cb8c39b3ad"
+			},
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_Roughness.jpg",
+				"sha256": "27fb018a3940583284bb616d44e72126bf23d29baf07166a7f9087ce192b8e83"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Grass003.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "dry_grass",
+		"source": "https://ambientcg.com/a/Grass003",
+		"treatment": "dry"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_sparse_grassy_soil.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground030",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_Color.jpg",
+				"sha256": "9de11b0005e7bb89351c396d9bb36de6bbc20b117776ab26180c48e52437948f"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_NormalGL.jpg",
+				"sha256": "1e62c2865e759d91a0d4841dccd65ebf5d073211e9c36096e49c43d9c8c319f2"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground030/Ground030_2K-JPG_Roughness.jpg",
+				"sha256": "ecfc40a08f5034e81ef73c12f1ba87785730a0cabed3ae2fca3e1a27dd3df51d"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Ground030.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "sparse_grassy_soil",
+		"source": "https://ambientcg.com/a/Ground030",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_green_grass.res",
+		"creation_method": "PBRProcedural",
+		"gpu_bytes": 6990560,
+		"id": "Grass003",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_Color.jpg",
+				"sha256": "8e0af561323475c31b645c57c8d15e97be7c3b1eaa56af1deeba95ca861767cf"
+			},
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_NormalGL.jpg",
+				"sha256": "3702ee3ac420515fd42ae31d3c24e92172a6783cfa6e55d672a524cb8c39b3ad"
+			},
+			{
+				"path": "res://assets/textures/savanna/Grass003/Grass003_2K-JPG_Roughness.jpg",
+				"sha256": "27fb018a3940583284bb616d44e72126bf23d29baf07166a7f9087ce192b8e83"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Grass003.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "green_grass",
+		"source": "https://ambientcg.com/a/Grass003",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_warm_red_weathered_soil.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground105",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_Color.jpg",
+				"sha256": "d46dc77b5cbe03cbf4936ad5d9e6859174cfd082c925dc8cf4c90a5ac07b63aa"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_NormalGL.jpg",
+				"sha256": "0bef6756eca99c8920ed453325c26fc0a9c4848952881fde32b461c590bbd17f"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_Roughness.jpg",
+				"sha256": "aa1bd17eaca8cd6bc1767c5153a72445b232b8aed27c738f38743a832c769427"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Ground105.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "warm_red_weathered_soil",
+		"source": "https://ambientcg.com/a/Ground105",
+		"treatment": "red"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_clay_hardpan.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground026",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Color.jpg",
+				"sha256": "965df353dd3c08e7097ee6451a35bebf7f3fdb045ad2913bff05b5b608b7aa13"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_NormalGL.jpg",
+				"sha256": "6801609594ee0776013c254cb28536ecc6aae7d49083c38280968222f9237929"
+			},
+			{
+				"path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Roughness.jpg",
+				"sha256": "a4fdac74637bb004512288b66d93f203722c0633de6fea1e22112f0c408b19b3"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Ground026.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "clay_hardpan",
+		"source": "https://ambientcg.com/a/Ground026",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_weathered_kopje_bedrock.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Rock042L",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Color.jpg",
+				"sha256": "17f7a88fa38576bf7dc6db09f053b01bbaecfdf8256fddc7ca986ad1c1d279ba"
+			},
+			{
+				"path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_NormalGL.jpg",
+				"sha256": "71453893e960997913438c948379c1e0a635b4d5a40d96573ce036d7120d1844"
+			},
+			{
+				"path": "res://assets/textures/savanna/Rock042L/Rock042L_2K-JPG_Roughness.jpg",
+				"sha256": "fe83adfacb8a0451aa7b49987d5b0add7e7e2d05152fbc474f596777ca238835"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Rock042L.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "weathered_kopje_bedrock",
+		"source": "https://ambientcg.com/a/Rock042L",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_warm_layered_bedrock.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Rock055",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Color.jpg",
+				"sha256": "c3c4fb15f1a99ef4e96e8f2f1bafb3335a94fc13d0ffc0bce4e97957d347edba"
+			},
+			{
+				"path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_NormalGL.jpg",
+				"sha256": "72f715a154c01a0441a6de091375376da55de3c44ca7371680e8cdefb3ece03f"
+			},
+			{
+				"path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Roughness.jpg",
+				"sha256": "1ced7dca92b82d00398321ed856560863dd7a05caa195460d88bfa20c77f98ff"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Rock055.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "warm_layered_bedrock",
+		"source": "https://ambientcg.com/a/Rock055",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/savanna_color_cracked_basin_soil.res",
+		"creation_method": "PBRApproximated",
+		"gpu_bytes": 6990560,
+		"id": "Ground031",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Color.jpg",
+				"sha256": "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b"
+			},
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_NormalGL.jpg",
+				"sha256": "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c"
+			},
+			{
+				"path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Roughness.jpg",
+				"sha256": "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84"
+			}
+		],
+		"normal_resource": "res://materials/savanna_normal_Ground031.res",
+		"note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+		"role": "cracked_basin_soil",
+		"source": "https://ambientcg.com/a/Ground031",
+		"treatment": "natural"
+	}
+]

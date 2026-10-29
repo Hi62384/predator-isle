@@ -1,0 +1,80 @@
+[
+	{
+		"color_resource": "res://materials/swamp_color_wet_mud.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground036",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/swamp/Ground036/Ground036_2K-JPG_Color.jpg",
+				"sha256": "b3c78e68180bb6462ed03e3aacd72192c937375b07921f0d257b693b31bbbec1"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground036/Ground036_2K-JPG_NormalGL.jpg",
+				"sha256": "29a46a981a71b236bff7156e3fa9c93d570817e985a050bb7f164b43d321c894"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground036/Ground036_2K-JPG_Roughness.jpg",
+				"sha256": "eca698e257b7851ea47d7c452595cd239375a91e5f81913f951cd0cdec12f74e"
+			}
+		],
+		"normal_resource": "res://materials/swamp_normal_Ground036.res",
+		"note": "Ground071 is a distinct photographed organic muddy woodland floor, used as peat-like decomposed ground; not a laboratory-verified peat scan. Wetness changes roughness without replacing source variation.",
+		"role": "wet_mud",
+		"source": "https://ambientcg.com/a/Ground036",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/swamp_color_river_silt.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground083",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/swamp/Ground083/Ground083_2K-JPG_Color.jpg",
+				"sha256": "64ca50dae1a03a449c1ab3c071075a733f3ad28eb11b142a9c75bbfcf016296a"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground083/Ground083_2K-JPG_NormalGL.jpg",
+				"sha256": "d1cccc15de25acbb731729f70459b25207ab0a31a5b71ffc6ab4cd7a2e6a1bc9"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground083/Ground083_2K-JPG_Roughness.jpg",
+				"sha256": "1d5948050c9b0bbde85ee13c3c1826af228268475766c4207fd5484ac06c66ce"
+			}
+		],
+		"normal_resource": "res://materials/swamp_normal_Ground083.res",
+		"note": "Ground071 is a distinct photographed organic muddy woodland floor, used as peat-like decomposed ground; not a laboratory-verified peat scan. Wetness changes roughness without replacing source variation.",
+		"role": "river_silt",
+		"source": "https://ambientcg.com/a/Ground083",
+		"treatment": "natural"
+	},
+	{
+		"color_resource": "res://materials/swamp_color_organic_peat_like.res",
+		"creation_method": "PBRPhotogrammetry",
+		"gpu_bytes": 6990560,
+		"id": "Ground071",
+		"license": "CC0-1.0",
+		"maps": [
+			{
+				"path": "res://assets/textures/swamp/Ground071/Ground071_2K-JPG_Color.jpg",
+				"sha256": "e842a27e8a832e27eb04b4f7886db45099af952099f8b57d300552e75c808b1d"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground071/Ground071_2K-JPG_NormalGL.jpg",
+				"sha256": "d67416867c59a61e0a47a25fc031c72bcb554df4ff384a81f2b5ad33f99a3668"
+			},
+			{
+				"path": "res://assets/textures/swamp/Ground071/Ground071_2K-JPG_Roughness.jpg",
+				"sha256": "e7821425eb9f1bdd6ca545cd254ae6c3ef2a3a0485c8a2ec326b1b923564bdfb"
+			}
+		],
+		"normal_resource": "res://materials/swamp_normal_Ground071.res",
+		"note": "Ground071 is a distinct photographed organic muddy woodland floor, used as peat-like decomposed ground; not a laboratory-verified peat scan. Wetness changes roughness without replacing source variation.",
+		"role": "organic_peat_like",
+		"source": "https://ambientcg.com/a/Ground071",
+		"treatment": "natural"
+	}
+]

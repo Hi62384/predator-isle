@@ -1,0 +1,11 @@
+{
+	"gpu_verified": true,
+	"height": 158.809185924284,
+	"sampler_sha256": "23ade76d323ca7cbdcfc05586301cf7980a782008f4df1106c2f6d71b25f28a1",
+	"score": 0.282352939248085,
+	"shader_sha256": "4af6d77c5c69fc1cd1f20998dcf2073642b4fd9d4a1b2a505b6b717b93876f54",
+	"source": "Native Tropical terrain shader wear mask, paths=0 negative control",
+	"water": 131.350600487484,
+	"x": -10922.3330078125,
+	"z": -98187.3359375
+}

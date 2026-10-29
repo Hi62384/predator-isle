@@ -1,0 +1,1090 @@
+{
+  "seed": 73921,
+  "status": "implemented_first_pass_with_known_visual_gaps",
+  "default_coverage": "Opt-in; existing saved-world layout is unchanged",
+  "families": {
+    "alien_infected": {
+      "primary": {
+        "descriptor": {
+          "age": 0.664432600140572,
+          "branch_distance": 1867.38208007813,
+          "breach_traversable": false,
+          "caves_supported": false,
+          "center": "(-47392.56, -46434.55)",
+          "center_distance": 0,
+          "family": 7,
+          "feature": 0.999132623878092,
+          "height": 109.842355398705,
+          "id": "(-12, -12)",
+          "infection_age": 0.664432600140572,
+          "infection_intensity": 1,
+          "influence": 1,
+          "organic_fluid": {
+            "eligible": false,
+            "reason": "Dedicated organic-liquid shading not installed",
+            "rendered": false
+          },
+          "region": 1.73941131458024,
+          "trunk_distance": 0,
+          "underground_center": "(-47392.56, -900.0, -46434.55)",
+          "underground_geometry": false,
+          "water_level": 0,
+          "wetness": 0.749566311939046
+        },
+        "height": 109.842355398705,
+        "regional_name": "Carapace highlands",
+        "x": -47392.5625,
+        "z": -46434.546875
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "age": 0.132863909006119,
+            "branch_distance": 1980.02600097656,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(21955.38, 2140.353)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.990180945702613,
+            "height": 75.6326606564757,
+            "id": "(5, 0)",
+            "infection_age": 0.132863909006119,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": false,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 0.219024570675228,
+            "trunk_distance": 0,
+            "underground_center": "(21955.38, -900.0, 2140.353)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.745090472851306
+          },
+          "height": 75.6326606564757,
+          "regional_name": "Assimilation fringe",
+          "x": 21955.37890625,
+          "z": 2140.35327148438
+        },
+        "1": {
+          "descriptor": {
+            "age": 0.543202448636293,
+            "branch_distance": 1773.65686035156,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(9683.318, -1968.975)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.995431614057072,
+            "height": 116.18663600873,
+            "id": "(2, -1)",
+            "infection_age": 0.543202448636293,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": false,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 1.26620455987449,
+            "trunk_distance": 0,
+            "underground_center": "(9683.318, -900.0, -1968.975)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.747715807028536
+          },
+          "height": 116.18663600873,
+          "regional_name": "Nerve lowlands",
+          "x": 9683.318359375,
+          "z": -1968.974609375
+        },
+        "2": {
+          "descriptor": {
+            "age": 0.664432600140572,
+            "branch_distance": 1867.38208007813,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(-47392.56, -46434.55)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.999132623878092,
+            "height": 109.842355398705,
+            "id": "(-12, -12)",
+            "infection_age": 0.664432600140572,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": false,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 1.73941131458024,
+            "trunk_distance": 0,
+            "underground_center": "(-47392.56, -900.0, -46434.55)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.749566311939046
+          },
+          "height": 109.842355398705,
+          "regional_name": "Carapace highlands",
+          "x": -47392.5625,
+          "z": -46434.546875
+        },
+        "3": {
+          "descriptor": {
+            "age": 0.363929435610771,
+            "branch_distance": 1966.76220703125,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(18614.33, -2095.526)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.99466880211331,
+            "height": 70.0837667116028,
+            "id": "(4, -1)",
+            "infection_age": 0.363929435610771,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": true,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 3.09859726659669,
+            "trunk_distance": 0,
+            "underground_center": "(18614.33, -900.0, -2095.526)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.747334401056655
+          },
+          "height": 70.0837667116028,
+          "regional_name": "Membrane sinklands",
+          "x": 18614.326171875,
+          "z": -2095.5263671875
+        },
+        "4": {
+          "descriptor": {
+            "age": 0.701250821352005,
+            "branch_distance": 1478.85107421875,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(17986.85, 2079.198)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.997419671575096,
+            "height": -29.8364399463629,
+            "id": "(4, 0)",
+            "infection_age": 0.701250821352005,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": false,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 3.77658594840903,
+            "trunk_distance": 0,
+            "underground_center": "(17986.85, -900.0, 2079.198)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.748709835787548
+          },
+          "height": -29.8364399463629,
+          "regional_name": "Hive rupture country",
+          "x": 17986.853515625,
+          "z": 2079.19775390625
+        },
+        "5": {
+          "descriptor": {
+            "age": 0.279953882098198,
+            "branch_distance": 2157.541015625,
+            "breach_traversable": false,
+            "caves_supported": false,
+            "center": "(6675.243, 2509.65)",
+            "center_distance": 0,
+            "family": 7,
+            "feature": 0.993767203774155,
+            "height": 101.366791487402,
+            "id": "(1, 0)",
+            "infection_age": 0.279953882098198,
+            "infection_intensity": 1,
+            "influence": 1,
+            "organic_fluid": {
+              "eligible": false,
+              "reason": "Dedicated organic-liquid shading not installed",
+              "rendered": false
+            },
+            "region": 4.66752491608772,
+            "trunk_distance": 0,
+            "underground_center": "(6675.243, -900.0, 2509.65)",
+            "underground_geometry": false,
+            "water_level": 0,
+            "wetness": 0.746883601887078
+          },
+          "height": 101.366791487402,
+          "regional_name": "Ancient dormant tissue",
+          "x": 6675.2431640625,
+          "z": 2509.64965820313
+        }
+      },
+      "supported_regions": [
+        "Assimilation fringe",
+        "Nerve lowlands",
+        "Carapace highlands",
+        "Membrane sinklands",
+        "Hive rupture country",
+        "Ancient dormant tissue"
+      ]
+    },
+    "crystal_wastes": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 5,
+          "feature": 0.65,
+          "height": 73.3884513466886,
+          "region": 0,
+          "water_level": 0,
+          "wetness": 0.2
+        },
+        "height": 73.3884513466886,
+        "regional_name": "Quartz plains",
+        "x": 13061.2099609375,
+        "z": -5790.35400390625
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 73.3884513466886,
+            "region": 0,
+            "water_level": 0,
+            "wetness": 0.2
+          },
+          "height": 73.3884513466886,
+          "regional_name": "Quartz plains",
+          "x": 13061.2099609375,
+          "z": -5790.35400390625
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 187.24014255028,
+            "region": 0.96419303621362,
+            "water_level": 0,
+            "wetness": 0.2
+          },
+          "height": 187.24014255028,
+          "regional_name": "Amethyst highlands",
+          "x": 14677.39453125,
+          "z": -4477.84814453125
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 115.4742452959,
+            "region": 2.08350700981135,
+            "water_level": 0,
+            "wetness": 0.2
+          },
+          "height": 115.4742452959,
+          "regional_name": "Selenite blade wastes",
+          "x": 13096.97265625,
+          "z": -4123.77685546875
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 55.4087587912659,
+            "region": 2.91242032245684,
+            "water_level": 0,
+            "wetness": 0.2
+          },
+          "height": 55.4087587912659,
+          "regional_name": "Smoky crystalline ridges",
+          "x": 11441.619140625,
+          "z": -3854.39965820313
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 98.3912922434123,
+            "region": 4.27142747528533,
+            "water_level": 0.177214344664601,
+            "wetness": 0.2
+          },
+          "height": 98.3912922434123,
+          "regional_name": "Fluorite block country",
+          "x": 19820.248046875,
+          "z": -3937.28466796875
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 5,
+            "feature": 0.65,
+            "height": 53.2706744120699,
+            "region": 4.58267051892381,
+            "water_level": 0,
+            "wetness": 0.2
+          },
+          "height": 53.2706744120699,
+          "regional_name": "Mineral basins",
+          "x": 10985.0615234375,
+          "z": -2657.4453125
+        }
+      },
+      "supported_regions": [
+        "Quartz plains",
+        "Amethyst highlands",
+        "Selenite blade wastes",
+        "Smoky crystalline ridges",
+        "Fluorite block country",
+        "Mineral basins"
+      ]
+    },
+    "insect_colony": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 6,
+          "feature": 1,
+          "height": 70.505732193676,
+          "region": 0,
+          "water_level": 0,
+          "wetness": 0.477250234865234
+        },
+        "height": 70.505732193676,
+        "regional_name": "Cathedral territory",
+        "x": 11406.625,
+        "z": -3068.07446289063
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": 99.6126635016164,
+            "region": 0.393747882810746,
+            "water_level": 0,
+            "wetness": 0.378526501766651
+          },
+          "height": 99.6126635016164,
+          "regional_name": "Cathedral territory",
+          "x": 11830.96484375,
+          "z": -4787.38330078125
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": 64.5635884694436,
+            "region": 0.617082542133265,
+            "water_level": 0,
+            "wetness": 0.25335090297896
+          },
+          "height": 64.5635884694436,
+          "regional_name": "Ant earthworks",
+          "x": 13410.9072265625,
+          "z": -2661.30322265625
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": 87.1520769285217,
+            "region": 1.62540157330337,
+            "water_level": 0,
+            "wetness": 0.211705234186587
+          },
+          "height": 87.1520769285217,
+          "regional_name": "Magnetic clay mounds",
+          "x": 13405.5078125,
+          "z": -4731.8427734375
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": 93.1167621448234,
+            "region": 2.54376256956572,
+            "water_level": 0,
+            "wetness": 0.410818063845308
+          },
+          "height": 93.1167621448234,
+          "regional_name": "Dome nest plains",
+          "x": 17639.0078125,
+          "z": -5079.48583984375
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": 40.8057696169145,
+            "region": 4.37441567682014,
+            "water_level": 0,
+            "wetness": 0.212433518475123
+          },
+          "height": 40.8057696169145,
+          "regional_name": "Abandoned colony",
+          "x": 16256.1044921875,
+          "z": -5205.35888671875
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 6,
+            "feature": 1,
+            "height": -3.72184230978211,
+            "region": 4.62550374231066,
+            "water_level": 0,
+            "wetness": 0.381784849838254
+          },
+          "height": -3.72184230978211,
+          "regional_name": "Rocky colony highlands",
+          "x": 22020.1484375,
+          "z": 891.272888183594
+        }
+      },
+      "supported_regions": [
+        "Cathedral territory",
+        "Ant earthworks",
+        "Magnetic clay mounds",
+        "Dome nest plains",
+        "Abandoned colony",
+        "Rocky colony highlands"
+      ]
+    },
+    "quarry": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 0,
+          "feature": 1,
+          "height": 57.3347791211692,
+          "region": 3.91290600184186,
+          "water_level": 0,
+          "wetness": 0.65
+        },
+        "height": 57.3347791211692,
+        "regional_name": "Basalt bedrock",
+        "x": 10575.5126953125,
+        "z": -2312.14965820313
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 348.103968822891,
+            "region": 0.432911562868882,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 348.103968822891,
+          "regional_name": "Exposed granite plains",
+          "x": 8432.240234375,
+          "z": -2330.30590820313
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 297.733246085904,
+            "region": 1.3826739224133,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 297.733246085904,
+          "regional_name": "Limestone benches",
+          "x": 23371.01171875,
+          "z": 832.300659179688
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 515.034247273209,
+            "region": 1.93945108068644,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 515.034247273209,
+          "regional_name": "Slate highlands",
+          "x": 13671.18359375,
+          "z": -857.079711914063
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 377.957919670038,
+            "region": 3.32759147128303,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 377.957919670038,
+          "regional_name": "Sandstone excavation",
+          "x": 15178.6806640625,
+          "z": -4524.7177734375
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 304.314910197297,
+            "region": 3.53064630570463,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 304.314910197297,
+          "regional_name": "Basalt bedrock",
+          "x": 11252.8828125,
+          "z": -4007.34643554688
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 0,
+            "feature": 0,
+            "height": 330.376719574971,
+            "region": 4.63608921427875,
+            "water_level": 0,
+            "wetness": 0.25
+          },
+          "height": 330.376719574971,
+          "regional_name": "Gravel basins",
+          "x": 17855.544921875,
+          "z": -4801.9169921875
+        }
+      },
+      "supported_regions": [
+        "Exposed granite plains",
+        "Limestone benches",
+        "Slate highlands",
+        "Sandstone excavation",
+        "Basalt bedrock",
+        "Gravel basins"
+      ]
+    },
+    "radiation_wasteland": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 4,
+          "feature": 1,
+          "height": -205.769998960634,
+          "region": 0.916715393897138,
+          "water_level": -112,
+          "wetness": 2.02539997921268
+        },
+        "height": -205.769998960634,
+        "regional_name": "Ancient blast scars",
+        "x": 24950.97265625,
+        "z": 5780.64794921875
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0,
+            "height": 78.9648288737435,
+            "region": 0.0757312648726255,
+            "water_level": 0,
+            "wetness": 0.15
+          },
+          "height": 78.9648288737435,
+          "regional_name": "Barren exclusion plains",
+          "x": -46961.75390625,
+          "z": -47174.43359375
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0,
+            "height": 70.201290813511,
+            "region": 1.44201204970068,
+            "water_level": 0,
+            "wetness": 0.15
+          },
+          "height": 70.201290813511,
+          "regional_name": "Ancient blast scars",
+          "x": -50847.5078125,
+          "z": -42850.203125
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0,
+            "height": 59.1754960085543,
+            "region": 1.90761932116932,
+            "water_level": 0,
+            "wetness": 0.15
+          },
+          "height": 59.1754960085543,
+          "regional_name": "Vitrified event ground",
+          "x": 23743.236328125,
+          "z": -1130.91186523438
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0.999823537804341,
+            "height": 100.177695115948,
+            "region": 3.45760436035475,
+            "water_level": 0,
+            "wetness": 0.15
+          },
+          "height": 100.177695115948,
+          "regional_name": "Mineralized highlands",
+          "x": -51325.62109375,
+          "z": -47225.515625
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0.999999556992347,
+            "height": 59.3433522601361,
+            "region": 4.41071577112633,
+            "water_level": 7.30608946154893,
+            "wetness": 0.170764331161541
+          },
+          "height": 59.3433522601361,
+          "regional_name": "Fallout dust lobes",
+          "x": 20480.392578125,
+          "z": -3039.90161132813
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 4,
+            "feature": 0.999792953425294,
+            "height": 29.1503341010452,
+            "region": 4.68876436196157,
+            "water_level": 28.7547032090957,
+            "wetness": 0.22144353534174
+          },
+          "height": 29.1503341010452,
+          "regional_name": "Dry mineral lakebeds",
+          "x": -50322.46875,
+          "z": -49734.2421875
+        }
+      },
+      "supported_regions": [
+        "Barren exclusion plains",
+        "Ancient blast scars",
+        "Vitrified event ground",
+        "Mineralized highlands",
+        "Fallout dust lobes",
+        "Dry mineral lakebeds"
+      ]
+    },
+    "spore_forest": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "colony_age": 0.813603806688266,
+          "colony_id": "3:8:-3",
+          "family": 3,
+          "feature": 0.8,
+          "height": 96.9117132233172,
+          "luminous": false,
+          "region": 0.637966283690611,
+          "spore_dose_calibrated": false,
+          "water_level": 0,
+          "wetness": 0.67
+        },
+        "height": 96.9117132233172,
+        "regional_name": "Colony mounds",
+        "x": 15122.8828125,
+        "z": -4210.759765625
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.100760521414113,
+            "colony_id": "3:6:-4",
+            "family": 3,
+            "feature": 0.8,
+            "height": 40.0154819939661,
+            "luminous": false,
+            "region": 0.079229814514762,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.67
+          },
+          "height": 40.0154819939661,
+          "regional_name": "Mycelium lowlands",
+          "x": 11939.5263671875,
+          "z": -5958.27685546875
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.813603806688266,
+            "colony_id": "3:8:-3",
+            "family": 3,
+            "feature": 0.8,
+            "height": 96.9117132233172,
+            "luminous": false,
+            "region": 0.637966283690611,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.67
+          },
+          "height": 96.9117132233172,
+          "regional_name": "Colony mounds",
+          "x": 15122.8828125,
+          "z": -4210.759765625
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.607750679649297,
+            "colony_id": "3:7:-3",
+            "family": 3,
+            "feature": 0.8,
+            "height": 46.6654481786431,
+            "luminous": false,
+            "region": 1.91836282452305,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.67
+          },
+          "height": 46.6654481786431,
+          "regional_name": "Pale crustlands",
+          "x": 13301.2705078125,
+          "z": -4662.68896484375
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.661108378163124,
+            "colony_id": "3:5:-1",
+            "family": 3,
+            "feature": 0.8,
+            "height": 21.7407802738779,
+            "luminous": false,
+            "region": 3.40724370755202,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.82300636569967
+          },
+          "height": 21.7407802738779,
+          "regional_name": "Decomposition basins",
+          "x": 10249.822265625,
+          "z": -1146.10656738281
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.272832968399317,
+            "colony_id": "3:4:-1",
+            "family": 3,
+            "feature": 0.8,
+            "height": 117.703578875406,
+            "luminous": false,
+            "region": 3.97172056429675,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.67
+          },
+          "height": 117.703578875406,
+          "regional_name": "Rocky fungal highlands",
+          "x": 7659.474609375,
+          "z": -615.868041992188
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "colony_age": 0.475446022802706,
+            "colony_id": "3:7:-2",
+            "family": 3,
+            "feature": 0.8,
+            "height": 46.3286483929244,
+            "luminous": false,
+            "region": 4.99999,
+            "spore_dose_calibrated": false,
+            "water_level": 0,
+            "wetness": 0.37
+          },
+          "height": 46.3286483929244,
+          "regional_name": "Dry spore residue",
+          "x": 13636.283203125,
+          "z": -2355.64501953125
+        }
+      },
+      "supported_regions": [
+        "Mycelium lowlands",
+        "Colony mounds",
+        "Pale crustlands",
+        "Decomposition basins",
+        "Rocky fungal highlands",
+        "Dry spore residue"
+      ]
+    },
+    "volcanic": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 2,
+          "feature": 0,
+          "height": 550.080775096931,
+          "region": 0.0963552721126656,
+          "water_level": 0,
+          "wetness": 0.121468984403866
+        },
+        "height": 550.080775096931,
+        "regional_name": "Shield volcano",
+        "x": -84496.65625,
+        "z": -81424.1484375
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0,
+            "height": 550.080775096931,
+            "region": 0.0963552721126656,
+            "water_level": 0,
+            "wetness": 0.121468984403866
+          },
+          "height": 550.080775096931,
+          "regional_name": "Shield volcano",
+          "x": -84496.65625,
+          "z": -81424.1484375
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0,
+            "height": 918.69773856441,
+            "region": 1.05978356522145,
+            "water_level": 0,
+            "wetness": 0.234382933294113
+          },
+          "height": 918.69773856441,
+          "regional_name": "Stratovolcano",
+          "x": -76623.421875,
+          "z": -74179.3515625
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0,
+            "height": 216.317213150466,
+            "region": 2.05779556509577,
+            "water_level": 0,
+            "wetness": 0.157310074822656
+          },
+          "height": 216.317213150466,
+          "regional_name": "Collapse caldera",
+          "x": -9596.626953125,
+          "z": -83157.359375
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0.64759482461843,
+            "height": 117.876543991045,
+            "region": 3.15121453046341,
+            "water_level": 0,
+            "wetness": 0.252060462917229
+          },
+          "height": 117.876543991045,
+          "regional_name": "Cinder fields",
+          "x": -60541.12109375,
+          "z": -82031.1640625
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0,
+            "height": 88.8158342709358,
+            "region": 4.24702030646515,
+            "water_level": 0,
+            "wetness": 0.0263277149299754
+          },
+          "height": 88.8158342709358,
+          "regional_name": "Hardened lava plains",
+          "x": -77110.21875,
+          "z": -81274.0859375
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 2,
+            "feature": 0,
+            "height": 98.4332331409082,
+            "region": 4.81272067812967,
+            "water_level": 0,
+            "wetness": 0.0441401691381541
+          },
+          "height": 98.4332331409082,
+          "regional_name": "Ancient rift highlands",
+          "x": -4904.6826171875,
+          "z": -83291.5234375
+        }
+      },
+      "supported_regions": [
+        "Shield volcano",
+        "Stratovolcano",
+        "Collapse caldera",
+        "Cinder fields",
+        "Hardened lava plains",
+        "Ancient rift highlands"
+      ]
+    },
+    "wise_mountains": {
+      "primary": {
+        "descriptor": {
+          "caves_supported": false,
+          "family": 1,
+          "feature": 1,
+          "height": 419.766258688824,
+          "region": 0,
+          "water_level": 0,
+          "wetness": 0.4
+        },
+        "height": 419.766258688824,
+        "regional_name": "Sandstone pillar forest",
+        "x": 13411.1201171875,
+        "z": -5410.76416015625
+      },
+      "regions": {
+        "0": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 1,
+            "height": 419.766258688824,
+            "region": 0,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 419.766258688824,
+          "regional_name": "Sandstone pillar forest",
+          "x": 13411.1201171875,
+          "z": -5410.76416015625
+        },
+        "1": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 0.805794668551231,
+            "height": 89.3646589374562,
+            "region": 1.20983661693792,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 89.3646589374562,
+          "regional_name": "Granite peaks",
+          "x": 11894.0810546875,
+          "z": -3607.51171875
+        },
+        "2": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 1,
+            "height": 191.72960710156,
+            "region": 2.3977694588729,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 191.72960710156,
+          "regional_name": "Limestone tower karst",
+          "x": 9590.6796875,
+          "z": -2684.86083984375
+        },
+        "3": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 0.000618062152674884,
+            "height": 170.520848149878,
+            "region": 3.24961835869981,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 170.520848149878,
+          "regional_name": "Weathered highlands",
+          "x": 11479.7353515625,
+          "z": -1522.42578125
+        },
+        "4": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 0.432475051500591,
+            "height": 347.269849956487,
+            "region": 3.9315078124652,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 347.269849956487,
+          "regional_name": "Mountain labyrinth",
+          "x": 15567.5107421875,
+          "z": -5247.84521484375
+        },
+        "5": {
+          "descriptor": {
+            "caves_supported": false,
+            "family": 1,
+            "feature": 1,
+            "height": 350.405416382697,
+            "region": 4.99999,
+            "water_level": 0,
+            "wetness": 0.4
+          },
+          "height": 350.405416382697,
+          "regional_name": "Open river valley",
+          "x": 16008.146484375,
+          "z": -2835.89208984375
+        }
+      },
+      "supported_regions": [
+        "Sandstone pillar forest",
+        "Granite peaks",
+        "Limestone tower karst",
+        "Weathered highlands",
+        "Mountain labyrinth",
+        "Open river valley"
+      ]
+    }
+  }
+}

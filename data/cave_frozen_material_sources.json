@@ -1,0 +1,115 @@
+{
+  "checks": 26,
+  "combined_compressed_bytes": 22369728,
+  "failures": [],
+  "license_verification": {
+    "date": "2026-10-26",
+    "license": "CC0-1.0",
+    "note": "Official license page verified;existing Ice004 asset page was inaccessible through web reader. Raw local files match the preexisting download provenance hashes;no new download or invented asset ID.",
+    "url": "https://docs.ambientcg.com/license/"
+  },
+  "passed": true,
+  "records": [
+    {
+      "archive_sha256": "D648880717CFF4F6DD739E6AC9C2EA6080B6AA6642A659049679347102D6CA13",
+      "cave_color_resource": "res://materials/snow_color_Ice004.res",
+      "cave_normal_resource": "res://materials/cave_frozen_normal_Ice004.res",
+      "color_packing": "Exact existing native2048color/roughness BC3resource;no recoloring. Ice004 is existing PBRProcedural source,not a new ice photograph.",
+      "creation_method": "PBRProcedural",
+      "download": "https://ambientcg.com/get?file=Ice004_2K-JPG.zip",
+      "id": "Ice004",
+      "license": "CC0-1.0",
+      "license_url": "https://docs.ambientcg.com/license/",
+      "maps": [
+        {
+          "bytes": 3655370.0,
+          "file": "Ice004_2K-JPG_Color.jpg",
+          "path": "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Color.jpg",
+          "sha256": "FE7BFA014EBFF2BBE198BBC96B72F04AF4AF670F408F331FE622349FA1B05EE8"
+        },
+        {
+          "bytes": 4989314.0,
+          "file": "Ice004_2K-JPG_NormalGL.jpg",
+          "path": "res://assets/textures/snow/Ice004/Ice004_2K-JPG_NormalGL.jpg",
+          "sha256": "5F27A3BE7711C00B05FC042FD9356F50C7141C585F08510D1F437AFB7BF3BA23"
+        },
+        {
+          "bytes": 1660103.0,
+          "file": "Ice004_2K-JPG_Roughness.jpg",
+          "path": "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Roughness.jpg",
+          "sha256": "7CFA58006B5FE4D0EEFF182A316FD749419EE14458B6C98A089AF51137045CB9"
+        },
+        {
+          "bytes": 1846192.0,
+          "file": "Ice004_2K-JPG_Displacement.jpg",
+          "path": "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Displacement.jpg",
+          "sha256": "E10D9AF387F3277F05FC0CD36F283DC50015C88F849E1FED39DCF5A88693881D"
+        }
+      ],
+      "normal_packing": "Original native2048square OpenGL XY→BC5/full11mips,no resizing. Old1024surface normal resource unchanged.",
+      "role": "fractured lake/glacial ice appearance",
+      "source": "https://ambientcg.com/a/Ice004"
+    },
+    {
+      "archive_sha256": "768AA080B299A0EDF9C9F04F53A4A9C752392FBA39BDED5581939E292F9BCA8D",
+      "cave_color_resource": "res://materials/snow_color_Snow005.res",
+      "cave_normal_resource": "res://materials/cave_frozen_normal_Snow005.res",
+      "color_packing": "Exact existing native2048color/roughness BC3resource;no recoloring. Ice004 is existing PBRProcedural source,not a new ice photograph.",
+      "creation_method": "PBRPhotogrammetry",
+      "download": "https://ambientcg.com/get?file=Snow005_2K-JPG.zip",
+      "id": "Snow005",
+      "license": "CC0-1.0",
+      "license_url": "https://docs.ambientcg.com/license/",
+      "maps": [
+        {
+          "bytes": 2352272.0,
+          "file": "Snow005_2K-JPG_Color.jpg",
+          "path": "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Color.jpg",
+          "sha256": "593F6845ABCE150781F48DA51BB96D168C2CE2DFC5B91AC7B1E78DAD69196F8E"
+        },
+        {
+          "bytes": 8904417.0,
+          "file": "Snow005_2K-JPG_NormalGL.jpg",
+          "path": "res://assets/textures/snow/Snow005/Snow005_2K-JPG_NormalGL.jpg",
+          "sha256": "887ED9FC93C0763A39357430B79E41EE4AE05072F350683B253CF2AE79F06BE3"
+        },
+        {
+          "bytes": 2508374.0,
+          "file": "Snow005_2K-JPG_Roughness.jpg",
+          "path": "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Roughness.jpg",
+          "sha256": "DA88CA9504EEB74E5DA3A84ECDE9C219070A5E096172C90287F84821F1B0E0D6"
+        },
+        {
+          "bytes": 2463102.0,
+          "file": "Snow005_2K-JPG_Displacement.jpg",
+          "path": "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Displacement.jpg",
+          "sha256": "48ECD40EDAD6B4825E89E1231DFDCB0910A472C510918C720425B4BBC9649C5A"
+        }
+      ],
+      "normal_packing": "Original native2048square OpenGL XY→BC5/full11mips,no resizing. Old1024surface normal resource unchanged.",
+      "role": "clean granular frost/compacted snow appearance",
+      "source": "https://ambientcg.com/a/Snow005"
+    }
+  ],
+  "scope": "Offline encoding of two existing inspected licensed materials. Existing2Kcolor/roughness reused exactly,cave-only native2KBC5normals generated from verified raw2Kmaps;old surface resources/Snow owner untouched. Compact two-layer palette,not all Frozen geometry/material/traversal acceptance.",
+  "source_sha256": {
+    "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Color.jpg": "fe7bfa014ebff2bbe198bbc96b72f04af4af670f408f331fe622349fa1b05ee8",
+    "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Displacement.jpg": "e10d9af387f3277f05fc0cd36f283dc50015c88f849e1fed39dcf5a88693881d",
+    "res://assets/textures/snow/Ice004/Ice004_2K-JPG_NormalGL.jpg": "5f27a3be7711c00b05fc042fd9356f50c7141c585f08510d1f437afb7bf3ba23",
+    "res://assets/textures/snow/Ice004/Ice004_2K-JPG_Roughness.jpg": "7cfa58006b5fe4d0eeff182a316fd749419ee14458b6c98a089af51137045cb9",
+    "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Color.jpg": "593f6845abce150781f48da51bb96d168c2ce2dfc5b91ac7b1e78dad69196f8e",
+    "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Displacement.jpg": "48ecd40edad6b4825e89e1231dfdcb0910a472c510918c720425b4bbc9649c5a",
+    "res://assets/textures/snow/Snow005/Snow005_2K-JPG_NormalGL.jpg": "887ed9fc93c0763a39357430b79e41ee4ae05072f350683b253cf2ae79f06be3",
+    "res://assets/textures/snow/Snow005/Snow005_2K-JPG_Roughness.jpg": "da88ca9504eeb74e5da3a84ecde9c219070a5e096172c90287f84821f1b0e0d6",
+    "res://data/snow_material_sources.json": "d6738b6703b752db458215bb0b377ec65a56347f9f05ec7cff771fcc8cf60595",
+    "res://materials/cave_frozen_colors.tres": "c862218e7533befb3b3cb7b18e771c8b42fdb6dcfe54a1b9abb5eee1109db8a8",
+    "res://materials/cave_frozen_normal_Ice004.res": "d9cbf9418301aa035e9adf0b47db77ef5ed11a24cb5ba96e03bc44a98395da12",
+    "res://materials/cave_frozen_normal_Snow005.res": "352fc1d14588f93f566a1db59df5fe17f0cdce6b343d9c5b1214758ca6c61725",
+    "res://materials/cave_frozen_normals.tres": "5d7b5468ce7fbe00cf97381114492ef93b7e8855a69c584a23edcd1195f1ccaa",
+    "res://materials/snow_color_Ice004.res": "0e07a408e352edb65b37e72ee8c4c9ce642772a07e6fa060be8047b2e70e7f27",
+    "res://materials/snow_color_Snow005.res": "325afacbfe65a9ee5842939289a660ed0cb0936017269547532e8b85867918cf",
+    "res://materials/snow_color_roughness.tres": "0ed4420d033d0079554b739212857ee2b221e56e5d825bf6517e8d2d83cc488f",
+    "res://materials/snow_normals.tres": "9c6a91af247b0e6240b32a949b3c9a84f25597b0914f3fe5017250ec52a7f5f9",
+    "res://tools/caves/build_frozen_palette.gd": "8dfda4c6312607b1e85be26374b32fa73d630d5c493cdac3a2f5b5883592eab0"
+  }
+}

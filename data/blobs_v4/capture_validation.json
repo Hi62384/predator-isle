@@ -1,0 +1,16 @@
+{
+	"capture_fps": 15,
+	"capture_ms_per_frame": 621.786433333333,
+	"inverted_triangles_in_sampled_capture_poses": 0,
+	"max_simulation_step_us": 31557,
+	"maximum_edge_stretch": 2.20285580474323,
+	"maximum_stance_error": 0.0148628847673535,
+	"simulated_seconds": 12,
+	"solver_hz": 60,
+	"world_distances": [
+		7.0866086499791,
+		2.44409424422702,
+		1.23596725297284,
+		0.0
+	]
+}

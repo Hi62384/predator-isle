@@ -1,0 +1,316 @@
+{
+  "date": "2026-10-28",
+  "all_requested_work_complete": false,
+  "implemented": [
+    "Debug panel and main-world Blob hint hidden by default; backtick toggle",
+    "Captured mouse look before GUI input; Escape release and click capture",
+    "Root settings/scenes/docs reorganized and resource references migrated",
+    "Finished startup chunks publish early; complete local replacement groups publish atomically during movement",
+    "Temporary logical LOD gaps require recorded equivalent final grids or actual emitted skirt coverage",
+    "Queued terrain reserves three of four worker slots against cave replenishment",
+    "Protected Hive portal lookup runs only if a Hive root is admitted",
+    "Camera-adjacent 2 m grids; LOD1 8 m and LOD2 32 m base grids",
+    "Saved height blend widened from 12 to 3",
+    "Altitude-dependent depth precision works with diagnostics hidden"
+  ],
+  "validation": {
+    "camera_checks": 15,
+    "startup_publication_checks": 10,
+    "main_world_hint_check": ".godot/extensions_workshop_hint_camera.receipt.json",
+    "live_resource_references": "578 checked; none missing",
+    "native_layout": "43 moved files; settings and scenes load",
+    "editor_import": "Completed without stderr after editor metadata remap",
+    "surface_regression": "31 passed with broader saved biome blend before later local-cut and worker changes; historical source guard retained",
+    "detailed_startup_before_local_cut_changes": {
+      "first_visible_seconds": 5.457,
+      "local_full_detail_seconds": 5.466,
+      "complete_surroundings_seconds": 50.807,
+      "sampled_private_mib": 1311.2,
+      "scope": "Saved broad blend and detailed grids before later local-cut/worker changes; not cold-driver-cache or isolated timing"
+    },
+    "biome_transitions": "Three fixed-seed actual borders widened; native same-camera before/after inspected",
+    "live_spore_return": {
+      "checks": 160,
+      "walk": {
+        "capsule_height_m": 1.8,
+        "capsule_radius_m": 0.4,
+        "committed_cuts": 11,
+        "deepest_position": "(14776.0, 25.52577, -4071.757)",
+        "distance_m": 822.823726482689,
+        "entrance_transactions_changed": 2,
+        "failed": false,
+        "final_position": "(14946.96, 78.01778, -4396.071)",
+        "finished": true,
+        "floor_angle_degrees": 45,
+        "frames": 10155,
+        "maximum_canonical_depth_m": 53.5994988883279,
+        "maximum_unsupported_drop_m": 0.0,
+        "preload_pause_frames": 3671,
+        "speed_mps": 5,
+        "target": "(14947.27, 77.95338, -4396.461)",
+        "wall_seconds": 41.0195,
+        "waypoint": 130,
+        "waypoints": 130
+      },
+      "scope": "Actual main scene/fullLOD6/four total workers using production cave surface transactions,terrain materials and native collision. Original actual Spore seed73921/cell(9,-3),same original823m/130waypoint surface-first-chamber-surface path. Positive simultaneous owned-column jobs inside four TOTAL worker slots;fullLOD6 and actual50kmcamera far. Fixed60Hz accelerated native physics with explicit loading pauses and render loop disabled ONLY during motion;before/after/chamber GPU captures include separate temporary debug light. Not the deepest-return or uninterrupted frame-performance gate.",
+      "archive": "tools/biome_extensions/artifacts/revisions/experiment_check_cave_live_short_return_3135222fa6e8",
+      "report_sha256": "3135222fa6e84d3ff58d4f321511e081963811fa3d82c6b5dbab77bbdcd07c41",
+      "historical_after_ready_cut_change": true,
+      "current_guard_mismatches": [
+        "res://tools/caves/check_live_portal.gd"
+      ],
+      "unguarded_dependency_changed": "scripts/terrain_ready_cut.gd; fresh live test now explicitly guards this dependency"
+    },
+    "live_magma_return": {
+      "distance_m": 17213.1990420036,
+      "checks": 168,
+      "maximum_unsupported_drop_m": 0.03810882568359,
+      "motion_seconds": 501.496404,
+      "sampled_private_mib": 1759.8,
+      "archive": "tools/biome_extensions/artifacts/revisions/experiment_check_cave_live_magma_return_8c56e58573d4",
+      "scope": "Archived broad blend and denser terrain before local-cut/worker/lazy-Hive changes; fixed60Hz accelerated physics, rendering disabled during motion, preload pauses; not uninterrupted FPS"
+    },
+    "cave_release_checks": "17 passed before later local-cut/worker/lazy-Hive changes; historical evidence retained",
+    "live_near_refinement": {
+      "cases": [
+        {
+          "active_leaves": 153,
+          "camera_position": "(774.8345, 136.7866, 69.68923)",
+          "complete_cut_seconds": 22.831,
+          "local_full_detail_seconds": 2.948,
+          "local_swaps": 19,
+          "offset": "(768.0, 0.0, 0.0)",
+          "publication_seconds": 2.937397,
+          "staged_seconds": 1.23,
+          "surface_status": "no nearby admitted entrance"
+        },
+        {
+          "active_leaves": 174,
+          "camera_position": "(-761.1655, 136.7866, 837.6892)",
+          "complete_cut_seconds": 19.429,
+          "local_full_detail_seconds": 2.18,
+          "local_swaps": 25,
+          "offset": "(-1536.0, 0.0, 768.0)",
+          "publication_seconds": 2.129851,
+          "staged_seconds": 1.688,
+          "surface_status": "no nearby admitted entrance"
+        },
+        {
+          "active_leaves": 156,
+          "camera_position": "(19238.83, 136.7866, 837.6892)",
+          "complete_cut_seconds": 31.428,
+          "local_full_detail_seconds": 9.803,
+          "local_swaps": 16,
+          "offset": "(20000.0, 0.0, 0.0)",
+          "publication_seconds": 9.79380400000001,
+          "staged_seconds": 1.091,
+          "surface_status": "no nearby admitted entrance"
+        }
+      ],
+      "checks": 2278634,
+      "scope": "Actual saved game and native colliders;visible-cut overlap/edge evidence throughout the recorded moves. The default three-move set includes a root change;single-move is diagnostic only. Timing includes validation overhead;not isolated FPS.",
+      "archive": "tools/biome_extensions/artifacts/revisions/experiment_check_live_near_refinement_ceeb512516c6",
+      "maximum_partition_swap_ms": 11.854,
+      "report_sha256": "ceeb512516c6b684a8de8b7df41ad24cc3def23280eeb8779c88db8d12dd6339"
+    },
+    "previous_targeted_checks": [
+      "final_check_ready_cut",
+      "final_check_ready_cut_edges",
+      "final_check_ready_cut_skirts",
+      "final_check_coupled_ready_groups",
+      "final_check_cave_worker_fairness",
+      "final_check_startup_publication",
+      "final_check_biome_transition_width",
+      "final_camera_native",
+      "final_surface_cut"
+    ],
+    "current_ready_cut_checks": [
+      "ready128_check_ready_cut",
+      "ready128_check_ready_cut_edges",
+      "ready128_check_ready_cut_skirts",
+      "ready128_check_coupled_ready_groups",
+      "ready128_check_edge_coverage_oracle"
+    ],
+    "headless_mouse_check": "Headless mouse-capture assertions failed; log retained. The native-window rerun passed all 11 assertions.",
+    "normal_rendered_spore_return": {
+      "checks": 160,
+      "walk": {
+        "capsule_height_m": 1.8,
+        "capsule_radius_m": 0.4,
+        "committed_cuts": 11,
+        "deepest_position": "(14776.0, 25.52577, -4071.757)",
+        "distance_m": 822.819248862565,
+        "entrance_transactions_changed": 2,
+        "failed": false,
+        "final_position": "(14946.95, 78.01865, -4396.068)",
+        "finished": true,
+        "floor_angle_degrees": 45,
+        "frames": 10155,
+        "maximum_canonical_depth_m": 53.5994988883279,
+        "maximum_unsupported_drop_m": 0.0,
+        "preload_pause_frames": 0,
+        "speed_mps": 5,
+        "target": "(14947.27, 77.95338, -4396.461)",
+        "wall_seconds": 169.308444,
+        "waypoint": 130,
+        "waypoints": 130
+      },
+      "measurements": {
+        "actual_viewport_cpu_ms": {
+          "maximum_ms": 7.09499979019165,
+          "mean_ms": 1.97684814819745,
+          "median_ms": 1.81200003623962,
+          "over100ms_frames": 0,
+          "over33ms_frames": 0,
+          "over50ms_frames": 0,
+          "p95_ms": 3.03699994087219,
+          "p99_ms": 4.78900003433228,
+          "samples": 10102,
+          "supported": true
+        },
+        "actual_viewport_gpu_ms": {
+          "maximum_ms": 25.1009998321533,
+          "mean_ms": 7.11781696871091,
+          "median_ms": 5.56099987030029,
+          "over100ms_frames": 0,
+          "over33ms_frames": 0,
+          "over50ms_frames": 0,
+          "p95_ms": 14.9250001907349,
+          "p99_ms": 16.2940006256104,
+          "samples": 10102,
+          "supported": true
+        },
+        "rendered_process_intervals": {
+          "maximum_ms": 315.873,
+          "mean_ms": 16.7496062135154,
+          "median_ms": 16.666,
+          "over100ms_frames": 3,
+          "over33ms_frames": 7,
+          "over50ms_frames": 3,
+          "p95_ms": 17.53,
+          "p99_ms": 22.065,
+          "samples": 10107,
+          "supported": true
+        },
+        "scope": "Actual rendered wall-clock process intervals during ordinary60Hz physics,with no fixed-fps flag,no automatic preload pauses,no midpoint capture/light interruption,and original geometry/lighting/fullLOD6/50km camera. Other project sessions running;not isolated hardware performance.",
+        "stream_readiness_missing_process_frames": 561
+      },
+      "scope": "Actual main scene/fullLOD6/four total workers using production cave surface transactions,terrain materials and native collision. Original Spore seed73921/site(9,-3),normal wall-clock 5mps capsule surface-to-cave-and-same-exit return. Rendering and following eye camera remain active;no fixed-fps acceleration,automatic preload pauses,midpoint captures,temporary light or route correction. FullLOD6/50km/fourtotalworkers/180spreload/420smotion/2048MiB. Actual non-isolated frame timing distributions recorded separately.",
+      "report_sha256": "68a0738350a253a6db4d983bf5faf9cf438f5ada14cca8a6c1607159fa564e45",
+      "receipt": ".godot/extensions_final_rendered_spore.receipt.json",
+      "historical_after_ready_cut_change": true,
+      "current_guard_mismatches": [
+        "res://tools/caves/check_live_portal.gd"
+      ],
+      "unguarded_dependency_changed": "scripts/terrain_ready_cut.gd; fresh live test now explicitly guards this dependency"
+    },
+    "current_rendered_spore_profile": {
+      "checks": 161,
+      "walk": {
+        "capsule_height_m": 1.8,
+        "capsule_radius_m": 0.4,
+        "committed_cuts": 11,
+        "deepest_position": "(14776.0, 25.52577, -4071.757)",
+        "distance_m": 822.804937161505,
+        "entrance_transactions_changed": 2,
+        "failed": false,
+        "final_position": "(14946.94, 78.02307, -4396.057)",
+        "finished": true,
+        "floor_angle_degrees": 45,
+        "frames": 10155,
+        "maximum_canonical_depth_m": 53.5994988883279,
+        "maximum_unsupported_drop_m": 0.0,
+        "preload_pause_frames": 0,
+        "speed_mps": 5,
+        "target": "(14947.27, 77.95338, -4396.461)",
+        "wall_seconds": 169.118253,
+        "waypoint": 130,
+        "waypoints": 130
+      },
+      "measurements": {
+        "actual_viewport_cpu_ms": {
+          "maximum_ms": 6.33599996566772,
+          "mean_ms": 1.86708715839572,
+          "median_ms": 1.76199996471405,
+          "over100ms_frames": 0,
+          "over33ms_frames": 0,
+          "over50ms_frames": 0,
+          "p95_ms": 2.67000007629395,
+          "p99_ms": 3.06599998474121,
+          "samples": 10131,
+          "supported": true
+        },
+        "actual_viewport_gpu_ms": {
+          "maximum_ms": 32.5359992980957,
+          "mean_ms": 6.44402102649347,
+          "median_ms": 5.05600023269653,
+          "over100ms_frames": 0,
+          "over33ms_frames": 0,
+          "over50ms_frames": 0,
+          "p95_ms": 12.3979997634888,
+          "p99_ms": 13.1300001144409,
+          "samples": 10131,
+          "supported": true
+        },
+        "private_instrumentation": true,
+        "private_upload_profiling": {
+          "maximum_collect_ms": 69.426,
+          "maximum_shape_ms": 0.251,
+          "shape_builds": 163
+        },
+        "rendered_process_intervals": {
+          "maximum_ms": 113.021,
+          "mean_ms": 16.6830380820837,
+          "median_ms": 16.665,
+          "over100ms_frames": 1,
+          "over33ms_frames": 3,
+          "over50ms_frames": 1,
+          "p95_ms": 17.35,
+          "p99_ms": 21.104,
+          "samples": 10136,
+          "supported": true
+        },
+        "scope": "Actual rendered wall-clock process intervals during ordinary60Hz physics,with no fixed-fps flag,no automatic preload pauses,no midpoint capture/light interruption,and original geometry/lighting/fullLOD6/50km camera. Other project sessions running;not isolated hardware performance.",
+        "stream_readiness_missing_process_frames": 568
+      },
+      "archive": "tools/biome_extensions/artifacts/revisions/experiment_check_cave_rendered_spore_upload_trace_748b1ccc5742",
+      "receipt": ".godot/extensions_rendered_spore_upload_trace.receipt.json",
+      "report_sha256": "748b1ccc5742fae125e009366134662fdea40729b99fcaab9e2d53189f2ac170",
+      "scope": "Private timing probes only; production geometry/route/loading policy. Ready-cut dependency explicitly guarded. One observed frame above100ms remains; this is not a zero-hitch acceptance claim."
+    },
+    "all_owner_native_diagnostic": {
+      "configured_mask": 65535,
+      "startup_seconds": 164.509,
+      "shader_preparation_seconds": 88.113061,
+      "first_visible_seconds": 115.299,
+      "active_surface_chunks": 117,
+      "sampled_peak_private_mib": 2794.2,
+      "memory_limit_mib": 3072,
+      "capture_sha256": {
+        "res://tools/biome_extensions/artifacts/check_all_owner_startup_private.png": "99877ae669329325cbde974b264af0970f9a836d29bbaa3b3de630678cf18d45"
+      },
+      "report_sha256": "ffbf9fb2b87653da4c339afc38baca2e70279c0df68bc14914353e99d9624bb4",
+      "scope": "Actual saved entry and main scene with all sixteen owner coverages changed in memory for this diagnostic. No saved coverage changes; production_adoption=false. Startup and memory are measured, but no rendered traversal/FPS or art acceptance."
+    }
+  },
+  "remaining": [
+    "Reduce complete background terrain generation cost and remaining local dependency waits",
+    "All-biome shader memory solution; per-tile candidate not adopted",
+    "Reference-level biome/cave appearance and remaining scenic coverage",
+    "Broader rendered performance coverage and remaining measured hitches"
+  ],
+  "source_sha256": {
+    "scripts/free_camera.gd": "8ccb3c8be0c3928ff9afce6686da575197a94d375d729fb01d992b29a24d28cf",
+    "scripts/blobs/blob_workshop.gd": "93690b82eac2607ce153e217638acbb90a0a8dfe17fa87aad81e451c5f66b543",
+    "scripts/chunk_terrain.gd": "a4cc17f524617ff285a071c60072ac73b24f5e5c1e39e0d3d89b64a813588b81",
+    "scripts/terrain_ready_cut.gd": "da1d736b3e235d346475600122435bb131cf29af6cefd04399e966e49c8571a5",
+    "scripts/caves/streamer.gd": "051412bb2ca259c49582ee88895dc92fb05944b46a4e2f345d12a08b6b888e5d",
+    "scripts/biome_extension_structures.gd": "caa49bcbfa79da3d7fd785052eee8e08d8c3855410f3d4784fbcb231ab40a120",
+    "scenes/main.tscn": "2da7f3c5373a256af489147106e79b3a08132e706f42a13188e7b6b3f8fdeb5a",
+    "project.godot": "636262a4cc6bb5d2491f1776ed95804eee542e9a687a688c7bb0f67f8e7e0d12",
+    "config/world/terrain_settings.tres": "67c10d2c8e35474e4d0c02f3d5c4cdc197ebe7a0c26fc875f4db25258a44f9f3",
+    "tools/check_startup_publication.gd": "98441b5a094152770685ca9ae9c948fcaad0982748180c88af7c715c194ae052",
+    "tools/check_biome_transition_width.gd": "9977156e9816d713ed2af8f87b7c6f4022023ffff847f70d463f8f4122332914"
+  },
+  "scope": "Current scoped implementation status, not an all-work completion certificate. Existing archived source-bound evidence stays historical."
+}

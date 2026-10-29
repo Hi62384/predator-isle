@@ -1,0 +1,66 @@
+{
+  "date": "2026-10-27",
+  "engine": "Godot 4.6.1",
+  "gpu": "NVIDIA RTX 3060 Laptop GPU / OpenGL compatibility",
+  "anatomy_checks": 12700,
+  "anatomy_failures": [],
+  "control_checks": 12,
+  "control_failures": [],
+  "draft_generation_ms": {
+    "min": 855,
+    "median": 2702.5,
+    "max": 8427
+  },
+  "draft_triangles": {
+    "min": 12372,
+    "max": 64696
+  },
+  "mechanics": {
+    "bones": 4,
+    "cpu_simulation_us_per_step": 171.89375,
+    "lod_buffers": 19,
+    "max_marker_step": 0.0156729891896248,
+    "max_sampled_penetration": 0.0,
+    "render_groups": 3,
+    "volume_scale_determinant": 0.995108772825679
+  },
+  "render_batches": [
+    {
+      "draw_calls": 220.0,
+      "frame_ms_including_viewports_and_vsync": 25.2849,
+      "sheet": "clay_24.png",
+      "simultaneous_blobs": 24,
+      "static_memory_bytes": 1002521252,
+      "video_memory_bytes": 185499891.0
+    },
+    {
+      "draw_calls": 110.0,
+      "frame_ms_including_viewports_and_vsync": 16.5937,
+      "sheet": "biology_12.png",
+      "simultaneous_blobs": 12,
+      "static_memory_bytes": 687122377,
+      "video_memory_bytes": 174863247.0
+    },
+    {
+      "draw_calls": 58.0,
+      "frame_ms_including_viewports_and_vsync": 16.155,
+      "sheet": "geometry_clay_6.png",
+      "simultaneous_blobs": 6,
+      "static_memory_bytes": 481375898,
+      "video_memory_bytes": 131000187.0
+    },
+    {
+      "draw_calls": 58.0,
+      "frame_ms_including_viewports_and_vsync": 16.1745,
+      "sheet": "tissue_closeups_6.png",
+      "simultaneous_blobs": 6,
+      "static_memory_bytes": 481376730,
+      "video_memory_bytes": 131000187.0
+    }
+  ],
+  "notes": [
+    "Render timings include independent preview viewports, VSync and validation-host contention; they are not a full terrain-game benchmark.",
+    "Volume determinant describes the gravity scale correction, not an exact anatomical fluid-volume measurement.",
+    "Motion video capture includes PNG encoding/readback and is not a real-time FPS measurement."
+  ]
+}

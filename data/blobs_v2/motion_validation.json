@@ -1,0 +1,13 @@
+{
+	"capture_fps": 15,
+	"captured_frames": 150,
+	"flat_collision_proxies": 5,
+	"flat_final": "(-4.500533, 0.0, 1.9827)",
+	"max_cpu_step_us": 980,
+	"mean_capture_frame_ms": 99.5180733333333,
+	"minimum_lane_separation": 8.90976715087891,
+	"rigid_body_rotation": false,
+	"seconds_simulated": 10.0,
+	"uneven_collision_proxies": 3,
+	"uneven_final": "(4.28636, 0.105062, 0.409542)"
+}

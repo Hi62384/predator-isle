@@ -1,0 +1,231 @@
+{
+	"features": {
+		"alluvial_fan": {
+			"height": 26.0712341033727,
+			"score": 0.649963817238317,
+			"water": 0.0,
+			"x": 4893.392578125,
+			"z": 3743.8076171875
+		},
+		"badlands_canyon": {
+			"height": 129.827104062012,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -10752.0,
+			"z": -76800.0
+		},
+		"barren_plain": {
+			"height": 29.3525414998813,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -89088.0,
+			"z": -59904.0
+		},
+		"bentonite_hills": {
+			"height": 103.65545889077,
+			"score": 0.957524128175569,
+			"water": 0.0,
+			"x": -46080.0,
+			"z": -53760.0
+		},
+		"dense_gullies": {
+			"height": 88.9691949444456,
+			"score": 0.85,
+			"water": 0.0,
+			"x": 98304.0,
+			"z": -95232.0
+		},
+		"dissected_plateau": {
+			"height": 361.198257926401,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -6144.0,
+			"z": -90624.0
+		},
+		"dry_wash_country": {
+			"height": 25.2297546863556,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -62976.0,
+			"z": -96768.0
+		},
+		"eroded_ridges": {
+			"height": 298.987978632834,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 7680.0,
+			"z": -81408.0
+		},
+		"forest_badlands_transition": {
+			"height": 43.3105453326664,
+			"score": 0.978577248752117,
+			"water": 0.0,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"grass_badlands_transition": {
+			"height": 40.9125976971782,
+			"score": 0.978577248752117,
+			"water": 0.0,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"gray_clay": {
+			"height": 97.7037248958075,
+			"score": 0.728117228835133,
+			"water": 0.0,
+			"x": 9216.0,
+			"z": -70656.0
+		},
+		"hoodoo_cluster": {
+			"height": 162.81775458672,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 16397.353515625,
+			"z": 315.714691162109
+		},
+		"hoodoo_country": {
+			"height": 114.739369324067,
+			"score": 0.692053265598953,
+			"water": 0.0,
+			"x": -81408.0,
+			"z": -69120.0
+		},
+		"jungle_badlands_transition": {
+			"height": 40.5928532408273,
+			"score": 0.978577248752117,
+			"water": 0.0,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"knife_edge_ridges": {
+			"evidence": "res://tools/badlands/artifacts/check_incised_profiles.json",
+			"height": 257.198426986263,
+			"prominence_at_32m": 13.0004446473041,
+			"prominence_at_64m": 13.6423169007721,
+			"score": 1.13685974173101,
+			"selection": "Actual measured crest, not just an upland regional label",
+			"water": 0.0,
+			"x": 8504.3759765625,
+			"z": -2297.51806640625
+		},
+		"major_dry_wash": {
+			"height": 25.1045220995913,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -62524.50390625,
+			"z": -48522.83203125
+		},
+		"mountain_badlands_transition": {
+			"height": 376.087785149912,
+			"score": 0.978577248752117,
+			"water": 87.9367153254009,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"narrow_ravine": {
+			"height": 88.9691949444456,
+			"score": 0.85,
+			"water": 0.0,
+			"x": 98304.0,
+			"z": -95232.0
+		},
+		"painted_hills": {
+			"height": 113.572851860556,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -87552.0,
+			"z": -98304.0
+		},
+		"pale_badlands": {
+			"height": 111.828345235481,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -7680.0,
+			"z": -82944.0
+		},
+		"rare_pool": {
+			"height": 19.9077818913937,
+			"score": 1.0,
+			"water": 24.0,
+			"x": 8763.65234375,
+			"z": 15321.8935546875
+		},
+		"red_mudstone": {
+			"height": 133.583243705942,
+			"score": 0.984952763409162,
+			"water": 0.0,
+			"x": 7680.0,
+			"z": -67584.0
+		},
+		"rocky_highlands": {
+			"height": 318.205125514809,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -84480.0,
+			"z": -82944.0
+		},
+		"savanna_badlands_transition": {
+			"height": 43.0771843457956,
+			"score": 0.978577248752117,
+			"water": 0.0,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"sediment_basin": {
+			"height": 54.5784884143519,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -67584.0,
+			"z": -98304.0
+		},
+		"sediment_fans": {
+			"height": 62.4406247137876,
+			"score": 1.0,
+			"water": 0.0,
+			"x": 95232.0,
+			"z": -89088.0
+		},
+		"stratified_clay": {
+			"height": 135.324804765885,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -95232.0,
+			"z": -66048.0
+		},
+		"stratified_escarpment": {
+			"height": 104.295088735868,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -7680.0,
+			"z": -96768.0
+		},
+		"swamp_badlands_transition": {
+			"height": 37.53413654995,
+			"score": 0.978577248752117,
+			"water": 3.67496349414472,
+			"x": -71800.0,
+			"z": -61400.0
+		},
+		"talus_slope": {
+			"height": 111.673947483226,
+			"score": 0.920175321179948,
+			"water": 0.0,
+			"x": -9216.0,
+			"z": -67584.0
+		},
+		"tropical_badlands_transition": {
+			"height": 115.346323285284,
+			"score": 0.978577248752117,
+			"water": 22.2030643989289,
+			"x": -71800.0,
+			"z": -61400.0
+		}
+	},
+	"heightfield": "No detached caps, overhangs or decorative rock objects",
+	"seed": 73921,
+	"unsupported_transitions": [
+		"Desert: retired/inactive in current live ownership",
+		"Mesa: not installed in current live ownership"
+	]
+}

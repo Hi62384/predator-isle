@@ -1,0 +1,70 @@
+[
+	{
+		"cache_hit": true,
+		"generation_ms": null,
+		"quality": 2,
+		"request_ms": 13,
+		"seed": 8800,
+		"statistics": {
+			"feature_types": {
+				"anatomical_fold": 6,
+				"belly_contact": 1,
+				"brow": 6,
+				"cheek": 6,
+				"chin": 3,
+				"core": 1,
+				"embedded_face": 3,
+				"eye_recess": 6,
+				"eyelid": 6,
+				"face_transition": 6,
+				"forehead": 3,
+				"growth_nodule": 2,
+				"lower_lip": 3,
+				"major_vine": 1,
+				"mouth_slit": 3,
+				"nose_bridge": 3,
+				"nose_tip": 3,
+				"primary_mass": 2,
+				"upper_lip": 3,
+				"vine_branch": 4,
+				"vine_socket": 1
+			},
+			"features": 72,
+			"packed_bytes": 6103368,
+			"triangles": 104704,
+			"vertices": 52400
+		}
+	},
+	{
+		"cache_hit": true,
+		"generation_ms": null,
+		"quality": 2,
+		"request_ms": 16,
+		"seed": 8801,
+		"statistics": {
+			"feature_types": {
+				"belly_contact": 1,
+				"brow": 6,
+				"cheek": 6,
+				"chin": 3,
+				"core": 1,
+				"embedded_face": 3,
+				"eye_recess": 6,
+				"eyelid": 6,
+				"face_transition": 6,
+				"facial_drape": 2,
+				"forehead": 3,
+				"lower_lip": 3,
+				"mouth_slit": 3,
+				"nose_bridge": 3,
+				"nose_tip": 3,
+				"primary_mass": 3,
+				"upper_lip": 3
+			},
+			"features": 61,
+			"packed_bytes": 8347696,
+			"triangles": 143608,
+			"vertices": 71834
+		}
+	}
+]

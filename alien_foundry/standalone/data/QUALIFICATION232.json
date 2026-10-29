@@ -1,0 +1,241 @@
+{
+  "actual": {
+    "actual_live_scope": {
+      "armed": false,
+      "cancellation_observed": false,
+      "counts": {
+        "attribution_lattice_requests": 53874,
+        "attribution_passes": 1,
+        "attribution_vertices_planned": 17958,
+        "attribution_vertices_with_complete_AO": 17958,
+        "attribution_vertices_written": 17958,
+        "completed_extractions": 1,
+        "conforming_dispatches": 1,
+        "extractor_entries": 1,
+        "independent_sac_complete_values": 2190,
+        "lattice_complete_values": 522880,
+        "parent_build_entries": 1,
+        "partition_calls": 17958,
+        "post_complete_values": 0,
+        "rejected_complete_requests": 0,
+        "selected_F1_complete_values": 2896,
+        "solver_complete_values": 642694,
+        "source_authentications": 1
+      },
+      "failure": "",
+      "historical224_reference": {
+        "cumulative_edges": 31888,
+        "cumulative_lattice_visits": 977816,
+        "cumulative_queries": 1141122,
+        "error": "204 refined face/field-normal inconsistency; no normal or topology repair.",
+        "historical_only": true,
+        "raw_sha256": "6140ac5eb9b49eebc67f78f521fc60dfb6655d1e1de05766b87abf944f82e572"
+      },
+      "live_artifact_key": "b8404250f3619b0750dd5f0030d9cf9dc5b8a7a392c8e55ab9c631db02351465",
+      "phase": "finished",
+      "qualification_accounting": {
+        "author_F1_callback_dispatches": 2896,
+        "author_callback_dispatches": 3776,
+        "available": true,
+        "complete_values_total_new": 1171540,
+        "selected_F0_and_F1_complete_values": 3776,
+        "selected_F0_complete_values": 880,
+        "selected_F1_complete_values": 2896,
+        "selected_F1_is_overlapping_subset": true,
+        "selected_F1_rejected_callbacks": 0
+      },
+      "rejected_by_phase": {},
+      "rejected_by_reason": {},
+      "source_field_key": "c62a719694d5c35573b4d0b4e5154f39e3b7e7f77b744310f3d5b5a9d0c0c236",
+      "source_proven_exclusions": {
+        "coarse_extraction": true,
+        "legacy223_loader": true,
+        "not_dynamic_call_counters": true,
+        "retained_reselection": true,
+        "slab_planner": true
+      },
+      "used": true
+    },
+    "build_attempts": 1,
+    "cumulative_extraction_ledger": {
+      "edge_queries": 1141122,
+      "edges": 31888,
+      "lattice_visits": 977816
+    },
+    "elapsed_seconds": 123.85145837400341,
+    "exact_parity": {
+      "all_edge_ledger_fields_except_declared_error_exact224": true,
+      "alternate_quads": 3873,
+      "attribute_audit": {
+        "AO_colors_UV_are_fresh_not_borrowed": true,
+        "ao_max": 1.0,
+        "ao_min": 0.2800000011920929,
+        "maximum_sum_error": 4.470348358154297e-08,
+        "new_field_calls": 0,
+        "ok": true,
+        "vertices": 17958
+      },
+      "declared_error_exclusion": {
+        "all_other_fields_sha256": "08b6e150773702f6e70ca349f6cc0c0c7fff213ec84698eb067c1ee765543dd1",
+        "fresh_complete_queries": 642694,
+        "fresh_complete_sha256": "83687c0e5da5ee41529bafef43e006ca598c08a73a0fbb3f22c053e46acfaf89",
+        "fresh_error": "",
+        "old_complete_queries": 642694,
+        "old_complete_sha256": "369e03ba0861e67ebb745c97b0d8ac6962ba9c6f74d9181e3b093f611c246751",
+        "old_error": "204 refined face/field-normal inconsistency; no normal or topology repair.",
+        "sole_excluded_key": "error"
+      },
+      "fresh_AO_colors_UV_generated": true,
+      "indices_exact229": true,
+      "legacy_quads": 4693,
+      "ordered_quad_records_and_scalar_bits_exact229": 8566,
+      "ownership_arrays_and_native_top4_statistics_exact229_qualified_view": true,
+      "positions_normals_exact224_and229": true,
+      "single_triangle_tetrahedra": 18780,
+      "triangles": 35912,
+      "vertices": 17958
+    },
+    "fresh_extraction": {
+      "edge_queries": 642694,
+      "faces": 35912,
+      "grid": [
+        80,
+        76,
+        86
+      ],
+      "lattice_queries": 522880,
+      "lattice_visits": 522880,
+      "vertices": 17958
+    },
+    "fresh_parity_checks": 56,
+    "fresh_statistics": {
+      "active_cells": 5863,
+      "attachment_repairs": 0,
+      "attribution_ms": 4221,
+      "base_grid": [
+        76,
+        73,
+        82
+      ],
+      "body_envelope201_attribution": {
+        "maximum_components": 4,
+        "maximum_dropped_weight": 0.09436947107315063,
+        "reductions": 2708,
+        "sum_dropped_weight": 2.6391674580209807
+      },
+      "body_group202": {
+        "actual_smooth_min_attribution": true,
+        "core_evaluated_once_per_group_call": true,
+        "finite_witnesses_only": true,
+        "internal_carriers": 4,
+        "one_external_group": true
+      },
+      "budget_adaptations": [],
+      "budget_attempts": 1,
+      "cell_size": 0.06132264835698207,
+      "cell_size_semantics": "unchanged field/normal reference cell, not all rectilinear interval widths",
+      "detail_triangles": 0,
+      "extraction_ms": 90801,
+      "field_ms": 23163,
+      "field_primitives": 28,
+      "generated_triangles": 35912,
+      "geometry_ms": 118214,
+      "grid": [
+        80,
+        76,
+        86
+      ],
+      "grid_samples": 522880,
+      "lattice_connection_repairs": 0,
+      "mass_reprofile203": {
+        "crown_heuristic_diagnostic": "reported_in_field_qualification",
+        "crown_is_aesthetic_diagnostic": true,
+        "internal_carriers": 4,
+        "one_external_group": true,
+        "outer_host_changed": true,
+        "protected_middle_roots_unchanged": true
+      },
+      "max_body_triangles": 100000,
+      "max_detail_triangles": 0,
+      "primitive_tests": 6229747,
+      "regional_noise_gains": {
+        "abdomen": 4.0,
+        "body_chain": 2.75,
+        "core": 3.5,
+        "growth": 4.5,
+        "limb": 2.75,
+        "lobe": 4.0,
+        "muscle_fan": 3.0,
+        "pelvis": 3.0,
+        "segment": 3.0,
+        "shoulder": 3.0,
+        "torso": 3.5
+      },
+      "sampled_points": 522880,
+      "skipped_empty_points": 0,
+      "spacing_scale": 1.0,
+      "thin_features_preserved": 0,
+      "triangles": 35912,
+      "uniform_extraction_grid": false,
+      "vertices": 17958
+    },
+    "historical_coarse_cost": {
+      "edge_queries": 498428,
+      "edges": 13930,
+      "lattice_visits": 454936
+    },
+    "new_complete_field_values": 1171540,
+    "new_complete_field_values_cap": 4411048,
+    "peak_rss_bytes": 611803136
+  },
+  "actual_qa_freeze_sha256": "bf91a9f068d58d949bd44c0fb3b3b499a9d3157bc9bce54626cd7e1f2aa98e89",
+  "artifact_geometry_key232": "b8404250f3619b0750dd5f0030d9cf9dc5b8a7a392c8e55ab9c631db02351465",
+  "artistic_acceptance": false,
+  "cheap": {
+    "core_assertions": 111,
+    "fields": 0,
+    "parsers": 6,
+    "public_assertions": 446,
+    "public_negative_cases": 80,
+    "successful_builds": 0
+  },
+  "field_geometry_key224": "c62a719694d5c35573b4d0b4e5154f39e3b7e7f77b744310f3d5b5a9d0c0c236",
+  "finite_profile": {
+    "directional_carried": 200,
+    "formal_continuity_proof": false,
+    "global_nearest_surface_claimed": false,
+    "local_bracket_carried": 1,
+    "new_fields_for_carry": 0,
+    "normal_gates_carried": 201
+  },
+  "fixed224_input_sha256": "6140ac5eb9b49eebc67f78f521fc60dfb6655d1e1de05766b87abf944f82e572",
+  "late_evidence_carried_under_exact_parity_not_rerun": true,
+  "late_receipt_sha256": "20e2c0e2d3141b54933eafa050dcc2d31632efc072e9c9f88550b62a50e38cdc",
+  "launcher_full_build_repeated_for_packaging": false,
+  "matched_clay_images": {
+    "count": 6,
+    "not_material_or_AO_visualization": true,
+    "receipt_sha256": "a38788ee39c64919d10129e6991effdd019df9aabaa5cfd3352cfb2748c4422a",
+    "scope": "Actual fresh geometry clay diagnostics, not AO/UV/material visualization. CPU64 samples800x650 rear-first exact fixed scene."
+  },
+  "native_status_flags_changed": false,
+  "ordinary_UI_or_general_seed_claim": false,
+  "original224_and201_rejections_preserved": true,
+  "other_engine_versions_verified": false,
+  "portable_overlay_qa": "Separate receipt required. This file records the already completed source/API qualification, not later packaging execution.",
+  "public_recipe_sha256": "de59647b901a1d9445a4cf56f952e73d3a482231c48f02417d9d189f012afef7",
+  "recorded_output_included_in_overlay": false,
+  "recorded_raw": {
+    "bytes": 23804552,
+    "native_pending_flags_modified": false,
+    "native_status": "live_stage5_generated232_unqualified",
+    "sha256": "68a33031a85005c359035808709076e19b1c84f8706026f58d79bfe06c6205a2"
+  },
+  "schema": "predator_isle_blob232_public_qualification_summary_v1",
+  "sealed_cheap_summary_sha256": "85d852bbd72c33168c9654a7dbeb87ca14fa27446397bff95fbc46d6757a89c7",
+  "sealed_original_summary_sha256": "85b879abfcd23dde0c693d9d3906ad4f1bac99558f55a2f19bc94b3de17d16c8",
+  "source_manifest_sha256": "384ed4808a56884fb8403a09bc46f40d76b434c92533254575d29450eb3095ee",
+  "status": "fresh_live232_qualified_under_finite_local_profile_not_art_acceptance",
+  "summary_kind": "portable_derivative_of_sealed_reports_not_a_new_native_run",
+  "tested_engine": "Godot4.6.3 single-precision Vector3"
+}

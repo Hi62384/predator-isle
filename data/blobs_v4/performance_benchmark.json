@@ -1,0 +1,38 @@
+{
+	"animation_ms": {
+		"max": 22.805,
+		"mean": 17.0154333333333,
+		"p95": 19.649
+	},
+	"cancellation_before_extraction": {
+		"elapsed_ms": 1465.504,
+		"success": true
+	},
+	"draw_calls": 8.0,
+	"frame_ms_including_render_and_vsync": {
+		"max": 36.737,
+		"mean": 19.3933916666667,
+		"p95": 21.972
+	},
+	"generation": [
+		{
+			"cold_generation_ms": 1907.46,
+			"packed_geometry_bytes": 2147960,
+			"quality": 0,
+			"triangles": 27776
+		},
+		{
+			"cold_generation_ms": 5291.47,
+			"packed_geometry_bytes": 4508288,
+			"quality": 1,
+			"triangles": 59648
+		}
+	],
+	"gpu": "NVIDIA GeForce RTX 3060 Laptop GPU",
+	"notes": "One draft creature; CPU includes contact/curve guards. Frame wall time includes the Godot root viewport, vsync and scheduling. No crowd or game FPS claim.",
+	"process_static_memory_bytes": 81185464,
+	"renderer": "Compatibility",
+	"seed": 5101,
+	"video_memory_bytes": 43468239.0,
+	"viewport": "1280x720"
+}

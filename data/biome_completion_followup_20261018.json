@@ -1,0 +1,1943 @@
+{
+  "asset_validation": {
+    "array": "res://materials/biological_colors_v2.tres",
+    "compressed_array_bytes": 11184864.0,
+    "failures": [],
+    "gpu_readback_performed": true,
+    "native_source_dimensions": [
+      1254.0,
+      1254.0
+    ],
+    "production_array_references_valid": true,
+    "production_dimensions": [
+      2048.0,
+      2048.0
+    ],
+    "readbacks": [
+      {
+        "max_channel_error": 0.0156862735748291,
+        "name": "mycelium",
+        "sample_count": 1024.0
+      },
+      {
+        "max_channel_error": 0.011764720082283,
+        "name": "nerve",
+        "sample_count": 1024.0
+      },
+      {
+        "max_channel_error": 0.0117647051811218,
+        "name": "carapace",
+        "sample_count": 1024.0
+      },
+      {
+        "max_channel_error": 0.00784315168857574,
+        "name": "membrane",
+        "sample_count": 1024.0
+      }
+    ],
+    "source_hashes_valid": true
+  },
+  "capture_integrity": {
+    "artistic_signoff": false,
+    "captures_audited": 143.0,
+    "feature_captures": 13.0,
+    "infinite_cave_system_complete": false,
+    "png_hashes_dimensions_and_committed_cuts": true,
+    "regional_day_night_captures": 96.0,
+    "source_hashes_current": true
+  },
+  "cave_biome_registry_complete": false,
+  "current_assertion_total": 220308,
+  "current_core_source_sha256": {
+    "res://alien_infected_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://assets/textures/biological/mycelium_albedo_v2.png": "38ffa794781ce78a0d46c56d97e80c819c0e19d5e4c8eed206444837963d2b64",
+    "res://crystal_wastes_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://data/biological_material_sources.json": "384e03b6085e1e1da55bc3109930b67e296a26c50155c77009631d41b8650f08",
+    "res://insect_colony_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://materials/biological_color_mycelium_v2.res": "aca5c21c1550013c5f6bfeedcffefebc76d868184a9ebebf13888dec7b3f9bfc",
+    "res://materials/biological_colors_v2.tres": "1cd8db32aaed5d68c61bd5d9a03bcec5a8496d904839d9f814a32ad484cd5fb5",
+    "res://quarry_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://radiation_wasteland_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://scripts/alien_infected_sampler.gd": "9a46aa6ec282de6697e7e34c1d39ce365e4835debcfa6287950c92a1ae525ea2",
+    "res://scripts/badlands_sampler.gd": "a841fd25e61a19bee0c11d3c5a251285be85bbfba92a5e1eeaae7efa804194eb",
+    "res://scripts/biome_extension_sampler.gd": "449bb18615251d54eceeab3290eea26d2b4ad52cb8a02d8162db8004181c82f8",
+    "res://scripts/biome_extension_settings.gd": "bda1e668b6579206feacb2e5e1a52d6e6ab185aa0895f323856847c42255ccfb",
+    "res://scripts/biome_extension_structures.gd": "e182af1199c49a52a4cb5e45329f30335949245b5a8807d5b937ca1f68bcd360",
+    "res://scripts/chunk_terrain.gd": "4a044120b3ede79f063fadd3f73bebff4842ca11facb72469f25ca57c57419e4",
+    "res://scripts/crystal_wastes_sampler.gd": "93c5763bdff74ffa342c5188262612bc06e5b524f1b85fe744b734c9fd75d384",
+    "res://scripts/insect_colony_sampler.gd": "e114e94b5b66af860a40d04f91df8aad47221a13f9d6a0fa228fa1cb461fb046",
+    "res://scripts/quarry_sampler.gd": "0c103ce9e7a6f908a86f1e9b31a82f037d7be4410003a43c17ba60a873dc2184",
+    "res://scripts/radiation_wasteland_sampler.gd": "6c4eb166d0b07c3bc32e18e3647bd2f7b3bead358e56cb7c4e365dba05f366c6",
+    "res://scripts/spore_forest_sampler.gd": "6de1abb547fe79835abc65206e0ddb28a1f8b3ee97791fc9afb8882fc3bd29b9",
+    "res://scripts/terrain_collision.gd": "eeb1f0452b75e6974a65ad3f8ad3d651a28623b5816bdfe371bf5ccfb8fd320c",
+    "res://scripts/terrain_feature_meshes.gd": "b198af2ad3c881bb13d4d587e4a8dd328e3ee56ca2c6a50310c52d3336d83420",
+    "res://scripts/terrain_mesh_builder.gd": "de249f2e6bf0973499345bf18c6f577c1453ec5c409538e5ee10841e6ac87941",
+    "res://scripts/terrain_settings.gd": "725a21569373dabb8926ded69a06a69bc913a7aaccb5f41add71a84c9ff8ca1f",
+    "res://scripts/volcanic_sampler.gd": "2bcf41535d4a93a093fe591f41f0d7d2ab23ad8fe026b8e2a5fea296a8574c24",
+    "res://scripts/wise_mountains_sampler.gd": "2795af2b510a43d5bd678bd4ff23ddc2d6bce90ad70db0c2055fa3bc55070eda",
+    "res://shaders/badlands_material.gdshaderinc": "a99e7b9d4a3100e3494fba0a59b67c0fc33ccb031b29c5015fbe67c85e602d7b",
+    "res://shaders/biome_extensions.gdshaderinc": "679ecdbe1cc3c40cf514cfe70a496a9d23308fa59aad239c0a754a3283500b07",
+    "res://shaders/biome_structures.gdshader": "65adbaf49e9ea18fcc5b37a9021ae2796493188ce857dffbda3546de01c7b7a9",
+    "res://shaders/crystal_transmission.gdshader": "dba0a557bed0d96e2775c22225c927858d55b6f8081c9e540d26d250c4e0c8d1",
+    "res://shaders/terrain_biomes.gdshader": "691ecb1d93fb3979f6043acde06c95bb28528235516872e5107a84bab48a3af3",
+    "res://shaders/terrain_features.gdshader": "978b916072fdb8bcc259550e73c0c1352b6adb1f388068e2c1e0a199e6edfa5d",
+    "res://spore_forest_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://volcanic_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://wise_mountains_settings.tres": "0fa99cfd16973e1b8a4d14d789c8ba86878eb28aeb359886dddca8974023f307"
+  },
+  "date": "2026-10-18",
+  "earlier_followup_streaming_diagnostic": {
+    "baseline": {
+      "chunks": 251,
+      "commit_max_ms": 16.882,
+      "commit_p50_ms": 2.341,
+      "commit_p95_ms": 5.299,
+      "initial_fill_s": 9.606349,
+      "stage_max_ms": 10.561,
+      "stage_p95_ms": 1.535
+    },
+    "collision_phases": {
+      "chunks": 251,
+      "commit_max_ms": 7.6,
+      "commit_p50_ms": 1.997,
+      "commit_p95_ms": 3.584,
+      "initial_fill_s": 9.07834,
+      "stage_max_ms": 2.988,
+      "stage_p95_ms": 0.759
+    },
+    "cpu_payload": {
+      "chunks": 251,
+      "commit_max_ms": 56.216,
+      "commit_p50_ms": 2.198,
+      "commit_p95_ms": 4.144,
+      "initial_fill_s": 9.375856,
+      "stage_max_ms": 51.874,
+      "stage_p95_ms": 0.818
+    }
+  },
+  "frozen_caverns_complete": false,
+  "full_reference_quality_complete": false,
+  "gpu_payload_validation": {
+    "actual_source_function": true,
+    "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+    "failures": [],
+    "negative_control_detected": true,
+    "positive_cases": [
+      {
+        "case": 0.0,
+        "family": 0.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 0.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 0.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 1.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 1.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 1.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 2.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 2.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 2.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 3.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 3.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 3.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 4.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 4.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 4.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 5.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 5.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 5.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 6.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 6.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 6.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 0.0,
+        "family": 7.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 1.0,
+        "family": 7.0,
+        "max_linear_error": 0.00392156839370728
+      },
+      {
+        "case": 2.0,
+        "family": 7.0,
+        "max_linear_error": 0.00392156839370728
+      }
+    ]
+  },
+  "infinite_default_cave_complete": false,
+  "known_remaining": [
+    "Natural/reference-quality shape, material, regional/scenic-target work remains; artistic sign-off is false.",
+    "Finite spiral-shaft/gallery fixtures are not natural infinite connected cave networks or deep brain chambers.",
+    "Twelve static walks cover three seeds; the one actual streaming walk pauses to preload and is not uninterrupted performance certification.",
+    "Quarry grades cover eight admitted inland centreline routes on canonical and 2/4 m grids; not exhaustive capsule, mixed-owner, custom-scale or all-quarry traversal certification.",
+    "Generated mycelium is an original 1254-square albedo resampled to 2048, not a photographed PBR scan; mirrored/rotated shader borders do not prove source pixels are perfectly tileable.",
+    "Accelerated fixed-step headless physics sometimes emitted a Jolt job-capacity warning; no actual runtime-performance conclusion is drawn from its elapsed time.",
+    "Cold startup and streaming frame spikes remain measured performance work.",
+    "Infinite Default Cave remains queued after surface completion, followed by the same-network registry plus Default/Frozen, then Crystal Caverns, then Magma Caverns. Later biome implementation is authorized only in that strict sequential order; no specialized cave biome is complete."
+  ],
+  "latest_queued_request": {
+    "acceptance": "Actual procedural generation of the 56 named test cases, fixed-seed distributions and separate accessible-area coverage, rare 2%/1000–2000m regions, no mandatory molten crossing/jump/drop, full Volcanic surface-to-Default-to-cooled/active-Magma-to-surface physical return walk. Validate actual basins and dry bypasses, geometry/material transitions, collision, deterministic ownership/seams/LOD, bounded memory, CPU/GPU cost and native visual quality. Preserve the complete brief's final report requirements.",
+    "additional_cave_biome_order": 2.0,
+    "brief": "C:/Users/User1/.codex/attachments/a753d663-6646-4991-8a27-e9b50a41933d/Pasted text.txt",
+    "brief_read_in_full": true,
+    "brief_review_status": "Complete 3123-line brief read. Preserve all twenty implementation stages and distribution, visual, physical traversal, streaming and performance acceptance gates; recording this request is not implementation.",
+    "depends_on": "Crystal Caverns",
+    "excluded": "No creatures, lava damage/burning, eruptions, particles/smoke/steam, new audio/weather, mining, destructible terrain, inventory, buildings or unrelated gameplay. Do not implement separate Sulfur/Alien Hive/future cave biomes in this phase.",
+    "initial_defaults": {
+      "depth_weights": [
+        0.0,
+        5.0,
+        30.0,
+        80.0,
+        100.0
+      ],
+      "size_m": [
+        300.0,
+        1100.0
+      ],
+      "spawn_percent": 22.0,
+      "surface_affinities": {
+        "Badlands": 20.0,
+        "Desert": 10.0,
+        "Mountain Range": 35.0,
+        "Quarry": 15.0,
+        "Radiation Wasteland": 15.0,
+        "Rocky Coast": 5.0,
+        "Volcanic": 100.0,
+        "others": 0.0
+      }
+    },
+    "integration_note": "Keep candidate rarity, extent, smooth relative depth preference, actual surface affinity and environmental suitability independent. Zero normal L1 spawning. Desert is not a current live owner and Rocky Coast is an overlay: map real semantics instead of inventing IDs. Volcanic origin is distinct from present heat; exposed molten rock needs a suitable heat source, not depth alone. Reuse compatible Volcanic materials/rendering without rebuilding the cave engine or recoloring ocean water.",
+    "reference_images": [
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-ef7a7abd-a57d-4492-b250-ff9946403d02.png",
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-857f1309-aac0-41cb-882c-5d57d036c697.png",
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-59ecb8f1-0e02-4753-ae39-01ebe2834230.png",
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-c59d219d-e0e7-4d81-b22e-b489a4b76ba7.png",
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-ff5d2cf7-7bcb-4f97-b081-df9ee344c794.png",
+      "C:/Users/User1/AppData/Local/Temp/codex-clipboard-43b4d0e0-a546-4982-9dd0-08bda7e495f8.png"
+    ],
+    "scope": "Extend the same connected cave geometry and registry with coherent volcanic age, intrusive geology and separately controlled geothermal activity. Real ancient lava tubes, enormous basalt chambers/cathedrals, smooth ropy and rough hardened flows, fissures, selective columnar basalt, obsidian, ash/scoria and weathering. Mostly dormant geology with rare basin-conforming molten lakes/channels, dark cooling crust and controlled dedicated lava shading. Preserve Default/Frozen/Crystal and every required dry two-way route.",
+    "status": "queued_after_crystal_caverns_completion",
+    "system": "Magma Caverns"
+  },
+  "native_capture_metrics": {
+    "captures": 143,
+    "gpu_view_median_max_ms": 13.2030000686646,
+    "gpu_view_median_min_ms": 4.13600015640259,
+    "initial_fill_max_s": 123.903414,
+    "initial_fill_min_s": 5.180543,
+    "stream_wait_frame_max_ms": 163.333,
+    "video_memory_max_bytes": 547217713.0,
+    "video_memory_min_bytes": 380901285.0
+  },
+  "previous_phase_report": "data/biome_completion_validation_20261018.json",
+  "profiling_caveat": "Three ordered Alien runs, not a randomized repeat distribution. Measured before the latest fungal/transition/rim revisions. Payload retains worker numeric collision arrays and removes mesh readback/duplicate cavity uploads; a 51.874 ms staging outlier still occurred. Not a claim that stalls are solved.",
+  "status": "completion_pass_in_progress",
+  "tests": {
+    "check_all": {
+      "checks": 48392.0,
+      "failures": [],
+      "families": {
+        "alien_infected": {
+          "mesh_2048m_32_resolution_ms": 266.984,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "age": 0.676951572299004,
+                "branch_distance": 727.425598144531,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-47434.31, -38840.4)",
+                "center_distance": 1845.90625,
+                "family": 7.0,
+                "feature": 0.118907392720569,
+                "height": 66.2842782107924,
+                "id": "(-12, -10)",
+                "infection_age": 0.676951572299004,
+                "infection_intensity": 0.118494854393727,
+                "influence": 0.118494854393727,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 0.0,
+                "trunk_distance": 725.18115234375,
+                "underground_center": "(-47434.31, -900.0, -38840.4)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.309453696360284
+              },
+              "x": -49022.0,
+              "z": -39782.0
+            },
+            "1": {
+              "descriptor": {
+                "age": 0.304852098226547,
+                "branch_distance": 1063.77294921875,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-5488.796, 22887.67)",
+                "center_distance": 1148.64367675781,
+                "family": 7.0,
+                "feature": 0.0644495292529266,
+                "height": 27.1554761635772,
+                "id": "(-2, 5)",
+                "infection_age": 0.304852098226547,
+                "infection_intensity": 0.0645520703973399,
+                "influence": 0.0645520703973399,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 1.4450973924956,
+                "trunk_distance": 929.885192871094,
+                "underground_center": "(-5488.796, -900.0, 22887.67)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.282224764626463
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            },
+            "2": {
+              "descriptor": {
+                "age": 0.429409623146057,
+                "branch_distance": 1102.09350585938,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-51653.89, -46631.07)",
+                "center_distance": 1492.35803222656,
+                "family": 7.0,
+                "feature": 0.0956307162820885,
+                "height": 50.8680686677527,
+                "id": "(-13, -12)",
+                "infection_age": 0.429409623146057,
+                "infection_intensity": 0.0955230771374345,
+                "influence": 0.0955230771374345,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 1.63531242456898,
+                "trunk_distance": 798.451721191406,
+                "underground_center": "(-51653.89, -900.0, -46631.07)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.297815358141044
+              },
+              "x": -52081.0,
+              "z": -48061.0
+            },
+            "3": {
+              "descriptor": {
+                "age": 0.188503444194794,
+                "branch_distance": 1388.986328125,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-60055.73, -59584.86)",
+                "center_distance": 418.868560791016,
+                "family": 7.0,
+                "feature": 0.963918942278451,
+                "height": 87.1005219875856,
+                "id": "(-15, -15)",
+                "infection_age": 0.188503444194794,
+                "infection_intensity": 0.963918942278451,
+                "influence": 0.963918942278451,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 2.56990093737841,
+                "trunk_distance": 12.4943447113037,
+                "underground_center": "(-60055.73, -900.0, -59584.86)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.731959471139226
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            },
+            "4": {
+              "descriptor": {
+                "age": 0.490591764450073,
+                "branch_distance": 1000.46801757813,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-54956.11, -51463.38)",
+                "center_distance": 1634.16198730469,
+                "family": 7.0,
+                "feature": 0.57255611632631,
+                "height": 65.1276855156872,
+                "id": "(-14, -13)",
+                "infection_age": 0.490591764450073,
+                "infection_intensity": 0.570784892663708,
+                "influence": 0.570784892663708,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 4.06478599295971,
+                "trunk_distance": 190.652572631836,
+                "underground_center": "(-54956.11, -900.0, -51463.38)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.536278058163155
+              },
+              "x": -54511.0,
+              "z": -49891.0
+            },
+            "5": {
+              "descriptor": {
+                "age": 0.522946938872337,
+                "branch_distance": 1388.32971191406,
+                "breach_traversable": false,
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "center": "(-13832.84, 10580.03)",
+                "center_distance": 1332.46520996094,
+                "family": 7.0,
+                "feature": 0.131861658560622,
+                "height": 52.4121115213493,
+                "id": "(-4, 2)",
+                "infection_age": 0.522946938872337,
+                "infection_intensity": 0.131537275753991,
+                "influence": 0.131537275753991,
+                "organic_fluid": {
+                  "eligible": false,
+                  "rendered": "Only retained basins passing the feature mesher's bed/rim test",
+                  "renderer_supported": true
+                },
+                "region": 4.99999,
+                "trunk_distance": 689.678100585938,
+                "underground_center": "(-13832.84, -900.0, 10580.03)",
+                "underground_geometry": false,
+                "water_level": 0.0,
+                "wetness": 0.315930829280311
+              },
+              "x": -14916.0,
+              "z": 9804.0
+            }
+          },
+          "sample_and_test_ms": 397.9,
+          "structure_ms": 0.164,
+          "triangles": 0.0
+        },
+        "crystal_wastes": {
+          "mesh_2048m_32_resolution_ms": 163.44,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.0,
+                "height": 69.8395182230933,
+                "region": 0.0,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": 25894.0,
+              "z": 10414.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.133434673350399,
+                "height": 219.810190517682,
+                "region": 0.649992678564246,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": 17975.0,
+              "z": -1525.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.0815860444466556,
+                "height": 45.8988196097166,
+                "region": 2.22701504826546,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.222726930897694,
+                "height": -14.8213229415535,
+                "region": 2.79027872797451,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": -14916.0,
+              "z": 9804.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.0,
+                "height": 106.00320288971,
+                "region": 3.68144397840115,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 5.0,
+                "feature": 0.577019902395659,
+                "height": 36.0953450605968,
+                "region": 4.99999,
+                "water_level": 0.0,
+                "wetness": 0.2
+              },
+              "x": -52081.0,
+              "z": -48061.0
+            }
+          },
+          "sample_and_test_ms": 249.08,
+          "structure_ms": 5.76,
+          "triangles": 200.0
+        },
+        "insect_colony": {
+          "mesh_2048m_32_resolution_ms": 223.901,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.0,
+                "height": 47.6996419493398,
+                "region": 0.0,
+                "water_level": 0.0,
+                "wetness": 0.210417901543164
+              },
+              "x": 31383.0,
+              "z": 20523.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.192454391971016,
+                "height": 73.6476120996802,
+                "region": 1.27004790306091,
+                "water_level": 0.0,
+                "wetness": 0.299400091916043
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.0,
+                "height": 55.5512867057931,
+                "region": 1.91206902058548,
+                "water_level": 0.0,
+                "wetness": 0.43079145319331
+              },
+              "x": 25894.0,
+              "z": 10414.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.0,
+                "height": 69.9663969014486,
+                "region": 3.43531864881516,
+                "water_level": 0.0,
+                "wetness": 0.457196258547342
+              },
+              "x": 3352.0,
+              "z": 35512.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.0,
+                "height": 78.9260550395029,
+                "region": 3.68552668021403,
+                "water_level": 0.0,
+                "wetness": 0.344412934242009
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 6.0,
+                "feature": 0.0612221823432376,
+                "height": 106.13971669365,
+                "region": 4.99999,
+                "water_level": 0.0,
+                "wetness": 0.426193667634481
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            }
+          },
+          "sample_and_test_ms": 384.826,
+          "structure_ms": 71.834,
+          "triangles": 12348.0
+        },
+        "quarry": {
+          "mesh_2048m_32_resolution_ms": 255.71,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 0.0,
+                "height": 251.076334783505,
+                "region": 0.0,
+                "water_level": 0.0,
+                "wetness": 0.25
+              },
+              "x": -54511.0,
+              "z": -49891.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 0.0,
+                "height": 350.77183551571,
+                "region": 1.47333242826309,
+                "water_level": 0.0,
+                "wetness": 0.25
+              },
+              "x": 33813.0,
+              "z": 22353.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 0.0,
+                "height": 375.584107281126,
+                "region": 1.5040744244061,
+                "water_level": 0.0,
+                "wetness": 0.25
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 1.0,
+                "height": 269.921602736165,
+                "region": 3.14640439382755,
+                "water_level": 0.0,
+                "wetness": 0.65
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 0.0,
+                "height": 434.175361913038,
+                "region": 3.51993085613807,
+                "water_level": 0.0,
+                "wetness": 0.25
+              },
+              "x": -52081.0,
+              "z": -48061.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "family": 0.0,
+                "feature": 0.0,
+                "height": 232.831896568698,
+                "region": 4.99999,
+                "water_level": 0.0,
+                "wetness": 0.25
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            }
+          },
+          "sample_and_test_ms": 369.49,
+          "structure_ms": 0.05,
+          "triangles": 0.0
+        },
+        "radiation_wasteland": {
+          "mesh_2048m_32_resolution_ms": 228.453,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.329690191792636,
+                "drainage_distance": 700.213073730469,
+                "fallout_deposition": 0.419083435368934,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 66.1469502887691,
+                "physical_damage": 0.0,
+                "region": 0.0,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": 15545.0,
+              "z": -3355.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.00254653975498458,
+                "drainage_distance": 274.975189208984,
+                "fallout_deposition": 0.00231567436375203,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 60.3241603487098,
+                "physical_damage": 0.0,
+                "region": 0.853851503123224,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": 25894.0,
+              "z": 10414.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.225175458843528,
+                "drainage_distance": 75.9118499755859,
+                "fallout_deposition": 0.0,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 71.4619762391845,
+                "physical_damage": 0.0,
+                "region": 2.08533831817262,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": 19819.0,
+              "z": -54161.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.0140431208933267,
+                "drainage_distance": 203.988800048828,
+                "fallout_deposition": 0.0,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 108.723146551989,
+                "physical_damage": 0.0,
+                "region": 3.17941329482801,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.0541850265778856,
+                "drainage_distance": 177.461059570313,
+                "fallout_deposition": 0.0,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 75.7230749478014,
+                "physical_damage": 0.0,
+                "region": 3.82132551396964,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "contamination": 0.112576443709955,
+                "drainage_distance": 0.0,
+                "fallout_deposition": 0.0,
+                "family": 4.0,
+                "feature": 0.0,
+                "height": 28.5346146344966,
+                "physical_damage": 0.0,
+                "region": 4.51544594764709,
+                "water_level": 0.0,
+                "wetness": 0.15
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            }
+          },
+          "sample_and_test_ms": 357.46,
+          "structure_ms": 0.032,
+          "triangles": 0.0
+        },
+        "spore_forest": {
+          "mesh_2048m_32_resolution_ms": 427.102,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.355594470796918,
+                "colony_coverage": 0.169944253794797,
+                "colony_id": "3:-3:13",
+                "family": 3.0,
+                "feature": 0.08669381308735,
+                "height": 35.8389417922438,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 0.203877397370093,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.41935505046988
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.319785595089097,
+                "colony_coverage": 0.136280649276854,
+                "colony_id": "3:-31:-28",
+                "family": 3.0,
+                "feature": 0.0675745651128068,
+                "height": 49.5160361913222,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 0.697710303491817,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.404059652090245
+              },
+              "x": -54511.0,
+              "z": -49891.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.49401910626051,
+                "colony_coverage": 0.26024315283523,
+                "colony_id": "3:-6:11",
+                "family": 3.0,
+                "feature": 0.130375539130715,
+                "height": 19.5353468591843,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 2.20616828470811,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.454300431304572
+              },
+              "x": -9427.0,
+              "z": 19913.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.0,
+                "colony_coverage": 0.0,
+                "colony_id": "3:-7:6",
+                "family": 3.0,
+                "feature": 0.0,
+                "height": 52.9581456856481,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 3.44478032147344,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.482491510333527
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.186754456342549,
+                "colony_coverage": 0.367741431835381,
+                "colony_id": "3:1:19",
+                "family": 3.0,
+                "feature": 0.187956479782926,
+                "height": 77.3701884526801,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 4.26712718605995,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.499047960834594
+              },
+              "x": 3352.0,
+              "z": 35512.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": false,
+                "colony_age": 0.491607629457306,
+                "colony_coverage": 0.040926509696865,
+                "colony_id": "3:-34:-34",
+                "family": 3.0,
+                "feature": 0.0204632548484325,
+                "height": 38.8964752554893,
+                "luminous": false,
+                "luminous_potential": 0.0,
+                "region": 4.87713098526001,
+                "spore_dose_calibrated": false,
+                "water_level": 0.0,
+                "wetness": 0.066370603878746
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            }
+          },
+          "sample_and_test_ms": 587.364,
+          "structure_ms": 0.034,
+          "triangles": 0.0
+        },
+        "volcanic": {
+          "mesh_2048m_32_resolution_ms": 193.067,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.0,
+                "height": 266.336154564285,
+                "region": 0.184895270049594,
+                "water_level": 0.0,
+                "wetness": 0.28341801146903
+              },
+              "x": -52081.0,
+              "z": -48061.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.0,
+                "height": 788.126047993796,
+                "region": 1.10109044282035,
+                "water_level": 0.0,
+                "wetness": 0.169349167120806
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.499101597660869,
+                "height": 801.07119848549,
+                "region": 1.86548962575159,
+                "water_level": 0.0,
+                "wetness": 0.277294189551517
+              },
+              "x": 17975.0,
+              "z": -1525.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.0,
+                "height": 27.0866381786682,
+                "region": 2.80019723038502,
+                "water_level": 0.0,
+                "wetness": 0.267227951189144
+              },
+              "x": -4567.0,
+              "z": 23573.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.0,
+                "height": 32.2153229192481,
+                "region": 3.90082919597626,
+                "water_level": 0.0,
+                "wetness": 0.0436682057747004
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 2.0,
+                "feature": 0.0,
+                "height": 160.560301691303,
+                "region": 4.99999,
+                "water_level": 0.0,
+                "wetness": 0.12519636048246
+              },
+              "x": -49022.0,
+              "z": -39782.0
+            }
+          },
+          "sample_and_test_ms": 280.494,
+          "structure_ms": 0.029,
+          "triangles": 0.0
+        },
+        "wise_mountains": {
+          "mesh_2048m_32_resolution_ms": 125.622,
+          "metadata_bytes": 34848.0,
+          "preview_regions": {
+            "0": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 0.0,
+                "height": 10.2233797371388,
+                "region": 0.309474945068359,
+                "water_level": 4.0,
+                "wetness": 1.0
+              },
+              "x": -60000.0,
+              "z": -60000.0
+            },
+            "1": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 1.0,
+                "height": 435.058829649258,
+                "region": 0.779643200314297,
+                "water_level": 0.0,
+                "wetness": 0.4
+              },
+              "x": -52081.0,
+              "z": -48061.0
+            },
+            "2": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 0.0,
+                "height": 31.4777246657363,
+                "region": 1.75899160431766,
+                "water_level": 0.0,
+                "wetness": 0.4
+              },
+              "x": 33813.0,
+              "z": 22353.0
+            },
+            "3": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 1.0,
+                "height": 181.421528463713,
+                "region": 2.56112779103379,
+                "water_level": 0.0,
+                "wetness": 0.4
+              },
+              "x": -6997.0,
+              "z": 21743.0
+            },
+            "4": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 1.0,
+                "height": 387.300175204425,
+                "region": 3.7032072763468,
+                "water_level": 0.0,
+                "wetness": 0.4
+              },
+              "x": -12486.0,
+              "z": 11634.0
+            },
+            "5": {
+              "descriptor": {
+                "cave_placement": "Finite dry-site portals only, not arbitrary heightfield excavation",
+                "caves_supported": true,
+                "family": 1.0,
+                "feature": 1.0,
+                "height": 520.637959577029,
+                "region": 4.94635248742998,
+                "water_level": 0.0,
+                "wetness": 0.4
+              },
+              "x": -14916.0,
+              "z": 9804.0
+            }
+          },
+          "sample_and_test_ms": 193.091,
+          "structure_ms": 0.03,
+          "triangles": 0.0
+        }
+      }
+    },
+    "check_features": {
+      "cavity_cases": [
+        {
+          "family": 1.0,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 1.0,
+            "floor": 31.184792117069,
+            "half": 96.0,
+            "id": "1:12:-2",
+            "kind": "rock_cavern",
+            "owner": "(103776.0, -12672.0)",
+            "phase": 2.25205679357936,
+            "position": "(103776.0, -12672.0)",
+            "roof": 51.184792117069,
+            "top": 227.899235737112
+          },
+          "vertices": 4200.0
+        },
+        {
+          "family": 2.0,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 2.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "2:-15:-1",
+            "kind": "lava_tube",
+            "owner": "(-118528.0, -5920.0)",
+            "phase": 3.89458010574736,
+            "position": "(-118528.0, -5920.0)",
+            "roof": 28.0,
+            "top": 57.6913118575478
+          },
+          "vertices": 2472.0
+        },
+        {
+          "family": 6.0,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 6.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "6:2:2",
+            "kind": "burrow",
+            "owner": "(20896.0, 21248.0)",
+            "phase": 3.45185390686939,
+            "position": "(20896.0, 21248.0)",
+            "roof": 28.0,
+            "top": 67.3293854472393
+          },
+          "vertices": 3048.0
+        },
+        {
+          "family": 7.0,
+          "physics_portal_floor": true,
+          "site": {
+            "family": 7.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "7:-15:-1",
+            "kind": "hive_chamber",
+            "owner": "(-117952.0, -5088.0)",
+            "phase": 2.77850338035794,
+            "position": "(-117952.0, -5088.0)",
+            "roof": 28.0,
+            "top": 63.8946342766285
+          },
+          "vertices": 3048.0
+        }
+      ],
+      "checks": 36.0,
+      "failures": [],
+      "fixture_cave_frequency": 0.5,
+      "note": "Native rays plus four-second capsule traversals in four cavity fixtures; not exhaustive world traversal"
+    },
+    "check_integration": {
+      "checks": 160701.0,
+      "collision": "Native PhysicsDirectSpaceState3D downward rays at canonical mesh vertices",
+      "failures": [],
+      "ownership": "Exact world-space major geometry multiset, parent versus four children"
+    },
+    "check_liquids": {
+      "active_lava_frequency": 0.04,
+      "cases": [
+        {
+          "family": 2.0,
+          "id": "2:33:-14",
+          "position": "(241955.0, -97306.7)"
+        },
+        {
+          "family": 2.0,
+          "id": "2:35:-3",
+          "position": "(253826.8, -18163.32)"
+        },
+        {
+          "family": 7.0,
+          "id": "7:-58:-59",
+          "position": "(-235825.0, -239911.4)"
+        },
+        {
+          "family": 7.0,
+          "id": "7:-55:-59",
+          "position": "(-223827.3, -239837.3)"
+        }
+      ],
+      "checks": 8312.0,
+      "failures": [],
+      "note": "Default production source frequency and clipping; not a fluid simulation"
+    },
+    "check_quarry_access": {
+      "cases": [
+        {
+          "configured_grade": 0.1,
+          "id": "0:3:1",
+          "max_2m_mesh_grade": 0.0435905578210168,
+          "max_4m_mesh_grade": 0.0437400675558964,
+          "max_adjacent_height": 0.0818939208984375,
+          "max_canonical_grade": 0.0435327010002277,
+          "position": "(10522.09, 5536.569)",
+          "turns": 3.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:3:1",
+            "point": "(10470.33, 133.9013, 5392.349)",
+            "raw_height": 132.779885282499,
+            "t": 0.00651041666666667
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:4:2",
+          "max_2m_mesh_grade": 0.0415445764878299,
+          "max_4m_mesh_grade": 0.0417218448225662,
+          "max_adjacent_height": 0.107879638671875,
+          "max_canonical_grade": 0.0415198043905599,
+          "position": "(14986.19, 7642.193)",
+          "turns": 3.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:4:2",
+            "point": "(14998.76, 94.99549, 7853.407)",
+            "raw_height": 83.4974583390457,
+            "t": 0.0598958333333333
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:-8:5",
+          "max_2m_mesh_grade": 0.0399113662306062,
+          "max_4m_mesh_grade": 0.0398413650114773,
+          "max_adjacent_height": 0.089263916015625,
+          "max_canonical_grade": 0.0399927796514418,
+          "position": "(-24116.43, 17133.0)",
+          "turns": 3.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:-8:5",
+            "point": "(-23937.96, 170.9106, 17117.35)",
+            "raw_height": 170.810840314853,
+            "t": 0.00065104166666666
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:1:6",
+          "max_2m_mesh_grade": 0.0486796111093419,
+          "max_4m_mesh_grade": 0.0487273668478315,
+          "max_adjacent_height": 0.106399536132813,
+          "max_canonical_grade": 0.0486579524348178,
+          "position": "(4170.976, 20361.33)",
+          "turns": 6.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:1:6",
+            "point": "(4227.803, 87.71875, 20530.1)",
+            "raw_height": 71.4615978671673,
+            "t": 0.0494791666666667
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:-7:7",
+          "max_2m_mesh_grade": 0.0461790959097684,
+          "max_4m_mesh_grade": 0.0463871728261156,
+          "max_adjacent_height": 0.080963134765625,
+          "max_canonical_grade": 0.046157362560815,
+          "position": "(-20338.72, 24781.96)",
+          "turns": 8.0,
+          "width": 67.1527648047347,
+          "worst": {
+            "owner": "0:-7:7",
+            "point": "(-20469.41, 164.8756, 24724.47)",
+            "raw_height": 158.206885857713,
+            "t": 0.0205078125
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:6:7",
+          "max_2m_mesh_grade": 0.0432210051131136,
+          "max_4m_mesh_grade": 0.0434186595883791,
+          "max_adjacent_height": 0.0889320373535156,
+          "max_canonical_grade": 0.0432402796053223,
+          "position": "(20236.4, 23869.07)",
+          "turns": 6.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:6:7",
+            "point": "(20292.12, 48.16512, 24027.01)",
+            "raw_height": 39.8298123820385,
+            "t": 0.03125
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:1:9",
+          "max_2m_mesh_grade": 0.0468783261221056,
+          "max_4m_mesh_grade": 0.04707236565292,
+          "max_adjacent_height": 0.0802230834960938,
+          "max_canonical_grade": 0.0468585350937989,
+          "position": "(4321.911, 29938.48)",
+          "turns": 5.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:1:9",
+            "point": "(4399.153, 106.758, 29822.45)",
+            "raw_height": 106.382986224628,
+            "t": 0.0015625
+          }
+        },
+        {
+          "configured_grade": 0.1,
+          "id": "0:3:9",
+          "max_2m_mesh_grade": 0.0473485383134998,
+          "max_4m_mesh_grade": 0.0474343778742721,
+          "max_adjacent_height": 0.088409423828125,
+          "max_canonical_grade": 0.0473446861638886,
+          "position": "(10825.47, 30321.19)",
+          "turns": 5.0,
+          "width": 96.0,
+          "worst": {
+            "owner": "0:3:9",
+            "point": "(10689.28, 144.1519, 30253.63)",
+            "raw_height": 137.462004761127,
+            "t": 0.03203125
+          }
+        }
+      ],
+      "checks": 25.0,
+      "failures": [],
+      "scope": "Canonical and exact 2/4 m grid triangle-interpolated centreline grades; not capsule or mixed-owner certification",
+      "seed": 73921.0
+    },
+    "check_roundtrip": {
+      "cases": [
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 1.0,
+          "finished": true,
+          "frames": 47886.0,
+          "max_airborne_frames": 8.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(103894.4, 157.7374, -12671.99)",
+          "site": {
+            "family": 1.0,
+            "floor": 31.184792117069,
+            "half": 96.0,
+            "id": "1:12:-2",
+            "kind": "rock_cavern",
+            "owner": "(103776.0, -12672.0)",
+            "phase": 2.25205679357936,
+            "position": "(103776.0, -12672.0)",
+            "roof": 51.184792117069,
+            "top": 227.899235737112
+          },
+          "speed_mps": 5.0,
+          "target": "(103895.0, 157.8293, -12672.0)",
+          "waypoint": 776.0,
+          "waypoints": 776.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 2.0,
+          "finished": true,
+          "frames": 15476.0,
+          "max_airborne_frames": 4.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-118415.1, 48.12816, -5919.997)",
+          "site": {
+            "family": 2.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "2:-15:-1",
+            "kind": "lava_tube",
+            "owner": "(-118528.0, -5920.0)",
+            "phase": 3.89458010574736,
+            "position": "(-118528.0, -5920.0)",
+            "roof": 28.0,
+            "top": 57.6913118575478
+          },
+          "speed_mps": 5.0,
+          "target": "(-118414.6, 48.16815, -5920.0)",
+          "waypoint": 200.0,
+          "waypoints": 200.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 6.0,
+          "finished": true,
+          "frames": 26329.0,
+          "max_airborne_frames": 5.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(21010.28, 52.90235, 21248.01)",
+          "site": {
+            "family": 6.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "6:2:2",
+            "kind": "burrow",
+            "owner": "(20896.0, 21248.0)",
+            "phase": 3.45185390686939,
+            "position": "(20896.0, 21248.0)",
+            "roof": 28.0,
+            "top": 67.3293854472393
+          },
+          "speed_mps": 5.0,
+          "target": "(21010.83, 52.94726, 21248.0)",
+          "waypoint": 392.0,
+          "waypoints": 392.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 7.0,
+          "finished": true,
+          "frames": 26298.0,
+          "max_airborne_frames": 4.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-117835.1, 51.30518, -5087.999)",
+          "site": {
+            "family": 7.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "7:-15:-1",
+            "kind": "hive_chamber",
+            "owner": "(-117952.0, -5088.0)",
+            "phase": 2.77850338035794,
+            "position": "(-117952.0, -5088.0)",
+            "roof": 28.0,
+            "top": 63.8946342766285
+          },
+          "speed_mps": 5.0,
+          "target": "(-117834.6, 51.33311, -5088.0)",
+          "waypoint": 392.0,
+          "waypoints": 392.0
+        }
+      ],
+      "checks": 16.0,
+      "failures": [],
+      "fixture_cave_frequency": 0.5,
+      "scope": "Finite cavity physics, no streaming or infinite cave certification",
+      "seed": 73921.0
+    },
+    "check_roundtrip_17041": {
+      "cases": [
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 1.0,
+          "finished": true,
+          "frames": 58471.0,
+          "max_airborne_frames": 9.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-71151.34, 146.8885, -10816.0)",
+          "site": {
+            "family": 1.0,
+            "floor": 15.2614850569271,
+            "half": 96.0,
+            "id": "1:-9:-2",
+            "kind": "rock_cavern",
+            "owner": "(-71264.0, -10816.0)",
+            "phase": 3.98204603206643,
+            "position": "(-71264.0, -10816.0)",
+            "roof": 35.2614850569271,
+            "top": 236.684001229234
+          },
+          "speed_mps": 5.0,
+          "target": "(-71150.86, 146.8744, -10816.0)",
+          "waypoint": 968.0,
+          "waypoints": 968.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 2.0,
+          "finished": true,
+          "frames": 26847.0,
+          "max_airborne_frames": 6.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-135469.8, 43.26762, -20767.99)",
+          "site": {
+            "family": 2.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "2:-17:-3",
+            "kind": "lava_tube",
+            "owner": "(-135584.0, -20768.0)",
+            "phase": 5.92644077549179,
+            "position": "(-135584.0, -20768.0)",
+            "roof": 28.0,
+            "top": 81.6153287793454
+          },
+          "speed_mps": 5.0,
+          "target": "(-135469.3, 43.32711, -20768.0)",
+          "waypoint": 392.0,
+          "waypoints": 392.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 6.0,
+          "finished": true,
+          "frames": 37114.0,
+          "max_airborne_frames": 5.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-76105.7, 96.29953, -20447.99)",
+          "site": {
+            "family": 6.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "6:-10:-3",
+            "kind": "burrow",
+            "owner": "(-76224.0, -20448.0)",
+            "phase": 2.31962443001695,
+            "position": "(-76224.0, -20448.0)",
+            "roof": 28.0,
+            "top": 123.857851487754
+          },
+          "speed_mps": 5.0,
+          "target": "(-76105.19, 96.34325, -20448.0)",
+          "waypoint": 584.0,
+          "waypoints": 584.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 7.0,
+          "finished": true,
+          "frames": 37059.0,
+          "max_airborne_frames": 5.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-28624.18, 101.9653, 30272.01)",
+          "site": {
+            "family": 7.0,
+            "floor": 17.4963968296817,
+            "half": 96.0,
+            "id": "7:-4:3",
+            "kind": "hive_chamber",
+            "owner": "(-28736.0, 30272.0)",
+            "phase": 4.38815655003441,
+            "position": "(-28736.0, 30272.0)",
+            "roof": 37.4963968296817,
+            "top": 124.744080636808
+          },
+          "speed_mps": 5.0,
+          "target": "(-28623.64, 102.0088, 30272.0)",
+          "waypoint": 584.0,
+          "waypoints": 584.0
+        }
+      ],
+      "checks": 16.0,
+      "failures": [],
+      "fixture_cave_frequency": 0.5,
+      "scope": "Finite cavity physics, no streaming or infinite cave certification",
+      "seed": 17041.0
+    },
+    "check_roundtrip_98123": {
+      "cases": [
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 1.0,
+          "finished": true,
+          "frames": 49142.0,
+          "max_airborne_frames": 10.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(338226.4, 123.2383, -2175.97)",
+          "site": {
+            "family": 1.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "1:41:-1",
+            "kind": "rock_cavern",
+            "owner": "(338112.0, -2176.0)",
+            "phase": 3.42938825720016,
+            "position": "(338112.0, -2176.0)",
+            "roof": 28.0,
+            "top": 212.113994251881
+          },
+          "speed_mps": 5.0,
+          "target": "(338226.9, 123.2152, -2176.0)",
+          "waypoint": 776.0,
+          "waypoints": 776.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 2.0,
+          "finished": true,
+          "frames": 58579.0,
+          "max_airborne_frames": 1.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-70441.63, 169.3293, -13312.0)",
+          "site": {
+            "family": 2.0,
+            "floor": 37.1156657586407,
+            "half": 96.0,
+            "id": "2:-9:-2",
+            "kind": "lava_tube",
+            "owner": "(-70560.0, -13312.0)",
+            "phase": 0.841134839365392,
+            "position": "(-70560.0, -13312.0)",
+            "roof": 57.1156657586407,
+            "top": 274.438273296711
+          },
+          "speed_mps": 5.0,
+          "target": "(-70441.14, 169.1983, -13312.0)",
+          "waypoint": 968.0,
+          "waypoints": 968.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 6.0,
+          "finished": true,
+          "frames": 26468.0,
+          "max_airborne_frames": 4.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-2026.627, 53.99086, -5087.999)",
+          "site": {
+            "family": 6.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "6:-1:-1",
+            "kind": "burrow",
+            "owner": "(-2144.0, -5088.0)",
+            "phase": 0.522939261162759,
+            "position": "(-2144.0, -5088.0)",
+            "roof": 28.0,
+            "top": 74.2327177292979
+          },
+          "speed_mps": 5.0,
+          "target": "(-2026.082, 54.02432, -5088.0)",
+          "waypoint": 392.0,
+          "waypoints": 392.0
+        },
+        {
+          "capsule_height": 1.8,
+          "capsule_radius": 0.4,
+          "failed": false,
+          "family": 7.0,
+          "finished": true,
+          "frames": 26583.0,
+          "max_airborne_frames": 23.0,
+          "max_airborne_waypoint": 0.0,
+          "max_unsupported_drop_metres": 0.0,
+          "position": "(-11848.88, 81.87573, -13984.0)",
+          "site": {
+            "family": 7.0,
+            "floor": 8.0,
+            "half": 96.0,
+            "id": "7:-2:-2",
+            "kind": "hive_chamber",
+            "owner": "(-11968.0, -13984.0)",
+            "phase": 1.87109102567715,
+            "position": "(-11968.0, -13984.0)",
+            "roof": 28.0,
+            "top": 108.860731415451
+          },
+          "speed_mps": 5.0,
+          "target": "(-11848.33, 82.09837, -13984.0)",
+          "waypoint": 392.0,
+          "waypoints": 392.0
+        }
+      ],
+      "checks": 16.0,
+      "failures": [],
+      "fixture_cave_frequency": 0.5,
+      "scope": "Finite cavity physics, no streaming or infinite cave certification",
+      "seed": 98123.0
+    },
+    "check_sample_alias": {
+      "checks": 1056.0,
+      "failures": [],
+      "scope": "Cached node aliasing and dense fractional height/normal seams with independent samplers"
+    },
+    "check_spore_ecology": {
+      "cases": [
+        {
+          "centres": 81.0,
+          "default_frequency": 0.08,
+          "luminous_centres": 4.0,
+          "seed": 73921.0
+        },
+        {
+          "centres": 81.0,
+          "default_frequency": 0.08,
+          "luminous_centres": 4.0,
+          "seed": 17041.0
+        },
+        {
+          "centres": 81.0,
+          "default_frequency": 0.08,
+          "luminous_centres": 11.0,
+          "seed": 98123.0
+        }
+      ],
+      "checks": 1221.0,
+      "failures": [],
+      "scope": "Colony union, deterministic overlap, bounded signals, default/disabled luminous control; not artistic acceptance"
+    },
+    "check_streamed_roundtrip": {
+      "checks": 6.0,
+      "committed_cuts": 25.0,
+      "completed": true,
+      "failures": [],
+      "fill_seconds": 13.711366,
+      "max_partition_swap_ms": 2.072,
+      "max_plan_ms": 5.138,
+      "max_unsupported_drop_metres": 0.0,
+      "maximum_lod": 6.0,
+      "movement_frames": 47883.0,
+      "preload_pause_frames": 841.0,
+      "scope": "One Wise fixture using actual production chunk jobs, staging, caches and transactional collision cuts; test walker pauses while replacement cut preloads; not an infinite cave or uninterrupted performance certificate",
+      "site": {
+        "family": 1.0,
+        "floor": 31.184792117069,
+        "half": 96.0,
+        "id": "1:12:-2",
+        "kind": "rock_cavern",
+        "owner": "(103776.0, -12672.0)",
+        "phase": 2.25205679357936,
+        "position": "(103776.0, -12672.0)",
+        "roof": 51.184792117069,
+        "top": 227.899235737112
+      },
+      "walk_wall_seconds": 20.538625,
+      "waypoint": 776.0,
+      "waypoints": 776.0
+    },
+    "check_waterfalls": {
+      "cases": [
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34.0,
+          "outlet": "(8264.859, -1077.567)",
+          "position": "(8264.859, -577.5667)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34.0,
+          "outlet": "(12115.39, -4295.563)",
+          "position": "(12115.39, -4795.563)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34.0,
+          "outlet": "(12115.39, -580.5667)",
+          "position": "(12115.39, -80.56664)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34.0,
+          "outlet": "(16355.62, -4450.519)",
+          "position": "(16355.62, -3950.518)"
+        },
+        {
+          "connected_to_carrier": true,
+          "drop_metres": 34.0,
+          "outlet": "(16355.62, -556.285)",
+          "position": "(16355.62, -56.28502)"
+        }
+      ],
+      "checks": 511.0,
+      "failures": []
+    }
+  }
+}

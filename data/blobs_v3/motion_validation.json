@@ -1,0 +1,8 @@
+{
+	"capture_fps": 15,
+	"capture_ms_per_frame": 241.571266666667,
+	"max_stance_error": 0.00135594687890261,
+	"max_step_us": 10757,
+	"seconds_simulated": 10,
+	"solver_hz": 60
+}

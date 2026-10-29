@@ -1,0 +1,576 @@
+{
+  "date": "2026-10-17",
+  "status": "historical_20261017_snapshot_superseded",
+  "superseded_by": "data/biome_completion_validation_20261018.json",
+  "reference_quality_complete": false,
+  "engine": "Godot 4.6.1 stable",
+  "native_renderer": "gl_compatibility",
+  "adapter": "NVIDIA GeForce RTX 3060 Laptop GPU",
+  "numerical": {
+    "checks": 15632,
+    "failures": []
+  },
+  "integration": {
+    "checks": 88281,
+    "collision": "Native PhysicsDirectSpaceState3D downward rays at canonical mesh vertices",
+    "failures": [],
+    "ownership": "Exact world-space major geometry multiset, parent versus four children"
+  },
+  "gpu_payload": {
+    "positive_cases": 24,
+    "negative_control_detected": true,
+    "failures": [],
+    "max_raw_rgb_error": 0.00392156839370728,
+    "production_function_used": true
+  },
+  "biological_assets": {
+    "sources": 4,
+    "native_source_dimensions": [
+      1254,
+      1254
+    ],
+    "production_dimensions": [
+      2048,
+      2048
+    ],
+    "compression": "BC1 with mipmaps",
+    "shared_gpu_bytes": 11184864,
+    "source_hashes_and_packing_check": "passed",
+    "provenance": "data/biological_material_sources.json"
+  },
+  "native_review": {
+    "all_committed_cuts": true,
+    "artistic_success_claimed": false,
+    "captures_audited": 34,
+    "current_core_source_hashes": true,
+    "families": [
+      "quarry",
+      "wise_mountains",
+      "volcanic",
+      "spore_forest",
+      "radiation_wasteland",
+      "crystal_wastes",
+      "insect_colony",
+      "alien_infected"
+    ],
+    "mixed_world": true
+  },
+  "native_measurements": {
+    "resolution": [
+      1280,
+      720
+    ],
+    "far_plane_metres": 50000,
+    "maximum_lod": 6,
+    "note": "60 settled frames per view, VSync may limit frame timings; not an isolated shader-only benchmark",
+    "gpu_per_view_median_range_ms": [
+      2.98799991607666,
+      6.32999992370605
+    ],
+    "frame_per_view_median_range_ms": [
+      16.661,
+      16.672
+    ],
+    "isolated_families": {
+      "quarry": {
+        "initial_stream_fill_s": 11.249841,
+        "gpu_p50_ms": 5.48799991607666,
+        "frame_p50_ms": 16.667,
+        "leaves": 162,
+        "draw_calls": 116,
+        "video_bytes": 400195251,
+        "metadata_bytes": 6814048
+      },
+      "wise_mountains": {
+        "initial_stream_fill_s": 13.713521,
+        "gpu_p50_ms": 4.93200016021729,
+        "frame_p50_ms": 16.668,
+        "leaves": 165,
+        "draw_calls": 135,
+        "video_bytes": 419975315,
+        "metadata_bytes": 8626432
+      },
+      "volcanic": {
+        "initial_stream_fill_s": 11.49951,
+        "gpu_p50_ms": 4.69799995422363,
+        "frame_p50_ms": 16.666,
+        "leaves": 162,
+        "draw_calls": 98,
+        "video_bytes": 395405709,
+        "metadata_bytes": 7509056
+      },
+      "spore_forest": {
+        "initial_stream_fill_s": 9.194988,
+        "gpu_p50_ms": 5.56099987030029,
+        "frame_p50_ms": 16.662,
+        "leaves": 159,
+        "draw_calls": 111,
+        "video_bytes": 408316011,
+        "metadata_bytes": 6364256
+      },
+      "radiation_wasteland": {
+        "initial_stream_fill_s": 11.386513,
+        "gpu_p50_ms": 5.30499982833862,
+        "frame_p50_ms": 16.666,
+        "leaves": 168,
+        "draw_calls": 141,
+        "video_bytes": 414468025,
+        "metadata_bytes": 7630816
+      },
+      "crystal_wastes": {
+        "initial_stream_fill_s": 8.954684,
+        "gpu_p50_ms": 5.24100017547607,
+        "frame_p50_ms": 16.668,
+        "leaves": 168,
+        "draw_calls": 167,
+        "video_bytes": 399886157,
+        "metadata_bytes": 7266656
+      },
+      "insect_colony": {
+        "initial_stream_fill_s": 10.839242,
+        "gpu_p50_ms": 5.14300012588501,
+        "frame_p50_ms": 16.671,
+        "leaves": 165,
+        "draw_calls": 136,
+        "video_bytes": 394442945,
+        "metadata_bytes": 7294400
+      },
+      "alien_infected": {
+        "initial_stream_fill_s": 18.805832,
+        "gpu_p50_ms": 6.32999992370605,
+        "frame_p50_ms": 16.67,
+        "leaves": 162,
+        "draw_calls": 133,
+        "video_bytes": 420999683,
+        "metadata_bytes": 6925024
+      }
+    },
+    "mixed_world": {
+      "actual_render": true,
+      "all_sixteen_owners_enabled": true,
+      "captures": [
+        {
+          "biome": "mixed",
+          "camera": "(7124.0, 434.9979, -79256.0)",
+          "committed": true,
+          "draw_calls": 98,
+          "focus": "(7824.0, 34.99786, -78256.0)",
+          "frame_p50_ms": 16.666,
+          "gpu_p50_ms": 6.22700023651123,
+          "initial_stream_fill_s": 9.266628,
+          "leaves": 162,
+          "metadata_bytes": 6127008,
+          "sha256": "8993ac022b8765eba89fbe16baa76c1cdb89ab96a19b5fccbbf16b8c2a1a3cf1",
+          "structure_batches": 4,
+          "video_bytes": 442092523,
+          "view": "medium"
+        },
+        {
+          "biome": "mixed",
+          "camera": "(7704.0, 114.9979, -78426.0)",
+          "committed": true,
+          "draw_calls": 102,
+          "focus": "(7824.0, 34.99786, -78256.0)",
+          "frame_p50_ms": 16.67,
+          "gpu_p50_ms": 7.51800012588501,
+          "initial_stream_fill_s": 9.266628,
+          "leaves": 159,
+          "metadata_bytes": 5216320,
+          "sha256": "9038cd7442482c82d3d73222fcc53d5d011f76fef18a7abb955ab22977443b1b",
+          "structure_batches": 4,
+          "video_bytes": 448593231,
+          "view": "normals"
+        }
+      ],
+      "draw_distance": 50000,
+      "initial_stream_fill_s": 9.266628,
+      "maximum_lod": 6,
+      "old_new_transition_focus": "(7824.0, -78256.0)"
+    }
+  },
+  "source_game_smokes": {
+    "all_extensions": {
+      "badlands_preview": false,
+      "beach_preview": false,
+      "biome": "Coastal Dunes / Beaches",
+      "coast_preview": false,
+      "elapsed_s": 40.099999999999,
+      "engine": "4.6.1-stable (official)",
+      "exported": false,
+      "extension_debug_smoke": true,
+      "extension_preview": "",
+      "failure": "",
+      "feature": "",
+      "forest_preview": false,
+      "ground_height": 13.1399422486535,
+      "jungle_preview": false,
+      "loaded_chunks": 117,
+      "local_water_level": 0,
+      "mountain_preview": false,
+      "position": "(6.834559, 113.1399, 69.68923)",
+      "revision": 1,
+      "savanna_preview": false,
+      "swamp_preview": false,
+      "swamp_water_tiles": 30,
+      "tropical_preview": false
+    },
+    "alien_infected": {
+      "badlands_preview": false,
+      "beach_preview": false,
+      "biome": "Alien-Infected",
+      "coast_preview": false,
+      "elapsed_s": 26.5897373333332,
+      "engine": "4.6.1-stable (official)",
+      "exported": false,
+      "extension_debug_smoke": true,
+      "extension_preview": "alien_infected",
+      "failure": "",
+      "feature": "",
+      "forest_preview": false,
+      "ground_height": 72.2283495525531,
+      "jungle_preview": false,
+      "loaded_chunks": 153,
+      "local_water_level": 0,
+      "mountain_preview": false,
+      "position": "(14000.0, 672.2283, 5180.0)",
+      "revision": 1,
+      "savanna_preview": false,
+      "swamp_preview": false,
+      "swamp_water_tiles": 82,
+      "tropical_preview": false
+    }
+  },
+  "cpu_mesh_profile": {
+    "cases": {
+      "alien_infected": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 129.064,
+          "repeats_ms": [
+            116.468,
+            129.064,
+            136.763
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 386.972,
+          "repeats_ms": [
+            370.546,
+            386.972,
+            387.86
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 2708.316,
+          "repeats_ms": [
+            2708.316
+          ],
+          "resolution": 64
+        }
+      ],
+      "crystal_wastes": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 115.846,
+          "repeats_ms": [
+            108.958,
+            115.846,
+            133.944
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 392.358,
+          "repeats_ms": [
+            387.9,
+            392.358,
+            419.838
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1399.921,
+          "repeats_ms": [
+            1399.921
+          ],
+          "resolution": 64
+        }
+      ],
+      "grass": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 163.876,
+          "repeats_ms": [
+            150.909,
+            163.876,
+            180.611
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 404.506,
+          "repeats_ms": [
+            380.697,
+            404.506,
+            411.49
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 537.774,
+          "repeats_ms": [
+            537.774
+          ],
+          "resolution": 64
+        }
+      ],
+      "insect_colony": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 124.259,
+          "repeats_ms": [
+            118.654,
+            124.259,
+            131.811
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 376.409,
+          "repeats_ms": [
+            374.69,
+            376.409,
+            412.323
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1684.778,
+          "repeats_ms": [
+            1684.778
+          ],
+          "resolution": 64
+        }
+      ],
+      "quarry": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 107.695,
+          "repeats_ms": [
+            100.033,
+            107.695,
+            138.164
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 328.815,
+          "repeats_ms": [
+            325,
+            328.815,
+            369.546
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1583.918,
+          "repeats_ms": [
+            1583.918
+          ],
+          "resolution": 64
+        }
+      ],
+      "radiation_wasteland": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 124.305,
+          "repeats_ms": [
+            117.387,
+            124.305,
+            130.509
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 409.723,
+          "repeats_ms": [
+            398.75,
+            409.723,
+            435.689
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1610.734,
+          "repeats_ms": [
+            1610.734
+          ],
+          "resolution": 64
+        }
+      ],
+      "spore_forest": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 118.932,
+          "repeats_ms": [
+            112.899,
+            118.932,
+            140.632
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 425.511,
+          "repeats_ms": [
+            409.187,
+            425.511,
+            469.877
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1420.508,
+          "repeats_ms": [
+            1420.508
+          ],
+          "resolution": 64
+        }
+      ],
+      "volcanic": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 105.679,
+          "repeats_ms": [
+            103.857,
+            105.679,
+            115.06
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 387.236,
+          "repeats_ms": [
+            364.751,
+            387.236,
+            418.548
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 1592.16,
+          "repeats_ms": [
+            1592.16
+          ],
+          "resolution": 64
+        }
+      ],
+      "wise_mountains": [
+        {
+          "chunk_metres": 256,
+          "median_ms": 100.937,
+          "repeats_ms": [
+            100.201,
+            100.937,
+            108.528
+          ],
+          "resolution": 64
+        },
+        {
+          "chunk_metres": 256,
+          "median_ms": 385.994,
+          "repeats_ms": [
+            378.099,
+            385.994,
+            386.877
+          ],
+          "resolution": 128
+        },
+        {
+          "chunk_metres": 16384,
+          "median_ms": 927.245,
+          "repeats_ms": [
+            927.245
+          ],
+          "resolution": 64
+        }
+      ]
+    },
+    "note": "Isolated numerical work; fresh sampler for every mesh repeat. Same coordinates and settings except ownership. No rendering concurrently. Milliseconds, not FPS."
+  },
+  "regressions": {
+    "passed": [
+      "jungle/check_invariants",
+      "jungle/check_materials",
+      "jungle/check_active_biomes",
+      "forest/check_invariants",
+      "forest/check_materials",
+      "savanna/check_invariants",
+      "savanna/check_materials",
+      "swamp/check_invariants",
+      "mountain/check_invariants",
+      "rocky_coast/check_invariants",
+      "beach/check_invariants",
+      "tropical/check_invariants",
+      "tropical/check_assets",
+      "badlands/check_invariants",
+      "badlands/check_assets"
+    ],
+    "scope": "Existing biomes, headless numerical/resource checks; not fresh full visual sweeps"
+  },
+  "current_core_source_sha256": {
+    "res://alien_infected_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://crystal_wastes_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://insect_colony_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://quarry_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://radiation_wasteland_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://scripts/alien_infected_sampler.gd": "f3fdea644400841c212c7f4597a22f8a7c9473184f85c86bcaf46f3c84aa0144",
+    "res://scripts/biome_extension_sampler.gd": "d156fa55af590f4ac834a432df3e2cc38c49d8d122260be0fe4c57540cc660d7",
+    "res://scripts/biome_extension_settings.gd": "1c798d9aacd1e5306ec56467df162791d4a5f7199e04e9193df4f5d6d8fad481",
+    "res://scripts/biome_extension_structures.gd": "1cffd628d6534390246528b78bc5a99758c26f96cd1e9eb85834641862733b94",
+    "res://scripts/chunk_terrain.gd": "1065a4c348ce3628ae878672341a915f15863ca6a3d1d26666c54215d963fb98",
+    "res://scripts/crystal_wastes_sampler.gd": "93c5763bdff74ffa342c5188262612bc06e5b524f1b85fe744b734c9fd75d384",
+    "res://scripts/insect_colony_sampler.gd": "e114e94b5b66af860a40d04f91df8aad47221a13f9d6a0fa228fa1cb461fb046",
+    "res://scripts/quarry_sampler.gd": "9da2a0039aadf2bf025689db72bb7710007ad2ecd1c98bfe87abcbf8fc00d5e3",
+    "res://scripts/radiation_wasteland_sampler.gd": "c0c3f06eb8caa4a34e1b168f3be6baec9b710d347e088e505f53c4428398fca9",
+    "res://scripts/spore_forest_sampler.gd": "d7c0ca563cd5fbbd6aba507096b33d1214e0f478d86eae3e665508a71cf28782",
+    "res://scripts/terrain_collision.gd": "d73ffb5830f4bc12e8faf1a5322fe4ce25ac081b68760e63f17e519213ebc44e",
+    "res://scripts/terrain_mesh_builder.gd": "de249f2e6bf0973499345bf18c6f577c1453ec5c409538e5ee10841e6ac87941",
+    "res://scripts/terrain_settings.gd": "725a21569373dabb8926ded69a06a69bc913a7aaccb5f41add71a84c9ff8ca1f",
+    "res://scripts/volcanic_sampler.gd": "c7c254a8a695770299f4b0bf9ba1f2db760af9918a8faf8baacf77352a3b2ad2",
+    "res://scripts/wise_mountains_sampler.gd": "d8ad0ba4a8c42084578d675a5cc48d9d955d366fb1ff93f5783ca264c189df09",
+    "res://shaders/biome_extensions.gdshaderinc": "326172fd63e592029390c4ff036cf69a9163ae49b8059b1f833386cbef782ac0",
+    "res://shaders/biome_structures.gdshader": "65adbaf49e9ea18fcc5b37a9021ae2796493188ce857dffbda3546de01c7b7a9",
+    "res://shaders/terrain_biomes.gdshader": "15504f630935852a24d3f06c68900a11a8eaea32825e29b0df95e82ce571ed29",
+    "res://spore_forest_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://volcanic_settings.tres": "a00479a67b66428029dd788ac01944ff77ef5f138f7dc68bd464448dfa47643f",
+    "res://wise_mountains_settings.tres": "0fa99cfd16973e1b8a4d14d789c8ba86878eb28aeb359886dddca8974023f307"
+  },
+  "limitations": [
+    "First-pass visuals, not reference-quality sign-off",
+    "No true caves, open burrows or underground chambers",
+    "Lava and organic liquids have eligibility descriptors, not renderers",
+    "Crystals opaque; no true refraction",
+    "Mixed far leaves can undersample narrow features",
+    "No comprehensive nighttime, fast-travel or character traversal sweep",
+    "Generated biological albedos are upscaled artwork, not scanned 2K PBR"
+  ],
+  "evidence_directory": "tools/biome_extensions/artifacts (ignored local reports and PNGs)"
+}

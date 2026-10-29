@@ -1,0 +1,93 @@
+{
+  "assets": [
+    {
+      "name": "mycelium",
+      "source": "res://assets/textures/biological/mycelium_albedo_v2.png",
+      "sha256": "38ffa794781ce78a0d46c56d97e80c819c0e19d5e4c8eed206444837963d2b64",
+      "packed": "res://materials/biological_color_mycelium_v2.res",
+      "native_dimensions": [
+        1254,
+        1254
+      ],
+      "production_dimensions": [
+        2048,
+        2048
+      ],
+      "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+      "prompt": "Use case: photorealistic-natural. Asset type: original seamless tileable albedo texture for Predator Isle's Spore Forest ground, requested square 2048 by 2048 pixels. Primary request: sparse, anatomically plausible fungal mycelium growing in irregular branching dendritic networks over dark decomposed forest soil, as in real close-up biological reference photographs. Frame represents about 2 metres of substrate, orthographic straight overhead, every part in focus, flat neutral diffuse lighting without baked directional shadows or specular highlights. About 80 percent of the visible area is exposed dark brown-black gritty organic soil with tiny decomposed plant flecks. Narrow off-white branching rhizomorphs make connected irregular root-like networks of changing thickness; each thick strand tapers and splits into finer filaments. Thin strands only occupy about 15 percent of the surface; occasional very small fuzzy hyphal junctions occupy another 5 percent. Long meandering connected strands, asymmetrical branch angles, several scales of fine offshoots. Natural restrained contrast and cream/off-white fibres, no blue or green tint. Avoid cotton wool, fuzzy carpeting, dense white mats, lace sheets, web blankets, fur, moss, grass, mushrooms, trees, isolated props, regular branching stamps, repeating loops, even spacing, a central focal pattern, vignettes, labels, watermark, borders, neon or emission. Full bleed material swatch; seamlessly tileable on all four edges. Single albedo image, not a PBR map sheet, montage, terrain render or perspective landscape.",
+      "revision_note": "Sparse branching network replacing fuzzy-mat appearance. Version 1 preserved. Generated edges are not assumed pixel-identical; the shader mirrors and rotates the fungal swatch to keep border color continuous."
+    },
+    {
+      "name": "nerve",
+      "source": "res://assets/textures/biological/nerve_albedo_v3.png",
+      "sha256": "c038977714a3be917bf76f392e7e1c9bf0b3aa1ccc9f0854f34c1191810eb476",
+      "packed": "res://materials/biological_color_nerve_v3.res",
+      "prompt_reference": "res://tools/biome_extensions/experiments/nerve_film_v3_provenance.json",
+      "revision_note": "Charcoal folded tissue replaces the conspicuous pale repeated motif. The creation-time private provenance remains historical; production binding is recorded separately. Native resolution remains 1254 square. Original nerve_albedo_v1.png, biological_color_nerve.res and biological_colors_v2.tres are preserved.",
+      "native_dimensions": [
+        1254,
+        1254
+      ],
+      "production_dimensions": [
+        2048,
+        2048
+      ],
+      "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+      "prompt": "The complete original built-in image-generation prompt is preserved verbatim in prompt_reference. This asset is generated albedo, not a measured height/normal/roughness scan."
+    },
+    {
+      "name": "carapace",
+      "source": "res://assets/textures/biological/carapace_albedo_v1.png",
+      "sha256": "71e68c82f77981b92adab997cda6103523dfd6369e51a46e2fb648dc6bb1ea44",
+      "packed": "res://materials/biological_color_carapace.res",
+      "native_dimensions": [
+        1254,
+        1254
+      ],
+      "production_dimensions": [
+        2048,
+        2048
+      ],
+      "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+      "prompt": "Use case: stylized-concept. Asset type: reusable seamless tileable albedo texture, square 2048x2048, for hardened alien carapace terrain. Photorealistic macro material swatch, orthographic directly overhead, uniformly diffuse lighting, no baked directional shadows. Tough charcoal-brown and deep desaturated maroon-black biological shell with irregular grown overlapping armor laminae, broad asymmetrical scutes, worn edges, subtle fine fibrous chitin grain, leathery connections in recessed seams and occasional small pale mineralized wear. Natural biological hierarchy, broad hard regions and restrained varied organic segmentation. Mostly dry matte, physically substantial, neither metal nor rock nor wet flesh. No hexagonal tiles, Voronoi cells, regular polygon grid, parallel stripes, repeating scales, symmetric pattern, plastic gloss, bright colors, glow, creatures, eyes, eggs, organs, objects, text, logos, borders or watermark. Seamless all four edges, full-bleed single albedo material image, not a landscape or PBR map montage."
+    },
+    {
+      "name": "membrane",
+      "source": "res://assets/textures/biological/membrane_albedo_v1.png",
+      "sha256": "69df1c673ae550325d23a67f69454d732b1173650f99cfb5e73346cb8071fcf3",
+      "packed": "res://materials/biological_color_membrane.res",
+      "native_dimensions": [
+        1254,
+        1254
+      ],
+      "production_dimensions": [
+        2048,
+        2048
+      ],
+      "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+      "prompt": "Use case: stylized-concept. Asset type: seamless reusable square 2048x2048 albedo texture for alien biological membrane terrain in a realistic game. Orthographic directly top-down full-bleed material swatch with flat diffuse neutral lighting and no directional baked shadows. Thick stretched leathery biological membrane, dark desaturated red-brown and muted gray-maroon skin, smooth tensioned surfaces alternating with delicate irregular folds and fine fibrous attachment seams. Broad soft sheets, varied fold width and changing directions, shallow fine pores, selective subtly damp areas but mostly satin rough material rather than plastic gloss. Restrained biological horror, no gore or blood or exposed body parts. Distinct from fungal mycelium, nerve fascicles and armored carapace. Seamless all four edges, no regular waves or grid or hexagons, no random colorful noise, no neon or glow, no creatures, eyes, eggs, objects, text, logos, borders, watermark, perspective, landscape or PBR montage. Single albedo texture only."
+    }
+  ],
+  "origin": "Original AI-generated game textures, not downloaded scans or website previews",
+  "licensing_note": "No third-party CC0 claim is made for generated assets. Apply the project's own distribution policy.",
+  "array": "res://materials/biological_colors_v3.tres",
+  "array_gpu_bytes": 11184864,
+  "height_normal_note": "Small apparent microrelief is derived in the shader from albedo derivatives. It is not a measured height/normal scan. Roughness is material-specific, not a photographed roughness map.",
+  "generation_tool": "Built-in image_gen tool, not CLI",
+  "previous_mycelium": {
+    "name": "mycelium",
+    "source": "res://assets/textures/biological/mycelium_albedo_v1.png",
+    "sha256": "cb39d9a7b69e6f6dfb525f9ba82be54e4679287ecb7326ac11238f97b2d1afac",
+    "packed": "res://materials/biological_color_mycelium.res",
+    "native_dimensions": [
+      1254,
+      1254
+    ],
+    "production_dimensions": [
+      2048,
+      2048
+    ],
+    "method": "Built-in image generation; offline Lanczos resampling, RGB BC1 mipmapped packing",
+    "prompt": "Use case: photorealistic-natural. Asset type: reusable seamless tileable albedo texture for the ground of a Godot game Spore Forest biome, square 2048x2048. Primary request: photorealistic natural fungal mycelium growing across dark decomposed forest soil, viewed perfectly orthographically from directly above, all in focus, flat diffuse neutral lighting with no baked directional shadows. Dense delicate off-white and cream hyphae form genuinely irregular branching networks of extremely fine interwoven fibers, thicker braided rhizomorphs occasionally separating into many fine strands. Uneven mature pale fungal mats interspersed with exposed rich brown-black compost grains and small decayed organic substrate, dense organic complexity. Match the biological subject of the user reference photographs, but create an original texture, not a copy. Frame represents roughly 0.6 metres of actual ground. No distinct focal element, no regular spacing, no repeated trees or arrows or grid or scratches, no mushrooms, plants, objects, text, border, watermark, neon, or emission. Seamlessly tileable on all four edges; full-bleed material swatch, not a rendered landscape or a perspective scene. Single albedo image only, not a montage or PBR map sheet."
+  }
+}

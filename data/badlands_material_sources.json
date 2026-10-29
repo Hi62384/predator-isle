@@ -1,0 +1,184 @@
+{
+  "policy": "Six distinct existing photographed CC0 PBR sources, shared arrays without downloads or duplicate bitmap arrays. Material names are appearance analogues, not mineral-certified mudstone, shale or bentonite. Strata color grading retains different source normal and roughness maps.",
+  "simultaneous_roles": 3,
+  "records": [
+    {
+      "color_resource": "res://materials/savanna_color_clay_hardpan.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560,
+      "id": "Ground026",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Color.jpg",
+          "sha256": "965df353dd3c08e7097ee6451a35bebf7f3fdb045ad2913bff05b5b608b7aa13"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_NormalGL.jpg",
+          "sha256": "6801609594ee0776013c254cb28536ecc6aae7d49083c38280968222f9237929"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground026/Ground026_2K-JPG_Roughness.jpg",
+          "sha256": "a4fdac74637bb004512288b66d93f203722c0633de6fea1e22112f0c408b19b3"
+        }
+      ],
+      "normal_resource": "res://materials/savanna_normal_Ground026.res",
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "clay_hardpan",
+      "source": "https://ambientcg.com/a/Ground026",
+      "treatment": "natural",
+      "badlands_role": 0,
+      "appearance_role": "clay_hardpan",
+      "shared_array": "savanna_colors",
+      "shared_layer": 4
+    },
+    {
+      "color_resource": "res://materials/savanna_color_warm_red_weathered_soil.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560,
+      "id": "Ground105",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_Color.jpg",
+          "sha256": "d46dc77b5cbe03cbf4936ad5d9e6859174cfd082c925dc8cf4c90a5ac07b63aa"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_NormalGL.jpg",
+          "sha256": "0bef6756eca99c8920ed453325c26fc0a9c4848952881fde32b461c590bbd17f"
+        },
+        {
+          "path": "res://assets/textures/savanna/Ground105/Ground105_2K-JPG_Roughness.jpg",
+          "sha256": "aa1bd17eaca8cd6bc1767c5153a72445b232b8aed27c738f38743a832c769427"
+        }
+      ],
+      "normal_resource": "res://materials/savanna_normal_Ground105.res",
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "warm_red_weathered_soil",
+      "source": "https://ambientcg.com/a/Ground105",
+      "treatment": "red",
+      "badlands_role": 1,
+      "appearance_role": "red_mudstone_analogue",
+      "shared_array": "savanna_colors",
+      "shared_layer": 3
+    },
+    {
+      "color_resource": "res://materials/savanna_color_warm_layered_bedrock.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560,
+      "id": "Rock055",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Color.jpg",
+          "sha256": "c3c4fb15f1a99ef4e96e8f2f1bafb3335a94fc13d0ffc0bce4e97957d347edba"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_NormalGL.jpg",
+          "sha256": "72f715a154c01a0441a6de091375376da55de3c44ca7371680e8cdefb3ece03f"
+        },
+        {
+          "path": "res://assets/textures/savanna/Rock055/Rock055_2K-JPG_Roughness.jpg",
+          "sha256": "1ced7dca92b82d00398321ed856560863dd7a05caa195460d88bfa20c77f98ff"
+        }
+      ],
+      "normal_resource": "res://materials/savanna_normal_Rock055.res",
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "warm_layered_bedrock",
+      "source": "https://ambientcg.com/a/Rock055",
+      "treatment": "natural",
+      "badlands_role": 2,
+      "appearance_role": "resistant_layered_rock",
+      "shared_array": "savanna_colors",
+      "shared_layer": 6
+    },
+    {
+      "color_resource": "res://materials/savanna_color_cracked_basin_soil.res",
+      "creation_method": "PBRApproximated",
+      "gpu_bytes": 6990560,
+      "id": "Ground031",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Color.jpg",
+          "sha256": "0e21d8c100cdd7ab200cf165eabd583ad0da322dad86483a167beed87128198b"
+        },
+        {
+          "path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_NormalGL.jpg",
+          "sha256": "574b03caeab29df038f89a448f46b5f496eb9ee5254e30465eb67218e09f871c"
+        },
+        {
+          "path": "res://assets/textures/desert/Ground031/Ground031_2K-JPG_Roughness.jpg",
+          "sha256": "54996f5e4dbb595625221cf613b2061a1bd8a577b4aac6e5c8a9849595238b84"
+        }
+      ],
+      "normal_resource": "res://materials/savanna_normal_Ground031.res",
+      "note": "Dry grass is a color-graded Grass003 PBR variant; red soil is a graded dry-earth scan, not a certified laterite sample. Rock042L provides photographed weathered bedrock appearance, not verified mineral classification. Rectangular sources are resampled to square array dimensions.",
+      "role": "cracked_basin_soil",
+      "source": "https://ambientcg.com/a/Ground031",
+      "treatment": "natural",
+      "badlands_role": 3,
+      "appearance_role": "basin_cracked_soil",
+      "shared_array": "savanna_colors",
+      "shared_layer": 7
+    },
+    {
+      "gpu_bytes": 6990560,
+      "id": "Gravel020",
+      "license": "CC0-1.0",
+      "license_url": "https://docs.ambientcg.com/license/",
+      "maps": [
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Color.jpg",
+          "sha256": "8aa9fd0886c8167615ef93dda674b1ee7e27429c2fcc130fa16d7dc9bb3bf0e9"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_NormalGL.jpg",
+          "sha256": "46c74509115f7b39a5e53bed76b6443168d8bfccb6b5e864244582c01116a4eb"
+        },
+        {
+          "path": "res://assets/textures/ambientcg/Gravel020/Gravel020_2K-JPG_Roughness.jpg",
+          "sha256": "f77f60801b8517d900d2fa2dfc5cd1dcbe77c9946c8ec83edf455b782b509ac6"
+        }
+      ],
+      "normal_convention": "OpenGL positive Y XY BC5",
+      "role": "river_gravel",
+      "roughness": "linear alpha; albedo sRGB",
+      "source": "https://ambientcg.com/a/Gravel020",
+      "badlands_role": 4,
+      "appearance_role": "wash_gravel",
+      "shared_array": "jungle_colors",
+      "shared_layer": 3
+    },
+    {
+      "color_resource": "res://materials/mountain_color_coarse_talus.res",
+      "creation_method": "PBRPhotogrammetry",
+      "gpu_bytes": 6990560,
+      "id": "Ground108",
+      "license": "CC0-1.0",
+      "maps": [
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Color.jpg",
+          "sha256": "ab087d6e2bae96b740d45702665d3cee224d9fcaa6d8395af2e64fe933502676"
+        },
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_NormalGL.jpg",
+          "sha256": "282facdd61ec1423962727540d2eebe24ecb74c6637855c3c934bd318f145ffc"
+        },
+        {
+          "path": "res://assets/textures/mountain/Ground108/Ground108_2K-JPG_Roughness.jpg",
+          "sha256": "fc8bcc3835537aa614e7d5e39a5cefcfaf9b26a39fd9189bea7e0c8c1fe865f0"
+        }
+      ],
+      "normal_resource": "res://materials/mountain_normal_Ground108.res",
+      "note": "Photographed mountain rock, rocky river debris and slate-like gravel; appearance roles, not certified geological mineral classifications. Other Mountain roles reuse existing PBR arrays.",
+      "role": "coarse_talus",
+      "source": "https://ambientcg.com/a/Ground108",
+      "treatment": "natural",
+      "badlands_role": 5,
+      "appearance_role": "coarse_talus",
+      "shared_array": "mountain_colors",
+      "shared_layer": 1
+    }
+  ]
+}

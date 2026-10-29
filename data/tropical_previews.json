@@ -1,0 +1,288 @@
+{
+	"features": {
+		"ancient_volcanic_highland": {
+			"height": 534.464557375024,
+			"score": 1.0,
+			"water": 115.109424087116,
+			"x": -45056.0,
+			"z": -33792.0
+		},
+		"beach_tropical_transition": {
+			"height": 26.8577862807694,
+			"score": 0.998077362775803,
+			"water": 11.0502613179638,
+			"x": 195705.8125,
+			"z": -188308.0
+		},
+		"coast_tropical_transition": {
+			"height": 299.39792323946,
+			"score": 0.9996517598629,
+			"water": 12.0444906094448,
+			"x": -183151.890625,
+			"z": -25789.166015625
+		},
+		"coastal_bluff": {
+			"height": 290.892178645738,
+			"score": 1.0,
+			"water": 119.292438293725,
+			"x": 26624.0,
+			"z": -3072.0
+		},
+		"coastal_lowland": {
+			"height": 148.831059623914,
+			"score": 1.0,
+			"water": 122.435406197267,
+			"x": -27648.0,
+			"z": -98304.0
+		},
+		"forest_tropical_transition": {
+			"height": 58.2133878214141,
+			"score": 0.991125881671906,
+			"water": 28.5811396824972,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"freshwater_lake": {
+			"height": 26.3540761494912,
+			"score": 1.0,
+			"water": 35.4702357129638,
+			"x": 103840.0,
+			"z": -14936.880859375
+		},
+		"freshwater_pool": {
+			"height": 33.51181476252,
+			"score": 1.0,
+			"water": 37.9362026812598,
+			"x": -1107.10607910156,
+			"z": 12586.2333984375
+		},
+		"grass_tropical_transition": {
+			"height": 137.428178535008,
+			"score": 0.991125881671906,
+			"water": 28.5811396824972,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"humid_basin": {
+			"height": 201.411230195147,
+			"score": 0.928349137306213,
+			"water": 131.057909297281,
+			"x": 7168.0,
+			"z": 25600.0
+		},
+		"humid_soil": {
+			"height": 37.435634215533,
+			"score": 1.0,
+			"water": 36.5844694266922,
+			"x": -92160.0,
+			"z": -60416.0
+		},
+		"jungle_tropical_transition": {
+			"height": 114.903896806012,
+			"score": 0.991125881671906,
+			"water": 28.5811396824972,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"lake_country": {
+			"height": 123.971133892631,
+			"score": 0.913825433681392,
+			"water": 75.2915975039752,
+			"x": 2048.0,
+			"z": 37888.0
+		},
+		"large_river": {
+			"height": 27.9674531045694,
+			"score": 1.0,
+			"water": 30.9674531045694,
+			"x": -72704.0,
+			"z": -96256.0
+		},
+		"limestone_highland": {
+			"height": 378.012630594237,
+			"score": 1.0,
+			"water": 93.9411484585503,
+			"x": 10240.0,
+			"z": -77824.0
+		},
+		"lush_plain": {
+			"height": 159.068633792243,
+			"score": 1.0,
+			"water": 131.967162159524,
+			"x": -11264.0,
+			"z": -98304.0
+		},
+		"mountain_belt": {
+			"height": 489.020183187489,
+			"score": 1.0,
+			"water": 54.1918716539069,
+			"x": -89088.0,
+			"z": -77824.0
+		},
+		"mountain_tropical_transition": {
+			"height": 209.661245483909,
+			"score": 0.991125881671906,
+			"water": 127.17695556872,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"plateau_country": {
+			"height": 158.965401671891,
+			"score": 0.987794971622832,
+			"water": 84.9775841798528,
+			"x": -97280.0,
+			"z": -2048.0
+		},
+		"ravine_country": {
+			"height": 384.173498426421,
+			"score": 1.0,
+			"water": 45.5634761978255,
+			"x": -5120.0,
+			"z": -77824.0
+		},
+		"red_soil": {
+			"height": 493.644286762648,
+			"score": 1.0,
+			"water": 103.513274341503,
+			"x": -98304.0,
+			"z": -98304.0
+		},
+		"river_mouth": {
+			"height": -1.2,
+			"score": 1.0,
+			"water": 0.0,
+			"x": -129024.0,
+			"z": -184320.0
+		},
+		"river_valley": {
+			"height": 107.764087251685,
+			"score": 0.996982932090759,
+			"water": 51.4336874851459,
+			"x": -53248.0,
+			"z": 98304.0
+		},
+		"rocky_cascade": {
+			"candidate": {
+				"drop_metres": 27.9307098388672,
+				"flow_connected": true,
+				"foot": "(-190900.4, 137.9788, -123397.5)",
+				"id": "tropical:-80:-31",
+				"kind": "Actual rocky tributary cascade using the existing foam renderer; not a detached free-falling waterfall",
+				"lip": "(-190644.4, 165.9095, -123442.9)",
+				"renderer_supported": true
+			},
+			"height": 149.57283685566,
+			"score": 27.9307098388672,
+			"water": 151.667031720075,
+			"x": -190772.421875,
+			"z": -123435.5859375
+		},
+		"rocky_gorge": {
+			"height": 216.978122225625,
+			"score": 0.254287918381541,
+			"water": 170.965804273763,
+			"x": -65536.0,
+			"z": -77824.0
+		},
+		"rocky_highland": {
+			"height": 379.184301944662,
+			"score": 1.0,
+			"water": 25.1932834610165,
+			"x": -57344.0,
+			"z": -98304.0
+		},
+		"rocky_soil_transition": {
+			"height": 103.223857409737,
+			"score": 0.999999822398208,
+			"water": 22.5062665419693,
+			"x": -74752.0,
+			"z": -62464.0
+		},
+		"rolling_hills": {
+			"height": 144.949636800566,
+			"score": 1.0,
+			"water": 112.836293204107,
+			"x": -80896.0,
+			"z": -98304.0
+		},
+		"rugged_hills": {
+			"height": 275.585930198067,
+			"score": 1.0,
+			"water": 48.7552311368006,
+			"x": -17408.0,
+			"z": -90112.0
+		},
+		"savanna_tropical_transition": {
+			"height": 61.4411731217227,
+			"score": 0.991125881671906,
+			"water": 28.5811396824972,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"small_stream": {
+			"height": 36.8631698110699,
+			"score": 1.0,
+			"water": 38.6631698110699,
+			"x": -1024.0,
+			"z": -64512.0
+		},
+		"swamp_tropical_transition": {
+			"height": 50.1824855688535,
+			"score": 0.991125881671906,
+			"water": 32.3740562551196,
+			"x": 1024.0,
+			"z": 16896.0
+		},
+		"uplifted_terrace": {
+			"height": 255.623422855477,
+			"score": 0.276983936131001,
+			"water": 130.620424804011,
+			"x": 97280.0,
+			"z": 93184.0
+		},
+		"volcanic_tropical_transition": {
+			"height": 171.948519603116,
+			"score": 0.876851968467236,
+			"water": 13.5277074167101,
+			"x": -58445.0,
+			"z": -81545.0
+		},
+		"waterfall_ledge": {
+			"candidate": {
+				"drop_metres": 32.9294230548558,
+				"flow_connected": false,
+				"foot": [
+					-53248.0,
+					242.316286404831,
+					-38976.0
+				],
+				"kind": "Dry escarpment ledge; terrain attachment candidate only, not a rendered or routed waterfall",
+				"lip": [
+					-53248,
+					275.245709459687,
+					-38912
+				],
+				"renderer_supported": false
+			},
+			"height": 275.245709459687,
+			"score": 0.329294230548558,
+			"water": 51.4336874851459,
+			"x": -53248.0,
+			"z": -38912.0
+		},
+		"weathered_escarpment": {
+			"height": 328.785451991096,
+			"score": 1.0,
+			"water": 51.4336874851459,
+			"x": -53248.0,
+			"z": -34816.0
+		}
+	},
+	"pending_dependencies": [],
+	"seed": 73921,
+	"source": "Searched actual Tropical sampler and verified connected cascade profiles; no static showcases",
+	"unsupported": [
+		"Detached free-falling waterfall volumes; steep tributary cascades are rendered",
+		"Heightfield caves and overhangs"
+	]
+}

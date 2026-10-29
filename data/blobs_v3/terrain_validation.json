@@ -1,0 +1,275 @@
+{
+	"failures": [],
+	"runs": [
+		{
+			"effective": "roll",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3437.71666666667,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "roll",
+			"seed": 3000,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3281.17777777778,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "vine",
+			"seed": 3000,
+			"travel": "(120.0, 28.73273, 238.8417)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3178.22222222222,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "limb",
+			"seed": 3000,
+			"travel": "(120.0, 28.73273, 238.8417)"
+		},
+		{
+			"effective": "contractile",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3469.33333333333,
+			"minimum_support_clearance": -0.015,
+			"requested": "contractile",
+			"seed": 3000,
+			"travel": "(119.981, 28.72221, 239.3741)"
+		},
+		{
+			"effective": "peristaltic",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3588.22777777778,
+			"minimum_support_clearance": -0.015,
+			"requested": "peristaltic",
+			"seed": 3000,
+			"travel": "(119.9829, 28.72334, 239.5641)"
+		},
+		{
+			"effective": "pulse",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3854.36666666667,
+			"minimum_support_clearance": -0.015,
+			"requested": "pulse",
+			"seed": 3000,
+			"travel": "(119.9815, 28.72205, 239.4006)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3391.53888888889,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "drag",
+			"seed": 3000,
+			"travel": "(120.0, 28.73273, 238.8417)"
+		},
+		{
+			"effective": "hybrid",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3353.56666666667,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "hybrid",
+			"seed": 3000,
+			"travel": "(120.0, 28.73288, 238.6955)"
+		},
+		{
+			"effective": "multicontact",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3450.27222222222,
+			"minimum_support_clearance": -0.0148437920391722,
+			"requested": "multicontact",
+			"seed": 3000,
+			"travel": "(120.0, 28.73273, 238.8417)"
+		},
+		{
+			"effective": "undulate",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3690.54444444444,
+			"minimum_support_clearance": -0.015,
+			"requested": "undulate",
+			"seed": 3000,
+			"travel": "(119.9829, 28.72334, 239.5641)"
+		},
+		{
+			"effective": "roll",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3970.96666666667,
+			"minimum_support_clearance": -0.0149108281006443,
+			"requested": "roll",
+			"seed": 3003,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "vine",
+			"maximum_stance_error": 0.000258169340668246,
+			"mean_step_us": 4222.17222222222,
+			"minimum_support_clearance": -0.0149108281006443,
+			"requested": "vine",
+			"seed": 3003,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4023.92777777778,
+			"minimum_support_clearance": -0.0149108281006443,
+			"requested": "limb",
+			"seed": 3003,
+			"travel": "(120.0, 28.73279, 238.823)"
+		},
+		{
+			"effective": "contractile",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4489.78333333333,
+			"minimum_support_clearance": -0.015,
+			"requested": "contractile",
+			"seed": 3003,
+			"travel": "(120.0101, 28.72369, 239.3635)"
+		},
+		{
+			"effective": "peristaltic",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4368.36111111111,
+			"minimum_support_clearance": -0.015,
+			"requested": "peristaltic",
+			"seed": 3003,
+			"travel": "(120.0088, 28.72352, 239.4911)"
+		},
+		{
+			"effective": "pulse",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4316.56666666667,
+			"minimum_support_clearance": -0.013972084510092,
+			"requested": "pulse",
+			"seed": 3003,
+			"travel": "(120.0099, 28.72338, 239.4141)"
+		},
+		{
+			"effective": "drag",
+			"maximum_stance_error": 0.0000057220458984375,
+			"mean_step_us": 4189.62777777778,
+			"minimum_support_clearance": -0.0149607418367071,
+			"requested": "drag",
+			"seed": 3003,
+			"travel": "(120.0, 28.72309, 239.4707)"
+		},
+		{
+			"effective": "hybrid",
+			"maximum_stance_error": 0.000064849853515625,
+			"mean_step_us": 3949.51111111111,
+			"minimum_support_clearance": -0.0149108281006443,
+			"requested": "hybrid",
+			"seed": 3003,
+			"travel": "(120.0, 28.7318, 238.6234)"
+		},
+		{
+			"effective": "multicontact",
+			"maximum_stance_error": 0.000003814697265625,
+			"mean_step_us": 4012.44444444444,
+			"minimum_support_clearance": -0.0149108281006443,
+			"requested": "multicontact",
+			"seed": 3003,
+			"travel": "(120.0, 28.73267, 238.8398)"
+		},
+		{
+			"effective": "undulate",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4321.9,
+			"minimum_support_clearance": -0.015,
+			"requested": "undulate",
+			"seed": 3003,
+			"travel": "(120.0088, 28.72352, 239.4911)"
+		},
+		{
+			"effective": "roll",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4307.12222222222,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "roll",
+			"seed": 3006,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3641.1,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "vine",
+			"seed": 3006,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3678.16111111111,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "limb",
+			"seed": 3006,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "contractile",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4297.25,
+			"minimum_support_clearance": -0.0149999999999999,
+			"requested": "contractile",
+			"seed": 3006,
+			"travel": "(120.0072, 28.72387, 239.5165)"
+		},
+		{
+			"effective": "peristaltic",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4470.62777777778,
+			"minimum_support_clearance": -0.015,
+			"requested": "peristaltic",
+			"seed": 3006,
+			"travel": "(120.0108, 28.72777, 239.6616)"
+		},
+		{
+			"effective": "pulse",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4232.27222222222,
+			"minimum_support_clearance": -0.015,
+			"requested": "pulse",
+			"seed": 3006,
+			"travel": "(120.0096, 28.72502, 239.5753)"
+		},
+		{
+			"effective": "limb",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3808.77777777778,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "drag",
+			"seed": 3006,
+			"travel": "(120.0, 28.72487, 238.447)"
+		},
+		{
+			"effective": "hybrid",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3948.17222222222,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "hybrid",
+			"seed": 3006,
+			"travel": "(120.0, 28.73131, 238.6019)"
+		},
+		{
+			"effective": "multicontact",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 3914.37777777778,
+			"minimum_support_clearance": -0.0149999999999998,
+			"requested": "multicontact",
+			"seed": 3006,
+			"travel": "(120.0, 28.73302, 238.7911)"
+		},
+		{
+			"effective": "undulate",
+			"maximum_stance_error": 0.0,
+			"mean_step_us": 4337.17222222222,
+			"minimum_support_clearance": -0.015,
+			"requested": "undulate",
+			"seed": 3006,
+			"travel": "(120.0108, 28.72777, 239.6616)"
+		}
+	]
+}

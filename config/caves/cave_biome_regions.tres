@@ -1,0 +1,11 @@
+[gd_resource type="Resource" load_steps=6 format=3]
+
+[ext_resource type="Script" path="res://scripts/caves/biome_region_settings.gd" id="1"]
+[ext_resource type="Resource" path="res://config/caves/biomes/default_cave_definition.tres" id="2"]
+[ext_resource type="Resource" path="res://config/caves/biomes/frozen_cave_definition.tres" id="3"]
+[ext_resource type="Resource" path="res://config/caves/biomes/crystal_cave_definition.tres" id="4"]
+[ext_resource type="Resource" path="res://config/caves/biomes/magma_cave_definition.tres" id="5"]
+
+[resource]
+script = ExtResource("1")
+definitions = Array[Resource]([ExtResource("2"), ExtResource("3"), ExtResource("4"), ExtResource("5")])

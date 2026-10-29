@@ -1,0 +1,17 @@
+{
+	"cancellation_at_volume_pass": true,
+	"models": [
+		{
+			"cold_generation_ms": 4858.882,
+			"quality": 0,
+			"triangles": 26674,
+			"volume_samples": 32
+		},
+		{
+			"cold_generation_ms": 15556.202,
+			"quality": 1,
+			"triangles": 72086,
+			"volume_samples": 32
+		}
+	]
+}

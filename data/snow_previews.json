@@ -1,0 +1,269 @@
+{
+	"features": {
+		"alpine_mountains": {
+			"controls": {
+				"depth": 0.0847914665937424,
+				"exposure": 0.560256361961365,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.649886012077332,
+				"strain": 0.0
+			},
+			"discovery_score": 0.97289679003967,
+			"height": 1435.49646088295,
+			"region": 2.0,
+			"x": -97300.0,
+			"z": 8000.0
+		},
+		"arctic_tundra": {
+			"controls": {
+				"depth": 0.513147935271263,
+				"exposure": 0.405396521091461,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"strain": 0.0
+			},
+			"discovery_score": 0.405396521091461,
+			"height": 38.4340298839028,
+			"region": 1.0,
+			"x": -45100.0,
+			"z": -59500.0
+		},
+		"exposed_peaks": {
+			"controls": {
+				"depth": 0.653171628713608,
+				"exposure": 0.512300848960876,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.649999976158142,
+				"strain": 0.0
+			},
+			"discovery_score": 0.34913325745266,
+			"height": 1265.42403900735,
+			"region": 2.0,
+			"x": -97000.0,
+			"z": 8200.0
+		},
+		"frozen_lakes": {
+			"controls": {
+				"depth": 1.9826238155365,
+				"exposure": 0.0000100902707345085,
+				"glacier": 0.0,
+				"lake": 1.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"strain": 0.0
+			},
+			"discovery_score": 1.0,
+			"height": 0.460000000000004,
+			"region": 4.0,
+			"x": 95300.0,
+			"z": -75700.0
+		},
+		"frozen_river": {
+			"controls": {
+				"depth": 1.46076563000679,
+				"exposure": 0.000171382707776502,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 1.0,
+				"rock": 0.0,
+				"strain": 0.0
+			},
+			"discovery_score": 1.0,
+			"height": 0.460000000000001,
+			"region": 4.0,
+			"x": -64000.0,
+			"z": -100000.0
+		},
+		"grass_snow_transition": {
+			"controls": {
+				"grass": 0.5,
+				"snow": 0.5
+			},
+			"discovery_score": 1.0,
+			"height": 34.2166595458984,
+			"region": 0.0,
+			"x": -45250.0,
+			"z": -49750.0
+		},
+		"huge_snowfield": {
+			"controls": {
+				"depth": 1.83174902200699,
+				"exposure": 0.00129207735881209,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"strain": 0.0
+			},
+			"discovery_score": 1.0,
+			"height": 21.1967204077519,
+			"region": 0.0,
+			"x": -100000.0,
+			"z": -89200.0
+		},
+		"ice_field": {
+			"controls": {
+				"depth": 2.20763272047043,
+				"exposure": 0.452158719301224,
+				"glacier": 1.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.552500009536743,
+				"strain": 0.255236804485321
+			},
+			"discovery_score": 0.744763195514679,
+			"height": 260.858651408926,
+			"region": 3.0,
+			"x": -22600.0,
+			"z": 22400.0
+		},
+		"mountain_valley": {
+			"controls": {
+				"depth": 0.709459260106087,
+				"exposure": 0.0,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.455000013113022,
+				"strain": 0.0
+			},
+			"discovery_score": 1.0,
+			"height": 2043.50587107319,
+			"region": 7.0,
+			"x": -8200.0,
+			"z": -99100.0
+		},
+		"partial_lake": {
+			"controls": {
+				"max_freeze": 1.0,
+				"min_freeze": 0.0,
+				"runtime_ice_coverage": 0.5
+			},
+			"discovery_score": 1.0,
+			"height": 0.460000000000001,
+			"region": 4.0,
+			"x": -97144.390625,
+			"z": -100518.296875
+		},
+		"rolling_hills": {
+			"controls": {
+				"depth": 1.60660636425018,
+				"exposure": 0.191401034593582,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.0,
+				"strain": 0.0
+			},
+			"discovery_score": 0.0533002867131289,
+			"height": 45.1299134513554,
+			"region": 0.0,
+			"x": -1900.0,
+			"z": 3500.0
+		},
+		"rugged_highlands": {
+			"controls": {
+				"depth": 1.22070676088333,
+				"exposure": 0.270906388759613,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.486912071704865,
+				"strain": 0.0
+			},
+			"discovery_score": 0.60766735998075,
+			"height": 1111.71474648647,
+			"region": 7.0,
+			"x": -96400.0,
+			"z": 17900.0
+		},
+		"scoured_ridge": {
+			"controls": {
+				"depth": 1.1486531496048,
+				"exposure": 0.537918090820313,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.519999980926514,
+				"strain": 0.0
+			},
+			"discovery_score": 0.266266627081848,
+			"height": 321.749170116149,
+			"region": 5.0,
+			"x": -91000.0,
+			"z": 15200.0
+		},
+		"snow_plateau": {
+			"controls": {
+				"depth": 1.1525085568428,
+				"exposure": 0.193667888641357,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.333870857954025,
+				"strain": 0.0
+			},
+			"discovery_score": 1.38202759895297,
+			"height": 1110.81950426451,
+			"region": 6.0,
+			"x": -99100.0,
+			"z": -4600.0
+		},
+		"snowdrifts": {
+			"controls": {
+				"depth": 1.53199553489685,
+				"exposure": 0.140847593545914,
+				"glacier": 0.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.259738028049469,
+				"strain": 0.0
+			},
+			"discovery_score": 0.738454957019654,
+			"height": 69.9526402080119,
+			"region": 6.0,
+			"x": -69400.0,
+			"z": -89200.0
+		},
+		"snowy_coast": {
+			"controls": {
+				"depth": 1.97230517864227,
+				"exposure": 0.0471437722444534,
+				"glacier": 0.0,
+				"lake": 1.0,
+				"river": 0.0,
+				"rock": 0.649999976158142,
+				"strain": 0.0
+			},
+			"discovery_score": 1.0,
+			"height": 0.46,
+			"region": 2.0,
+			"x": 1700.0,
+			"z": -99100.0
+		},
+		"valley_glacier": {
+			"controls": {
+				"depth": 3.19725966453552,
+				"exposure": 0.0155186364427209,
+				"glacier": 1.0,
+				"lake": 0.0,
+				"river": 0.0,
+				"rock": 0.552500009536743,
+				"strain": 0.646733820438385
+			},
+			"discovery_score": 1.0,
+			"height": 315.499132253991,
+			"region": 3.0,
+			"x": -26200.0,
+			"z": -97300.0
+		}
+	},
+	"note": "Discovered canonical world features, not sculpted demo geometry. Partial lake uses runtime lake_ice_coverage=.5; Grass transition uses runtime 50/50 coverage and 24000 m regions.",
+	"seed": 73921.0
+}

@@ -1,0 +1,13 @@
+Original procedural salt crust, authored for this project on 15 October 2026.
+No downloaded image, third-party material graph, photograph or AI image is used.
+This is NOT a photoscan and must not be described as scanned salt.
+
+Recipe: tools/desert/bake_salt.gdshader; baker: tools/desert/bake_salt.gd.
+Irregular periodic evaporite cells with raised crystalline seams, fine salt
+grains and correlated roughness. Physical repeat: 2 metres. Baked offline.
+Color: sRGB; roughness/height: linear; normals: OpenGL +Y.
+Prepared resources: BC3 2048px color/roughness and BC5 1024px normal XY,
+with linear-light albedo mips, linear alpha and renormalized normal mips.
+
+The project's pre-existing ambientCG/Poly Haven sources are unchanged and keep
+their recorded provenance. No new third-party salt asset was downloaded.
