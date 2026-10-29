@@ -54,7 +54,7 @@ public partial class CaveMesher : RefCounted
     public Vector3 crossing(Vector3 a, Vector3 b, double va, double vb)
     {
         if (a.X > b.X || (a.X == b.X && (a.Y > b.Y || (a.Y == b.Y && a.Z > b.Z)))) { (a, b) = (b, a); (va, vb) = (vb, va); }
-        var original = (a.Lerp(b, (float)Math.Clamp(va / (va - vb), 0, 1)) * 4096).Round() / 4096;
+        var original = Weld(a.Lerp(b, (float)Math.Clamp(va / (va - vb), 0, 1)));
         foreach (var value in _shores)
         {
             var shore = value.AsGodotDictionary(); var center = shore["center"].AsVector3();
@@ -65,10 +65,15 @@ public partial class CaveMesher : RefCounted
                 var middle = (low + high) * .5f;
                 if ((Field!.Sample(middle) < 0) == inside) low = middle; else high = middle;
             }
-            return (((low + high) * .5f) * 4096).Round() / 4096;
+            return Weld((low + high) * .5f);
         }
         return original;
     }
+    // Godot's native vector round uses half-away-from-zero; .NET Vector3.Round uses ties-to-even.
+    private static Vector3 Weld(Vector3 p) => new(
+        MathF.Round(p.X * 4096, MidpointRounding.AwayFromZero) / 4096,
+        MathF.Round(p.Y * 4096, MidpointRounding.AwayFromZero) / 4096,
+        MathF.Round(p.Z * 4096, MidpointRounding.AwayFromZero) / 4096);
 
     public virtual void emit(Vector3 a, Vector3 b, Vector3 c)
     {
