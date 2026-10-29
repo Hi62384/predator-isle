@@ -9,27 +9,85 @@ class_name TerrainSettings
 @export_range(0.25, 8.0, 0.05, "or_less", "or_greater") var biome_size: float = 1.0
 ## Target region width in metres. Rounded to hierarchy levels; neighboring same-biome regions can merge.
 @export_range(500.0, 20000.0, 100.0, "or_less", "or_greater") var grass_region_size: float = 5000.0
-## Target region width in metres; rounded to hierarchy levels independently of coverage.
-@export_range(500.0, 20000.0, 100.0, "or_less", "or_greater") var desert_region_size: float = 4500.0
-## Target region width in metres; rounded to hierarchy levels independently of coverage.
-@export_range(500.0, 20000.0, 100.0, "or_less", "or_greater") var snow_region_size: float = 5500.0
-## Target stone region width, independent of coverage and mountain detail. Large regions stay intact.
-@export_range(500.0, 20000.0, 100.0, "or_less", "or_greater") var stone_region_size: float = 3000.0
 ## Relative world-area coverage weight. 0 disables this biome; weights normalize together.
 @export_range(0.0, 100.0, 1.0, "or_greater") var grass_coverage: float = 50.0
-## Relative world-area coverage weight. 0 disables this biome; weights normalize together.
-@export_range(0.0, 100.0, 1.0, "or_greater") var desert_coverage: float = 20.0
-## Relative world-area coverage weight. 0 disables this biome; weights normalize together.
-@export_range(0.0, 100.0, 1.0, "or_greater") var snow_coverage: float = 20.0
-## Relative world-area coverage weight. 0 disables this biome; weights normalize together.
-@export_range(0.0, 100.0, 1.0, "or_greater") var stone_coverage: float = 10.0
+## Jungle relative coverage, alongside Grass and temperate Forest.
+@export_range(0,100,1,"or_greater") var jungle_coverage:float=30
+@export_range(500,40000,100,"or_greater") var jungle_region_size:float=7000
+## Temperate Forest; zero preserves the previous Grass/Jungle layout exactly.
+@export_range(0,100,1,"or_greater") var forest_coverage:float=20
+@export_range(500,40000,100,"or_greater") var forest_region_size:float=8000
+@export_group("Forest Terrain")
+@export var forest:Resource=preload("res://config/biomes/forest_settings.tres")
+@export_group("Savanna Terrain")
+## Zero restores the pre-Savanna world ownership exactly.
+@export_range(0,100,1,"or_greater") var savanna_coverage:float=20
+@export_range(500,40000,100,"or_greater") var savanna_region_size:float=10000
+@export var savanna:Resource=preload("res://config/biomes/savanna_settings.tres")
+@export_group("Swamp Terrain")
+## Zero preserves the previous four-biome world exactly.
+@export_range(0,100,1,"or_greater") var swamp_coverage:float=20
+@export_range(500,40000,100,"or_greater") var swamp_region_size:float=9000
+@export var swamp:Resource=preload("res://config/biomes/swamp_settings.tres")
+@export_group("Rocky Coast Terrain")
+@export var rocky_coast_enabled:bool=true
+@export var rocky_coast:Resource=preload("res://config/biomes/rocky_coast_settings.tres")
+@export_group("Coastal Dunes and Beaches")
+## Zero-cost opt-out for prior coastline presets. Saved world enables it explicitly.
+@export var beaches_enabled:bool=false
+@export var beach:Resource=preload("res://config/biomes/beach_settings.tres")
+@export_group("Mountain Range Terrain")
+## Zero restores the pre-Mountain world exactly.
+@export_range(0,100,1,"or_greater") var mountain_coverage:float=20
+@export_range(1000,60000,100,"or_greater") var mountain_region_size:float=16000
+@export var mountain:Resource=preload("res://config/biomes/mountain_settings.tres")
+@export_group("Tropical Terrain")
+## Opt in explicitly: zero retains all previous ownership and mesh layouts.
+@export_range(0,100,1,"or_greater") var tropical_coverage:float=0
+@export_range(1000,60000,100,"or_greater") var tropical_region_size:float=14000
+@export var tropical:Resource=preload("res://config/biomes/tropical_settings.tres")
+@export_group("Badlands Terrain")
+## Disabled by default; preserves the seven-owner world exactly.
+@export_range(0,100,1,"or_greater") var badlands_coverage:float=0
+@export_range(1000,60000,100,"or_greater") var badlands_region_size:float=14000
+@export var badlands:Resource=preload("res://config/biomes/badlands_settings.tres")
+const EXTENSION_KEYS:Array[String]=["quarry","wise_mountains","volcanic","spore_forest","radiation_wasteland","crystal_wastes","insect_colony","alien_infected"]
+
+@export_group("Additional Biome Regions")
+@export_range(0,100,1,"or_greater") var quarry_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var quarry_region_size:float=14000
+@export var quarry:Resource=preload("res://config/biomes/quarry_settings.tres")
+@export_range(0,100,1,"or_greater") var wise_mountains_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var wise_mountains_region_size:float=14000
+@export var wise_mountains:Resource=preload("res://config/biomes/wise_mountains_settings.tres")
+@export_range(0,100,1,"or_greater") var volcanic_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var volcanic_region_size:float=14000
+@export var volcanic:Resource=preload("res://config/biomes/volcanic_settings.tres")
+@export_range(0,100,1,"or_greater") var spore_forest_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var spore_forest_region_size:float=14000
+@export var spore_forest:Resource=preload("res://config/biomes/spore_forest_settings.tres")
+@export_range(0,100,1,"or_greater") var radiation_wasteland_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var radiation_wasteland_region_size:float=14000
+@export var radiation_wasteland:Resource=preload("res://config/biomes/radiation_wasteland_settings.tres")
+@export_range(0,100,1,"or_greater") var crystal_wastes_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var crystal_wastes_region_size:float=14000
+@export var crystal_wastes:Resource=preload("res://config/biomes/crystal_wastes_settings.tres")
+@export_range(0,100,1,"or_greater") var insect_colony_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var insect_colony_region_size:float=14000
+@export var insect_colony:Resource=preload("res://config/biomes/insect_colony_settings.tres")
+@export_range(0,100,1,"or_greater") var alien_infected_coverage:float=0
+@export_range(1000,60000,500,"or_greater") var alien_infected_region_size:float=14000
+@export var alien_infected:Resource=preload("res://config/biomes/alien_infected_settings.tres")
+@export_group("Jungle Terrain")
+@export var jungle:JungleSettings=preload("res://config/biomes/jungle_settings.tres")
+@export_group("Biome Blending")
 ## Regional weight sharpness for smoothly blending terrain heights.
 @export_range(1.0, 12.0, 0.5, "or_less", "or_greater") var height_blend: float = 4.0
 ## Higher values shorten the visible material transition.
 @export_range(1.0, 20.0, 0.5, "or_less", "or_greater") var texture_blend_sharpness: float = 4.0
 
 @export_group("Temperature")
-## Climate restricts snow/desert to cold/hot regions and leaves a temperate buffer.
+## Regional temperature field for diagnostics; does not select removed biomes.
 @export var temperature_enabled: bool = true
 ## Climate wavelength in metres before global biome scaling. Automatically kept larger than hot/cold regions.
 @export_range(5000.0, 200000.0, 1000.0, "or_greater") var temperature_region_size: float = 24000.0
@@ -37,12 +95,6 @@ class_name TerrainSettings
 @export_range(-30.0, 40.0, 1.0) var average_temperature: float = 14.0
 ## Regional temperature variation around the average.
 @export_range(0.0, 70.0, 1.0) var temperature_variation: float = 48.0
-## Snow regions must remain below this temperature across their entire footprint.
-@export_range(-20.0, 15.0, 1.0) var snow_max_temperature: float = 8.0
-## Desert regions must remain above this temperature. A minimum 5 C buffer is enforced.
-@export_range(10.0, 50.0, 1.0) var desert_min_temperature: float = 20.0
-## Prefer snow/desert in eligible cold/hot zones, compensating for restricted habitat.
-@export_range(1.0, 8.0, 0.25) var climate_biome_preference: float = 6.0
 
 @export_group("Islands and Ocean Floor")
 ## Typical island scale in metres. Independent of biome and climate scales.
@@ -136,40 +188,14 @@ class_name TerrainSettings
 ## Hill height amplitude.
 @export_range(0.0, 100.0, 1.0, "or_less", "or_greater") var grass_hill_height: float = 12.0
 
-@export_group("Desert Terrain")
-## Distance between dune crests in metres.
-@export_range(20.0, 2000.0, 5.0, "or_less", "or_greater") var dune_size: float = 369.6
-## Dune height amplitude.
-@export_range(0.0, 100.0, 1.0, "or_less", "or_greater") var dune_height: float = 7.0
-## How strongly fine noise bends dune crests.
-@export_range(0.0, 8.0, 0.1, "or_less", "or_greater") var dune_warp: float = 2.0
-## Small desert height variation.
-@export_range(0.0, 50.0, 0.5, "or_less", "or_greater") var desert_roughness: float = 3.0
-
-@export_group("Snow Terrain")
-## Snow drift terrain wavelength.
-@export_range(20.0, 2000.0, 5.0, "or_less", "or_greater") var snow_hill_size: float = 117.65
-## Snow hill amplitude.
-@export_range(0.0, 100.0, 1.0, "or_less", "or_greater") var snow_hill_height: float = 8.0
-## Additional snow ridge amplitude.
-@export_range(0.0, 150.0, 1.0, "or_less", "or_greater") var snow_ridge_height: float = 12.0
-
-@export_group("Stone Terrain")
-## Mountain ridge wavelength.
-@export_range(30.0, 4000.0, 10.0, "or_less", "or_greater") var mountain_size: float = 357.14
-## Mountain height amplitude.
-@export_range(0.0, 1000.0, 5.0, "or_less", "or_greater") var mountain_height: float = 170.0
-## Higher values narrow the ridge peaks.
-@export_range(0.5, 5.0, 0.1, "or_less", "or_greater") var mountain_sharpness: float = 1.6
-## Small stone terrain variation.
-@export_range(0.0, 100.0, 1.0, "or_less", "or_greater") var stone_roughness: float = 10.0
+@export_group("Terrain Detail")
 ## Height detail layers.
 @export_range(1, 6) var detail_octaves: int = 4
 ## Strength of successive height detail layers.
 @export_range(0.1, 0.8, 0.01, "or_less", "or_greater") var detail_gain: float = 0.48
 
 @export_group("Surface Materials")
-## Metres per texture repeat: X grass, Y sand, Z snow, W stone. Keep positive.
+## Shared surface tiling: X grass, Y beach/path sand, Z reserved, W exposed rock.
 @export var texture_tile_metres: Vector4 = Vector4(1.4, 3.5, 3.0, 4.0)
 ## Multiplies the ambientCG sand color.
 @export var sand_tint: Color = Color(1.0, 0.82, 0.46)

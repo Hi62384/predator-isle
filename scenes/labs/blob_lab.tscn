@@ -1,0 +1,71 @@
+[gd_scene load_steps=10 format=3]
+
+[ext_resource type="Script" path="res://scripts/blobs/blob_workshop.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/blobs/blob_lab_camera.gd" id="2"]
+
+[ext_resource type="Shader" path="res://shaders/blob_lab_floor.gdshader" id="3"]
+
+[sub_resource type="Environment" id="Environment"]
+background_mode = 1
+background_color = Color(0.13, 0.145, 0.15, 1)
+ambient_light_source = 3
+ambient_light_color = Color(0.7, 0.75, 0.8, 1)
+ambient_light_energy = 0.6
+tonemap_mode = 2
+
+[sub_resource type="PlaneMesh" id="Floor"]
+size = Vector2(200, 200)
+
+[sub_resource type="ShaderMaterial" id="FloorMaterial"]
+shader = ExtResource("3")
+
+[sub_resource type="StyleBoxFlat" id="TitlePanel"]
+bg_color = Color(0.03, 0.04, 0.035, 0.85)
+
+[sub_resource type="LabelSettings" id="TitleText"]
+font_size = 22
+
+[sub_resource type="LabelSettings" id="HelpText"]
+font_size = 16
+
+[node name="BlobLab" type="Node3D"]
+
+[node name="Camera" type="Camera3D" parent="."]
+current = true
+script = ExtResource("2")
+
+[node name="Environment" type="WorldEnvironment" parent="."]
+environment = SubResource("Environment")
+
+[node name="Key" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-45, -35, 0)
+light_color = Color(1, 0.88, 0.72, 1)
+light_energy = 1.5
+shadow_enabled = true
+
+[node name="Fill" type="DirectionalLight3D" parent="."]
+rotation_degrees = Vector3(-20, 140, 0)
+light_color = Color(0.6, 0.75, 1, 1)
+light_energy = 0.8
+
+[node name="Floor" type="MeshInstance3D" parent="."]
+mesh = SubResource("Floor")
+material_override = SubResource("FloorMaterial")
+
+[node name="Workshop" type="Node3D" parent="."]
+script = ExtResource("1")
+laboratory = true
+
+[node name="UI" type="CanvasLayer" parent="."]
+
+[node name="Title" type="Label" parent="UI"]
+offset_left = 24.0
+offset_top = 20.0
+text = "PREDATOR ISLE / ORGANISM FOUNDRY"
+label_settings = SubResource("TitleText")
+
+[node name="Help" type="Label" parent="UI"]
+offset_left = 24.0
+offset_top = 55.0
+text = "Hierarchical anatomy · Biological profiles · Deformable surface circulation\nRight-drag: orbit  |  Middle-drag: pan  |  Wheel: zoom  |  F: frame  R: reset  1/2/3: views"
+label_settings = SubResource("HelpText")

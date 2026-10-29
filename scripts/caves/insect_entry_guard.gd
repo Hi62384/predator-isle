@@ -1,0 +1,64 @@
+extends RefCounted
+## Shared cave admission: conservative full-complex Insect mound footprints
+## and existing finite-cavity reservations. Worker-owned immutable inputs only.
+const Features=preload("res://scripts/terrain_feature_meshes.gd")
+const HiveGuard=preload("res://scripts/caves/hive_entry_guard.gd")
+var _hive
+var builder
+var _roots:Dictionary={}
+var _finite:Dictionary={}
+func configure(owner)->void:builder=owner;_roots.clear();_finite.clear();_hive=HiveGuard.new();_hive.configure(owner)
+func roots_near(point:Vector2,radius:float)->Dictionary:
+	var sampler=builder._extras[6]
+	if sampler==null or sampler.settings.structure_density<=0:return {"valid":true,"roots":[]}
+	var span:float=2100*sampler.settings.feature_scale;var rounding_pad:float=1+maxf(absf(point.x),absf(point.y))*.000002;var reach:float=sampler.settings.nest_height*1.45*1.344+radius+8+rounding_pad
+	if not is_finite(reach) or not is_finite(span) or span<=0:return {"valid":false,"roots":[]}
+	var ring:int=ceili(reach/span)
+	if ring>8:return {"valid":false,"roots":[]}
+	var cell:=Vector2i(floori(point.x/span),floori(point.y/span));var key:=Vector3i(cell.x,cell.y,ring)
+	if _roots.has(key):return _roots[key]
+	var result:Array=[]
+	for z in range(cell.y-ring,cell.y+ring+1):
+		for x in range(cell.x-ring,cell.x+ring+1):
+			var descriptor:Dictionary=sampler.descriptor(Vector2i(x,z),span);var p:Vector2=descriptor.position
+			if descriptor.chance>sampler.settings.structure_density or builder._island_mask(p.x,p.y)<.03:continue
+			builder._biome_weights(p.x,p.y)
+			if builder._extra_weights[6]<.55:continue
+			var kind:int=clampi(roundi(sampler.region(p)),0,5)
+			if kind==1:continue
+			var ground:float=builder._get_height(p.x,p.y)
+			if ground<builder.get_water_surface_height(p.x,p.y)+2:continue
+			var scale:float=sampler.settings.nest_height*(.45+descriptor.age)*(1-.35*float(kind==4));var dome:bool=kind==3 and sampler.settings.nest_broad_domes;var footprint:float=scale*(1.344 if dome else .8)
+			result.append({"id":descriptor.id,"point":p,"radius":footprint,"scale":scale,"archetype":kind,"phase":descriptor.angle,"ground":ground,"broad_dome":dome})
+	if _roots.size()>=32:_roots.erase(_roots.keys()[0])
+	var data:Dictionary={"valid":true,"roots":result};_roots[key]=data;return data
+func clear_mounds(point:Vector3,radius:float)->bool:
+	if not point.is_finite() or not is_finite(radius) or radius<0:return false
+	var p:=Vector2(point.x,point.z);var data:Dictionary=roots_near(p,radius)
+	if not data.valid:return false
+	var rounding_pad:float=1+maxf(absf(p.x),absf(p.y))*.000002
+	for root:Dictionary in data.roots:
+		if p.distance_to(root.point)<root.radius+radius+8+rounding_pad:return false
+	return true
+func clear_finite(point:Vector3,radius:float)->bool:
+	var cell:=Vector2i(floori(point.x/64),floori(point.z/64))
+	if not _finite.has(cell):
+		var features=Features.new();features.builder=builder;var sites:Array=features.portal_sites(Rect2(Vector2(cell)*64,Vector2.ONE*64).grow(384+radius))
+		if _finite.size()>=64:_finite.erase(_finite.keys()[0])
+		_finite[cell]=sites
+	for site:Dictionary in _finite[cell]:
+		if Vector2(point.x,point.z).distance_to(site.position)<maxf(320,site.half*1.2)+radius:return false
+	return true
+func clear_access(edge:Dictionary)->bool:
+	if not _hive.clear_access(edge):return false
+	if builder._extras[6]==null:return true
+	if edge.points.size()<2:return false
+	var first:Vector3=edge.points[0];var direction:=Vector2(edge.points[1].x-first.x,edge.points[1].z-first.z).normalized()
+	# Reserve a real dry surface approach too,not merely the aperture point.
+	for station in range(6):
+		var p:Vector3=first-Vector3(direction.x,0,direction.y)*station*8;p.y=builder._get_height(p.x,p.z)
+		if p.y<=builder.get_water_surface_height(p.x,p.z)+2 or not clear_mounds(p,edge.half_width) or not clear_finite(p,edge.half_width):return false
+	for point:Vector3 in edge.points:
+		if float(builder._get_height(point.x,point.z))-point.y>64:continue
+		if not clear_mounds(point,edge.half_width) or not clear_finite(point,edge.half_width):return false
+	return true

@@ -4,6 +4,9 @@ var base_size:=256.0
 var maximum_level:=5
 var split_ratio:=1.15
 var merge_ratio:=1.50
+## Optional bounded fine-detail reservations (for complete cave mouths).
+## Empty preserves the original distance-only selection exactly.
+var forced_detail_regions:Array[Rect2]=[]
 var _root_center:=Vector2i(2147483647,2147483647)
 
 func children(key: Vector3i) -> Array[Vector3i]:
@@ -26,6 +29,12 @@ func adjacent(a: Vector3i,b: Vector3i) -> bool:
 	var ax:=a.x*sa;var az:=a.y*sa;var bx:=b.x*sb;var bz:=b.y*sb
 	return ((ax+sa==bx or bx+sb==ax) and maxi(az,bz)<mini(az+sa,bz+sb)) or ((az+sa==bz or bz+sb==az) and maxi(ax,bx)<mini(ax+sa,bx+sb))
 
+func reserved(key:Vector3i)->bool:
+	var area:Rect2=bounds(key)
+	for region:Rect2 in forced_detail_regions:
+		if area.intersects(region):return true
+	return false
+
 func select(point: Vector2,previous: Dictionary) -> Dictionary:
 	var ancestors: Dictionary={}
 	for leaf: Vector3i in previous:
@@ -45,7 +54,7 @@ func select(point: Vector2,previous: Dictionary) -> Dictionary:
 	while not stack.is_empty():
 		var key:=stack.pop_back() as Vector3i
 		var threshold: float=(merge_ratio if ancestors.has(key) else split_ratio)*base_size*float(1<<key.z)
-		if key.z>0 and distance_to(key,point)<threshold: stack.append_array(children(key))
+		if key.z>0 and (distance_to(key,point)<threshold or reserved(key)): stack.append_array(children(key))
 		else: leaves[key]=true
 	# Query aligned ancestors across each edge. Fine leaves discover coarser
 	# neighbors without quadratic all-pairs scans on the main thread.

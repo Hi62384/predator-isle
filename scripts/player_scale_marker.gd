@@ -44,7 +44,8 @@ func _part(mesh: Mesh, center: Vector3) -> void:
 	add_child(instance)
 
 func place(camera: Camera3D, terrain: ChunkTerrain) -> void:
-	# Terrain currently has no physics collision: intersect its height function.
+	# Editor-style placement follows the canonical surface height, independently
+	# of the currently committed near-physics window (and ignores cave interiors).
 	var origin := camera.global_position
 	var ray := -camera.global_basis.z
 	var previous := 0.0

@@ -9,19 +9,78 @@ var _plane_cache: Dictionary = {}
 var _owner_cache: Dictionary = {}
 var _river_cache: Dictionary = {}
 var _river_columns: Dictionary = {}
+var _river_cache_spacing:float=INF
+var _river_column_spacing:float=INF
 var _lake_cache: Dictionary = {}
 var _index_templates: Dictionary = {}
 var _grass_grid: Dictionary = {}
 var _coast_certificates: Dictionary = {}
 var _height_grid_cache: Dictionary = {}
+var _normal_height_cache: Dictionary = {}
+## Worker-only height memo. Coarse coastal organic footings revisit several
+## support lattices; their measured workload benefits from a bounded larger
+## memo. Near/unrelated tiles retain the original capacity. No payloads or
+## GPU resources are stored here; the independent switch restores the limit.
+var coastal_structure_height_cache_enabled:bool=true
+var _normal_height_cache_capacity:int=8192
 var _height_query := false
 var _last_precision := 0.0
-var settings: TerrainSettings = preload("res://terrain_settings.tres")
+var settings: TerrainSettings = preload("res://config/world/terrain_settings.tres")
 # Hierarchical, non-overlapping regions. A large assigned region is never
 # subdivided by smaller biomes. Coverage chooses whole regions at each level.
 var _region_sizes := PackedFloat64Array()
 var _region_enabled: Array[bool] = []
 var _coverage := Vector4.ZERO
+var _jungle_coverage:float=0
+var _mountain_coverage:float=0
+var _mountain_probabilities:=PackedFloat64Array()
+var _mountain_weight:float=0
+var _tropical_coverage:float=0
+var _tropical_probabilities:=PackedFloat64Array()
+var _tropical_weight:float=0
+var _tropical
+var _last_tropical:=Vector3.ZERO # weight, wetness, regional material identity
+var _badlands_coverage:float=0
+var _badlands_probabilities:=PackedFloat64Array()
+var _badlands_weight:float=0
+var _badlands
+var _last_badlands:=Vector3.ZERO
+var _last_badlands_palette:=Vector4.ZERO
+var _last_badlands_remnant:float=0
+var _last_badlands_skirt:float=0
+var built_badlands_palette:=PackedByteArray()
+var built_badlands_palette_slot:int=-1
+const EXTENSION_SCRIPTS=[preload("res://scripts/quarry_sampler.gd"),preload("res://scripts/wise_mountains_sampler.gd"),preload("res://scripts/volcanic_sampler.gd"),preload("res://scripts/spore_forest_sampler.gd"),preload("res://scripts/radiation_wasteland_sampler.gd"),preload("res://scripts/crystal_wastes_sampler.gd"),preload("res://scripts/insect_colony_sampler.gd"),preload("res://scripts/alien_infected_sampler.gd")]
+var _extras:Array=[]
+var _extra_coverage:=PackedFloat64Array()
+var _extra_probabilities:Array=[]
+var _extra_weights:=PackedFloat64Array()
+var _last_extras:=PackedVector4Array()
+var built_extension_data:=PackedByteArray()
+var built_alien_tissue_flow:=PackedByteArray()
+var built_alien_tissue_flow_rows:int=0
+var built_extension_rows:int=0
+var built_extension_mask:int=0
+var built_structure_arrays:Array=[]
+var _extras_enabled:bool=false
+var _coast
+var _last_coast:=Vector4.ZERO
+var _coast_limit:float=0
+var _mountain
+var _last_mountain:=PackedFloat32Array([0,0,0,0])
+var _jungle_probabilities:=PackedFloat64Array()
+var _jungle_weight:float=0
+var _jungle
+var _last_jungle:float=0 # exact 24-bit wet/drain/weight payload
+var _forest
+var _forest_neutral:=PackedFloat32Array([0,0,0,0])
+var _last_forest:=_forest_neutral
+var _savanna
+var _last_savanna:=_forest_neutral
+var _savanna_gullies:Dictionary={}
+var _swamp
+var _last_swamp:=_forest_neutral
+var _last_swamp_water:float=0
 var _level_probabilities: Array[Vector4] = []
 var _minimum_region_size: float
 var _root_region_size: float
@@ -30,11 +89,9 @@ var _label_cache: Dictionary = {}
 var _biome_cell_cache: Dictionary = {}
 var _warp_large := FastNoiseLite.new()
 var _warp_small := FastNoiseLite.new()
-var _snow_detail := FastNoiseLite.new()
 var _continent_noise := FastNoiseLite.new()
 var _shoreline_noise := FastNoiseLite.new()
 var _detail_noise := FastNoiseLite.new()
-var _ridge_noise := FastNoiseLite.new()
 var _temperature_period: float
 var _temperature_phase: float
 var _grass_region := FastNoiseLite.new()
@@ -48,25 +105,76 @@ var _last_island: float = 0.0
 var _last_surface := Vector2.ZERO # mountain exposure, drainage/basin influence
 var _last_geology := Vector3.ZERO # talus, incised drainage, competent cliff
 var profile_build := false
+## Test-only reference switch; pruning changes no returned mesh channel.
+var prune_unused_halo := true
+## Keep sparse Badlands derivative queries beside their centre while raw nodes
+## are still hot. The reference switch exists for complete-array parity tests.
+var interleave_badlands_normals := true
+var cache_dense_payloads := false
 var last_build_profile: Dictionary = {}
 var field_timings: Dictionary = {}
-
-
 func _configure_noise() -> void:
+	_extras.clear();_extras.resize(8);_extra_coverage.resize(8);_extra_weights.resize(8);_extra_weights.fill(0);_last_extras.resize(8);_last_extras.fill(Vector4.ZERO);_extras_enabled=false
+	for i in range(8):
+		var k:String=TerrainSettings.EXTENSION_KEYS[i];var config:Resource=settings.get(k)
+		_extra_coverage[i]=maxf(settings.get(k+"_coverage"),0)
+		if _extra_coverage[i]>0 or (i==7 and config.overlay_strength>0):
+			_extras[i]=EXTENSION_SCRIPTS[i].new();_extras[i].configure(config,world_seed,self,i);_extras_enabled=true
+	_badlands=null;_badlands_weight=0;_last_badlands=Vector3.ZERO
+	if settings.badlands_coverage>0:
+		_badlands=preload("res://scripts/badlands_sampler.gd").new();_badlands.configure(settings.badlands,world_seed,self);_badlands.profile=profile_build
+	_tropical=null;_tropical_weight=0;_last_tropical=Vector3.ZERO
+	if settings.tropical_coverage>0:
+		_tropical=preload("res://scripts/tropical_sampler.gd").new()
+		_tropical.configure(settings.tropical,world_seed,self);_tropical.profile=profile_build
+	_coast_limit=0;_last_coast=Vector4.ZERO
+	if settings.rocky_coast_enabled or settings.beaches_enabled:
+		_coast=preload("res://scripts/rocky_coast_sampler.gd").new();_coast.configure(settings.rocky_coast,world_seed,self);_coast.profile=profile_build;_coast_limit=_coast.max_width()
+		if settings.beaches_enabled:_coast_limit*=2
+		if not settings.rocky_coast_enabled:_coast.settings=_coast.settings.duplicate();_coast.settings.coverage=0
+	else:_coast=null
+	if settings.mountain_coverage>0:
+		_mountain=preload("res://scripts/mountain_sampler.gd").new()
+		_mountain.configure(settings.mountain if settings.mountain!=null else preload("res://scripts/mountain_settings.gd").new(),world_seed,self)
+		_mountain.profile=profile_build
+	else:_mountain=null
+	_last_mountain=PackedFloat32Array([0,0,0,0]);_mountain_weight=0
+	if settings.swamp_coverage>0:
+		_swamp=preload("res://scripts/swamp_sampler.gd").new()
+		_swamp.configure(settings.swamp if settings.swamp!=null else preload("res://scripts/swamp_settings.gd").new(),world_seed,self)
+	else:_swamp=null
+	_last_swamp=_forest_neutral;_last_swamp_water=water_level
+	if settings.savanna_coverage>0:
+		_savanna=preload("res://scripts/savanna_sampler.gd").new()
+		_savanna.configure(settings.savanna if settings.savanna!=null else preload("res://scripts/savanna_settings.gd").new(),world_seed)
+	else:_savanna=null
+	_last_savanna=_forest_neutral
+	_savanna_gullies.clear()
+	if settings.forest_coverage>0:
+		_forest=preload("res://scripts/forest_sampler.gd").new()
+		_forest.configure(settings.forest if settings.forest!=null else preload("res://scripts/forest_settings.gd").new(),world_seed)
+	else:_forest=null
+	_last_forest=_forest_neutral
+	if settings.jungle_coverage>0:
+		_jungle=preload("res://scripts/jungle_sampler.gd").new()
+		_jungle.configure(settings.jungle if settings.jungle!=null else JungleSettings.new(),world_seed)
+	else:_jungle=null
+	_last_jungle=0;_jungle_weight=0
 	_island_cache.clear()
 	_plane_cache.clear()
 	_owner_cache.clear()
 	_river_cache.clear()
 	_river_columns.clear()
+	_river_cache_spacing=INF;_river_column_spacing=INF
 	_lake_cache.clear()
 	_grass_grid.clear()
 	_coast_certificates.clear()
 	_height_grid_cache.clear()
+	_normal_height_cache.clear()
+	_normal_height_cache_capacity=8192
 	_setup_noise(_continent_noise, world_seed + 1327, 3.0 / maxf(settings.island_size, 1.0), settings.island_octaves, 0.52)
 	_setup_noise(_shoreline_noise, world_seed + 1429, 1.0 / maxf(settings.shoreline_detail_size,50.0), 3, 0.45)
 	_setup_noise(_detail_noise, world_seed + 307, 1.0 / maxf(settings.grass_hill_size, 1.0), settings.detail_octaves, settings.detail_gain)
-	_setup_noise(_snow_detail, world_seed + 308, 1.0 / maxf(settings.snow_hill_size, 1.0), settings.detail_octaves, settings.detail_gain)
-	_setup_noise(_ridge_noise, world_seed + 401, 1.0 / maxf(settings.mountain_size, 1.0), settings.detail_octaves, settings.detail_gain)
 	_configure_regions()
 	_setup_noise(_grass_region,world_seed+2101,1.0/maxf(settings.grass_landform_size,100.0),1,0.3)
 	_setup_noise(_grass_macro,world_seed+2203,1.0/maxf(settings.grass_landform_size*3.0,300.0),2,0.35)
@@ -84,28 +192,54 @@ func _configure_regions() -> void:
 	_level_probabilities.clear()
 	_label_cache.clear()
 	_biome_cell_cache.clear()
-	var sizes := [settings.grass_region_size, settings.desert_region_size, settings.snow_region_size, settings.stone_region_size]
-	_coverage = Vector4(maxf(settings.grass_coverage,0), maxf(settings.desert_coverage,0), maxf(settings.snow_coverage,0), maxf(settings.stone_coverage,0))
+	var sizes := [settings.grass_region_size,settings.forest_region_size if settings.forest_coverage>0 else settings.grass_region_size,settings.savanna_region_size if settings.savanna_coverage>0 else settings.grass_region_size,settings.swamp_region_size if settings.swamp_coverage>0 else settings.grass_region_size]
+	_coverage = Vector4(maxf(settings.grass_coverage,0),maxf(settings.forest_coverage,0),maxf(settings.savanna_coverage,0),maxf(settings.swamp_coverage,0))
 	var total := _coverage.x + _coverage.y + _coverage.z + _coverage.w
+	_jungle_coverage=maxf(settings.jungle_coverage,0)
+	_mountain_coverage=maxf(settings.mountain_coverage,0)
+	_tropical_coverage=maxf(settings.tropical_coverage,0)
+	_badlands_coverage=maxf(settings.badlands_coverage,0)
+	total+=_jungle_coverage+_mountain_coverage+_tropical_coverage+_badlands_coverage
+	for amount:float in _extra_coverage:total+=amount
 	if total <= 0.0:
 		_coverage = Vector4(1,0,0,0)
 	else:
 		_coverage /= total
+		_jungle_coverage/=total
+		_mountain_coverage/=total
+		_tropical_coverage/=total
+		_badlands_coverage/=total
+		for i in range(8):_extra_coverage[i]/=total
+	if _jungle_coverage>0 or _mountain_coverage>0 or _tropical_coverage>0 or _badlands_coverage>0:sizes.append(settings.jungle_region_size if _jungle_coverage>0 else settings.grass_region_size)
+	if _mountain_coverage>0 or _tropical_coverage>0 or _badlands_coverage>0:sizes.append(settings.mountain_region_size if _mountain_coverage>0 else settings.grass_region_size)
+	if _tropical_coverage>0 or _badlands_coverage>0:sizes.append(settings.tropical_region_size if _tropical_coverage>0 else settings.grass_region_size)
+	if _badlands_coverage>0:sizes.append(settings.badlands_region_size)
+	if _extras_enabled:
+		while sizes.size()<8:sizes.append(settings.grass_region_size)
+		for k:String in TerrainSettings.EXTENSION_KEYS:sizes.append(settings.get(k+"_region_size"))
+	var biome_count:int=sizes.size()
 	_minimum_region_size = INF
-	for i in range(4):
+	for i in range(biome_count):
 		var size: float = maxf(float(sizes[i]) * maxf(settings.biome_size,0.001), 16.0)
 		_region_sizes.append(size)
-		_region_enabled.append(_coverage[i] > 0.0)
+		_region_enabled.append((_coverage[i] if i<4 else (_jungle_coverage if i==4 else (_mountain_coverage if i==5 else (_tropical_coverage if i==6 else (_badlands_coverage if i==7 else _extra_coverage[i-8])))))>0)
 		if _region_enabled[i]:
 			_minimum_region_size = minf(_minimum_region_size, size)
 	var top_level := 0
-	for i in range(4):
+	for i in range(biome_count):
 		var level := maxi(0, roundi(log(_region_sizes[i] / _minimum_region_size) / log(2.0)))
 		_region_levels.append(level)
 		if _region_enabled[i]:
 			top_level = maxi(top_level, level)
 	_root_region_size = _minimum_region_size * pow(2.0,top_level)
 	_level_probabilities.resize(top_level + 1)
+	_jungle_probabilities.resize(top_level+1);_jungle_probabilities.fill(0)
+	_mountain_probabilities.resize(top_level+1);_mountain_probabilities.fill(0)
+	_tropical_probabilities.resize(top_level+1);_tropical_probabilities.fill(0)
+	_badlands_probabilities.resize(top_level+1);_badlands_probabilities.fill(0)
+	_extra_probabilities.clear()
+	for i in range(8):
+		var probabilities:=PackedFloat64Array();probabilities.resize(top_level+1);probabilities.fill(0);_extra_probabilities.append(probabilities)
 	var remaining := 1.0
 	for level in range(top_level, -1, -1):
 		var probabilities := Vector4.ZERO
@@ -114,11 +248,22 @@ func _configure_regions() -> void:
 			if _region_levels[i] == level:
 				probabilities[i] = _coverage[i] / maxf(remaining,0.000000001)
 				assigned += _coverage[i]
+		if biome_count>=5 and _region_levels[4]==level:
+			_jungle_probabilities[level]=_jungle_coverage/maxf(remaining,.000000001);assigned+=_jungle_coverage
+		if biome_count>=6 and _region_levels[5]==level:
+			_mountain_probabilities[level]=_mountain_coverage/maxf(remaining,.000000001);assigned+=_mountain_coverage
+		if biome_count>=7 and _region_levels[6]==level:
+			_tropical_probabilities[level]=_tropical_coverage/maxf(remaining,.000000001);assigned+=_tropical_coverage
+		if biome_count>=8 and _region_levels[7]==level:
+			_badlands_probabilities[level]=_badlands_coverage/maxf(remaining,.000000001);assigned+=_badlands_coverage
+		if _extras_enabled:
+			for i in range(8):
+				if _region_levels[8+i]==level:_extra_probabilities[i][level]=_extra_coverage[i]/maxf(remaining,.000000001);assigned+=_extra_coverage[i]
 		_level_probabilities[level] = probabilities
 		remaining -= assigned
 	_setup_noise(_warp_large, world_seed + 811, 1.0 / _root_region_size, 1,0.5)
 	_setup_noise(_warp_small, world_seed + 919, 1.0 / _minimum_region_size, 1,0.5)
-	_temperature_period = maxf(settings.temperature_region_size * maxf(settings.biome_size, 0.001), maxf(_region_sizes[1], _region_sizes[2]) * 8.0)
+	_temperature_period = maxf(settings.temperature_region_size * maxf(settings.biome_size, 0.001), _root_region_size * 8.0)
 	_temperature_phase = _region_random(0,0,0,9371) * TAU
 
 
@@ -138,12 +283,19 @@ func _setup_noise(
 
 
 func build(coordinate: Vector2i, resolution: int) -> Array:
+	_select_normal_height_cache_capacity()
+	built_badlands_palette=PackedByteArray()
+	built_badlands_palette_slot=-1
+	built_extension_data=PackedByteArray();built_extension_rows=0;built_extension_mask=0;built_structure_arrays=[]
+	built_alien_tissue_flow=PackedByteArray();built_alien_tissue_flow_rows=0
 	var profile_start := Time.get_ticks_usec() if profile_build else 0
 	var row_size := resolution + 1
 	var sample_size := row_size + 2
 	var step := chunk_size / float(resolution)
 	var origin_x := coordinate.x * chunk_size
 	var origin_z := coordinate.y * chunk_size
+	var inline_normal_pairs:Dictionary={}
+	var use_inline_normals:bool=interleave_badlands_normals and _badlands!=null and step>32.0
 	var height_samples := PackedFloat32Array()
 	height_samples.resize(sample_size * sample_size)
 	var weight_samples := PackedColorArray()
@@ -152,12 +304,38 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 	surface_samples.resize(sample_size * sample_size)
 	var geology_samples := PackedVector3Array()
 	geology_samples.resize(sample_size * sample_size)
+	var jungle_samples:=PackedFloat32Array();var has_jungle:bool=false
+	if _jungle!=null:jungle_samples.resize(sample_size*sample_size)
+	var forest_samples:Array[PackedFloat32Array]=[];var has_forest:bool=false
+	if _forest!=null:forest_samples.resize(sample_size*sample_size)
+	var savanna_samples:Array[PackedFloat32Array]=[];var has_savanna:bool=false
+	if _savanna!=null:savanna_samples.resize(sample_size*sample_size)
+	var swamp_samples:Array[PackedFloat32Array]=[];var has_swamp:bool=false
+	var swamp_water:=PackedFloat32Array()
+	if _swamp!=null:swamp_samples.resize(sample_size*sample_size);swamp_water.resize(sample_size*sample_size)
 
+	var coast_samples:=PackedVector4Array();var has_coast:bool=false
+	if _coast!=null:coast_samples.resize(sample_size*sample_size)
+	var mountain_samples:Array[PackedFloat32Array]=[];var has_mountain:bool=false
+	if _mountain!=null:mountain_samples.resize(sample_size*sample_size)
+	var tropical_samples:=PackedVector3Array();var has_tropical:bool=false
+	if _tropical!=null:tropical_samples.resize(sample_size*sample_size)
+	var extra_samples:Array[PackedVector4Array]=[]
+	if _extras_enabled:extra_samples.resize(sample_size*sample_size)
+	var badlands_samples:=PackedVector3Array();var has_badlands:bool=false
+	var badlands_palette:=PackedVector4Array()
+	var badlands_remnants:=PackedFloat32Array()
+	var badlands_skirts:=PackedFloat32Array()
+	if _badlands!=null:badlands_samples.resize(sample_size*sample_size);badlands_palette.resize(sample_size*sample_size);badlands_remnants.resize(sample_size*sample_size);badlands_skirts.resize(sample_size*sample_size)
+	if _swamp==null and (_mountain!=null or _coast!=null or _tropical!=null or _badlands!=null or _extras_enabled):swamp_water.resize(sample_size*sample_size)
 	# A one-vertex border gives accurate normals that match neighboring chunks.
 	for sample_z in range(sample_size):
 		for sample_x in range(sample_size):
 			var world_x := origin_x + (sample_x - 1) * step
 			var world_z := origin_z + (sample_z - 1) * step
+			if prune_unused_halo and step > 32.0 and (sample_x == 0 or sample_z == 0 or sample_x == sample_size-1 or sample_z == sample_size-1):
+				# Sparse normals use +/-32 m probes, NEVER the +/-mesh-step halo.
+				continue
 			height_samples[sample_z * sample_size + sample_x] = _sample_grid_height(world_x, world_z)
 			var w := _last_weights
 			if w == Vector4.ZERO:
@@ -165,7 +343,44 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 			weight_samples[sample_z * sample_size + sample_x] = Color(w.x,w.y,w.z,w.w)
 			surface_samples[sample_z * sample_size + sample_x] = _last_surface
 			geology_samples[sample_z * sample_size + sample_x] = _last_geology
-
+			if _jungle!=null:
+				jungle_samples[sample_z*sample_size+sample_x]=_last_jungle
+				if _last_jungle>=65536:has_jungle=true
+			if _forest!=null:
+				forest_samples[sample_z*sample_size+sample_x]=_last_forest
+				if _last_forest[0]>=65536:has_forest=true
+			if _savanna!=null:
+				savanna_samples[sample_z*sample_size+sample_x]=_last_savanna
+				if _last_savanna[0]>=65536:has_savanna=true
+			if _swamp!=null:
+				swamp_samples[sample_z*sample_size+sample_x]=_last_swamp
+				swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+				if _last_swamp[0]>=65536:has_swamp=true
+			if _coast!=null:
+				coast_samples[sample_z*sample_size+sample_x]=_last_coast;swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+				if _last_coast.x>1.0/255:has_coast=true
+			if _mountain!=null:
+				mountain_samples[sample_z*sample_size+sample_x]=_last_mountain
+				swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+				if _last_mountain[0]>=65536:has_mountain=true
+			if _tropical!=null:
+				tropical_samples[sample_z*sample_size+sample_x]=_last_tropical
+				swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+				if _last_tropical.x>1.0/255:has_tropical=true
+			if _badlands!=null:
+				badlands_samples[sample_z*sample_size+sample_x]=_last_badlands
+				badlands_palette[sample_z*sample_size+sample_x]=_last_badlands_palette
+				badlands_remnants[sample_z*sample_size+sample_x]=_last_badlands_remnant
+				badlands_skirts[sample_z*sample_size+sample_x]=_last_badlands_skirt
+				swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+				if _last_badlands.x>0:has_badlands=true
+			if _extras_enabled:
+				extra_samples[sample_z*sample_size+sample_x]=_last_extras
+				swamp_water[sample_z*sample_size+sample_x]=_last_swamp_water
+			# Capture every mutable surface control above before height-only probes.
+			# Float64 preserves the original sparse derivative arithmetic exactly.
+			if use_inline_normals and sample_x>0 and sample_z>0 and sample_x<sample_size-1 and sample_z<sample_size-1:
+				inline_normal_pairs[Vector2i(sample_x-1,sample_z-1)]=PackedFloat64Array([_sample_normal_height(world_x-32.0,world_z),_sample_normal_height(world_x+32.0,world_z),_sample_normal_height(world_x,world_z-32.0),_sample_normal_height(world_x,world_z+32.0)])
 	# One world-anchored normal field for all vertices/LODs, not a different
 	# derivative just along chunk edges (which produced visible border stripes).
 	# Reuse height samples at grid intersections; only the outer halo needs extra
@@ -182,6 +397,8 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 	normal_heights.resize(normal_width*normal_depth)
 	for nz in range(normal_depth):
 		for nx in range(normal_width):
+			if prune_unused_halo and normal_step>32.0 and (nx==0 or nz==0 or nx==normal_width-1 or nz==normal_depth-1):
+				continue
 			var wx := (normal_x+nx)*normal_step
 			var wz := (normal_z+nz)*normal_step
 			var sx := (wx-origin_x)/step+1.0
@@ -189,7 +406,7 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 			if is_equal_approx(sx,roundf(sx)) and is_equal_approx(sz,roundf(sz)) and sx>=0 and sz>=0 and sx<sample_size and sz<sample_size:
 				normal_heights[nz*normal_width+nx] = height_samples[roundi(sz)*sample_size+roundi(sx)]
 			else:
-				normal_heights[nz*normal_width+nx] = _sample_grid_height(wx,wz)
+				normal_heights[nz*normal_width+nx] = _sample_normal_height(wx,wz)
 	var normal_field := PackedVector3Array()
 	normal_field.resize(normal_width*normal_depth)
 	var curvature_field := PackedFloat32Array()
@@ -197,14 +414,32 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 	for nz in range(1,normal_depth-1):
 		for nx in range(1,normal_width-1):
 			var i := nz*normal_width+nx
+			var wx: float=(normal_x+nx)*normal_step;var wz: float=(normal_z+nz)*normal_step
+			var center: float=normal_heights[i]
+			var normal_blend:float=0.0
 			var left:=normal_heights[i-1];var right:=normal_heights[i+1]
 			var back:=normal_heights[i-normal_width];var front:=normal_heights[i+normal_width]
 			if normal_step>32.0:
-				var wx: float=(normal_x+nx)*normal_step;var wz: float=(normal_z+nz)*normal_step
-				left=_sample_grid_height(wx-32.0,wz);right=_sample_grid_height(wx+32.0,wz)
-				back=_sample_grid_height(wx,wz-32.0);front=_sample_grid_height(wx,wz+32.0)
-			normal_field[i] = Vector3(left-right,64.0,back-front).normalized()
-			curvature_field[i] = (left+right+back+front-4.0*normal_heights[i])/32.0
+				var local_index:=Vector2i(roundi((wx-origin_x)/step),roundi((wz-origin_z)/step))
+				if use_inline_normals and inline_normal_pairs.has(local_index):
+					var pair:PackedFloat64Array=inline_normal_pairs[local_index]
+					left=pair[0];right=pair[1];back=pair[2];front=pair[3]
+				else:
+					right=_sample_normal_height(wx+32.0,wz);front=_sample_normal_height(wx,wz+32.0)
+					left=_sample_normal_height(wx-32.0,wz);back=_sample_normal_height(wx,wz-32.0)
+				if normal_blend>=1.0:left=center;back=center
+			var central_normal:=Vector3(left-right,64.0,back-front)
+			if normal_blend>0.0:
+				# Match float32 storage of the dense 32 m normal lattice at shared
+				# coordinates, including sparse parent chunks.
+				var positive:=Vector2(right,front)
+				var forward_normal:=Vector3((center-positive.x)*2.0,64.0,(center-positive.y)*2.0)
+				central_normal=central_normal.lerp(forward_normal,normal_blend)
+			normal_field[i] = central_normal.normalized()
+			# Desert no longer thresholds this stencil into its material masks.
+			# Fade it out with the derivative transition rather than inventing
+			# one-sided "curvature" from a first derivative.
+			curvature_field[i] = (left+right+back+front-4.0*center)/32.0*(1.0-normal_blend)
 
 	var profile_normals := Time.get_ticks_usec() if profile_build else 0
 	var vertices := PackedVector3Array()
@@ -219,7 +454,14 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 	colors.resize(row_size * row_size)
 	uvs.resize(row_size * row_size)
 	surface_uvs.resize(row_size * row_size)
-	geology_colors.resize(row_size * row_size * 3)
+	var geology_stride:int=4 if has_jungle or has_badlands else 3
+	geology_colors.resize(row_size * row_size * geology_stride)
+	var forest_controls:=PackedFloat32Array()
+	if has_forest or has_coast or has_tropical:forest_controls.resize(row_size*row_size*4)
+	var savanna_controls:=PackedFloat32Array()
+	if has_savanna or has_tropical:savanna_controls.resize(row_size*row_size*4)
+	var swamp_controls:=PackedFloat32Array()
+	if has_swamp or has_tropical:swamp_controls.resize(row_size*row_size*4)
 
 	for z_index in range(row_size):
 		for x_index in range(row_size):
@@ -235,15 +477,104 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 			var iz := mini(floori(gz),normal_depth-3)
 			var ni := iz*normal_width+ix
 			normals[vertex_index] = normal_field[ni].lerp(normal_field[ni+1],gx-ix).lerp(normal_field[ni+normal_width].lerp(normal_field[ni+normal_width+1],gx-ix),gz-iz).normalized()
+			if _badlands!=null and badlands_remnants[sample_index]>.000001:
+				# The shared 32m background stencil cannot shade a compact column.
+				# Exact world-anchored +/-2m probes apply only where the analytic
+				# feature actually changes terrain. Shared LOD vertices still agree.
+				var local_normal:=Vector3(_sample_normal_height(world_x-2,world_z)-_sample_normal_height(world_x+2,world_z),4,_sample_normal_height(world_x,world_z-2)-_sample_normal_height(world_x,world_z+2)).normalized()
+				normals[vertex_index]=normals[vertex_index].lerp(local_normal,smoothstep(0,.15,badlands_remnants[sample_index])).normalized()
 			colors[vertex_index] = weight_samples[sample_index]
 			var curvature := lerpf(lerpf(curvature_field[ni],curvature_field[ni+1],gx-ix),lerpf(curvature_field[ni+normal_width],curvature_field[ni+normal_width+1],gx-ix),gz-iz)
-			uvs[vertex_index] = Vector2(get_water_surface_height(world_x,world_z),curvature)
+			uvs[vertex_index] = Vector2(swamp_water[sample_index] if _swamp!=null or _mountain!=null or _coast!=null or _tropical!=null or _badlands!=null or _extras_enabled else water_level,curvature)
 			surface_uvs[vertex_index] = surface_samples[sample_index]
 			var geology := geology_samples[sample_index]
-			geology_colors[vertex_index*3] = geology.x
-			geology_colors[vertex_index*3+1] = geology.y
-			geology_colors[vertex_index*3+2] = geology.z
-
+			geology_colors[vertex_index*geology_stride] = geology.x
+			geology_colors[vertex_index*geology_stride+1] = geology.y
+			geology_colors[vertex_index*geology_stride+2] = geology.z
+			if has_jungle:geology_colors[vertex_index*4+3]=jungle_samples[sample_index]
+			if has_forest:
+				var f:PackedFloat32Array=forest_samples[sample_index]
+				if f.size()==4:
+					for channel in range(4):forest_controls[vertex_index*4+channel]=f[channel]
+			if has_savanna:
+				var s:PackedFloat32Array=savanna_samples[sample_index]
+				if s.size()==4:
+					for channel in range(4):savanna_controls[vertex_index*4+channel]=s[channel]
+			if has_swamp:
+				var s:PackedFloat32Array=swamp_samples[sample_index]
+				if s.size()==4:
+					for channel in range(4):swamp_controls[vertex_index*4+channel]=s[channel]
+			if has_mountain:
+				var m:PackedFloat32Array=mountain_samples[sample_index]
+				# A negative sentinel enables the extended layout at this vertex.
+				# Decode BEFORE raster interpolation. Mountain-disabled arrays stay exact.
+				geology_colors[vertex_index*geology_stride]=-_pack_savanna(geology.x,geology.y,geology.z)-1
+				geology_colors[vertex_index*geology_stride+1]=m[0]
+				geology_colors[vertex_index*geology_stride+2]=m[1]
+				var q:int=int(m[2])
+				surface_uvs[vertex_index]=Vector2(_pack_savanna(surface_uvs[vertex_index].x,surface_uvs[vertex_index].y,float(q&255)/255),_pack_savanna(float((q>>8)&255)/255,float((q>>16)&255)/255,m[3]))
+			if has_coast:
+				var coast:Vector4=coast_samples[sample_index]
+				var forest_water:float=forest_controls[vertex_index*4+3]
+				forest_controls[vertex_index*4+2]=-_pack_savanna(forest_controls[vertex_index*4+2],coast.x,coast.y)-1
+				forest_controls[vertex_index*4+3]=_pack_savanna(forest_controls[vertex_index*4+3],coast.z,coast.w)
+				if coast.w<0:
+					var sand:int=int(-coast.w-1)
+					# Signed extension preserves the existing Forest water byte.
+					forest_controls[vertex_index*4+3]=-_pack_savanna(forest_water,float(sand&255)/255,float((sand>>8)&255)/255)-1
+			if has_tropical:
+				# Reclaim only redundant ownership bytes (already in COLOR.gba).
+				# All old ecological bytes and all four banks survive mixed vertices.
+				var t:Vector3=tropical_samples[sample_index]
+				var fi:int=int(forest_controls[vertex_index*4]);var si:int=int(savanna_controls[vertex_index*4]);var wi:int=int(swamp_controls[vertex_index*4])
+				forest_controls[vertex_index*4]=-float((fi&65535)+roundi(t.z*255)*65536)-1
+				savanna_controls[vertex_index*4]=-float((si&65535)+roundi(t.x*255)*65536)-1
+				swamp_controls[vertex_index*4]=-float((wi&65535)+roundi(t.y*255)*65536)-1
+			if has_badlands:
+				# Preserve the complete Jungle payload in a signed wrapper. Only
+				# Grass curvature (already saturated beyond +/- .35) is quantized.
+				var b:Vector3=badlands_samples[sample_index]
+				var curvature_byte:int=roundi(clampf(curvature,-.5,.5)*254)+127
+				uvs[vertex_index].y=float(roundi(b.x*255)+roundi(b.z*255)*256+curvature_byte*65536)
+				geology_colors[vertex_index*4+3]=-(jungle_samples[sample_index] if has_jungle else 0)-1
+	if has_badlands:
+		built_badlands_palette.resize(row_size*row_size*4)
+		for z in range(row_size):
+			for x in range(row_size):
+				var index:int=(z+1)*sample_size+x+1;var palette:Vector4=badlands_palette[index]
+				# Controls remain meaningful on the other side of an ownership
+				# transition. Ownership is blended separately, not divided out of
+				# a material palette using a differently interpolated scalar.
+				if badlands_samples[index].x<=0:palette=_badlands.material_palette(Vector2(origin_x+x*step,origin_z+z*step))
+				for channel in range(4):built_badlands_palette[(z*row_size+x)*4+channel]=roundi(clampf(palette[channel],0,1)*255)
+	if _extras_enabled:
+		var any_influence:bool=false
+		built_extension_data.resize(row_size*row_size*8*4);built_extension_rows=row_size
+		for z in range(row_size):
+			for x in range(row_size):
+				var sample_index:int=(z+1)*sample_size+x+1;var payload:PackedVector4Array=extra_samples[sample_index]
+				if payload.size()!=8:continue
+				for i in range(8):
+					var e:Vector4=payload[i];var offset:int=(z*row_size*8+i*row_size+x)*4
+					built_extension_data[offset]=roundi(clampf(e.x,0,1)*255)
+					if built_extension_data[offset]>0:built_extension_mask|=1<<i
+					built_extension_data[offset+1]=roundi(clampf(e.z*e.x,0,1)*255)
+					built_extension_data[offset+2]=roundi(clampf(e.y*e.x,0,1)*255)
+					built_extension_data[offset+3]=roundi(clampf(e.w*e.x,0,1)*255)
+					any_influence=any_influence or e.x>.5/255
+		if not any_influence:built_extension_data=PackedByteArray();built_extension_rows=0;built_extension_mask=0
+	if has_badlands:
+		if built_extension_data.is_empty():
+			built_extension_data=built_badlands_palette;built_extension_rows=row_size;built_badlands_palette_slot=0
+		else:
+			var combined:=PackedByteArray()
+			for z in range(row_size):
+				combined.append_array(built_extension_data.slice(z*row_size*8*4,(z+1)*row_size*8*4))
+				combined.append_array(built_badlands_palette.slice(z*row_size*4,(z+1)*row_size*4))
+			built_extension_data=combined;built_badlands_palette_slot=8
+	if (built_extension_mask & 128)!=0 and settings.alien_infected.nerve_flow_texturing:
+		var flow:Dictionary=preload("res://scripts/alien_tissue_coordinates.gd").atlas(_extras[7],Vector2(origin_x,origin_z),chunk_size,resolution)
+		built_alien_tissue_flow=flow.data;built_alien_tissue_flow_rows=flow.rows
 	# Vertical skirts cover gaps where neighboring LOD grids have different spacing.
 	var boundary: Array[int] = []
 	for i in range(row_size):
@@ -258,6 +589,13 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 		var a := boundary[i]
 		var b := boundary[(i + 1) % boundary.size()]
 		var skirt_depth:=maxf(32.0,step*4.0)
+		if _badlands!=null:
+			# A narrow column can be higher than the neighbouring coarse edge's
+			# chord. Extend only its visual skirt by its actual added height.
+			# Original terrain, vertex count and collision remain unchanged.
+			var sample_a:int=(a/row_size+1)*sample_size+a%row_size+1
+			var sample_b:int=(b/row_size+1)*sample_size+b%row_size+1
+			skirt_depth+=maxf(badlands_skirts[sample_a],badlands_skirts[sample_b])
 		vertices.append(vertices[a] - Vector3.UP * skirt_depth)
 		vertices.append(vertices[b] - Vector3.UP * skirt_depth)
 		normals.append(normals[a])
@@ -269,7 +607,13 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 		surface_uvs.append(surface_uvs[a])
 		surface_uvs.append(surface_uvs[b])
 		for vertex in [a,b]:
-			for channel in range(3): geology_colors.append(geology_colors[vertex*3+channel])
+			for channel in range(geology_stride): geology_colors.append(geology_colors[vertex*geology_stride+channel])
+			if has_forest or has_coast or has_tropical:
+				for channel in range(4):forest_controls.append(forest_controls[vertex*4+channel])
+			if has_savanna or has_tropical:
+				for channel in range(4):savanna_controls.append(savanna_controls[vertex*4+channel])
+			if has_swamp or has_tropical:
+				for channel in range(4):swamp_controls.append(swamp_controls[vertex*4+channel])
 
 	var arrays: Array = []
 	arrays.resize(Mesh.ARRAY_MAX)
@@ -280,6 +624,9 @@ func build(coordinate: Vector2i, resolution: int) -> Array:
 	arrays[Mesh.ARRAY_TEX_UV2] = surface_uvs
 	# Explicit RGB_FLOAT format; RGBA8 only exposed R on the tested GL backend.
 	arrays[Mesh.ARRAY_CUSTOM0] = geology_colors
+	if has_forest or has_coast or has_tropical:arrays[Mesh.ARRAY_CUSTOM1]=forest_controls
+	if has_savanna or has_tropical:arrays[Mesh.ARRAY_CUSTOM2]=savanna_controls
+	if has_swamp or has_tropical:arrays[Mesh.ARRAY_CUSTOM3]=swamp_controls
 	arrays[Mesh.ARRAY_INDEX] = indices
 
 	if profile_build:
@@ -344,31 +691,6 @@ func get_temperature(x: float, z: float) -> float:
 	return _temperature_at_region(_warp_region_point(x,z))
 
 
-func _climate_biome(biome: int, cx: int, cz: int, span: float) -> int:
-	if not settings.temperature_enabled or (biome != 1 and biome != 2):
-		return biome
-	var lo := cx*span*TAU/_temperature_period + _temperature_phase
-	var hi := (cx+1)*span*TAU/_temperature_period + _temperature_phase
-	var minimum := minf(sin(lo),sin(hi))
-	var maximum := maxf(sin(lo),sin(hi))
-	if ceil((lo-PI*0.5)/TAU) <= floor((hi-PI*0.5)/TAU):
-		maximum = 1.0
-	if ceil((lo+PI*0.5)/TAU) <= floor((hi+PI*0.5)/TAU):
-		minimum = -1.0
-	# Exact full-region extrema avoid over-rejecting safe snow/desert regions.
-	var t0 := settings.average_temperature+settings.temperature_variation*minimum
-	var t1 := settings.average_temperature+settings.temperature_variation*maximum
-	var cold_limit := settings.snow_max_temperature
-	var hot_limit := maxf(settings.desert_min_temperature, cold_limit + 5.0)
-	if biome == 2 and maxf(t0,t1) <= cold_limit:
-		return biome
-	if biome == 1 and minf(t0,t1) >= hot_limit:
-		return biome
-	# Replace the whole unsuitable region; never cut tiny climate holes into it.
-	# Grass remains the temperate safety fallback even if both neutral weights are zero.
-	return 3 if not _region_enabled[0] and _region_enabled[3] else 0
-
-
 func _region_owner(p: Vector2) -> int:
 	# Search from large to small; once claimed, the entire region is protected.
 	for level in range(_level_probabilities.size()-1, -1, -1):
@@ -378,26 +700,33 @@ func _region_owner(p: Vector2) -> int:
 		var roll := _region_random(cx,cz,level,2731)
 		var cumulative := 0.0
 		var probabilities := _level_probabilities[level]
-		if settings.temperature_enabled:
-			var original_mass := probabilities.x + probabilities.y + probabilities.z + probabilities.w
-			for special in [1,2]:
-				if _climate_biome(special,cx,cz,span) != special:
-					probabilities[special] = 0.0
-				else:
-					probabilities[special] *= maxf(settings.climate_biome_preference,1.0)
-			var eligible_mass := probabilities.x + probabilities.y + probabilities.z + probabilities.w
-			if eligible_mass > 0.0:
-				probabilities *= original_mass / eligible_mass
-			elif roll < original_mass:
-				return 3 if not _region_enabled[0] and _region_enabled[3] else 0
+		var jungle_probability:float=_jungle_probabilities[level]
 		for i in range(4):
 			cumulative += probabilities[i]
 			if roll < cumulative and _region_enabled[i]:
-				return _climate_biome(i,cx,cz,span)
+				return i
+		if jungle_probability>0 and roll<cumulative+jungle_probability:return 4
+		cumulative+=jungle_probability
+		if _mountain_probabilities[level]>0 and roll<cumulative+_mountain_probabilities[level]:return 5
+		cumulative+=_mountain_probabilities[level]
+		if _tropical_probabilities[level]>0 and roll<cumulative+_tropical_probabilities[level]:return 6
+		cumulative+=_tropical_probabilities[level]
+		if _badlands_probabilities[level]>0 and roll<cumulative+_badlands_probabilities[level]:return 7
+		cumulative+=_badlands_probabilities[level]
+		if _extras_enabled:
+			for i in range(8):
+				cumulative+=_extra_probabilities[i][level]
+				if _extra_probabilities[i][level]>0 and roll<cumulative:return 8+i
 	# Rounding at a cumulative probability of one.
 	for i in range(4):
 		if _region_enabled[i]:
-			return _climate_biome(i, floori(p.x / _minimum_region_size), floori(p.y / _minimum_region_size), _minimum_region_size)
+			return i
+	if _jungle_coverage>0:return 4
+	if _mountain_coverage>0:return 5
+	if _tropical_coverage>0:return 6
+	if _badlands_coverage>0:return 7
+	for i in range(8):
+		if _extra_coverage[i]>0:return 8+i
 	return 0
 
 
@@ -410,7 +739,120 @@ func _grid_owner(x: int, z: int, step: float) -> int:
 	return _label_cache[key]
 
 
+func is_pure_jungle_rect(bounds:Rect2)->bool:
+	if _jungle_coverage<=0:return false
+	if _jungle_coverage==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=4:return false
+	return true
+
+
+func is_pure_forest_rect(bounds:Rect2)->bool:
+	if _coverage.y<=0:return false
+	if _coverage.y==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=1:return false
+	return true
+
+
+func is_pure_savanna_rect(bounds:Rect2)->bool:
+	if _coverage.z<=0:return false
+	if _coverage.z==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=2:return false
+	return true
+
+
+func is_pure_swamp_rect(bounds:Rect2)->bool:
+	if _coverage.w<=0:return false
+	if _coverage.w==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=3:return false
+	return true
+
+func is_pure_mountain_rect(bounds:Rect2)->bool:
+	if _mountain_coverage<=0:return false
+	if _mountain_coverage==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=5:return false
+	return true
+
+func is_pure_tropical_rect(bounds:Rect2)->bool:
+	if _tropical_coverage<=0:return false
+	if _tropical_coverage==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step))
+	var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=6:return false
+	return true
+
+func is_pure_badlands_rect(bounds:Rect2)->bool:
+	if _badlands_coverage<=0:return false
+	if _badlands_coverage==1:return true
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step));var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return false
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=7:return false
+	return true
+
+func pure_extension_rect(bounds:Rect2)->int:
+	if not _extras_enabled:return -1
+	for i in range(8):
+		if _extra_coverage[i]==1:return i
+	var step:float=maxf(_minimum_region_size/(maxf(settings.height_blend,.1)*4),1)
+	var first:=Vector2i(floori(bounds.position.x/step),floori(bounds.position.y/step));var last:=Vector2i(ceili(bounds.end.x/step),ceili(bounds.end.y/step))
+	if (last.x-first.x+1)*(last.y-first.y+1)>256:return -1
+	var owner:int=_grid_owner(first.x,first.y,step)
+	if owner<8:return -1
+	for z in range(first.y,last.y+1):
+		for x in range(first.x,last.x+1):
+			if _grid_owner(x,z,step)!=owner:return -1
+	return owner-8
+
 func _biome_weights(x: float, z: float) -> Vector4:
+	_extra_weights.fill(0)
+	for i in range(8):
+		if _extra_coverage[i]==1:
+			_jungle_weight=0;_mountain_weight=0;_tropical_weight=0;_badlands_weight=0;_extra_weights[i]=1;return Vector4.ZERO
+	_jungle_weight=0;_mountain_weight=0;_tropical_weight=0;_badlands_weight=0
+	if _badlands_coverage==1:_badlands_weight=1;return Vector4.ZERO
+	if _tropical_coverage==1:_tropical_weight=1;return Vector4.ZERO
+	if _mountain_coverage==1:_mountain_weight=1;return Vector4.ZERO
+	if _jungle_coverage==1:
+		_jungle_weight=1;return Vector4.ZERO
+	if _coverage.y==1:return _coverage
+	if _coverage.z==1:return _coverage
+	if _coverage.w==1:return _coverage
 	# A fine global grid gives continuous, chunk-independent boundary blending.
 	# Region interiors stay exactly one biome; there is no distance-score contest.
 	var step := maxf(_minimum_region_size / (maxf(settings.height_blend,0.1) * 4.0), 1.0)
@@ -425,15 +867,30 @@ func _biome_weights(x: float, z: float) -> Vector4:
 	var labels: Vector4i=_biome_cell_cache[cell]
 	if labels.x==labels.y and labels.x==labels.z and labels.x==labels.w:
 		var pure:=Vector4.ZERO
-		pure[labels.x]=1.0
+		if labels.x==4:_jungle_weight=1
+		elif labels.x==5:_mountain_weight=1
+		elif labels.x==6:_tropical_weight=1
+		elif labels.x==7:_badlands_weight=1
+		elif labels.x>=8:_extra_weights[labels.x-8]=1
+		else:pure[labels.x]=1.0
 		return pure
 	var fx := smoothstep(0.0,1.0,px-ix)
 	var fz := smoothstep(0.0,1.0,pz-iz)
 	var weights := Vector4.ZERO
-	weights[labels.x] += (1.0-fx)*(1.0-fz)
-	weights[labels.y] += fx*(1.0-fz)
-	weights[labels.z] += (1.0-fx)*fz
-	weights[labels.w] += fx*fz
+	if not _extras_enabled and _jungle_coverage==0 and _mountain_coverage==0 and _tropical_coverage==0 and _badlands_coverage==0:
+		weights[labels.x] += (1.0-fx)*(1.0-fz)
+		weights[labels.y] += fx*(1.0-fz)
+		weights[labels.z] += (1.0-fx)*fz
+		weights[labels.w] += fx*fz
+	else:
+		var contributions:=Vector4((1-fx)*(1-fz),fx*(1-fz),(1-fx)*fz,fx*fz)
+		for i in range(4):
+			if labels[i]==4:_jungle_weight+=contributions[i]
+			elif labels[i]==5:_mountain_weight+=contributions[i]
+			elif labels[i]==6:_tropical_weight+=contributions[i]
+			elif labels[i]==7:_badlands_weight+=contributions[i]
+			elif labels[i]>=8:_extra_weights[labels[i]-8]+=contributions[i]
+			else:weights[labels[i]]+=contributions[i]
 	return weights
 
 
@@ -478,8 +935,8 @@ func _island_mask(x: float, z: float) -> float:
 	# Public mask queries remain exact; only saturated coastal blends use this.
 	if _height_query and _coast_certificates.has(cell):
 		var certificate: Vector3=_coast_certificates[cell]
-		if certificate.z-point.distance_to(Vector2(certificate.x,certificate.y))>maxf(settings.coast_width*694.445,0.1)+1.0:
-			return maxf(1.0,(maxf(settings.coast_width*694.445,0.1)+1.0)/maxf(settings.island_size*0.5,8.0))
+		if certificate.z-point.distance_to(Vector2(certificate.x,certificate.y))>maxf(maxf(settings.coast_width*694.445,0.1),_coast_limit)+1.0:
+			return maxf(1.0,(maxf(maxf(settings.coast_width*694.445,0.1),_coast_limit)+1.0)/maxf(settings.island_size*0.5,8.0))
 	if not _island_cache.has(cell):
 		var sites: Array[PackedFloat64Array] = []
 		for dz in range(-2,3):
@@ -544,14 +1001,24 @@ func _remember_coast(cell: Vector2i, point: Vector2, distance: float) -> void:
 
 
 func _grass_river_center(x: float, lane: int, spacing: float) -> float:
-	var key := Vector2(x,lane)
-	if _river_cache.has(key): return _river_cache[key]
+	# Match the existing exact-lattice height-cache policy. A Vector2 key
+	# rounded double-X tree anchors to float32; rounded/fractional callers can
+	# share that key but have different uncached values. Never quantize them.
+	var exact:bool=x==floorf(x) and absf(x)<2000000000.0 and lane>-2000000000 and lane<2000000000 and is_finite(spacing)
+	var key:=Vector2i.ZERO
+	if exact:
+		key=Vector2i(int(x),lane)
+		# Different samplers legitimately request different spacing in the
+		# same world. One active namespace avoids larger/per-query array keys.
+		if spacing!=_river_cache_spacing:_river_cache.clear();_river_cache_spacing=spacing
+		if _river_cache.has(key):return _river_cache[key]
 	var seed_value := _region_random(lane,0,93,541)
 	var broad := _grass_water_noise.get_noise_2d(x*0.3,lane*7919.0)
 	var bends := _grass_water_noise.get_noise_2d(x*1.15+3171.0,lane*7919.0+137.0)
 	var value := lane*spacing+(seed_value-0.5)*spacing*0.3 + broad*spacing*0.32 + bends*spacing*0.075
-	if _river_cache.size()>=4096: _river_cache.clear()
-	_river_cache[key] = value
+	if exact:
+		if _river_cache.size()>=4096:_river_cache.clear()
+		_river_cache[key]=value
 	return value
 
 
@@ -576,11 +1043,16 @@ func _lake_sites(cell: Vector2i, pitch: float) -> Array[Vector4]:
 
 
 func _river_column(x: float, lane: int, spacing: float) -> Vector3:
-	var key:=Vector2(x,lane)
-	if _river_columns.has(key): return _river_columns[key]
+	var exact:bool=x==floorf(x) and absf(x)<2000000000.0 and lane>-2000000000 and lane<2000000000 and is_finite(spacing)
+	var key:=Vector2i.ZERO
+	if exact:
+		key=Vector2i(int(x),lane)
+		if spacing!=_river_column_spacing:_river_columns.clear();_river_column_spacing=spacing
+		if _river_columns.has(key):return _river_columns[key]
 	var value:=Vector3(_grass_river_center(x,lane,spacing),(_grass_river_center(x+8.0,lane,spacing)-_grass_river_center(x-8.0,lane,spacing))/16.0,_grass_water_noise.get_noise_2d(x*0.6,lane*711.0))
-	if _river_columns.size()>=2048: _river_columns.clear()
-	_river_columns[key]=value
+	if exact:
+		if _river_columns.size()>=2048:_river_columns.clear()
+		_river_columns[key]=value
 	return value
 
 
@@ -907,63 +1379,431 @@ func _sample_grid_height(x: float,z: float) -> float:
 	# bypass this cache instead of rounding keys and changing the height function.
 	if absf(x)>2000000000.0 or absf(z)>2000000000.0 or x!=floorf(x) or z!=floorf(z):
 		return _get_height(x,z)
+	# Fine interior points are almost never shared with another tile. Caching
+	# nine Variants for each one churned the bounded cache before coarser LODs
+	# could reuse its canonical 32 m nodes. Keep exact heights; skip only memo
+	# allocation for non-node positions, never interpolate or round a key.
+	if not cache_dense_payloads and ((int(x)&31)!=0 or (int(z)&31)!=0):return _get_height(x,z)
 	var key:=Vector2i(int(x),int(z))
 	if _height_grid_cache.has(key):
 		var entry: Array=_height_grid_cache[key]
+		_last_jungle=entry[5]
+		if _forest!=null:_last_forest=entry[6] if entry.size()>6 else _forest_neutral
+		if _savanna!=null:_last_savanna=entry[7] if entry.size()>7 else _forest_neutral
+		if _swamp!=null:_last_swamp=entry[8];_last_swamp_water=entry[9]
+		if _mountain!=null:_last_mountain=entry[10];_last_swamp_water=entry[9]
+		if _coast!=null:_last_coast=entry[11];_last_swamp_water=entry[9]
+		if _tropical!=null:_last_tropical=entry[12];_last_swamp_water=entry[9]
+		if _badlands!=null:_last_badlands=entry[13];_last_swamp_water=entry[9]
+		if _badlands!=null:_last_badlands_palette=entry[15] if entry.size()>15 else Vector4.ZERO
+		if _badlands!=null:_last_badlands_remnant=entry[16] if entry.size()>16 else 0
+		if _badlands!=null:_last_badlands_skirt=entry[17] if entry.size()>17 else 0
+		if _extras_enabled:_last_extras=entry[14];_last_swamp_water=entry[9]
 		_last_weights=entry[1];_last_surface=entry[2];_last_geology=entry[3];_last_island=entry[4]
 		return entry[0]
 	var height:=_get_height(x,z)
 	if _height_grid_cache.size()>=8192: _height_grid_cache.clear()
-	_height_grid_cache[key]=[height,_last_weights,_last_surface,_last_geology,_last_island]
+	var entry:Array=[height,_last_weights,_last_surface,_last_geology,_last_island,_last_jungle]
+	if _forest!=null or _savanna!=null or _swamp!=null or _mountain!=null or _coast!=null or _tropical!=null or _badlands!=null:entry.append(_last_forest)
+	if _savanna!=null or _swamp!=null or _mountain!=null or _coast!=null or _tropical!=null or _badlands!=null:entry.append(_last_savanna)
+	if _swamp!=null or _mountain!=null or _coast!=null or _tropical!=null or _badlands!=null:entry.append(_last_swamp);entry.append(_last_swamp_water)
+	if _mountain!=null or _coast!=null or _tropical!=null or _badlands!=null:entry.append(_last_mountain)
+	if _coast!=null or _tropical!=null or _badlands!=null:entry.append(_last_coast)
+	if _tropical!=null or _badlands!=null:entry.append(_last_tropical)
+	if _badlands!=null:entry.append(_last_badlands)
+	if _extras_enabled:
+		while entry.size()<14:entry.append(null)
+		entry[6]=_last_forest;entry[7]=_last_savanna;entry[8]=_last_swamp;entry[9]=_last_swamp_water;entry[10]=_last_mountain;entry[11]=_last_coast;entry[12]=_last_tropical;entry[13]=_last_badlands;entry.append(_last_extras)
+	if _badlands!=null:
+		while entry.size()<18:entry.append(null)
+		entry[15]=_last_badlands_palette
+		entry[16]=_last_badlands_remnant
+		entry[17]=_last_badlands_skirt
+	_height_grid_cache[key]=entry
 	return height
 
 
-func _get_height(world_x: float, world_z: float) -> float:
+func _select_normal_height_cache_capacity()->void:
+	var coastal_organic:bool=coastal_structure_height_cache_enabled and _coast!=null and _extras.size()>7 and _extras[7]!=null and chunk_size>=8192
+	_normal_height_cache_capacity=65536 if coastal_organic else 8192
+	# A worker may build a fine tile immediately after a coarse tile. Shrinking
+	# cannot leave a formerly large memo retained until the next cache miss.
+	if _normal_height_cache.size()>_normal_height_cache_capacity:_normal_height_cache.clear()
+
+func _sample_normal_height(x: float, z: float) -> float:
+	# Never insert height-only entries into the full vertex-payload cache.
+	# Integer keys are exact, as in _sample_grid_height; distant/fractional
+	# queries bypass caching rather than rounding canonical coordinates.
+	if absf(x)>2000000000.0 or absf(z)>2000000000.0 or x!=floorf(x) or z!=floorf(z):
+		return _get_height(x,z,false)
+	var key:=Vector2i(int(x),int(z))
+	if _height_grid_cache.has(key): return _height_grid_cache[key][0]
+	if _normal_height_cache.has(key): return _normal_height_cache[key]
+	var height:=_get_height(x,z,false)
+	if _normal_height_cache.size()>=_normal_height_cache_capacity: _normal_height_cache.clear()
+	_normal_height_cache[key]=height
+	return height
+
+
+func _get_height(world_x:float,world_z:float,publish_controls:bool=true)->float:
+	if _extras_enabled:_last_extras=PackedVector4Array();_last_extras.resize(8);_last_extras.fill(Vector4.ZERO)
+	_last_badlands=Vector3.ZERO
+	_last_badlands_palette=Vector4.ZERO
+	_last_badlands_remnant=0
+	_last_badlands_skirt=0
+	_last_tropical=Vector3.ZERO
+	_last_coast=Vector4.ZERO
+	_last_jungle=0;_last_surface=Vector2.ZERO;_last_geology=Vector3.ZERO;_last_weights=Vector4.ZERO
+	if _forest!=null:_last_forest=_forest_neutral
+	if _savanna!=null:_last_savanna=_forest_neutral
+	if _swamp!=null:_last_swamp=_forest_neutral
+	_last_swamp_water=water_level
+	if _mountain!=null:_last_mountain=PackedFloat32Array([0,0,0,0])
 	_height_query=true
-	var island := _island_mask(world_x,world_z)
-	_height_query=false
-	_last_island = island
-	_last_weights = Vector4.ZERO
-	_last_surface = Vector2.ZERO
-	_last_geology = Vector3.ZERO
-	# Only the coastline mask knows island dimensions. Inland topography is
-	# sampled in an independent coordinate system, including its coastal fade.
-	var shape_scale := maxf(settings.terrain_shape_scale,0.01)
-	var terrain_x := world_x/shape_scale
-	var terrain_z := world_z/shape_scale
-	var shore_distance := island*maxf(settings.island_size*0.5,8.0)
-	var shore_transition := maxf(settings.coast_width*694.445,0.1)
-	if island>0.0:
-		_last_weights=_biome_weights(world_x,world_z)
-		if _last_weights.x==1.0:
-			var profile:=_grass_sample(terrain_x,terrain_z)
-			var grass_height:=lerpf(maxf(1.0,profile.x),profile.z,profile.y)
-			return water_level+grass_height*smoothstep(0.0,shore_transition,shore_distance)*maxf(settings.height_multiplier,0.01)
-	var detail := _detail_noise.get_noise_2d(terrain_x, terrain_z)
-	var floor_height := minf(-maxf(settings.ocean_depth,1.0)+detail*settings.seabed_relief,-1.0)
-	if island <= 0.0:
-		return water_level + floor_height * minf(-shore_distance/shore_transition,1.0) * maxf(settings.height_multiplier,0.01)
-	var ridge := absf(_ridge_noise.get_noise_2d(terrain_x, terrain_z))
-	var snow_detail := _snow_detail.get_noise_2d(terrain_x, terrain_z)
-	var weights := _last_weights
-	_last_weights = weights
-	var grass_profile := _grass_sample(terrain_x,terrain_z) if weights.x > 0.0001 else Vector3.ZERO
-	var grass := grass_profile.x
-	var desert := sin(terrain_x * TAU / maxf(settings.dune_size, 1.0) + detail * settings.dune_warp) * settings.dune_height + detail * settings.desert_roughness
-	var snow := snow_detail * settings.snow_hill_height + ridge * settings.snow_ridge_height
-	var stone := pow(ridge, settings.mountain_sharpness) * settings.mountain_height + detail * settings.stone_roughness
-	var land := maxf(1.0,settings.land_height*0.2*(1.0-weights.x) + weights.dot(Vector4(grass,desert,snow,stone)))
-	# Carve only Grass contributions. The existing water plane fills these
-	# lowland channels/basins; no new mesh or thread architecture is introduced.
-	land = lerpf(land,grass_profile.z,grass_profile.y*weights.x)
-	var blend := smoothstep(0.0,shore_transition,shore_distance)
-	return water_level + land*blend*maxf(settings.height_multiplier,0.01)
+	var island:float=_island_mask(world_x,world_z)
+	_height_query=false;_last_island=island
+	var shore_distance:float=island*maxf(settings.island_size*.5,8)
+	var shore_transition:float=maxf(settings.coast_width*694.445,.1)
+	var shape_scale:float=maxf(settings.terrain_shape_scale,.01)
+	var coast_state:=PackedFloat64Array()
+	if _coast!=null and _coast.may_affect(world_x,world_z,shore_distance):
+		_coast.sample(world_x,world_z,0,shore_distance,true);coast_state=_coast.state
+		if coast_state[2]==1:
+			# Fully replaced coastal vertices need no hidden inland landforms.
+			# Keep ownership canonical, but do not calculate invisible material banks.
+			_last_weights=_biome_weights(world_x,world_z)
+			if publish_controls:_last_coast=_coast_payload(coast_state)
+			_last_swamp_water=water_level+coast_state[1]*maxf(settings.height_multiplier,.01)
+			return water_level+coast_state[0]*maxf(settings.height_multiplier,.01)
+	if island<=0:
+		var detail:float=_detail_noise.get_noise_2d(world_x/shape_scale,world_z/shape_scale)
+		var floor_height:float=minf(-maxf(settings.ocean_depth,1)+detail*settings.seabed_relief,-1)
+		return _apply_coast(world_x,world_z,water_level+floor_height*minf(-shore_distance/shore_transition,1)*maxf(settings.height_multiplier,.01),shore_distance,publish_controls,coast_state)
+	_last_weights=_biome_weights(world_x,world_z)
+	var jungle_weight:float=_jungle_weight;var mountain_weight:float=_mountain_weight;var tropical_weight:float=_tropical_weight
+	var land:float=0
+	if _last_weights.x>0:
+		var profile:Vector3=_grass_sample(world_x/shape_scale,world_z/shape_scale)
+		land=lerpf(maxf(1,profile.x),profile.z,profile.y)*_last_weights.x
+	if jungle_weight>0:land+=_jungle_height(world_x,world_z,jungle_weight,publish_controls)*jungle_weight
+	if _last_weights.y>0:land+=_forest_height(world_x,world_z,_last_weights.y,publish_controls)*_last_weights.y
+	if _last_weights.z>0:land+=_savanna_height(world_x,world_z,_last_weights.z,publish_controls)*_last_weights.z
+	if _last_weights.w>0:
+		land+=_swamp_height(world_x,world_z,_last_weights.w,publish_controls)*_last_weights.w
+		_last_swamp_water=water_level+_swamp.state[1]*_last_weights.w*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+	if mountain_weight>0:
+		land+=_mountain_height(world_x,world_z,mountain_weight,publish_controls)*mountain_weight
+		_last_swamp_water+=_mountain.state[1]*mountain_weight*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+	if tropical_weight>0:
+		land+=_tropical_height(world_x,world_z,tropical_weight,publish_controls)*tropical_weight
+		_last_swamp_water+=_tropical.state[1]*tropical_weight*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+	if _badlands_weight>0:
+		var bw:float=_badlands_weight
+		land+=_badlands.sample(world_x,world_z,publish_controls)*bw
+		var s:PackedFloat64Array=_badlands.state
+		if publish_controls:
+			_last_badlands_palette=_badlands.palette_state
+			_last_badlands_remnant=bw*s[10]
+			_last_badlands_skirt=bw*_badlands.remnant_delta*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+			_last_swamp_water+=s[1]*bw*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+			_last_badlands=Vector3(bw,s[2],s[3])
+			_last_geology=_last_geology.lerp(Vector3(s[4],s[5],s[6]),bw)
+			_last_surface=_last_surface.lerp(Vector2(s[7],s[8]),bw)
+	if _extras_enabled:
+		for i in range(8):
+			var amount:float=_extra_weights[i]
+			if amount<=0:continue
+			land+=_extras[i].sample(world_x,world_z,true)*amount
+			var e:PackedFloat64Array=_extras[i].state
+			_last_swamp_water+=e[1]*amount*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01)
+			if publish_controls:_last_extras[i]=Vector4(amount,e[2],e[3],e[4])
+		if _extras[7]!=null and settings.alien_infected.overlay_strength>0:
+			var network:Dictionary=_extras[7].network(Vector2(world_x,world_z));var influence:float=network.influence*settings.alien_infected.overlay_strength*(1-_extra_weights[7])
+			land+=influence*settings.alien_infected.nerve_height*exp(-pow(network.trunk_distance/100,2))
+			if influence>0 and settings.alien_infected.nerve_fibre_height>0:
+				land+=influence*_extras[7].nerve_fibre_relief(Vector2(world_x,world_z))
+			if publish_controls:
+				for i in range(7):_last_extras[i].x*=1-influence
+				var previous:Vector4=_last_extras[7];_last_extras[7]=Vector4(previous.x+(1-previous.x)*influence,.5,clampf(network.age,0,1),network.influence)
+	return _apply_coast(world_x,world_z,water_level+land*smoothstep(0,shore_transition,shore_distance)*maxf(settings.height_multiplier,.01),shore_distance,publish_controls,coast_state)
 
 
-func get_water_surface_height(_x: float, _z: float) -> float:
-	# All water currently rendered by this project is connected sea-level water.
-	# Keep this query explicit for future local water surfaces; no fake high lakes.
-	return water_level
+func _apply_coast(_x:float,_z:float,base:float,_distance:float,publish:bool,c:PackedFloat64Array)->float:
+	if _coast==null or c.is_empty() or c[2]<=0:return base
+	var mult:float=maxf(settings.height_multiplier,.01)
+	_last_swamp_water=lerpf(_last_swamp_water,water_level+c[1]*mult,c[2])
+	if publish:_last_coast=_coast_payload(c)
+	return water_level+lerpf((base-water_level)/mult,c[0],c[2])*mult
+
+func _coast_payload(c:PackedFloat64Array)->Vector4:
+	var sediment:float=c[5]
+	if c.size()>20 and c[19]>.001:sediment=-_pack_savanna(c[19],c[20],0)-1
+	return Vector4(c[2],c[3],c[4],sediment)
+
+
+func _jungle_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_jungle.sample(x,z,true);var config:JungleSettings=_jungle.settings
+	var region_weights:PackedFloat32Array=_jungle.weights
+	var river_country:float=region_weights[5]+region_weights[6]+region_weights[10]*.7
+	var valley:float=0;var channel:float=0;var lake:float=0
+	if config.river_frequency>0 and settings.grass_river_frequency>0 and settings.water_enabled:
+		# Use the EXISTING world carriers and spacing, also in mixed Grass/Snow
+		# terrain. New widths/terraces do not introduce a second river network.
+		var spacing:float=4000.0/maxf(settings.grass_river_frequency,.01)
+		var lane:int=roundi(z/spacing)
+		for offset in range(-1,2):
+			var carrier:Vector3=_river_column(x,lane+offset,spacing)
+			var distance:float=absf(z-carrier.x)
+			var width:float=config.river_width*lerpf(.6,1.9,river_country)*(1+carrier.z*.3)
+			var reach:float=clampf(config.river_frequency,0,1)
+			var corridor:float=(1-smoothstep(width*2,width*2+config.river_valley_width,distance))*reach
+			var lowland:float=1-smoothstep(100,240,h)
+			var gorge:float=region_weights[10]
+			var floor_height:float=lerpf(maxf(6,h-config.valley_depth),4,clampf(lowland+gorge,0,1))
+			h=lerpf(h,floor_height,corridor)
+			var flood:float=(1-smoothstep(width*1.8,width*5,distance))*lowland*config.floodplain_influence
+			h=lerpf(h,3+smoothstep(width*1.2,width*4,distance)*4,flood)
+			var wet:float=(1-smoothstep(width*.4,width*1.6,distance/sqrt(1+carrier.y*carrier.y)))*clampf(lowland+gorge,0,1)*reach
+			channel=maxf(channel,wet);valley=maxf(valley,corridor)
+			# Existing one-sided tributary construction; tangent join, finite reach.
+			if config.stream_density>0 and lowland>.05:
+				var span:float=spacing*.6;var segment:int=floori(x/span)
+				for k in range(-1,2):
+					var branch:int=segment+k;var r:float=_region_random(branch,lane+offset,97,617)
+					if r>config.tributary_density:continue
+					var t:float=(x-(branch+.1+r*.3)*span)/(span*lerpf(.5,.9,r))
+					if t<=0 or t>=1:continue
+					var side:float=-1 if _region_random(branch,lane+offset,97,619)<.5 else 1
+					var across:float=z-carrier.x-side*spacing*.24*t*t
+					var sw:float=width*lerpf(.5,.15,t)*config.stream_density
+					var stream:float=(1-smoothstep(sw*.4,sw*1.7,absf(across)))*(1-smoothstep(.65,1,t))*lowland
+					channel=maxf(channel,stream)
+	if config.lake_frequency>0 and settings.grass_lake_frequency>0 and settings.water_enabled and h<100:
+		var pitch:float=maxf(settings.grass_lake_size*5,1200);var cell:=Vector2i(floori(x/pitch),floori(z/pitch))
+		for site:Vector4 in _lake_sites(cell,pitch):
+			if _region_random(floori(site.x),floori(site.y),103,19)>config.lake_frequency:continue
+			var p:Vector2=(Vector2(x,z)-Vector2(site.x,site.y)).rotated(site.w)/maxf(site.z,1)
+			var contour:float=minf(Vector2(p.x/.85,p.y/.65).length(),(p-Vector2(.48,.25)).length()/.6)
+			lake=maxf(lake,1-smoothstep(.65,1.12,contour))
+	var water:float=maxf(channel,lake)
+	h=lerpf(h,-maxf(settings.grass_river_depth,settings.grass_lake_depth),water)
+	if publish:
+		_jungle.river=channel;_jungle.lake=lake
+		_jungle.drainage=maxf(_jungle.drainage,valley)
+		_jungle.wetness=clampf(_jungle.wetness+valley*.2+water*.35,0,1)
+		_last_jungle=roundi(_jungle.wetness*255)+roundi(_jungle.drainage*255)*256+roundi(weight*255)*65536
+		_last_geology=_last_geology.lerp(Vector3(float(_jungle.region)/12.0,_jungle.rock,water),weight)
+	return h
+
+
+func _forest_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_forest.sample(x,z,true);var config:Resource=_forest.settings
+	var w:PackedFloat32Array=_forest.weights
+	var valley:float=0;var river:float=0;var lake:float=0
+	var lowland:float=(1-smoothstep(100,220,h))*clampf(.4+w[0]*.35+w[3]*.35+w[7]*.6+w[8],0,1)
+	if settings.water_enabled and settings.grass_river_frequency>0 and config.river_influence>0:
+		var spacing:float=4000/maxf(settings.grass_river_frequency,.01);var lane:int=roundi(z/spacing)
+		for offset in range(-1,2):
+			var carrier:Vector3=_river_column(x,lane+offset,spacing)
+			var distance:float=absf(z-carrier.x)/sqrt(1+carrier.y*carrier.y)
+			var width:float=config.river_width*(.65+w[8]*.8)*(1+carrier.z*.25)
+			var corridor:float=(1-smoothstep(width*2,width*2+config.river_valley_width,distance))*config.river_influence
+			h=lerpf(h,maxf(4,h-config.ravine_depth),corridor)
+			var flood:float=(1-smoothstep(width*1.4,width*5,distance))*lowland
+			h=lerpf(h,3+smoothstep(width,width*4,distance)*5,flood)
+			valley=maxf(valley,corridor*lowland)
+			river=maxf(river,(1-smoothstep(width*.45,width*1.55,distance))*lowland*config.river_influence)
+			if config.stream_density>0 and lowland>.1:
+				var span:float=spacing*.6;var segment:int=floori(x/span)
+				for k in range(-1,2):
+					var branch:int=segment+k;var r:float=_region_random(branch,lane+offset,97,617)
+					if r>config.stream_density:continue
+					var t:float=(x-(branch+.1+r*.3)*span)/(span*lerpf(.5,.9,r))
+					if t<=0 or t>=1:continue
+					var side:float=-1 if _region_random(branch,lane+offset,97,619)<.5 else 1
+					var across:float=z-carrier.x-side*spacing*.24*t*t
+					var sw:float=width*lerpf(.42,.12,t)
+					var reach:float=(1-smoothstep(.65,1,t))*lowland
+					var tributary_valley:float=(1-smoothstep(sw*1.5,sw+80,absf(across)))*reach
+					h=lerpf(h,5,tributary_valley);valley=maxf(valley,tributary_valley)
+					river=maxf(river,(1-smoothstep(sw*.4,sw*1.7,absf(across)))*reach)
+	if settings.water_enabled and settings.grass_lake_frequency>0 and config.lake_frequency>0 and h<100 and w[3]+w[7]+w[8]>.15:
+		var pitch:float=maxf(settings.grass_lake_size*5,1200);var cell:=Vector2i(floori(x/pitch),floori(z/pitch))
+		for site:Vector4 in _lake_sites(cell,pitch):
+			if _region_random(floori(site.x),floori(site.y),103,19)>config.lake_frequency:continue
+			var p:Vector2=(Vector2(x,z)-Vector2(site.x,site.y)).rotated(site.w)/maxf(site.z,1)
+			var contour:float=minf(Vector2(p.x/.9,p.y/.65).length(),minf((p-Vector2(.5,.2)).length()/.6,Vector2((p.x+.55)/.6,(p.y-.2)/.3).length()))
+			var basin:float=1-smoothstep(.65,1.8,contour)
+			h=lerpf(h,4+smoothstep(.65,1.5,contour)*5,basin*lowland)
+			lake=maxf(lake,(1-smoothstep(.65,1.1,contour))*lowland)
+	var water:float=maxf(river,lake);h=lerpf(h,-maxf(settings.grass_river_depth,settings.grass_lake_depth),water)
+	if publish:
+		_forest.river=river;_forest.lake=lake;_forest.drainage=maxf(_forest.drainage,valley)
+		_forest.wetness=clampf(_forest.wetness+valley*.15+water*.3,0,1)
+		_last_forest=PackedFloat32Array([roundi(_forest.wetness*255)+roundi(_forest.drainage*255)*256+roundi(weight*255)*65536,roundi(_forest.conifer*255)+roundi(_forest.clearing*255)*256+roundi(float(_forest.region)/9*255)*65536,_forest.rock,water])
+	return h
+
+
+func _savanna_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_savanna.sample(x,z,true);var c:Resource=_savanna.settings
+	var w:PackedFloat32Array=_savanna.weights
+	var drain:float=0;var channel:float=0;var basin:float=0;var water:float=0
+	# Same meandering carriers as all active biomes, not a separate river graph.
+	# Dry beds remain geometric even with the water renderer switched off.
+	if settings.grass_river_frequency>0 and c.drainage_strength>0 and c.seasonal_channel_frequency>0:
+		var spacing:float=4000/maxf(settings.grass_river_frequency,.01);var lane:int=roundi(z/spacing)
+		for offset in range(-1,2):
+			var id:int=lane+offset;var roll:float=_region_random(id,0,97,811)
+			if roll>c.seasonal_channel_frequency:continue
+			var carrier:Vector3=_river_column(x,id,spacing)
+			var distance:float=absf(z-carrier.x)/sqrt(1+carrier.y*carrier.y)
+			var width:float=(35+w[7]*40+w[8]*80)*(1+carrier.z*.22)
+			# Conservative support bounds: distant carriers and their finite
+			# tributaries cannot affect this sample. No approximation of height.
+			if distance>width*2+c.valley_width and absf(z-carrier.x)>spacing*.2+width*.4+55:continue
+			var valley:float=(1-smoothstep(width*2,width*2+c.valley_width,distance))*c.drainage_strength
+			var low:float=(1-smoothstep(90,190,h))*clampf(.3+w[3]*.2+w[7]*.5+w[8]+w[12]*.5,0,1)
+			h=lerpf(h,maxf(5,h-22-w[7]*18),valley)
+			var bed:float=1-smoothstep(width*.4,width*1.8,distance)
+			h=lerpf(h,maxf(3,h-8-w[7]*8),bed*c.drainage_strength)
+			channel=maxf(channel,bed*c.drainage_strength);drain=maxf(drain,valley)
+			# Whole carrier selection preserves a coherent perennial reach.
+			var perennial:float=0
+			if c.perennial_frequency>0:perennial=(1-smoothstep(c.perennial_frequency*.8,c.perennial_frequency+.001,roll))*low
+			water=maxf(water,bed*perennial)
+			if c.gully_frequency>0:
+				var span:float=spacing*.65;var segment:int=floori(x/span)
+				for k in range(-1,2):
+					var branch:int=segment+k;var key:=Vector2i(branch,id)
+					if not _savanna_gullies.has(key):
+						if _savanna_gullies.size()>=1024:_savanna_gullies.clear()
+						var roll_g:float=_region_random(branch,id,97,817)
+						_savanna_gullies[key]=[roll_g,(branch+.1+roll_g*.3)*span,-1.0 if _region_random(branch,id,97,819)<.5 else 1.0]
+					var descriptor:Array=_savanna_gullies[key];var r:float=descriptor[0]
+					if r>c.gully_frequency:continue
+					var t:float=(x-float(descriptor[1]))/(span*.72)
+					if t<=0 or t>=1:continue
+					var side:float=descriptor[2]
+					var across:float=z-carrier.x-side*spacing*.2*t*t
+					var width_g:float=width*lerpf(.4,.12,t)
+					var g:float=(1-smoothstep(width_g,width_g+55,absf(across)))*smoothstep(0,.08,t)*(1-smoothstep(.65,1,t))*c.erosion_intensity
+					h=lerpf(h,maxf(3,h-12),g);drain=maxf(drain,g);channel=maxf(channel,g*.8)
+	if c.basin_frequency>0 and w[8]+w[12]>.02:
+		var pitch:float=maxf(settings.grass_lake_size*5,1400);var cell:=Vector2i(floori(x/pitch),floori(z/pitch))
+		for site:Vector4 in _lake_sites(cell,pitch):
+			var roll:float=_region_random(floori(site.x),floori(site.y),103,829)
+			if roll>c.basin_frequency*2:continue
+			var p:Vector2=(Vector2(x,z)-Vector2(site.x,site.y)).rotated(site.w)/maxf(site.z*1.3,1)
+			var contour:float=minf(Vector2(p.x/.95,p.y/.58).length(),minf((p-Vector2(.6,.2)).length()/.55,Vector2((p.x+.55)/.7,(p.y-.2)/.38).length()))
+			var b:float=(1-smoothstep(.5,1.9,contour))*clampf(w[8]+w[12],0,1)*(1-smoothstep(55,100,h))
+			h=lerpf(h,3.5+smoothstep(.6,1.8,contour)*5,b);basin=maxf(basin,b)
+			if settings.grass_lake_frequency>0 and roll<c.basin_water_coverage*c.basin_frequency:water=maxf(water,(1-smoothstep(.5,1,contour))*b)
+	h=lerpf(h,-maxf(settings.grass_river_depth,2),water)
+	if publish:
+		_savanna.river=channel;_savanna.lake=basin;_savanna.water=water;_savanna.drainage=maxf(_savanna.drainage,drain)
+		_savanna.wetness=clampf(_savanna.wetness+water*.4+drain*.1,0,1)
+		_last_savanna=PackedFloat32Array([_pack_savanna(_savanna.wetness,_savanna.drainage,weight),_pack_savanna(_savanna.rock,_savanna.laterite,float(_savanna.region)/12),_pack_savanna(channel,basin,water),_pack_savanna(_savanna.aridity,_savanna.soil,_savanna.erosion)])
+	return h
+
+
+func _pack_savanna(a:float,b:float,c:float)->float:
+	return roundi(clampf(a,0,1)*255)+roundi(clampf(b,0,1)*255)*256+roundi(clampf(c,0,1)*255)*65536
+
+
+
+func _mountain_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_mountain.sample(x,z,true);var s:PackedFloat64Array=_mountain.state
+	h=lerpf(minf(h,s[1]+80),h,smoothstep(.05,.9,weight))
+	if publish:
+		_last_mountain=PackedFloat32Array([_pack_savanna(s[2],s[3],weight),_pack_savanna(s[4],s[5],s[6]),_pack_savanna(s[7],s[8],s[9]),s[10]])
+	return h
+
+func _tropical_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_tropical.sample(x,z,true);var s:PackedFloat64Array=_tropical.state
+	if publish:
+		_last_tropical=Vector3(weight,s[2],s[3])
+		# Reuse the legacy geological environmental field, including its existing
+		# Mountain extension wrapper. No additional bank or per-chunk texture.
+		_last_geology=_last_geology.lerp(Vector3(s[4],s[5],s[6]),weight)
+		_last_surface=_last_surface.lerp(Vector2(s[7],s[6]),weight)
+	return h
+
+func _swamp_height(x:float,z:float,weight:float,publish:bool)->float:
+	var h:float=_swamp.sample(x,z,true)
+	if publish:
+		var s:PackedFloat64Array=_swamp.state
+		_last_swamp=PackedFloat32Array([_pack_savanna(s[2],s[3],weight),_pack_savanna(s[4],s[5],s[6]),_pack_savanna(s[7],s[8],s[9]),_pack_savanna(s[10],s[11],s[12])])
+	return h
+
+func get_water_surface_height(x:float,z:float)->float:
+	if not _extras_enabled and _swamp==null and _mountain==null and _coast==null and _tropical==null and _badlands==null:return water_level
+	_get_height(x,z)
+	return _last_swamp_water
+
+## Worker-only numerical surface; shared indices align water clipping with land.
+func build_swamp_water(arrays:Array,resolution:int)->Array:
+	var result:Array=[]
+	if not settings.water_enabled:return result
+	var mountain:bool=false
+	if _mountain!=null:
+		for v:float in arrays[Mesh.ARRAY_CUSTOM0]:
+			if v<0:mountain=true;break
+	var coastal:PackedFloat32Array=arrays[Mesh.ARRAY_CUSTOM1] if arrays[Mesh.ARRAY_CUSTOM1]!=null else PackedFloat32Array()
+	if arrays[Mesh.ARRAY_CUSTOM3]==null and not mountain and coastal.is_empty() and _badlands==null and not _extras_enabled:return result
+	var count:int=(resolution+1)*(resolution+1)
+	var terrain:PackedVector3Array=arrays[Mesh.ARRAY_VERTEX]
+	var uv:PackedVector2Array=arrays[Mesh.ARRAY_TEX_UV]
+	var controls:PackedFloat32Array=arrays[Mesh.ARRAY_CUSTOM3] if arrays[Mesh.ARRAY_CUSTOM3]!=null else PackedFloat32Array()
+	var tropical_controls:PackedFloat32Array=arrays[Mesh.ARRAY_CUSTOM2] if arrays[Mesh.ARRAY_CUSTOM2]!=null else PackedFloat32Array()
+	var mountain_controls:PackedFloat32Array=arrays[Mesh.ARRAY_CUSTOM0]
+	var mountain_stride:int=mountain_controls.size()/terrain.size()
+	var vertices:=PackedVector3Array();var normals:=PackedVector3Array();var colors:=PackedColorArray();var uvs:=PackedVector2Array();var classes:=PackedVector2Array()
+	vertices.resize(count);normals.resize(count);colors.resize(count);uvs.resize(count);classes.resize(count)
+	var wet:=PackedByteArray();wet.resize(count)
+	var marine:=PackedByteArray();marine.resize(count)
+	for i in range(count):
+		var weight:float=floorf(controls[i*4]/65536)/255 if not controls.is_empty() else 0
+		if not controls.is_empty() and controls[i*4]<0:weight=arrays[Mesh.ARRAY_COLOR][i].a
+		var tw:float=float((int(-tropical_controls[i*4]-1)>>16)&255)/255 if not tropical_controls.is_empty() and tropical_controls[i*4]<0 else 0
+		# Badlands UV wrapper is orthogonal to every existing custom bank.
+		if mountain_stride==4 and mountain_controls[i*4+3]<0:tw+=float(int(uv[i].y)&255)/255
+		if built_extension_mask!=0 and not built_extension_data.is_empty():
+			var ex:float=0;var row:int=resolution+1;var width:int=built_extension_data.size()/(row*4)
+			for family_id in range(8):
+				if (built_extension_mask & (1<<family_id))==0:continue
+				ex+=float(built_extension_data[((i/row)*width+family_id*row+i%row)*4])/255
+			tw+=ex
+		var sediment:float=float(int(controls[i*4+1])&255)/255 if not controls.is_empty() else 0
+		var organic:float=float((int(controls[i*4+3])>>8)&255)/255 if not controls.is_empty() else 0
+		var basin:float=float((int(controls[i*4+1])>>16)&255)/255 if not controls.is_empty() else 0
+		var mw:float=floorf(mountain_controls[i*mountain_stride+1]/65536)/255 if mountain and mountain_controls[i*mountain_stride]<0 else 0
+		var cw:float=float((int(-coastal[i*4+2]-1)>>8)&255)/255 if not coastal.is_empty() and coastal[i*4+2]<0 else 0
+		# The global ocean owns marine water. Only retained, elevated coastal
+		# pools need this local grid; a sea-level duplicate causes wave z-fighting.
+		var coast_influence:float=cw
+		mw*=1-coast_influence
+		tw*=1-coast_influence
+		if coast_influence>.01 and uv[i].x<=water_level+.2:
+			cw=0;mw=0;weight=0;tw=0
+			if settings.beaches_enabled:marine[i]=1
+		if mw>0:
+			sediment=lerpf(sediment,float((int(mountain_controls[i*mountain_stride+1])>>8)&255)/255,mw);organic*=1-mw
+		if tw>0:sediment=lerpf(sediment,.45,tw);organic*=1-tw
+		if cw>0:
+			weight*=1-cw;sediment=lerpf(sediment,float((int(coastal[i*4+3])>>16)&255)/255,cw);organic*=1-cw
+		vertices[i]=Vector3(terrain[i].x,uv[i].x,terrain[i].z);normals[i]=Vector3.UP
+		colors[i]=Color(sediment,organic,weight,basin);uvs[i]=Vector2(terrain[i].y,uv[i].x)
+		classes[i]=Vector2(float((int(controls[i*4+1])>>8)&255)/255,float((int(controls[i*4+3])>>16)&255)/255) if not controls.is_empty() else Vector2.ZERO
+		if mw+cw+tw>0:classes[i].y=-maxf(maxf(mw,cw),tw)
+		if cw>0:classes[i].x=-cw
+		if weight+mw+cw+tw>.01 and uv[i].x+weight>terrain[i].y:wet[i]=1
+	var indices:=PackedInt32Array();var source:PackedInt32Array=arrays[Mesh.ARRAY_INDEX]
+	for i in range(0,resolution*resolution*6,3):
+		var a:int=source[i];var b:int=source[i+1];var c:int=source[i+2]
+		if wet[a]+wet[b]+wet[c]>0 and marine[a]+marine[b]+marine[c]==0:indices.append_array(PackedInt32Array([a,b,c]))
+	if indices.is_empty():return result
+	result.resize(Mesh.ARRAY_MAX);result[Mesh.ARRAY_VERTEX]=vertices;result[Mesh.ARRAY_NORMAL]=normals;result[Mesh.ARRAY_COLOR]=colors;result[Mesh.ARRAY_TEX_UV]=uvs;result[Mesh.ARRAY_TEX_UV2]=classes;result[Mesh.ARRAY_INDEX]=indices
+	return result
 
 
 func _normalized_noise(noise: FastNoiseLite, x: float, z: float) -> float:

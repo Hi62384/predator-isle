@@ -1,0 +1,90 @@
+[gd_scene format=3 uid="uid://bc2owo0nj1trr"]
+
+[ext_resource type="Script" uid="uid://bs1w0nu0kcmc2" path="res://scripts/chunk_terrain.gd" id="1_terrain"]
+[ext_resource type="Script" path="res://scripts/csharp/player/FreeCamera.cs" id="2_camera"]
+[ext_resource type="Script" path="res://scripts/blobs/blob_workshop.gd" id="3_blob"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_main"]
+sky_top_color = Color(0.18, 0.42, 0.68, 1)
+sky_horizon_color = Color(0.72, 0.85, 0.93, 1)
+ground_bottom_color = Color(0.3, 0.38, 0.43, 1)
+ground_horizon_color = Color(0.72, 0.8, 0.86, 1)
+
+[sub_resource type="Sky" id="Sky_main"]
+sky_material = SubResource("ProceduralSkyMaterial_main")
+
+[sub_resource type="Environment" id="Environment_main"]
+background_mode = 2
+sky = SubResource("Sky_main")
+ambient_light_source = 3
+ambient_light_color = Color(0.72, 0.8, 0.9, 1)
+ambient_light_energy = 0.45
+tonemap_mode = 2
+fog_enabled = true
+fog_light_color = Color(0.66, 0.74, 0.81, 1)
+fog_density = 3.5e-05
+fog_sky_affect = 0.0
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hud"]
+content_margin_left = 14.0
+content_margin_top = 10.0
+content_margin_right = 14.0
+content_margin_bottom = 10.0
+bg_color = Color(0.025, 0.04, 0.035, 0.82)
+border_width_left = 1
+border_width_top = 1
+border_width_right = 1
+border_width_bottom = 1
+border_color = Color(0.33, 0.61, 0.38, 0.65)
+corner_radius_top_left = 5
+corner_radius_top_right = 5
+corner_radius_bottom_right = 5
+corner_radius_bottom_left = 5
+
+[node name="PredatorIsle" type="Node3D" unique_id=1794594476]
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=677519735]
+environment = SubResource("Environment_main")
+
+[node name="BlobWorkshop" type="Node3D" parent="."]
+script = ExtResource("3_blob")
+
+[node name="Sun" type="DirectionalLight3D" parent="." unique_id=1410638502]
+transform = Transform3D(0.88294756, 0.36994863, -0.2890356, 0, 0.6156615, 0.7880107, 0.46947157, -0.6957722, 0.5435968, 0, 0, 0)
+light_color = Color(1, 0.94, 0.82, 1)
+light_energy = 1.15
+shadow_enabled = true
+directional_shadow_max_distance = 500.0
+
+[node name="Terrain" type="Node3D" parent="." unique_id=1745240871 node_paths=PackedStringArray("target")]
+script = ExtResource("1_terrain")
+target = NodePath("../FreeCamera")
+
+[node name="FreeCamera" type="Camera3D" parent="." unique_id=1020987015 node_paths=PackedStringArray("terrain", "debug_label")]
+transform = Transform3D(1, 0, 0, 0, 0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 45, 70)
+current = true
+script = ExtResource("2_camera")
+terrain = NodePath("../Terrain")
+debug_label = NodePath("../Interface/DebugPanel/DebugText")
+
+[node name="Interface" type="CanvasLayer" parent="." unique_id=1602225633]
+
+[node name="DebugPanel" type="PanelContainer" parent="Interface" unique_id=599450229]
+visible = false
+mouse_filter = 2
+offset_left = 16.0
+offset_top = 16.0
+offset_right = 1080.0
+offset_bottom = 94.0
+theme_override_styles/panel = SubResource("StyleBoxFlat_hud")
+
+[node name="DebugText" type="Label" parent="Interface/DebugPanel" unique_id=1904720413]
+layout_mode = 2
+mouse_filter = 2
+theme_override_colors/font_color = Color(0.87, 0.96, 0.86, 1)
+theme_override_colors/font_shadow_color = Color(0, 0, 0, 0.8)
+theme_override_constants/shadow_offset_x = 1
+theme_override_constants/shadow_offset_y = 1
+theme_override_font_sizes/font_size = 15
+text = "PREDATOR ISLE  |  TERRAIN STREAMING TEST
+Loading chunks..."
