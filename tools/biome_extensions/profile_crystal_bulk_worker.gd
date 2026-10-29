@@ -1,0 +1,16 @@
+extends SceneTree
+func _initialize()->void:
+	var original:String="res://tools/biome_extensions/profile_crystal_grounded_roots.gd";var source:String=FileAccess.get_file_as_string(original)
+	source=source.replace('b.settings.crystal_wastes.crystal_grounded_roots=enabled','b.settings.crystal_wastes.crystal_bulk_material=enabled')
+	source=source.replace('res://tools/biome_extensions/profile_crystal_grounded_roots.gd','res://tools/biome_extensions/profile_crystal_bulk_worker.gd')
+	var marker:String='\tvar cases:Array=[];var ratios:Array=[]';assert(source.count(marker)==1)
+	source=source.replace(marker,'\tguards["'+original+'"]=FileAccess.get_sha256("'+original+'")\n'+marker)
+	var remove:String='var faces:PackedVector3Array=collision.structure_faces;collision.erase("structure_faces")';assert(source.count(remove)==1)
+	source=source.replace(remove,'output.complete_collision=digest(collision);'+remove)
+	var compare:String='\t\t\tcheck(records[false].structures!=records[true].structures';assert(source.count(compare)==1)
+	source=source.replace(compare,'\t\t\tcheck(records[false].complete_collision==records[true].complete_collision,"Complete real worker collision unchanged by optical metadata")\n'+compare)
+	source=source.replace('artifacts/profile_crystal_grounded_roots.json','artifacts/profile_crystal_bulk_worker.json')
+	source=source.replace('"median_on_off_ratio":ratios[ratios.size()/2],','"median_on_off_ratio":ratios[ratios.size()/2],"isolated":false,')
+	source=source.replace('REGISTERED real cold terrain builder/full numeric feature/structure/collision/water pipeline','REGISTERED crystal_bulk_material false/true real cold terrain builder/full numeric feature/structure/collision/water pipeline')
+	source=source.replace('Complete unrelated payloads exact,changed collider positions correspond to real structures,no added triangles.','Complete unrelated and ALL collision payloads exact;only UV metadata changes,no added triangles. Explicitly non-isolated characterization;the other open Godot session is not closed or controlled.')
+	var script:=GDScript.new();script.source_code=source;assert(script.reload()==OK);set_script(script);call_deferred("run")

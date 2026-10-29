@@ -1,0 +1,12 @@
+{
+  "asset": "res://tools/biome_extensions/experiments/nerve_film_v3_albedo.png",
+  "production_adoption": false,
+  "asset_sha256": "c038977714a3be917bf76f392e7e1c9bf0b3aa1ccc9f0854f34c1191810eb476",
+  "generated_width": 1254,
+  "generated_height": 1254,
+  "note": "The tool returned 1254-square pixels despite a 2K prompt. Any later GPU-array resizing is import resampling, not native 2K detail.",
+  "creation_mode": "built-in image_gen",
+  "purpose": "Private opaque tissue base-color image trial; original textures/shaders unchanged.",
+  "prompt": "Use case: stylized-concept\nAsset type: seamless tileable photorealistic game environment PBR base-color texture, square 2K\nPrimary request: an original alien-infected landscape tissue surface for Predator Isle, not a scene or concept landscape. Opaque charcoal-grey biomechanical organic skin with irregular interwoven fine fibres, restrained elongated growth wrinkles and broad softly folded biofilm. It must read as tangible weathered biological tissue, not rock, bark, scales, a rope weave or a repeating decorative pattern.\nComposition/framing: perfectly orthographic flat material swatch filling the entire square edge to edge. Seamlessly wrapping left/right and top/bottom with no border, no central motif and no obvious repeating cells. Natural variation across several detail scales, mostly quiet smooth leathery tissue broken by subtle connected growth folds.\nLighting: neutral cross-polarized diffuse albedo reference, even flat illumination. No directional lighting, cast shadows, ambient-occlusion pockets, shiny baked highlights, reflections, vignette, depth of field or perspective. This image will be lit by the game engine.\nColor palette: restrained neutral-to-cool medium charcoal grey, approximate base-color RGB 65 to 110 of 255 with small low-saturation grey-brown variations; readable fine detail without high-contrast white veins or deep black grooves. No glowing elements or bright colors.\nConstraints: one continuous opaque material only, not a normal/height map or a grid of maps. No props, creatures, eyes, faces, organs, gore, architecture, horizon, sky, lava, text, labels, logos or watermark. No large holes, regularly spaced bumps, braided-rope motifs or tiled-looking medallions. Maintain consistent texel scale and realistic nonuniform microtexture.",
+  "validation": "Generated appearance inspected; seam/actual native material validation pending. Not a measured normal/height scan, production PBR asset or acceptance certificate."
+}
