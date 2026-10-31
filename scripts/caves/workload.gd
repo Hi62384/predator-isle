@@ -3,20 +3,21 @@ extends RefCounted
 ## Each worker owns its canonical sampler and compiled field. Bundles passed
 ## between workers contain immutable numeric descriptors only.
 const Builder=preload("res://scripts/terrain_mesh_builder.gd")
-const Network=preload("res://scripts/caves/network.gd")
-const Field=preload("res://scripts/caves/portal_field.gd")
+const Network=preload("res://scripts/csharp/caves/CaveNetwork.cs")
+const Field=preload("res://scripts/csharp/caves/PortalCaveField.cs")
 const Mesher=preload("res://scripts/csharp/caves/PortalCaveMesher.cs")
-const Context=preload("res://scripts/caves/surface_context.gd")
-const SurfaceCut=preload("res://scripts/caves/surface_cut.gd")
+const Context=preload("res://scripts/csharp/caves/CaveSurfaceContext.cs")
+static var SurfaceCut=preload("res://scripts/csharp/caves/CaveSurfaceCut.cs").new()
 var Collision=preload("res://scripts/csharp/terrain/TerrainCollision.cs").new()
 const Formations=preload("res://scripts/caves/formations.gd")
 const Basins=preload("res://scripts/caves/seepage_basins.gd")
 const InsectGuard=preload("res://scripts/caves/insect_entry_guard.gd")
 const Colony=preload("res://scripts/caves/colony_network.gd")
-const Frontiers=preload("res://scripts/caves/stream_frontiers.gd")
-const BiomeRegions=preload("res://scripts/caves/biome_regions.gd")
-const SurfaceBiomes=preload("res://scripts/caves/surface_biomes.gd")
-const BiomeFeatures=preload("res://scripts/caves/biome_features.gd")
+static var Frontiers=preload("res://scripts/csharp/caves/CaveStreamFrontiers.cs").new()
+const BiomeRegions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs")
+static var BiomeRegionHelpers=BiomeRegions.new()
+static var SurfaceBiomes=preload("res://scripts/csharp/caves/CaveSurfaceBiomes.cs").new()
+static var BiomeFeatures=preload("res://scripts/csharp/caves/CaveBiomeFeatures.cs").new()
 const MagmaHeat=preload("res://scripts/caves/magma_heat.gd")
 var _magma_heat
 var builder
@@ -56,7 +57,7 @@ func discover(cell:Vector2i)->Dictionary:
 				var edge:Dictionary=network.connection(Vector2i(x,z),other)
 				if not edge.is_empty():edges.append(edge)
 	var bundle:Dictionary={"cell":cell,"regions":regions,"connections":edges,"entrances":entrances}
-	if configuration.biome_regions.enabled:bundle["cave_biome_regions"]=BiomeRegions.combine(regions,edges,str(configuration.biome_regions.fallback_biome_id))
+	if configuration.biome_regions.enabled:bundle["cave_biome_regions"]=BiomeRegionHelpers.combine(regions,edges,str(configuration.biome_regions.fallback_biome_id))
 	if not use_bundle(bundle):return {"error":"Cave bundle exceeds numeric field bounds"}
 	bundle["cells"]=field.chunks.keys()
 	for entrance:Dictionary in entrances:entrance["columns"]=exposed_columns(entrance)
@@ -64,7 +65,7 @@ func discover(cell:Vector2i)->Dictionary:
 func use_bundle(bundle:Dictionary)->bool:
 	if field==null or not bundle.has("cell") or not bundle.has("regions") or not bundle.has("connections"):return false
 	if bundle_key==bundle.cell:return true
-	var assignment:Dictionary=BiomeRegions.combine(bundle.regions,bundle.connections,str(configuration.biome_regions.fallback_biome_id)) if configuration.biome_regions.enabled else {}
+	var assignment:Dictionary=BiomeRegionHelpers.combine(bundle.regions,bundle.connections,str(configuration.biome_regions.fallback_biome_id)) if configuration.biome_regions.enabled else {}
 	if not assignment.get("valid",true):return false
 	if not field.compile(bundle.regions,builder._get_height,bundle.connections,assignment):return false
 	_regions=bundle.regions;bundle_key=bundle.cell;_water_cache.clear();return true

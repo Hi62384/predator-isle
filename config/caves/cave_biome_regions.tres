@@ -1,6 +1,6 @@
 [gd_resource type="Resource" load_steps=6 format=3]
 
-[ext_resource type="Script" path="res://scripts/caves/biome_region_settings.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/csharp/caves/CaveBiomeRegionSettings.cs" id="1"]
 [ext_resource type="Resource" path="res://config/caves/biomes/default_cave_definition.tres" id="2"]
 [ext_resource type="Resource" path="res://config/caves/biomes/frozen_cave_definition.tres" id="3"]
 [ext_resource type="Resource" path="res://config/caves/biomes/crystal_cave_definition.tres" id="4"]

@@ -4,6 +4,8 @@
     <EnableDynamicLoading>true</EnableDynamicLoading>
     <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <Nullable>enable</Nullable>
+    <!-- Keep editor builds optimized: geographic sampling is production gameplay code. -->
+    <Optimize>true</Optimize>
     <LangVersion>12</LangVersion>
     <NuGetAudit>false</NuGetAudit>
   </PropertyGroup>

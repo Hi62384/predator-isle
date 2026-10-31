@@ -18,7 +18,10 @@ func _initialize()->void:
 				check(is_finite(h) and is_finite(water) and control.is_finite(),"Finite sand geometry/payload")
 				check(h==b._get_height(p.x,p.y,false),"Height-only equality")
 				records.append([p,h,water,control])
-		b._height_grid_cache.clear();b._coast._nodes.clear();b._coast._patches.clear();records.reverse()
+		b._height_grid_cache.clear()
+		if b._coast.has_method("clear_numeric_caches"):b._coast.clear_numeric_caches(false)
+		else:b._coast._nodes.clear();b._coast._patches.clear()
+		records.reverse()
 		for r:Array in records:check(r[1]==b._sample_grid_height(r[0].x,r[0].y) and r[2]==b._last_swamp_water and r[3]==b._last_coast,"Sand independent of generation order/cache")
 		for r:Array in records.slice(0,32):
 			var x:float=roundf(r[0].x/8)*8;var z:float=roundf(r[0].y/8)*8;var h:float=b._coast.sample(x,z,0,0)

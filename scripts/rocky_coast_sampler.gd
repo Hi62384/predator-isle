@@ -22,7 +22,7 @@ func configure(config:Resource,seed:int,host:RefCounted)->void:
 	settings=config;seed_value=seed;_host=weakref(host)
 	beach=null
 	if host.settings.beaches_enabled:
-		beach=preload("res://scripts/beach_sampler.gd").new();beach.configure(host.settings.beach,self)
+		beach=preload("res://scripts/csharp/biomes/BeachSampler.cs").new();beach.configure(host.settings.beach,self)
 	neutral.resize(CHANNELS);neutral.fill(0);state=neutral
 	for entry in [[_macro,31013,1.0/settings.bay_scale],[_meso,31039,1.0/220],[_detail,31051,1.0/48]]:
 		var n:FastNoiseLite=entry[0];n.seed=seed+entry[1];n.frequency=entry[2];n.noise_type=FastNoiseLite.TYPE_SIMPLEX_SMOOTH;n.fractal_type=FastNoiseLite.FRACTAL_FBM;n.fractal_octaves=2;n.fractal_gain=.3

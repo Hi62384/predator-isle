@@ -3,8 +3,8 @@ extends RefCounted
 const MAX_GROUPS=32
 const MAX_CHAINS=16
 const JOINTS=8
-const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
-const Curves=preload("res://alien_foundry/scripts/geometry/CurveGeometry.gd")
+static var Frames=preload("res://scripts/csharp/blobs/BlobCurveFrames.cs").new()
+static var Curves=preload("res://scripts/csharp/blobs/OrganicCurveGeometry.cs").new()
 static func finalize(data: Dictionary) -> Dictionary:
 	var groups: Array[Dictionary]=[]
 	var group_ids: Dictionary={}

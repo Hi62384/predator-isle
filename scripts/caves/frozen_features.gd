@@ -2,9 +2,9 @@ extends RefCounted
 ## Ice grows from measured rock contacts and retained water geography. This
 ## does not carve another cave volume, reroll a biome, or change walking rules.
 const Shapes=preload("res://scripts/caves/formations.gd")
-const Basins=preload("res://scripts/caves/seepage_basins.gd")
+static var Basins=preload("res://scripts/csharp/caves/CaveSeepageBasins.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const MAX_FORMS:int=32
 const MAX_VERTICES:int=120000
 const ICE_FREEBOARD:float=.06

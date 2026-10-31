@@ -3,9 +3,9 @@ extends CharacterBody3D
 ## anatomical skeleton/collision rig. No rotating Node3D drives rolling anymore.
 const Tissue = preload("res://shaders/blob_organism.gdshader")
 const Membrane = preload("res://shaders/blob_membrane.gdshader")
-const Circulation = preload("res://scripts/blobs/blob_surface_circulation.gd")
-const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
-const Contacts=preload("res://scripts/blobs/blob_appendage_contacts.gd")
+const Circulation = preload("res://scripts/csharp/blobs/BlobSurfaceCirculation.cs")
+static var Frames=preload("res://scripts/csharp/blobs/BlobCurveFrames.cs").new()
+const Contacts=preload("res://scripts/csharp/blobs/BlobAppendageContacts.cs")
 var contacts:=Contacts.new()
 var playback_rate:=1.0
 var debug_features:=false
@@ -276,7 +276,7 @@ func attachment_position(feature_id:int)->Vector3:
 
 func set_locomotion(mode: String) -> void:
 	if mode=="creep": mode="limb"
-	if mode not in Circulation.MODES: return
+	if mode not in solver.MODES: return
 	gait_fallback_reason="";_stall_time=0
 	var requested:=mode
 	var legs:bool=contacts.chains.any(func(c:Dictionary): return c.kind=="leg" and contacts._root(c).y-contacts._terrain_target(contacts._root(c)).y<float(c.length)*.94)

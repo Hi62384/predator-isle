@@ -1,10 +1,10 @@
 extends RefCounted
 ## Rare finite molten films on an EXISTING measured rock wall and a short
 ## exposed fall into actual clipped retained lava. No excavation/fluid solver.
-const Field=preload("res://scripts/caves/field.gd")
+const Field=preload("res://scripts/csharp/caves/CaveField.cs")
 const Shapes=preload("res://scripts/caves/formations.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
-const Surface=preload("res://scripts/caves/seepage_surface.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
+static var Surface=preload("res://scripts/csharp/caves/CaveSeepageSurface.cs").new()
 static func backing_distance(field,point:Vector3,axis:Vector3)->float:
 	# Find nearby solid contact. Sampling only a distant endpoint can pass
 	# THROUGH a real thin rock lip and incorrectly call the attached film free.

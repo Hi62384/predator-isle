@@ -118,6 +118,26 @@ void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
  float lamina=mix(.5,field(vec2(bed_frequency,17.1)),bed_filter);
  float lamination=badlands_lamina_strength*exposed*(1.0-deposit)*(.25+.75*smoothstep(.015,.2,slope));
  band=mix(band,vec3(.36,.34,.33),smoothstep(.57,.73,lamina)*lamination*(1.0-hard*.8));
+ // The large geological beds remain coupled to physical hardness. Subordinate
+ // silt laminae and thin mineral seams break up their otherwise uniform colour.
+ // Both use the unwrapped bedding coordinate, not independent chunk-local noise.
+ float silt_phase=coordinate*53.0+.42*sin(coordinate*2.7)+.11*sin(coordinate*13.3);
+ float mineral_phase=coordinate*167.0+.31*sin(coordinate*17.3);
+ float silt_width=fwidth(silt_phase),mineral_width=fwidth(mineral_phase);
+ float silt_filter=1.0-smoothstep(.18,.65,silt_width);
+ float mineral_filter=1.0-smoothstep(.08,.32,mineral_width);
+ float silt=0.0,mineral=0.0;
+ if(lamination>.0001 && silt_filter>.003){
+  silt=(field(vec2(silt_phase,41.7))-.5)*silt_filter;
+ }
+ if(lamination>.0001 && mineral_filter>.003){
+  float seam_distance=abs(fract(mineral_phase)-.5);
+  float aa=max(mineral_width*.5,.001);
+  float persistence=smoothstep(.27,.72,field(world_position.xz*.043+vec2(coordinate*.09)));
+  mineral=(1.0-smoothstep(max(.035-aa,0.0),.035+aa,seam_distance))*persistence*mineral_filter;
+ }
+ band*=1.0+silt*lamination*.45;
+ band=mix(band,vec3(.67,.61,.50),mineral*lamination*.55);
  band=badlands_working_color(band);
  // Recolour geological strata, retaining different source normals/roughness:
  // this is not six variants of one rock image.
@@ -153,13 +173,15 @@ void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
  // shading field made broad clay terrain look inflated despite flat geometry.
  float relief=fracture*.35*exposed*smoothstep(.10,.40,slope)*(.2+hard*.8)*(1.0-deposit)*(1.0-smoothstep(2000.0,6000.0,view_distance));
  relief+=(lamina-.5)*lamination*.06;
+ // Millimetre-scale apparent bedding only; no displacement or collision change.
+ relief+=(silt*.006+mineral*.003)*lamination;
  vec3 r1=cross(dy,n),r2=cross(n,dx);float det=dot(dx,r1);
  // Procedural bedding/weathering obey the same detail/normal-off control as
  // the scanned normals. Otherwise debug 7 leaves relief active while a zero
  // strength correctly removes it, making the two controls disagree.
  if(abs(det)>.000001)gradient-=clamp((r1*dFdx(relief)+r2*dFdy(relief))/det,vec3(-.5),vec3(.5))*badlands_normal_strength*fine;
  color*=.88+fracture*.22;
- color*=1.0+(weather-.5)*badlands_weathering*.15;rough=clamp(rough,.6,1.0);masks=vec3(exposed,deposit,hard);
+ color*=1.0+(weather-.5)*badlands_weathering*.15;rough=clamp(rough+(silt*.05-mineral*.04)*lamination,.6,1.0);masks=vec3(exposed,deposit,hard);
 }
 vec3 badlands_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks){
  if(debug_view==240)return id_color(int(round(badlands_control.y*15.0)));

@@ -8,7 +8,9 @@ public partial class PortalCaveField : CaveField
 {
     public D surface_columns { get; set; } = new();
     public D surface_limits { get; set; } = new();
-    public Callable top_height { get; set; }
+    private Callable _topHeight;
+    private Func<double,double,double>? _sampleTopHeight;
+    public Callable top_height { get=>_topHeight; set { _topHeight=value;_sampleTopHeight=CaveHeightSampler.Bind(value); } }
     public bool include_surface_air { get; set; } = true;
     public double cave_sample(Vector3 point) => base.sample(point);
     public double surface_height(Vector2 point) => SurfaceHeight(point);
@@ -16,7 +18,7 @@ public partial class PortalCaveField : CaveField
     public override double SurfaceHeight(Vector2 point)
     {
         bool valid = top_height.Delegate != null || (GodotObject.IsInstanceValid(top_height.Target) && top_height.Target!.HasMethod(top_height.Method));
-        return (valid ? top_height : height).Call(point.X, point.Y).AsDouble();
+        return valid&&_sampleTopHeight is not null?_sampleTopHeight(point.X,point.Y):base.SurfaceHeight(point);
     }
     public override double sample(Vector3 point)
     {

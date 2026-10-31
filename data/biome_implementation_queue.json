@@ -98,7 +98,8 @@
       "implemented": "Sampler, settings, sedimentary material, shared-water integration, seven live transitions, preview/debug hooks and reproducible validation tools",
       "verified": "The latest source-validated 79846-assertion / 186-capture checkpoint is preserved under tools/badlands/artifacts/revisions/f87632d9c49f-41b8e123 with source snapshots. It includes the standard numerical suite, 620 hill checks, 37 compact seam checks, 28 normal-scheduling equivalence cases, 112 collision precision checks, 250 production landmark checks over 125 rays, all GPU checks, native benchmarks, the shared 31-script regression and a complete 2.74km capsule return through 27 committed cuts. Earlier snapshots remain historical by their declared hashes; subsequent extension-material corrections require their own refreshed evidence. See TERRAIN_TUNING.md.",
       "pending": "Reference-quality landforms/materials and distant rendering remain under review: broad sediment bands, overly smooth distant faces and some repeated channel silhouettes are still visible. Regional hills, filtered fine sediment beds, parent-directed tributaries, conservative valley/fan bounds, joint-eroded caprock, local rugged meshes and continuous mineral palettes are implemented, not artistic sign-off. First-cut startup and streaming spikes remain measured work. Saved-world coverage remains zero. Desert/Mesa transitions unavailable in current live ownership.",
-      "brief": "C:/Users/User1/.codex/attachments/b6369486-203f-45e4-8afb-1fb50f398d1a/Pasted text.txt"
+      "brief": "C:/Users/User1/.codex/attachments/b6369486-203f-45e4-8afb-1fb50f398d1a/Pasted text.txt",
+      "material_continuation_20261030": "Finer derivative-filtered silt laminae/mineral seams added under existing lamina strength. Shader import and appearance remain untested; broad geological units and canonical terrain are unchanged. This is implementation, not reference-quality sign-off."
     },
     {
       "biome": "Quarry",
@@ -346,5 +347,15 @@
       "Magma Caverns"
     ],
     "instruction": "The user will supply more cave-biome briefs. After all preceding surface and cave-foundation/Default-Frozen work is finished, implement added biomes one at a time in arrival order. Do not start later entries in parallel or treat registration as completion."
+  },
+  "current_art_continuation_20261030": {
+    "date": "2026-10-30",
+    "scope": "Continuation of pre-existing art requirements, not a new biome phase",
+    "implemented": "Badlands subordinate silt laminae and thin mineral seams use the unwrapped geological coordinate, footprint filtering, roughness variation and small apparent bedding relief under the existing lamina_strength control.",
+    "source": "shaders/badlands_material.gdshaderinc",
+    "preserved": "Saved settings, existing photographed material banks, canonical terrain, hardness, drainage, geometry, collision, resource/model guards and historical source-bound receipts. Hoogie code and textures remain excluded.",
+    "verification": "Shader-only source change. No new Godot import, rendering, screenshot, gameplay, performance or memory checks. The preceding C# build does not validate this shader.",
+    "remaining": "Recorded visual/reference-quality and scenic-coverage criteria remain unaccepted. No additional concrete absent generator or asset is specified by the queue pending fields; further art changes need identification of a specific unmet target, rather than speculative reopening of implemented modules.",
+    "complete": false
   }
 }

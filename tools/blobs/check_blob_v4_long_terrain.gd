@@ -1,6 +1,6 @@
 extends SceneTree
 const Organism=preload("res://scripts/blobs/blob_organism.gd")
-const Oracle=preload("res://scripts/blobs/blob_deformation_oracle.gd")
+var Oracle=preload("res://scripts/csharp/blobs/BlobDeformationOracle.cs").new()
 const Integrity=preload("res://scripts/blobs/blob_mesh_integrity.gd")
 class Ground extends Node3D:
 	func get_height_at(p:Vector3)->float:return .08*sin(p.x*.7)+.06*sin(p.z*.9)+.09*p.z

@@ -2,9 +2,9 @@ extends Node3D
 ## B places a fresh organism on the terrain under the camera. Heavy field work
 ## runs on a cancellable worker; scene/mesh resources are created on main thread.
 const Pipeline = preload("res://scripts/blobs/blob_organism_pipeline.gd")
-const Blueprint = preload("res://scripts/blobs/blob_blueprint.gd")
-const Cache = preload("res://scripts/blobs/blob_mesh_cache.gd")
-const Organism = preload("res://scripts/blobs/blob_organism.gd")
+static var Blueprint=preload("res://scripts/csharp/blobs/BlobBlueprint.cs").new()
+static var Cache=preload("res://scripts/csharp/blobs/BlobMeshCache.cs").new()
+const Organism = preload("res://scripts/csharp/blobs/BlobOrganism.cs")
 @export var laboratory := false
 @export var seed_value := 22
 @export_range(0, 2) var quality := 1
@@ -214,7 +214,7 @@ func _process(delta: float) -> void:
 	elapsed += delta
 	if worker.is_alive():
 		var progress := job.snapshot()
-		status.text = "Seed %d · %s · %.1f s" % [seed_value, progress.message, elapsed]
+		status.text = "Seed %d Ã‚Â· %s Ã‚Â· %.1f s" % [seed_value, progress.message, elapsed]
 		return
 	var result: Dictionary = worker.wait_to_finish()
 	for widget in build_widgets: widget.disabled = false
@@ -247,7 +247,7 @@ func _process(delta: float) -> void:
 	if laboratory and camera!=null and camera.has_method("frame_creature"):
 		camera.frame_creature(result,creature.solver.height)
 		camera.follow_actor(creature)
-	status.text = "Seed %d · %s · %d features · %.1f s  |  B: grow  Shift+B: seed  M: mode  X: clear" % [seed_value, creature.locomotion+" / "+result.dna.profile+" / "+result.dna.body_plan, result.features.size(), elapsed]
+	status.text = "Seed %d Ã‚Â· %s Ã‚Â· %d features Ã‚Â· %.1f s  |  B: grow  Shift+B: seed  M: mode  X: clear" % [seed_value, creature.locomotion+" / "+result.dna.profile+" / "+result.dna.body_plan, result.features.size(), elapsed]
 
 func _toggle_mode() -> void:
 	if is_instance_valid(creature):
@@ -257,7 +257,7 @@ func _toggle_mode() -> void:
 		for offset in range(1,modes.size()+1):
 			creature.set_locomotion(modes[posmod(start+offset,modes.size())])
 			if creature.locomotion!=original:break
-		status.text = "Seed %d · %s  |  B: grow  Shift+B: seed  M: mode  X: clear" % [seed_value, creature.locomotion]
+		status.text = "Seed %d Ã‚Â· %s  |  B: grow  Shift+B: seed  M: mode  X: clear" % [seed_value, creature.locomotion]
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo: return
@@ -349,7 +349,7 @@ func _inspection_controls(ui: CanvasLayer) -> void:
 	feature.value_changed.connect(func(value:float):
 		if not is_instance_valid(creature):return
 		var f:Dictionary=creature.anatomy.features[clampi(int(value),0,creature.anatomy.features.size()-1)]
-		metadata.text="%s\nTissue: %s · parent %d\n%s\n%s"%[f.feature_type,f.tissue,f.parent,f.get("animation_role",f.locomotion_relevance),f.get("omission_reason","Integrated" if f.get("fused_path",false) else "Surface/curve attached")])
+		metadata.text="%s\nTissue: %s Ã‚Â· parent %d\n%s\n%s"%[f.feature_type,f.tissue,f.parent,f.get("animation_role",f.locomotion_relevance),f.get("omission_reason","Integrated" if f.get("fused_path",false) else "Surface/curve attached")])
 	var views:=OptionButton.new()
 	for title in ["Front","Back","Left","Right","Top","Bottom","Three-quarter"]: views.add_item(title)
 	views.selected=6; views.item_selected.connect(func(i:int): camera.quick_view(i)); rows.add_child(views)

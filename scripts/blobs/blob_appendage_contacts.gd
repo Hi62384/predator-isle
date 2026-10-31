@@ -2,8 +2,8 @@ extends RefCounted
 ## Persistent world-space grips with stance/reach/release states. Legs use a
 ## two-bone hinge; vines use fixed-length FABRIK; passive chains use damped
 ## Verlet constraints. Digits/bulbs are skinned to these same terminal frames.
-const Guard=preload("res://scripts/blobs/blob_curve_guard.gd")
-const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
+static var Guard=preload("res://scripts/csharp/blobs/BlobCurveGuard.cs").new()
+static var Frames=preload("res://scripts/csharp/blobs/BlobCurveFrames.cs").new()
 const JOINTS=8
 const MAX_CHAINS=16
 var actor: Node3D

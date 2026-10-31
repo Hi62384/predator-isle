@@ -2,7 +2,7 @@ extends RefCounted
 ## Retained optional side basins,not a global groundwater simulation. Their
 ## carved bed is separate from the calm water surface;main routes stay dry.
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Surface=preload("res://scripts/caves/seepage_surface.gd")
+static var Surface=preload("res://scripts/csharp/caves/CaveSeepageSurface.cs").new()
 const MAX_BASINS:int=4
 static func route_clear(center:Vector3,radius:float,bed_y:float,water_y:float,region:Dictionary)->bool:
 	for edge:Dictionary in region.edges+region.get("pocket_passages",[]):

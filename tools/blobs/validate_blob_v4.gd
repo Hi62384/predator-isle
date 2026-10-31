@@ -1,6 +1,6 @@
 extends SceneTree
 const Organism=preload("res://scripts/blobs/blob_organism.gd")
-const Oracle=preload("res://scripts/blobs/blob_deformation_oracle.gd")
+var Oracle=preload("res://scripts/csharp/blobs/BlobDeformationOracle.cs").new()
 const Integrity=preload("res://scripts/blobs/blob_mesh_integrity.gd")
 const INPUT="res://.godot/blob_validation_v4_release"
 var failures:Array[String]=[]

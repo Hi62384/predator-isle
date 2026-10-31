@@ -1,7 +1,7 @@
 extends RefCounted
 ## Deterministic graph geography,not a per-voxel lottery. Pure numeric results
 ## travel in existing worker bundles;no new worker pool or world ownership.
-const Definition=preload("res://scripts/caves/biome_definition.gd")
+static var Definition=preload("res://scripts/csharp/caves/CaveBiomeDefinition.cs").new()
 const MAX_NODES:int=128
 const MAX_EDGES:int=256
 var builder

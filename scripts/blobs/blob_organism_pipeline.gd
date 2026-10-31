@@ -1,13 +1,13 @@
 extends RefCounted
 ## Staged organism generator with final surface/animation binding. Uses the imported Foundry's indexed implicit
 ## surface extractor and Catmull-Rom anatomical curves, never its retained mesh.
-const Extractor = preload("res://scripts/blobs/blob_stable_extractor.gd")
-const Curves = preload("res://alien_foundry/scripts/geometry/CurveGeometry.gd")
-const Blueprint = preload("res://scripts/blobs/blob_blueprint.gd")
-const Attachments=preload("res://scripts/blobs/blob_surface_attachments.gd")
-const Integrity=preload("res://scripts/blobs/blob_mesh_integrity.gd")
-const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
-const Bindings=preload("res://scripts/blobs/blob_deformation_bindings.gd")
+const Extractor = preload("res://scripts/csharp/blobs/BlobStableExtractor.cs")
+static var Curves = preload("res://scripts/csharp/blobs/OrganicCurveGeometry.cs").new()
+static var Blueprint=preload("res://scripts/csharp/blobs/BlobBlueprint.cs").new()
+const Attachments=preload("res://scripts/csharp/blobs/BlobSurfaceAttachments.cs")
+static var Integrity=preload("res://scripts/csharp/blobs/BlobMeshIntegrity.cs").new()
+static var Frames=preload("res://scripts/csharp/blobs/BlobCurveFrames.cs").new()
+static var Bindings=preload("res://scripts/csharp/blobs/BlobDeformationBindings.cs").new()
 const Growth = preload("res://scripts/blobs/blob_anatomical_growth.gd")
 const PASS_NAMES = ["Biological blueprint", "Mass composition", "Weight-bearing anatomy", "Primary biology", "Organic integration", "Regional geometry", "Connected anatomy", "Tissue materials"]
 const TISSUES = ["flesh", "sac", "sponge", "root", "face", "membrane", "belly", "leg", "cavity", "cartilage", "vein"]

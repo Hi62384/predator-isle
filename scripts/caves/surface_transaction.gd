@@ -2,7 +2,7 @@ extends RefCounted
 ## Main-thread surface commit. Preparation allocates replacement resources but
 ## never edits a visible material or active collider. Only a validated complete
 ## transaction may exchange parent masks, ground shapes and cave patch bodies.
-const Cut=preload("res://scripts/caves/surface_cut.gd")
+static var Cut=preload("res://scripts/csharp/caves/CaveSurfaceCut.cs").new()
 var Collision=preload("res://scripts/csharp/terrain/TerrainCollision.cs").new()
 var records:Array=[]
 var patches:Array=[]

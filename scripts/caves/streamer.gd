@@ -2,17 +2,18 @@ extends Node3D
 ## Sparse cave backend sharing the host terrain's TOTAL worker allowance.
 ## Surface transactions are installed separately; closed terrain is retained
 ## until its complete corresponding portal replacement is ready.
-const Workload=preload("res://scripts/caves/workload.gd")
+const Workload=preload("res://scripts/csharp/caves/CaveWorkload.cs")
 const REGION:float=1536
-const SurfaceRenderer=preload("res://scripts/caves/surface_renderer.gd")
-const SurfaceTransaction=preload("res://scripts/caves/surface_transaction.gd")
+static var SurfaceRenderer=preload("res://scripts/csharp/caves/CaveSurfaceRenderer.cs").new()
+const SurfaceTransaction=preload("res://scripts/csharp/caves/CaveSurfaceTransaction.cs")
 const SurfaceBatch=preload("res://scripts/csharp/caves/SurfaceBatch.cs")
-const WaterRenderer=preload("res://scripts/caves/water_renderer.gd")
-const Palette=preload("res://scripts/caves/material_palette.gd")
-const Frontiers=preload("res://scripts/caves/stream_frontiers.gd")
-const BiomeRegions=preload("res://scripts/caves/biome_regions.gd")
-const BiomeMaterials=preload("res://scripts/caves/biome_materials.gd")
-const FeatureRenderer=preload("res://scripts/caves/feature_renderer.gd")
+static var WaterRenderer=preload("res://scripts/csharp/caves/CaveWaterRenderer.cs").new()
+static var Palette=preload("res://scripts/csharp/caves/CaveMaterialPalette.cs").new()
+static var Frontiers=preload("res://scripts/csharp/caves/CaveStreamFrontiers.cs").new()
+const BiomeRegions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs")
+static var BiomeRegionHelpers=BiomeRegions.new()
+static var BiomeMaterials=preload("res://scripts/csharp/caves/CaveBiomeMaterials.cs").new()
+static var FeatureRenderer=preload("res://scripts/csharp/caves/CaveFeatureRenderer.cs").new()
 var TraversalEnvelope=preload("res://scripts/csharp/caves/TraversalEnvelope.cs").new()
 var SurfacePolicy=preload("res://scripts/csharp/caves/SurfaceStreamingPolicy.cs").new()
 var host
@@ -117,7 +118,7 @@ func collect()->void:
 		if job.kind=="discovery":
 			var bundle:Dictionary=job.result[0]
 			if bundle.has("error"):last_error=bundle.error;continue
-			_bundle=bundle;_last_plan=Vector3.INF;_biome_debug=BiomeRegions.description(bundle.get("cave_biome_regions",{}))
+			_bundle=bundle;_last_plan=Vector3.INF;_biome_debug=BiomeRegionHelpers.description(bundle.get("cave_biome_regions",{}))
 		elif job.kind=="portal":
 			if _surface_batch==null or job.batch_id!=_surface_batch.id:continue
 			_surface_batch.accept(job.batch_id,job.generation,job.part,job.result[0])

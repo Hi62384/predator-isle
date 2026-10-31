@@ -1,8 +1,8 @@
 [gd_scene format=3 uid="uid://bc2owo0nj1trr"]
 
-[ext_resource type="Script" uid="uid://bs1w0nu0kcmc2" path="res://scripts/chunk_terrain.gd" id="1_terrain"]
+[ext_resource type="Script" path="res://scripts/csharp/terrain/ChunkTerrain.cs" id="1_terrain"]
 [ext_resource type="Script" path="res://scripts/csharp/player/FreeCamera.cs" id="2_camera"]
-[ext_resource type="Script" path="res://scripts/blobs/blob_workshop.gd" id="3_blob"]
+[ext_resource type="Script" path="res://scripts/csharp/blobs/BlobWorkshop.cs" id="3_blob"]
 
 [sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_main"]
 sky_top_color = Color(0.18, 0.42, 0.68, 1)
@@ -59,6 +59,7 @@ directional_shadow_max_distance = 500.0
 [node name="Terrain" type="Node3D" parent="." unique_id=1745240871 node_paths=PackedStringArray("target")]
 script = ExtResource("1_terrain")
 target = NodePath("../FreeCamera")
+nested_rings = true
 
 [node name="FreeCamera" type="Camera3D" parent="." unique_id=1020987015 node_paths=PackedStringArray("terrain", "debug_label")]
 transform = Transform3D(1, 0, 0, 0, 0.906308, 0.422618, 0, -0.422618, 0.906308, 0, 45, 70)

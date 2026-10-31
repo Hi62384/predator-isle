@@ -1,7 +1,7 @@
 extends RefCounted
 ## Private post-process: very rare fictional regions,selected opaque prisms
 ## only. The thickness UV sign carries the flag losslessly;geometry stays intact.
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 static func apply(payload:Dictionary,regions:Array,seed_id:int,settings:Dictionary)->Dictionary:
 	if not settings.get("luminous_minerals",false) or float(settings.get("luminous_region_chance",.005))<=0 or float(settings.get("luminous_form_chance",.12))<=0:return payload
 	var themes:Dictionary={}

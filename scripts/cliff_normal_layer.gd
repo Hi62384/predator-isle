@@ -1,5 +1,5 @@
 @tool
-class_name CliffNormalLayer
+## Retained reference implementation; the global resource class is now C#.
 extends Resource
 
 @export var label: String = "New rock":

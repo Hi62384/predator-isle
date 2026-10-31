@@ -117,7 +117,8 @@ public partial class CaveMesher : RefCounted
         emit(c0, c1, c2); emit(c0, c2, c3);
     }
 
-    public A build(GodotObject volume, Vector3I coordinate, double step_metres = 2)
+    public A build(GodotObject volume, Vector3I coordinate) => build(volume, coordinate, 2);
+    public A build(GodotObject volume, Vector3I coordinate, double step_metres)
     {
         _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); boundary_values = new();
         Field = volume as ICaveField ?? new LegacyCaveField(volume); origin = (Vector3)coordinate * 64;

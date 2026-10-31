@@ -2,7 +2,7 @@ extends RefCounted
 ## Private SAME-volume proposal: only existing real wide corridor/room joins
 ## can accept minerals outside the original entire protected8x8m passage.
 ## Narrow passages remain clear;no SDF widening or new cave engine.
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const MAX_CANDIDATES:int=64
 const MAX_FORMS:int=24
 static func order(a:Dictionary,b:Dictionary)->bool:return a.priority<b.priority or (a.priority==b.priority and a.id<b.id)

@@ -1,6 +1,6 @@
 extends RefCounted
 ## CPU equivalent of the production vertex shader, used for triangle QA.
-const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
+static var Frames=preload("res://scripts/csharp/blobs/BlobCurveFrames.cs").new()
 static func mesh_pose(mesh:Dictionary,actor:Node3D)->Dictionary:
 	var vertices:=PackedVector3Array();var normals:=PackedVector3Array();var frames:Array=[]
 	for c:Dictionary in actor.contacts.chains:

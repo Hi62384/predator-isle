@@ -2,7 +2,7 @@ extends RefCounted
 ## One bounded connected water patch per basin,including optional short
 ## feeder channels. Triangle clipping follows real bed air at the retained
 ## water level;no overlapping decorative pool/stream planes.
-const Field=preload("res://scripts/caves/field.gd")
+const Field=preload("res://scripts/csharp/caves/CaveField.cs")
 const STEP:float=.5
 const MAX_VERTICES:int=30000
 static func water_point(pool:Dictionary,p:Vector2)->Vector3:

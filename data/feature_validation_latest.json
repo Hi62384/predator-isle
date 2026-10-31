@@ -1,0 +1,18 @@
+{
+  "passed": true,
+  "modes": 15,
+  "assertions": 4783264,
+  "peak_sampled_private_mib": 1246.9,
+  "first_visible_and_collision_seconds": 2.69459,
+  "full_coverage_and_cave_discovery_seconds": 46.4821604,
+  "move_and_return_complete_seconds": 50.8921581,
+  "receipt": ".godot/csharp_checks/20261031T061619959/receipt.json",
+  "capture": "data/startup_verified_render.png",
+  "limitations": [
+    "Uncontrolled caches and shared machine; not a cold or isolated benchmark.",
+    "One saved launch/move/return and focused component fixtures; not every procedural world or a full underground walking tour.",
+    "Photographic quality and ordinary-world occurrence of every requested rare scenic outcome remain unaccepted."
+  ],
+  "applies_to_current_runtime": false,
+  "subsequent_change": "data/loading_optimization_current.json"
+}

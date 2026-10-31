@@ -1,5 +1,5 @@
 extends "res://tools/blobs/render_blob_v4_sheets.gd"
-const Oracle=preload("res://scripts/blobs/blob_deformation_oracle.gd")
+var Oracle=preload("res://scripts/csharp/blobs/BlobDeformationOracle.cs").new()
 const Integrity=preload("res://scripts/blobs/blob_mesh_integrity.gd")
 const Frames=preload("res://scripts/blobs/blob_curve_frames.gd")
 func _run()->void:

@@ -27,7 +27,7 @@ func _initialize() -> void:
 			if [h,culled.control_surface,culled.control_wind,culled.control_detail]!=reference[i]:failures.append(str([seed_value,points[i]]))
 		var culled_us: int=Time.get_ticks_usec()-tick
 		for i in range(2300):culled.sample(i*129.0,i*-113.0)
-		if culled._drainage_graph._local_tiles.size()>2048:failures.append("Unbounded drainage subtiles")
+		if (culled._drainage_graph.cache_counts().local_tiles if culled._drainage_graph.has_method("cache_counts") else culled._drainage_graph._local_tiles.size())>2048:failures.append("Unbounded drainage subtiles")
 		for i in range(0,points.size(),31):
 			if culled.sample(points[i].x,points[i].y)!=reference[i][0]:failures.append("Eviction changed drainage")
 		rows.append({"seed":seed_value,"exact_samples":points.size(),"full_candidates_us":full_us,"culled_candidates_us":culled_us})

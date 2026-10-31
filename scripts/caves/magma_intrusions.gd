@@ -3,15 +3,15 @@ extends RefCounted
 ## has a fully measured buried attachment, exposed face and ordinary collider.
 ## No emissive source is inferred from the shape or from cave depth.
 const Shapes=preload("res://scripts/caves/formations.gd")
-const Fit=preload("res://scripts/caves/measured_formation.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Fit=preload("res://scripts/csharp/caves/CaveMeasuredFormation.cs").new()
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const Shared=preload("res://scripts/biome_extension_structures.gd")
 var templates:Dictionary={}
 func prototype(kind:int)->PackedVector3Array:
 	if templates.has(kind):return templates[kind]
 	if kind==3:
 		var points:=PackedVector3Array()
-		for point:Vector3 in preload("res://scripts/caves/magma_geometry.gd").new().prototype(0,0):
+		for point:Vector3 in preload("res://scripts/csharp/caves/MagmaCaveGeometry.cs").new().prototype(0,0):
 			var taper:float=1-point.y*.93;points.append(Vector3(point.x*taper,point.y,point.z*taper))
 		templates[kind]=points;return points
 	var b=Shared.new();b._skip_degenerate=true

@@ -1,15 +1,15 @@
 extends RefCounted
 ## Cooled volcanic geology on the existing graph, field, worker and renderer.
 const Shapes=preload("res://scripts/caves/formations.gd")
-const Geometry=preload("res://scripts/caves/magma_geometry.gd")
-const Fit=preload("res://scripts/caves/measured_formation.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+const Geometry=preload("res://scripts/csharp/caves/MagmaCaveGeometry.cs")
+static var Fit=preload("res://scripts/csharp/caves/CaveMeasuredFormation.cs").new()
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Basins=preload("res://scripts/caves/seepage_basins.gd")
-const Tubes=preload("res://scripts/caves/magma_tubes.gd")
-const LakeChambers=preload("res://scripts/caves/magma_lake_chambers.gd")
-const Intrusions=preload("res://scripts/caves/magma_intrusions.gd")
-const Cascades=preload("res://scripts/caves/magma_cascades.gd")
+static var Basins=preload("res://scripts/csharp/caves/CaveSeepageBasins.cs").new()
+static var Tubes=preload("res://scripts/csharp/caves/MagmaCaveTubes.cs").new()
+static var LakeChambers=preload("res://scripts/csharp/caves/MagmaLakeChambers.cs").new()
+const Intrusions=preload("res://scripts/csharp/caves/MagmaIntrusions.cs")
+static var Cascades=preload("res://scripts/csharp/caves/MagmaCascades.cs").new()
 const MAX_FORMS:int=64
 const MAX_VERTICES:int=24000
 func decorate_region_with_context(region:Dictionary,height:Callable,seed_id:int,configuration:Dictionary,maximum_depth:float,minimum_roof:float,heat_context)->Dictionary:

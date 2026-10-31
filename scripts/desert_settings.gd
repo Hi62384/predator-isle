@@ -1,5 +1,5 @@
 @tool
-class_name DesertSettings
+# Original resource reference; the global DesertSettings is implemented in C#.
 extends Resource
 
 ## Desert uses absolute world metres. All changes apply on terrain restart.

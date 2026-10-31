@@ -14,7 +14,7 @@ var seed_value: int = 73921
 var _macro := FastNoiseLite.new()
 var _meso := FastNoiseLite.new()
 var _detail := FastNoiseLite.new()
-var _drainage_graph = preload("res://scripts/desert_drainage.gd").new()
+var _drainage_graph = preload("res://scripts/csharp/biomes/DesertDrainage.cs").new()
 var _region_cache: Dictionary = {}
 var _site_cache: Dictionary = {}
 # Adjacent fixed-lattice nodes usually visit the same nine sites. Keep their

@@ -2,15 +2,16 @@ extends RefCounted
 ## Worker-only measured mineral growth in the SAME cave volume. Logical roots,
 ## family/patch identity and far silhouettes never depend on camera/load order.
 const Shapes=preload("res://scripts/caves/formations.gd")
-const Geometry=preload("res://scripts/caves/crystal_geometry.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+const Geometry=preload("res://scripts/csharp/caves/CrystalCaveGeometry.cs")
+const Shared=preload("res://scripts/biome_extension_structures.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const ConnectedProfiles=preload("res://scripts/caves/crystal_profiles.gd")
-const VeinExposure=preload("res://scripts/caves/crystal_vein_exposure.gd")
-const Corridors=preload("res://scripts/caves/crystal_corridor_features.gd")
-const LakeChambers=preload("res://scripts/caves/crystal_lake_chambers.gd")
-const Luminous=preload("res://scripts/caves/crystal_luminous.gd")
-const Shallow=preload("res://scripts/caves/crystal_shallow.gd")
+static var ConnectedProfiles=preload("res://scripts/csharp/caves/CrystalConnectedProfiles.cs").new()
+static var VeinExposure=preload("res://scripts/csharp/caves/CrystalVeinExposure.cs").new()
+static var Corridors=preload("res://scripts/csharp/caves/CrystalCorridorFeatures.cs").new()
+static var LakeChambers=preload("res://scripts/csharp/caves/CrystalLakeChambers.cs").new()
+static var Luminous=preload("res://scripts/csharp/caves/CrystalLuminous.cs").new()
+static var Shallow=preload("res://scripts/csharp/caves/CrystalShallowChambers.cs").new()
 const MAX_FORMS:int=160
 const MAX_VERTICES:int=60000
 ## Added AFTER the original160 crystal/vein forms,never instead of a major.
@@ -42,10 +43,10 @@ func lining_patch(field,patch:Dictionary)->bool:
 	if field.sample(back)<.15 or field.sample(cap)>-.04:return reject("lining_center_attachment")
 	var bounds:=AABB(low,high-low)
 	if shapes.protected(field,bounds.get_center(),Vector2(bounds.size.x,bounds.size.z).length()*.5,low.y,high.y):return reject("lining_protected_route")
-	var emitter=Geometry.Shared.new();emitter.origin=origin;emitter._skip_degenerate=true;var midpoint:Vector3=(cap+back)*.5
+	var emitter=Shared.new();emitter.origin=origin;emitter._skip_degenerate=true;var midpoint:Vector3=(cap+back)*.5
 	for index in range(facets):
 		var next:int=(index+1)%facets;geometry.quad(emitter,cap,front[index],front[next],cap,midpoint);geometry.quad(emitter,back,rear[next],rear[index],back,midpoint);geometry.quad(emitter,front[index],rear[index],rear[next],front[next],midpoint)
-	var target:Dictionary=bucket("mineral_opaque");var first:int=target.vertices.size();var tint:Color=Geometry.tint(patch.family,patch.age).lerp(Color(.32,.30,.26),.4);tint.a=patch.age
+	var target:Dictionary=bucket("mineral_opaque");var first:int=target.vertices.size();var tint:Color=geometry.tint(patch.family,patch.age).lerp(Color(.32,.30,.26),.4);tint.a=patch.age
 	if first+emitter.vertices.size()>MAX_VERTICES:return reject("lining_vertex_budget")
 	for index in range(emitter.vertices.size()):
 		target.vertices.append(emitter.vertices[index]);target.normals.append(emitter.normals[index]);target.colors.append(tint);target.uvs.append(Vector2(patch.family+.08,.3));target.growth_uvs.append(Vector2((emitter.vertices[index]+origin-root).dot(normal),patch.phase));target.middle.append(first+index);target.far.append(first+index)
@@ -164,7 +165,7 @@ func form(field,root:Vector3,axis:Vector3,width:float,height:float,family:int,br
 	var thin:bool=width<.45 and height<4 and family in [0,2,4];var small_fluorite:bool=family==4 and width<1.5 and height<3
 	# Thin geometry is eligibility,not automatic transparency. Keep most
 	# lining minerals opaque;choose a stable minority for near-only optics.
-	var clear:bool=selective and settings.get("selective_transmission",true) and (thin or small_fluorite) and Regions.random(identity,_seed_id,"crystal/selective_near_transmission")<.25;var kind:String="mineral_clear" if clear else ("mineral_grains" if height<1.2 else "mineral_opaque");var target:Dictionary=bucket(kind);var first:int=target.vertices.size();var tint:Color=Geometry.tint(family,age);tint.a=age
+	var clear:bool=selective and settings.get("selective_transmission",true) and (thin or small_fluorite) and Regions.random(identity,_seed_id,"crystal/selective_near_transmission")<.25;var kind:String="mineral_clear" if clear else ("mineral_grains" if height<1.2 else "mineral_opaque");var target:Dictionary=bucket(kind);var first:int=target.vertices.size();var tint:Color=geometry.tint(family,age);tint.a=age
 	if first+vertices.size()>MAX_VERTICES:return reject("vertex_budget")
 	var physical_thickness:float=width*(.28 if family==2 else (sqrt(2) if family==4 else 2.0))
 	for i in range(0,vertices.size(),3):
@@ -245,7 +246,7 @@ func vein_contact(field,room:Dictionary,angle:float,band:int,offset:float)->Vect
 	return p if owns_wall(field,room,p) else Vector3.INF
 func veins(field,room:Dictionary,identity:String,seed_id:int,density:float)->void:
 	if Regions.random(str(room.id),seed_id,"crystal/vein_admit")>density:return
-	var band:int=roundi((room.point.y+room.chamber_height*.4)/6);var family:int=mini(5,int(Regions.random(identity,seed_id,"crystal/mineral")*6));var age:float=Regions.random(identity,seed_id,"crystal/weather")*.7;var tint:Color=Geometry.tint(family,age);tint.a=age
+	var band:int=roundi((room.point.y+room.chamber_height*.4)/6);var family:int=mini(5,int(Regions.random(identity,seed_id,"crystal/mineral")*6));var age:float=Regions.random(identity,seed_id,"crystal/weather")*.7;var tint:Color=geometry.tint(family,age);tint.a=age
 	for segment in range(32):
 		if placements.size()>=MAX_FORMS:break
 		var a:float=segment*TAU/32;var b:float=(segment+1)*TAU/32;var width_a:float=.12+.3*pow(.5+.5*sin(a*7+room.point.x*.03),2);var width_b:float=.12+.3*pow(.5+.5*sin(b*7+room.point.x*.03),2)
@@ -267,7 +268,7 @@ func veins(field,room:Dictionary,identity:String,seed_id:int,density:float)->voi
 			attachments.append(rear[-1]);low=low.min(front[-1]).min(rear[-1]);high=high.max(front[-1]).max(rear[-1])
 		var bounds:AABB=AABB(low,high-low)
 		if not valid or shapes.protected(field,bounds.get_center(),Vector2(bounds.size.x,bounds.size.z).length()*.5,low.y,high.y):continue
-		var emitter=Geometry.Shared.new();emitter.origin=origin;var midpoint:Vector3=(front[0]+front[2]+rear[0]+rear[2])*.25
+		var emitter=Shared.new();emitter.origin=origin;var midpoint:Vector3=(front[0]+front[2]+rear[0]+rear[2])*.25
 		geometry.quad(emitter,front[0],front[1],front[2],front[3],midpoint);geometry.quad(emitter,rear[3],rear[2],rear[1],rear[0],midpoint)
 		for i in range(4):var j:int=(i+1)%4;geometry.quad(emitter,front[i],rear[i],rear[j],front[j],midpoint)
 		var target:Dictionary=bucket("mineral_bed");var first:int=target.vertices.size()

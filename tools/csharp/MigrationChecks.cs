@@ -13,14 +13,81 @@ namespace PredatorIsle.Checks;
 public partial class MigrationChecks : Node
 {
     private int _checks;
+    private string _mode = "general";
     public override async void _Ready()
     {
         try
         {
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"blob-only")){_mode="blob";BlobRuntimeChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# blob runtime checks passed: {_checks}");await Finish();return;}
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"rings-only")){_mode="rings";TerrainRingChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# ring checks passed: {_checks}");await Finish();return;}
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "tropical-only"))
+            {
+                _mode = "tropical"; TropicalSamplerChecks.Run(Require); BadlandsFanChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# tropical checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "coast-only"))
+            {
+                _mode = "coast"; CoastSamplerChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# rocky coast checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "beach-only"))
+            {
+                _mode = "beach"; BeachSamplerChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# beach sampler checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "tissue-only"))
+            {
+                _mode = "tissue"; AlienSamplerChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# alien tissue checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "placement-only"))
+            {
+                _mode = "placement"; JunglePlacementChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# jungle placement checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "samplers-only"))
+            {
+                _mode = "samplers"; ExtensionSamplerChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# extension sampler checks passed: {_checks}"); await Finish(); return;
+            }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "network-only"))
+            {
+                _mode = "network"; CaveRouteChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
+                GD.Print($"C# cave network checks passed: {_checks}"); await Finish(); return;
+            }
             if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "field-only"))
             {
-                CaveFieldChecks.Run(Require); GD.Print($"C# cave field checks passed: {_checks}"); GetTree().Quit(); return;
+                _mode = "field";
+                CaveFieldChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true, CaveFieldChecks.Measurements); GD.Print($"C# cave field checks passed: {_checks}"); await Finish(); return;
             }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "worker-only"))
+            {
+                _mode = "worker";
+                CrystalHelperChecks.Run(Require); CrystalGeometryChecks.Run(Require); FrozenFeatureChecks.Run(Require); MagmaFeatureChecks.Run(Require); MagmaCascadeChecks.Run(Require); MagmaIntrusionChecks.Run(Require); MagmaLakeChecks.Run(Require); MagmaTubeChecks.Run(Require); CaveFormationChecks.Run(Require); CaveSeepageChecks.Run(Require); CaveEntryGuardChecks.Run(Require); CaveWorkloadChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true, CaveWorkloadChecks.Measurements); GD.Print($"C# actual cave worker checks passed: {_checks}"); await Finish(); return;
+            }
+            CaveSettingsChecks.Run(Require); CaveDefinitionChecks.Run(Require);
+            CaveBiomeRegionChecks.Run(Require);
+            CaveSurfaceCutChecks.Run(Require);
+            CavePayloadChecks.Run(Require);
+            CaveContextChecks.Run(Require);
+            CaveTransactionChecks.Run(this, Require);
+            CaveRendererChecks.Run(this, Require);
+            CaveBiomeMaterialChecks.Run(this, Require);
+            FrozenSurfaceChecks.Run(Require);
+            MagmaSurfaceChecks.Run(this, Require);
+            CrystalSurfaceChecks.Run(Require);
+            CaveFeatureDispatchChecks.Run(Require);
+            CaveFrontierChecks.Run(this, Require);
+            ForestSamplerChecks.Run(Require);
+            JungleSamplerChecks.Run(Require);
+            JunglePlacementChecks.Run(Require);
+            SavannaSamplerChecks.Run(Require);
+            SwampSamplerChecks.Run(Require);
+            MountainSamplerChecks.Run(Require);
+            ExtensionSamplerChecks.Run(Require);
+            BeachSamplerChecks.Run(Require);
+            CoastSamplerChecks.Run(Require);
+            TropicalSamplerChecks.Run(Require); BadlandsFanChecks.Run(Require);
             CheckPlanner();
             CheckShaderVariants();
             CheckReadyCut();
@@ -42,13 +109,26 @@ public partial class MigrationChecks : Node
             await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
             System.GC.Collect(); System.GC.WaitForPendingFinalizers();
             GD.Print($"C# migration checks passed: {_checks}");
-            GetTree().Quit();
+            MigrationEvidence.Write(_mode, _checks, true, new GDictionary { ["swamp_maximum_scalar_error_m"] = SwampSamplerChecks.MaximumScalarError,
+                ["mountain_maximum_scalar_error_m"] = MountainSamplerChecks.MaximumScalarError,
+                ["swamp_precision"] = "At most 1e-12 absolute scalar/state error and identical Float32 extraction values; packed terrain material values must match exactly. No Float64 byte-equality claim across native math libraries." });
+            await Finish();
         }
         catch (Exception error)
         {
+            MigrationEvidence.Write(_mode, _checks, false, error: error.ToString());
             GD.PushError(error.ToString());
             GetTree().Quit(1);
         }
+    }
+    private async System.Threading.Tasks.Task Finish()
+    {
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        System.GC.Collect(); System.GC.WaitForPendingFinalizers();
+        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+        // Return from the managed async continuation before engine teardown.
+        // Otherwise its live camera/tree references retain the root render target.
+        GetTree().CallDeferred(SceneTree.MethodName.Quit, 0);
     }
 
     private void CheckExistingCaveField()

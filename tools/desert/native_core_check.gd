@@ -1,6 +1,6 @@
 extends SceneTree
-const Desert=preload("res://scripts/desert_sampler.gd")
-const Settings=preload("res://scripts/desert_settings.gd")
+const Desert=preload("res://scripts/csharp/biomes/DesertSampler.cs")
+const Settings=preload("res://scripts/csharp/biomes/DesertSettings.cs")
 var failures:Array[String]=[]
 var peak_static:int=0
 var comparisons:int=0
@@ -34,8 +34,10 @@ func _initialize()->void:
   for i in range(0,512,7):
    var p:Vector2=points[i]
    check(record(a,p.x,p.y,i%2==0)==expected[i],"Cache eviction mismatch");comparisons+=1
-  check(a._region_cache.size()<=a.CACHE_LIMIT and a._site_cache.size()<=a.CACHE_LIMIT and a._dune_cache.size()<=512,"Descriptor bound")
-  check(a._drainage_graph._catchments.size()<=128 and a._drainage_graph._tiles.size()<=a._drainage_graph.MAX_TILES,"Drainage cache bound")
+  var descriptor_counts:Dictionary=a.cache_counts()
+  check(descriptor_counts.regions<=4096 and descriptor_counts.sites<=4096 and descriptor_counts.dunes<=512,"Descriptor bound")
+  var drainage_counts:Dictionary=a._drainage_graph.cache_counts() if a._drainage_graph.has_method("cache_counts") else {"catchments":a._drainage_graph._catchments.size(),"tiles":a._drainage_graph._tiles.size()}
+  check(drainage_counts.catchments<=128 and drainage_counts.tiles<=a._drainage_graph.MAX_TILES,"Drainage cache bound")
   a.configure(c,seed_value)
   for i in range(0,512,19):
    var p:Vector2=points[i]

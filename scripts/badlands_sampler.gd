@@ -1,4 +1,5 @@
 extends RefCounted
+static var FanGeometry=preload("res://scripts/csharp/biomes/BadlandsFanGeometry.cs").new()
 ## One sediment mass cut by a cached, finite drainage tree; not a Desert/Mesa clone.
 const NAMES=["Painted hills","Red mudstone","Gray clay","Bentonite hills","Eroded ridge country","Hoodoo country","Badlands canyon","Dissected plateau","Sediment basin","Dry wash country","Stratified clay hills","Pale badlands","Rocky highlands","Stratified escarpment","Sediment fans","Barren plain"]
 const STEP:float=16
@@ -334,12 +335,12 @@ func _raw(p:Vector2)->PackedFloat64Array:
 		var along:float=(p.y-root.z)*side;var fan_span:float=350+relief
 		var fan_mask:float=(1-smoothstep(0,fan_span,absf(along)))*(1-smoothstep(70,320,absf(p.x-root.x)))
 		if settings.fan_shape_strength>0 and settings.fans>0 and w[14]+w[8]*.6+w[9]*.3>0:
-			var shaped:float=preload("res://scripts/badlands_fan_geometry.gd").mask(p,tree,fan_span)
+			var shaped:float=FanGeometry.mask(p,tree,fan_span)
 			fan_mask=lerpf(fan_mask,shaped,clampf(settings.fan_shape_strength,0,1))
 		if settings.fan_gradient>0 and settings.fan_shape_strength>0:
 			var contribution:float=fan_mask*settings.fans*(w[14]+w[8]*.6+w[9]*.3)*clampf(settings.fan_shape_strength,0,1)
 			if contribution>0:
-				var basis:PackedFloat64Array=preload("res://scripts/badlands_fan_geometry.gd").frame(tree)
+				var basis:PackedFloat64Array=FanGeometry.frame(tree)
 				if not basis.is_empty():
 					var upstream:float=clampf((p-Vector2(basis[0],basis[1])).dot(Vector2(basis[2],basis[3])),0,minf(fan_span,maxf(32,basis[4]*.85)))
 					fan_deposit_sum+=contribution*upstream*settings.fan_gradient;fan_deposit_weight+=contribution

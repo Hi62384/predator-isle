@@ -33,14 +33,18 @@ func _initialize()->void:
 			var p:=Vector2(i*7919%160000-80000,i*11939%160000-80000);var h:float=b._sample_grid_height(p.x,p.y)
 			check(is_finite(h) and is_finite(b._last_swamp_water),"Finite land/water");check(h==b._get_height(p.x,p.y,false),"Full/height-only agreement")
 			b._get_height(p.x,p.y);samples.append([p,h,b._last_badlands,b._last_swamp_water])
-		b._height_grid_cache.clear();b._badlands._nodes.clear();b._badlands._patches.clear();b._badlands._patch_ring.clear();b._badlands._patch_cursor=0;b._badlands._regions.clear();b._badlands._trees.clear();b._badlands._carriers.clear();samples.reverse()
+		b._height_grid_cache.clear()
+		if b._badlands.has_method("clear_numeric_caches"):b._badlands.clear_numeric_caches()
+		else:b._badlands._nodes.clear();b._badlands._patches.clear();b._badlands._patch_ring.clear();b._badlands._patch_cursor=0;b._badlands._regions.clear();b._badlands._trees.clear();b._badlands._carriers.clear()
+		samples.reverse()
 		for sample:Array in samples:
 			check(sample[1]==b._sample_grid_height(sample[0].x,sample[0].y) and sample[2]==b._last_badlands and sample[3]==b._last_swamp_water,"Cache/order determinism")
 		for x:float in [-128,0,256]:
 			for z:float in [-128,0,256]:
 				var h:float=b._badlands.sample(x,z);var left:float=(h-b._badlands.sample(x-.02,z))/.02;var right:float=(b._badlands.sample(x+.02,z)-h)/.02
 				check(absf(left-right)<.015,"C1 height lattice")
-		check(b._badlands._nodes.size()<=16384 and b._badlands._trees.size()<=512 and b._badlands._regions.size()<=2048,"Bounded caches")
+		var counts:Dictionary=b._badlands.cache_counts() if b._badlands.has_method("cache_counts") else {"nodes":b._badlands._nodes.size(),"trees":b._badlands._trees.size(),"regions":b._badlands._regions.size()}
+		check(counts.nodes<=16384 and counts.trees<=512 and counts.regions<=2048,"Bounded caches")
 	var b=builder();var a:Array=b.build(Vector2i(21,17),64);var right:Array=b.build(Vector2i(22,17),64)
 	for z in range(65):
 		var i:int=z*65+64;var j:int=z*65

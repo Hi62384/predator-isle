@@ -1,0 +1,848 @@
+# CODEX TASK — PREDATOR ISLE TERRAIN GENERATION & RENDERING OVERHAUL
+
+Repository: https://github.com/Hi62384/predator-isle
+
+## PRIMARY OBJECTIVE
+
+After the existing C# migration is complete, completely overhaul Predator Isle's terrain generation, chunk streaming, and terrain rendering systems.
+
+Replace the current terrain chunking architecture with a highly optimized **nested 3×3 terrain ring system**, combined with low-cost base geometry, high-quality GPU surface detailing, efficient multiresolution sampling, and adaptive hardware performance.
+
+The goal is to achieve:
+
+- Extremely fast terrain generation.
+- Very high nearby visual detail.
+- Smooth, realistic terrain.
+- Vast render distances.
+- Minimal CPU and GPU usage.
+- No visible chunk gaps.
+- Minimal LOD popping.
+- No noticeable gameplay stuttering.
+- Good performance on low-end computers.
+- Improved performance on powerful hardware.
+- Full compatibility with Predator Isle's existing terrain, biomes, caves, and multiplayer architecture.
+
+**Do not simply reduce terrain quality to increase performance. Change the architecture so high visual quality requires substantially less computation.**
+
+This is an implementation task. Modify the existing project, benchmark the changes, visually inspect the result, and correct problems.
+
+---
+
+# 1. C# MIGRATION MUST BE COMPLETED FIRST
+
+The repository is currently migrating from GDScript to C#.
+
+Before beginning this overhaul:
+
+1. Read `AGENTS.md`.
+2. Inspect `data/csharp_migration_status.json`.
+3. Verify the actual C# implementation, rather than trusting status documents alone.
+4. Confirm that the terrain controller, mesh builder, biome samplers, caves, collision, and relevant runtime dependencies have completed their migration.
+5. Confirm the Godot .NET project builds and runs.
+6. Run the existing terrain and cave regression tests.
+
+Do not begin a major new terrain architecture while its core generation systems are still being migrated.
+
+If migration is incomplete, keep this overhaul as the next implementation task and report the remaining dependency. Do not introduce a second conflicting terrain architecture.
+
+After migration is verified, implement the following system entirely in C#, except for shaders and Godot resource definitions where appropriate.
+
+---
+
+# 2. NESTED 3×3 TERRAIN RING SYSTEM
+
+Replace the current distance-based hierarchical terrain selection with a reusable nested-ring architecture.
+
+## 2.1 Basic concept
+
+The terrain surrounding the active camera is divided into progressively larger rings.
+
+Each ring uses chunks approximately three times larger than those of the previous ring.
+
+The central area uses the smallest chunks and highest geometric quality.
+
+Example:
+
+| Level | Chunk size | Arrangement |
+|---|---|---|
+| 0 | 16 × 16 m | Central 3×3 grid, 9 chunks |
+| 1 | 48 × 48 m | Ring around Level 0 |
+| 2 | 144 × 144 m | Ring around Level 1 |
+| 3 | 432 × 432 m | Ring around Level 2 |
+| 4 | 1,296 × 1,296 m | Ring around Level 3 |
+| 5 | 3,888 × 3,888 m | Ring around Level 4 |
+| 6 | 11,664 × 11,664 m | Outer distant terrain ring |
+
+The design target is approximately eight surrounding patches per additional level.
+
+With six outer rings, the intended coverage is approximately 35 km across using roughly 57 patches, before any transition or corrective geometry.
+
+These numbers should be configurable.
+
+## 2.2 Critical ring-alignment requirement
+
+Do not assume that independently camera-centered 3×3 grids at different scales will automatically fit together.
+
+A 16 m grid shifts more frequently than a 48 m grid, which can cause holes, overlaps, or misaligned boundaries.
+
+Implement a mathematically consistent system using:
+
+- World-aligned coordinates.
+- Hierarchical cell ownership.
+- Stable ring origins.
+- Consistent parent-child relationships.
+- Validated coverage.
+- Transition patches or correctly masked regions where necessary.
+
+If maintaining exactly eight chunks per outer ring conflicts with continuous coverage during movement, prioritize correct coverage over an exact patch count.
+
+The nine highest-quality chunks must follow the camera while the outer rings update less frequently.
+
+Do not create exposed areas when the fine ring moves inside a coarser parent cell.
+
+---
+
+# 3. NEARBY TERRAIN — EXTREMELY CHEAP BASE GEOMETRY
+
+The central 3×3 region should always use the highest enabled terrain quality.
+
+Default settings:
+
+- Chunk width: **16 meters**
+- Nearby vertex spacing: **1 meter**
+- Nearby subdivisions: **16×16**
+- Nearby patch count: **9**
+
+That produces only 289 grid vertices per chunk, or 2,601 vertices across the nine patches, before transition geometry.
+
+Support these configurations:
+
+| Quality | Nearby vertex spacing |
+|---|---|
+| Low | 2 m |
+| Medium | 1 m |
+| High | 1 m, with improved surface/detail rendering |
+| Ultra | Optional 0.5 m or adaptive refinement if performance permits |
+
+Do not automatically use 0.25 m spacing everywhere.
+
+The CPU-generated base mesh should represent:
+
+- Ground elevation
+- Hills
+- Valleys
+- Slopes
+- Important erosion geometry
+- Larger ridges
+- Major terrain formations
+- Collision-relevant surface shape
+
+Fine visual surface detail should be handled separately.
+
+## 3.1 Preserve complex terrain
+
+A regular 1 m grid must not prevent terrain from representing important shapes.
+
+Where necessary, add localized geometry for:
+
+- Sharp cliff edges
+- Narrow ridges
+- Significant rock shelves
+- Cave entrances
+- Steep geological formations
+- Erosion channels
+- Important coastline geometry
+
+Only refine areas where the extra geometry actually improves appearance or gameplay.
+
+Avoid raising the resolution of entire chunks just because one small region contains complex terrain.
+
+---
+
+# 4. GPU-BASED TERRAIN VISUAL DETAIL
+
+This is a major part of the overhaul.
+
+The CPU should generate relatively inexpensive base geometry.
+
+The GPU should handle as much visual detail as possible without requiring dense CPU meshes.
+
+## 4.1 Important technical distinction
+
+An ordinary Godot spatial shader cannot create additional mesh vertices.
+
+Do not claim that normal mapping, parallax mapping, or a vertex shader automatically subdivides geometry.
+
+Use two separate techniques.
+
+### A. Surface-detail shaders
+
+Use shaders for:
+
+- Fine rock texture
+- Cracks
+- Soil roughness
+- Gravel appearance
+- Sand granularity
+- Surface erosion detail
+- Moss
+- Small irregularities
+- Material transitions
+- Fine surface shading
+
+Use:
+
+- Detailed normal maps
+- Height-based material blending
+- Triplanar projection
+- Multi-scale material detail
+- Appropriate roughness maps
+- Distance-based filtering
+- Optional parallax effects where supported and worthwhile
+
+Reuse the project's existing AmbientCG texture resources and terrain materials.
+
+Do not replace high-quality source textures with repetitive procedural noise.
+
+### B. Optional actual geometric refinement
+
+Where visible geometric detail is required, investigate:
+
+- Localized CPU mesh refinement
+- GPU compute-generated terrain geometry
+- Adaptive subdivision
+- Reusable higher-resolution local meshes
+- Dedicated geological feature geometry
+
+Benchmark each approach.
+
+Use actual geometry for details that affect silhouettes, player movement, or collision.
+
+Do not add large fake shader displacements that make players float above or sink beneath the visible ground.
+
+## 4.2 Material quality
+
+Preserve the existing biome materials.
+
+Make terrain look realistic through:
+
+- Proper material scale
+- Different geological surface types
+- Realistic soil and rock blending
+- Non-repetitive texture variation
+- Accurate normal orientation
+- Natural slope-dependent materials
+- Appropriate wetness
+- Convincing rock surfaces
+- Smooth biome transitions
+
+Do not make all grass a uniform green surface or all rock a single gray texture.
+
+---
+
+# 5. DISTANT TERRAIN — SMOOTH AND REALISTIC
+
+The outer rings will cover very large areas with relatively few vertices.
+
+Without special handling, distant terrain may become:
+
+- Spiky
+- Blocky
+- Jagged
+- Artificial-looking
+- Overly simplified
+- Missing mountain details
+- Visibly discontinuous between LODs
+
+Implement scale-aware terrain generation.
+
+## 5.1 Band-limited terrain detail
+
+Do not sample fine terrain noise that the distant mesh cannot represent properly.
+
+Filter or omit high-frequency detail according to effective vertex spacing.
+
+Preserve:
+
+- Broad mountains
+- Mountain silhouettes
+- Large ridges
+- Valleys
+- Major plateaus
+- Large erosion features
+- Important coastal landforms
+
+Remove or filter:
+
+- Tiny surface bumps
+- Extremely small erosion noise
+- High-frequency height variation that causes aliasing
+
+## 5.2 Prefiltered height representations
+
+Implement a multiresolution height representation or equivalent deterministic filtered sampling.
+
+Far terrain should represent the larger shape of the same canonical terrain, not an unrelated simplified height function.
+
+Avoid simply averaging away important geographic features.
+
+For sharp formations, use feature-aware sampling or selective refinement.
+
+## 5.3 Smooth visual transitions
+
+Use appropriate:
+
+- Edge stitching
+- Morphing
+- Transition patches
+- Hierarchical height relationships
+- Compatible normal generation
+
+The transition from 16 m patches to 48 m patches must not produce visible cracks.
+
+The same applies to every additional level.
+
+Because the scale difference is 3:1, implement transition geometry that supports these ratios correctly.
+
+Do not assume an algorithm designed only for 2:1 quadtree boundaries will work unchanged.
+
+Avoid relying entirely on enormous vertical skirts to hide geometric mismatches.
+
+---
+
+# 6. INCREMENTAL RING UPDATING
+
+This is essential to performance.
+
+**Do not regenerate all surrounding terrain whenever the player moves.**
+
+Each ring must update independently, using stable world-space alignment and caching.
+
+## 6.1 Central ring
+
+The central 3×3 fine region follows the active camera.
+
+When the camera crosses a relevant boundary:
+
+- Reuse still-valid chunks.
+- Generate only newly exposed patches or strips.
+- Preserve already-generated terrain.
+- Update ring transitions.
+- Keep valid terrain beneath the player.
+
+## 6.2 Middle rings
+
+Middle-distance rings update less frequently.
+
+Reuse cached geometry and sampled terrain data.
+
+Only regenerate newly required world regions.
+
+## 6.3 Distant rings
+
+Far rings should remain stable through much larger camera movements.
+
+Avoid unnecessary mesh reconstruction.
+
+Where possible, reuse static grid topology and update only the height/control data that changes.
+
+## 6.4 Prevent holes
+
+When replacement terrain is not ready:
+
+- Keep existing valid terrain visible.
+- Avoid overlapping conflicting terrain surfaces.
+- Do not remove playable collision prematurely.
+- Prioritize replacement geometry needed near the player.
+- Guarantee that nearby terrain remains traversable.
+
+Preserve existing safe cave and terrain transition behavior.
+
+---
+
+# 7. MAKE TERRAIN SAMPLING MUCH FASTER
+
+Inspect and optimize the existing height generation implementation.
+
+The previous GDScript implementation had expensive height, biome, and normal sampling.
+
+The new C# implementation should avoid the same inefficiencies.
+
+## 7.1 Avoid unnecessary calculations
+
+Separate queries into appropriate levels:
+
+- Height-only query
+- Height + normal query
+- Full terrain/material query
+- Biome-only query
+- Collision query
+
+A normal-height sample should not unnecessarily calculate expensive material payloads or irrelevant geometry.
+
+## 7.2 Reuse data
+
+Cache and reuse:
+
+- Height samples
+- Biome weights
+- Temperature/humidity fields
+- Geological region data
+- Coastline influence
+- Large-scale erosion fields
+- Terrain derivative data
+- Reusable mesh topology
+
+Where useful, cache broad low-frequency geographic information separately from fine local detail.
+
+## 7.3 Optimize allocations
+
+Avoid unnecessary allocations inside per-vertex loops.
+
+Prefer:
+
+- Reusable arrays and buffers
+- Compact numeric data
+- Efficient C# value types
+- Precomputed constants
+- Cached region descriptors
+- Reusable index layouts
+- Batched sampling
+
+Do not repeatedly create dictionaries or complex temporary objects for every height sample.
+
+## 7.4 Sampling optimization
+
+Investigate vectorized and batched sampling where possible.
+
+Avoid processing disabled biome generators.
+
+Skip calculations when a biome has zero influence.
+
+Do not calculate expensive alien, cave, or geological details for distant terrain that cannot display them.
+
+Preserve deterministic terrain output where required.
+
+---
+
+# 8. MULTITHREADED GENERATION
+
+Use C# workers and Godot-supported threading carefully.
+
+Generate CPU-side numerical data in the background.
+
+Keep scene-tree changes and GPU resource operations on appropriate threads.
+
+Implement:
+
+- Priority queues
+- Cancellation of obsolete jobs
+- Worker budgets
+- Reusable work buffers
+- Result caching
+- Nonblocking result collection
+- Adaptive concurrency
+
+Prioritize:
+
+1. Player safety/collision
+2. Missing near terrain
+3. Near transition geometry
+4. Middle-distance terrain
+5. Distant terrain
+6. Optional environmental details
+
+Prevent far terrain jobs from monopolizing all worker threads.
+
+Coordinate worker allocation with the existing cave-generation system.
+
+Do not allow terrain generation to starve cave loading or vice versa.
+
+---
+
+# 9. OPTIONAL GPU COMPUTE BACKEND
+
+Implement or prototype a GPU acceleration backend only after the optimized C# path is working.
+
+The current project previously used Godot's Compatibility renderer.
+
+Compute shaders require a suitable rendering backend, and switching renderers may affect the existing materials and other systems.
+
+Requirements:
+
+- Maintain a CPU fallback.
+- Detect supported rendering capabilities.
+- Benchmark GPU and CPU implementations.
+- Avoid unnecessary GPU-to-CPU readbacks.
+- Avoid synchronization stalls.
+- Do not force compute on low-end machines.
+- Do not require a dedicated GPU for servers.
+- Preserve canonical gameplay terrain.
+
+A GPU compute backend is optional if benchmarks show little benefit or unacceptable compatibility costs.
+
+Do not claim shader-generated visual geometry is identical to authoritative collision without verifying it.
+
+---
+
+# 10. COLLISION AND MULTIPLAYER
+
+Terrain rendering quality must be independent from authoritative gameplay geometry.
+
+## Collision
+
+Generate nearby collision using deterministic CPU data.
+
+The player must not experience major discrepancies between visible ground and collision.
+
+Support:
+
+- Accurate nearby ground collision
+- Cave entrances
+- Cliffs
+- Steep slopes
+- Terrain modifications
+- Multiple active players
+
+Do not generate physics collision for every distant visual patch.
+
+## Multiplayer
+
+Each player's client may have a different:
+
+- Render distance
+- Terrain shader quality
+- LOD resolution
+- Optional GPU acceleration mode
+
+All players must share:
+
+- Canonical terrain
+- World seed
+- Terrain changes
+- Resource positions
+- Authoritative collision and gameplay state
+
+The dedicated server must not depend on the visual clipmap or GPU compute.
+
+The server should generate and retain collision-relevant terrain around active players rather than building unnecessary distant visual geometry.
+
+---
+
+# 11. HARDWARE ADAPTATION
+
+Create configurable performance profiles.
+
+## Low-end
+
+- 2 m nearby vertex spacing
+- Reduced visual material complexity
+- Conservative ring count
+- Aggressive distant filtering
+- CPU fallback
+- Low generation budgets
+
+## Medium
+
+- 1 m nearby vertex spacing
+- High-quality normal maps
+- Moderate render distance
+- Adaptive local geometry
+- CPU or GPU generation based on benchmark
+
+## High
+
+- 1 m nearby geometry
+- Higher-quality materials
+- Larger viewing distance
+- Selective geometric refinement
+- Optional GPU acceleration
+
+## Ultra
+
+- Optional finer nearby geometry
+- More detailed geological formations
+- Extended render distance
+- More advanced material effects where affordable
+
+Do not enable expensive features solely because a GPU has a particular brand name.
+
+Provide actual settings for:
+
+- Inner mesh resolution
+- Outer ring count
+- Terrain detail quality
+- Shader detail quality
+- Maximum worker count
+- Upload budget
+- Cache memory budget
+- Optional GPU backend
+
+Allow adaptive adjustments based on measured performance.
+
+Avoid frequent quality changes that produce noticeable popping.
+
+---
+
+# 12. PRESERVE EXISTING PREDATOR ISLE SYSTEMS
+
+The new architecture must remain compatible with:
+
+- Existing island generation
+- Biome placement
+- Terrain height blending
+- Mountains
+- Plains
+- Valleys
+- Erosion features
+- Rocky coasts
+- Beaches
+- Rivers and lakes
+- Swamps
+- Volcanic terrain
+- Crystal wastes
+- Alien infected terrain
+- Giant insect colony terrain
+- All other existing surface biomes
+- Cave entrances and tunnels
+- Cave collision
+- Cave biome integration
+- Environmental prop placement
+- Terrain materials
+- Terrain debug views
+
+Do not simplify or replace biome-specific terrain algorithms merely to make the system run faster.
+
+Do not remove complex geology or distinctive terrain shapes.
+
+Do not reuse any withdrawn third-party project assets or code.
+
+Preserve the game's existing terrain source data and project-specific constraints.
+
+---
+
+# 13. VISUAL QUALITY VALIDATION
+
+Compare the current terrain and the new terrain with the same:
+
+- World seeds
+- Locations
+- Biome settings
+- Camera positions
+- Lighting
+- Material resources
+
+Capture screenshots in:
+
+- Grass plains
+- Mountains
+- Cliffs
+- Forest terrain
+- Jungle
+- Desert
+- Rocky coast
+- Beach
+- Badlands
+- Volcanic terrain
+- Crystal wastes
+- Alien infected terrain
+- Mixed biome transitions
+
+Inspect:
+
+- Near-ground detail
+- Terrain silhouettes
+- Smoothness of distant terrain
+- Material realism
+- Texture tiling
+- LOD transitions
+- Normal consistency
+- Cliff appearance
+- Coastline geometry
+- Terrain/cave boundaries
+
+Do not accept a faster generator if the actual rendered result becomes substantially less realistic.
+
+Use mesh refinement or additional geometric feature modules when a low-resolution height grid cannot preserve important shapes.
+
+---
+
+# 14. PERFORMANCE BENCHMARKS
+
+Before changing the system, collect reproducible baseline measurements from the completed C# implementation.
+
+Then benchmark the new architecture using identical seeds, camera paths, and comparable viewing distances.
+
+Measure:
+
+- Initial nearby terrain readiness
+- Full surrounding terrain readiness
+- Average chunk generation time
+- Worst chunk generation time
+- Height-sampling time
+- Biome-sampling time
+- Mesh construction time
+- Collision generation time
+- Main-thread upload time
+- CPU usage
+- GPU time
+- Memory usage
+- Number of generated vertices
+- Number of active patches
+- Number of regenerated patches during movement
+- Cache hit rate
+- p95/p99 frame times
+- Frame-time spikes
+
+Test:
+
+- Standing still
+- Walking
+- Running
+- Fast traversal
+- Teleportation
+- Cave entry/exit
+- Moving through biome transitions
+- Changing quality settings
+- Long-duration exploration
+
+Include low-end hardware-oriented quality configurations, not only maximum quality.
+
+Benchmarks should distinguish cold starts, warm caches, shader compilation, and repeated runs.
+
+Do not invent performance results.
+
+---
+
+# 15. IMPLEMENTATION ORDER
+
+Proceed in this order after completing the migration gate.
+
+### Phase 1 — Baseline and prototype
+
+- Profile the completed C# terrain generator.
+- Build the nested-ring planner.
+- Validate 3×3 coverage and world alignment.
+- Prototype 16 m nearby patches.
+- Render the prototype using the existing canonical terrain height function.
+
+### Phase 2 — Efficient ring streaming
+
+- Incremental movement updates.
+- Ring caching.
+- Worker scheduling.
+- Obsolete-job cancellation.
+- Safe replacement.
+- 3:1 LOD transitions.
+
+### Phase 3 — Rendering quality
+
+- Scale-aware height filtering.
+- Smooth distant terrain.
+- High-quality near materials.
+- Consistent normals.
+- Local geometry refinement for important features.
+- Visual comparison against the existing terrain.
+
+### Phase 4 — Sampling optimization
+
+- Optimize the C# terrain sampling path.
+- Remove redundant calculations.
+- Cache reusable geographic fields.
+- Improve mesh construction and data layout.
+
+### Phase 5 — Integrate existing world systems
+
+- All surface biomes.
+- Cave entrances.
+- Cave collision.
+- Geological structures.
+- Water and coastline systems.
+- Terrain modifications and persistence.
+
+### Phase 6 — Hardware adaptation
+
+- Performance profiles.
+- Configurable ring count.
+- CPU worker budgets.
+- Optional GPU backend experimentation.
+- GPU/CPU benchmarking.
+
+### Phase 7 — Final validation
+
+- Visual regression tests.
+- Collision tests.
+- Movement tests.
+- Multiplayer consistency tests.
+- Long-running streaming tests.
+- Performance comparisons.
+
+Do not remove the existing working terrain architecture until the new one passes the required tests.
+
+Use a reversible implementation path so regressions can be diagnosed.
+
+---
+
+# 16. FINAL ACCEPTANCE CRITERIA
+
+The overhaul is successful when:
+
+- [ ] The C# migration is verified complete before the overhaul begins.
+- [ ] The new nested-ring system works.
+- [ ] The central 3×3 area uses the selected maximum nearby quality.
+- [ ] 16 m near chunks are supported.
+- [ ] 1 m and 2 m nearby vertex spacing work.
+- [ ] Larger rings provide very large render distances.
+- [ ] Ring movement does not regenerate all terrain.
+- [ ] Ring boundaries have no visible gaps.
+- [ ] LOD changes avoid objectionable popping.
+- [ ] Distant terrain is smooth without losing major terrain features.
+- [ ] Surface shaders provide convincing fine detail.
+- [ ] Meaningful geometric features use actual geometry when required.
+- [ ] All existing biomes remain functional.
+- [ ] Cave entrances and collision remain valid.
+- [ ] CPU generation remains available on low-end systems.
+- [ ] GPU acceleration is optional and benchmarked.
+- [ ] Multiplayer terrain and collision remain consistent.
+- [ ] Terrain generation performance is substantially improved on comparable workloads.
+- [ ] Gameplay does not suffer major generation-related stutters.
+- [ ] The optimized terrain looks at least as realistic as the previous system.
+- [ ] Automated tests pass.
+- [ ] Representative terrain screenshots have been inspected.
+- [ ] Performance measurements are documented.
+
+---
+
+# FINAL INSTRUCTIONS
+
+Implement the new terrain architecture in the actual Predator Isle Godot project, AFTER the C# migration is complete.
+
+The most important goals are:
+
+**1. Generate dramatically less base terrain geometry.**
+
+**2. Reuse terrain data and meshes instead of regenerating everything.**
+
+**3. Use nested 3×3 rings for enormous rendering distances.**
+
+**4. Make distant terrain smooth and visually convincing.**
+
+**5. Use shaders for realistic fine surface appearance.**
+
+**6. Use real additional geometry only where it materially improves terrain shapes or silhouettes.**
+
+**7. Optimize C# terrain sampling and chunk construction.**
+
+**8. Preserve reliable collision, caves, and multiplayer consistency.**
+
+**9. Support weak and powerful PCs without requiring expensive GPU features.**
+
+**10. Benchmark, render, inspect, and fix the implementation.**
+
+Do not stop at a plan or prototype.
+
+Do not report success for a system that has only been implemented theoretically.
+
+Do not trade away substantial realism simply to obtain a better generation benchmark.
+
+The final objective is a production-ready terrain system capable of supporting Predator Isle's massive island world, complex biomes, caves, and future environmental objects with high visual quality and extremely efficient streaming.

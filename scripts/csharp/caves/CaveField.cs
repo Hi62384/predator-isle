@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using A = Godot.Collections.Array;
 using D = Godot.Collections.Dictionary;
 
@@ -19,6 +20,7 @@ public partial class CaveField : RefCounted, ICaveField
     private readonly Dictionary<Vector2, double> _heightMemo = new();
     private readonly Dictionary<string, Variant> _packed = new();
     private Callable _height;
+    private Func<double,double,double>? _sampleHeight;
     internal long SpatialReferences;
     public D chunks { get; set; } = new();
     public D _biome_assignment { get; set; } = new();
@@ -35,13 +37,14 @@ public partial class CaveField : RefCounted, ICaveField
     public double opening_rock_cover { get; set; }
     public long references { get; set; }
     public long thermal_references { get; set; }
-    public Callable height { get => _height; set { _height = value; _heightMemo.Clear(); } }
+    public Callable height { get => _height; set { _height = value; _sampleHeight=CaveHeightSampler.Bind(value); _heightMemo.Clear(); } }
     public A PreciseShores => precise_shores;
     public double Sample(Vector3 p) => sample(p);
     public Vector3 Normal(Vector3 p) => normal(p);
     public bool HasChunk(Vector3I p) => has_chunk(p);
     public virtual bool HasSurfaceColumn(Vector2I column) => false;
-    public virtual double SurfaceHeight(Vector2 point) => height.Call(point.X, point.Y).AsDouble();
+    private double SampleHeight(double x,double z)=>_sampleHeight is not null?_sampleHeight(x,z):_height.Call(x,z).AsDouble();
+    public virtual double SurfaceHeight(Vector2 point) => SampleHeight(point.X, point.Y);
     public virtual bool has_chunk(Vector3I key) => chunks.ContainsKey(key);
     public Vector3I cell(Vector3 p) => new((int)Math.Floor(p.X / 64.0), (int)Math.Floor(p.Y / 64.0), (int)Math.Floor(p.Z / 64.0));
     public Vector3I bin_cell(Vector3 p) => new((int)Math.Floor(p.X / BinMetres), (int)Math.Floor(p.Y / BinMetres), (int)Math.Floor(p.Z / BinMetres));
@@ -75,7 +78,15 @@ public partial class CaveField : RefCounted, ICaveField
         var result = new D(); foreach (var pair in BiomeFields) result[pair.Key] = pair.Value.ToArray();
         _packed["_biome_fields"] = result; return result;
     }
-    internal void InvalidatePacked() => _packed.Clear();
+    internal void InvalidatePacked()
+    {
+        foreach (var value in _packed.Values) value.Dispose();
+        _packed.Clear();
+    }
+    public override void _Notification(int what)
+    {
+        if (what == NotificationPredelete) InvalidatePacked();
+    }
     public void clear()
     {
         SpatialReferences = 0; precise_shores.Clear(); floor_relief.Clear(); thermal_sources.Clear(); ThermalBins.Clear(); thermal_references = 0;
@@ -84,10 +95,10 @@ public partial class CaveField : RefCounted, ICaveField
     }
     public double ground_height(Vector3 p)
     {
-        if (!cache_height_samples) return height.Call(p.X, p.Z).AsDouble();
+        if (!cache_height_samples) return SampleHeight(p.X, p.Z);
         var key = new Vector2(p.X, p.Z);
         if (_heightMemo.TryGetValue(key, out double value)) return value;
-        value = height.Call(p.X, p.Z).AsDouble();
+        value = SampleHeight(p.X, p.Z);
         if (_heightMemo.Count >= 8192) _heightMemo.Clear();
         _heightMemo[key] = value; return value;
     }
@@ -103,7 +114,8 @@ public partial class CaveField : RefCounted, ICaveField
         }
         return false;
     }
-    public bool append_feature(Vector3 a, Vector3 b, Vector2 size, int kind, int style = 0)
+    public bool append_feature(Vector3 a, Vector3 b, Vector2 size, int kind) => append_feature(a, b, size, kind, 0);
+    public bool append_feature(Vector3 a, Vector3 b, Vector2 size, int kind, int style)
     {
         if (!a.IsFinite() || !b.IsFinite() || !size.IsFinite() || size.X <= 0 || size.Y <= 0 || Begins.Count >= 65536) return false;
         var low = a.Min(b) - new Vector3(size.X + 4, 4, size.X + 4); var high = a.Max(b) + new Vector3(size.X + 4, size.Y + 4, size.X + 4);
@@ -124,7 +136,9 @@ public partial class CaveField : RefCounted, ICaveField
         }
         InvalidatePacked(); return true;
     }
-    public bool compile(A regions, Callable surface, A? extra_edges = null, D? biome_assignment = null) => CaveFieldCompiler.Compile(this, regions, surface, extra_edges ?? new(), biome_assignment ?? new());
+    public bool compile(A regions, Callable surface) => compile(regions, surface, new(), new());
+    public bool compile(A regions, Callable surface, A extra_edges) => compile(regions, surface, extra_edges, new());
+    public bool compile(A regions, Callable surface, A extra_edges, D biome_assignment) => CaveFieldCompiler.Compile(this, regions, surface, extra_edges, biome_assignment);
     public void bind_feature_biomes(int feature, string from_id, string to_id, double first, double last, double length_m) => CaveFieldBiomes.Bind(this, feature, from_id, to_id, first, last, length_m);
     public A biome_ids_for_cell(Vector3I key) => CaveFieldBiomes.Ids(this, key);
     public Vector4 biome_weights_at(Vector3 point, A ids) => CaveFieldBiomes.Weights(this, point, ids);
@@ -132,13 +146,14 @@ public partial class CaveField : RefCounted, ICaveField
     public bool append_thermal_source(D source) => CaveFieldThermal.Append(this, source);
     public double source_heat(D source, Vector3 point) => CaveFieldThermal.SourceHeat(source, point);
     public double heat_at(Vector3 point) => CaveFieldThermal.HeatAt(this, point);
-    public bool hot_bounds(Aabb bounds, double threshold = .08) => CaveFieldThermal.HotBounds(this, bounds, threshold);
+    public bool hot_bounds(Aabb bounds) => hot_bounds(bounds, .08);
+    public bool hot_bounds(Aabb bounds, double threshold) => CaveFieldThermal.HotBounds(this, bounds, threshold);
     public double evaluate(Vector3 point, int[] features) => Evaluate(point, features);
-    internal double Evaluate(Vector3 point, IEnumerable<int> features) => CaveFieldEvaluation.Evaluate(this, point, features);
+    internal double Evaluate(Vector3 point, ReadOnlySpan<int> features) => CaveFieldEvaluation.Evaluate(this, point, features);
     public virtual double sample(Vector3 point)
     {
         if (!SafePoint(point)) return Far;
-        return Bins.TryGetValue(bin_cell(point), out var features) ? Evaluate(point, features) : Far;
+        return Bins.TryGetValue(bin_cell(point), out var features) ? Evaluate(point, CollectionsMarshal.AsSpan(features)) : Far;
     }
     internal static bool SafePoint(Vector3 point) => point.IsFinite() && Math.Abs((double)point.X) <= 2147483646.0 * BinMetres && Math.Abs((double)point.Y) <= 2147483646.0 * BinMetres && Math.Abs((double)point.Z) <= 2147483646.0 * BinMetres;
     public Vector3 normal(Vector3 point)

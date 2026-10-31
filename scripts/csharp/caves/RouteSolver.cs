@@ -7,14 +7,22 @@ namespace PredatorIsle.Caves;
 /// <summary>Propagate roof, depth and slope bounds in both directions before selecting floors.</summary>
 public partial class RouteSolver : RefCounted
 {
+    private static readonly float[] LateralFractions={-1f,-.5f,0f,.5f,1f};
+    public D solve(Vector2[] stations, Callable surface, double half_width, double headroom, double roof, double maximum_depth, double grade, double start_floor, double end_floor)
+        => solve(stations, surface, half_width, headroom, roof, maximum_depth, grade, start_floor, end_floor, null, 0, 0);
+    public D solve(Vector2[] stations, Callable surface, double half_width, double headroom, double roof, double maximum_depth, double grade, double start_floor, double end_floor, float[] cover)
+        => solve(stations, surface, half_width, headroom, roof, maximum_depth, grade, start_floor, end_floor, cover, 0, 0);
+    public D solve(Vector2[] stations, Callable surface, double half_width, double headroom, double roof, double maximum_depth, double grade, double start_floor, double end_floor, float[] cover, double flat_start_metres)
+        => solve(stations, surface, half_width, headroom, roof, maximum_depth, grade, start_floor, end_floor, cover, flat_start_metres, 0);
     public D solve(Vector2[] stations, Callable surface, double half_width, double headroom, double roof,
-        double maximum_depth, double grade, double start_floor, double end_floor, float[]? cover = null,
-        double flat_start_metres = 0, double flat_end_metres = 0)
+        double maximum_depth, double grade, double start_floor, double end_floor, float[]? cover,
+        double flat_start_metres, double flat_end_metres)
     {
         var reject = new D { ["valid"] = false, ["points"] = System.Array.Empty<Vector3>(), ["reason"] = "invalid_input" };
         D Reject(string reason) { reject["reason"] = reason; return reject; }
         bool validSurface = surface.Delegate != null || (GodotObject.IsInstanceValid(surface.Target) && surface.Target!.HasMethod(surface.Method));
         if (!validSurface || stations.Length < 2 || stations.Length > 4096) return reject;
+        var sampleSurface=CaveHeightSampler.Bind(surface);
         foreach (double number in new[] { half_width, headroom, roof, maximum_depth, grade, start_floor, end_floor, flat_start_metres, flat_end_metres }) if (!double.IsFinite(number)) return reject;
         if (half_width <= 0 || headroom <= 0 || roof < 0 || maximum_depth <= roof + headroom + 2 || grade <= 0 || grade > .5 || flat_start_metres < 0 || flat_end_metres < 0) return reject;
         cover ??= System.Array.Empty<float>();
@@ -27,9 +35,9 @@ public partial class RouteSolver : RefCounted
             var tangent = (stations[Math.Min(i + 1, count - 1)] - stations[Math.Max(i - 1, 0)]).Normalized();
             if (tangent.LengthSquared() < .5) return reject;
             var side = new Vector2(-tangent.Y, tangent.X); double lowest = double.PositiveInfinity, highest = double.NegativeInfinity;
-            foreach (float fraction in new[] { -1f, -.5f, 0f, .5f, 1f })
+            foreach (float fraction in LateralFractions)
             {
-                var q = point + side * (float)(half_width + 2) * fraction; double h = surface.Call(q.X, q.Y).AsDouble();
+                var q = point + side * (float)(half_width + 2) * fraction; double h = sampleSurface(q.X, q.Y);
                 if (!double.IsFinite(h)) return reject;
                 lowest = Math.Min(lowest, h); highest = Math.Max(highest, h);
             }

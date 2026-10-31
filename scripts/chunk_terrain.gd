@@ -1,5 +1,9 @@
-class_name ChunkTerrain
+## Retained runtime reference; the global ChunkTerrain class is now C#.
 extends Node3D
+static var TropicalRiverDetail=preload("res://scripts/csharp/biomes/TropicalRiverDetail.cs").new()
+static var StructureGeometry=preload("res://scripts/csharp/terrain/BiomeStructureGeometry.cs").new()
+static var JunglePlacement=preload("res://scripts/csharp/biomes/JunglePlacement.cs").new()
+static var AlienTissueCoordinates=preload("res://scripts/csharp/biomes/AlienTissueCoordinates.cs").new()
 
 ## Deterministic, endless terrain streamed in reusable square chunks.
 ## Climate noise creates broad believable biome regions, while separate masks
@@ -11,7 +15,7 @@ const BIOME_NAMES:Dictionary = {0:"Grass",1:"Forest",2:"Savanna",3:"Swamp",4:"Ju
 
 @export_category("Terrain Preset")
 ## Expand to tune biome regions, individual landforms, materials and water. Restart to apply.
-@export var settings: TerrainSettings = preload("res://config/world/terrain_settings.tres")
+@export var settings: Resource = preload("res://config/world/terrain_settings.tres")
 ## Explicit test override; saved biome settings remain untouched.
 @export var grass_preview: bool = false
 @export_enum("Disabled","quarry","wise_mountains","volcanic","spore_forest","radiation_wasteland","crystal_wastes","insect_colony","alien_infected") var extension_preview:String="Disabled"
@@ -122,9 +126,9 @@ var _last_structure_collision_cell:Vector3=Vector3.INF
 @export var cave_settings:Resource=preload("res://config/caves/cave_settings.tres")
 var _cave_streamer
 
-var _settings_snapshot: TerrainSettings
+var _settings_snapshot: Resource
 var _sampler: RefCounted
-const MeshBuilder = preload("res://scripts/terrain_mesh_builder.gd")
+const MeshBuilder = preload("res://scripts/csharp/terrain/TerrainMeshBuilder.cs")
 var _jobs: Dictionary = {}
 var _inflight: Dictionary = {}
 var _ready_chunks: Array = []
@@ -172,7 +176,7 @@ var max_plan_ms:=0.0
 var max_partition_swap_ms:=0.0
 
 func _ready() -> void:
-	_settings_snapshot = settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as TerrainSettings
+	_settings_snapshot = settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as Resource
 	# Existing preview overrides must not silently include the new default biome.
 	if grass_preview or jungle_preview or forest_preview or OS.get_cmdline_user_args().has("grass-preview") or OS.get_cmdline_user_args().has("jungle-preview") or OS.get_cmdline_user_args().has("forest-preview"):_settings_snapshot.savanna_coverage=0
 	grass_preview=grass_preview or OS.get_cmdline_user_args().has("grass-preview")
@@ -366,7 +370,7 @@ func _ready() -> void:
 	if _settings_snapshot.mountain_coverage>0 or _settings_snapshot.rocky_coast_enabled or _settings_snapshot.beaches_enabled or _settings_snapshot.tropical_coverage>0 or _settings_snapshot.badlands_coverage>0:
 		_terrain_material.set_shader_parameter("mountain_colors",load("res://materials/mountain_colors.tres"))
 		_terrain_material.set_shader_parameter("mountain_normals",load("res://materials/mountain_normals.tres"))
-		var config:Resource=_settings_snapshot.mountain if _settings_snapshot.mountain!=null else preload("res://scripts/mountain_settings.gd").new()
+		var config:Resource=_settings_snapshot.mountain if _settings_snapshot.mountain!=null else preload("res://scripts/csharp/biomes/MountainSettings.cs").new()
 		for key in config.uniforms():_terrain_material.set_shader_parameter(key,config.uniforms()[key])
 		if _settings_snapshot.swamp_coverage<=0:
 			_swamp_water_material=ShaderMaterial.new();_swamp_water_material.shader=preload("res://shaders/swamp_water.gdshader")
@@ -386,7 +390,7 @@ func _ready() -> void:
 	if _settings_snapshot.swamp_coverage>0:
 		_terrain_material.set_shader_parameter("swamp_colors",load("res://materials/swamp_colors.tres"))
 		_terrain_material.set_shader_parameter("swamp_normals",load("res://materials/swamp_normals.tres"))
-		var config:Resource=_settings_snapshot.swamp if _settings_snapshot.swamp!=null else preload("res://scripts/swamp_settings.gd").new()
+		var config:Resource=_settings_snapshot.swamp if _settings_snapshot.swamp!=null else preload("res://scripts/csharp/biomes/SwampSettings.cs").new()
 		for key in config.uniforms():_terrain_material.set_shader_parameter(key,config.uniforms()[key])
 		_terrain_material.set_shader_parameter("swamp_flood_stage",config.flood_stage)
 		_swamp_water_material=ShaderMaterial.new();_swamp_water_material.shader=preload("res://shaders/swamp_water.gdshader")
@@ -396,12 +400,12 @@ func _ready() -> void:
 	if _settings_snapshot.savanna_coverage>0 or _settings_snapshot.mountain_coverage>0 or _settings_snapshot.rocky_coast_enabled or _settings_snapshot.beaches_enabled or _settings_snapshot.tropical_coverage>0 or _settings_snapshot.badlands_coverage>0:
 		_terrain_material.set_shader_parameter("savanna_colors",load("res://materials/savanna_colors.tres"))
 		_terrain_material.set_shader_parameter("savanna_normals",load("res://materials/savanna_normals.tres"))
-		var config:Resource=_settings_snapshot.savanna if _settings_snapshot.savanna!=null else preload("res://scripts/savanna_settings.gd").new()
+		var config:Resource=_settings_snapshot.savanna if _settings_snapshot.savanna!=null else preload("res://scripts/csharp/biomes/SavannaSettings.cs").new()
 		for key in config.uniforms():_terrain_material.set_shader_parameter(key,config.uniforms()[key])
 	if _settings_snapshot.forest_coverage>0:
 		_terrain_material.set_shader_parameter("forest_colors",load("res://materials/forest_colors.tres"))
 		_terrain_material.set_shader_parameter("forest_normals",load("res://materials/forest_normals.tres"))
-		var config:Resource=_settings_snapshot.forest if _settings_snapshot.forest!=null else preload("res://scripts/forest_settings.gd").new()
+		var config:Resource=_settings_snapshot.forest if _settings_snapshot.forest!=null else preload("res://scripts/csharp/biomes/ForestSettings.cs").new()
 		for key in config.uniforms():_terrain_material.set_shader_parameter(key,config.uniforms()[key])
 	if _settings_snapshot.jungle_coverage>0 or _settings_snapshot.forest_coverage>0 or _settings_snapshot.swamp_coverage>0 or _settings_snapshot.mountain_coverage>0 or _settings_snapshot.rocky_coast_enabled or _settings_snapshot.beaches_enabled or _settings_snapshot.tropical_coverage>0 or _settings_snapshot.badlands_coverage>0:
 		_terrain_material.set_shader_parameter("jungle_colors",load("res://materials/jungle_colors.tres"))
@@ -539,7 +543,7 @@ func _ready() -> void:
 	if cave_settings!=null and cave_settings.enabled:
 		var errors:Array=cave_settings.validation_errors()
 		if errors.is_empty():
-			_cave_streamer=preload("res://scripts/caves/streamer.gd").new();_cave_streamer.name="CaveStreaming";add_child(_cave_streamer);_cave_streamer.initialize(self)
+			_cave_streamer=preload("res://scripts/csharp/caves/CaveStreamer.cs").new();_cave_streamer.name="CaveStreaming";add_child(_cave_streamer);_cave_streamer.initialize(self)
 		else:push_warning("Cave foundation disabled: "+str(errors))
 	_refresh_visible_chunks()
 	if OS.get_cmdline_user_args().has("smoke-test"):
@@ -717,7 +721,7 @@ func _configure_noise() -> void:
 	_savanna_mesh_tiles.clear();_swamp_mesh_tiles.clear();_mountain_mesh_tiles.clear()
 	_tropical_mesh_tiles.clear()
 	if _settings_snapshot == null:
-		_settings_snapshot = settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as TerrainSettings
+		_settings_snapshot = settings.duplicate_deep(Resource.DEEP_DUPLICATE_ALL) as Resource
 	_sampler = MeshBuilder.new()
 	_sampler.settings = _settings_snapshot
 	_sampler.water_level = water_level
@@ -815,7 +819,7 @@ func _tile_resolution(key: Vector3i) -> int:
 			var edge:float=0
 			if _sampler.is_pure_tropical_rect(bounds):
 				edge=maxf(_settings_snapshot.tropical.far_mesh_metres,128)
-				var river:float=preload("res://scripts/tropical_river_detail.gd").spacing(_sampler,bounds,key.z)
+				var river:float=TropicalRiverDetail.spacing(_sampler,bounds,key.z)
 				if river>0:edge=minf(edge,river)
 			_tropical_mesh_tiles[key]=edge
 		var edge:float=float(_tropical_mesh_tiles[key])
@@ -999,7 +1003,7 @@ func _dispatch_jobs() -> void:
 			var job: Dictionary={"task":-1,"result":result,"builder":builder}
 			var base_size:=chunk_size
 			var index_structures:bool=spatial_structure_collision
-			var support_steps:PackedFloat64Array=preload("res://scripts/biome_extension_structures.gd").support_grids(base_size,close_resolution,middle_resolution,maximum_lod)
+			var support_steps:PackedFloat64Array=StructureGeometry.support_grids(base_size,close_resolution,middle_resolution,maximum_lod)
 			job.task=WorkerThreadPool.add_task(func() -> void:
 				for item in batch:
 					var begin:=Time.get_ticks_usec()
@@ -1007,13 +1011,13 @@ func _dispatch_jobs() -> void:
 					var arrays: Array=builder.build(Vector2i(item.x,item.y),item.w)
 					var edge_profiles:Dictionary=_ready_cut.edge_profiles(arrays,item.w)
 					var has_features:bool=builder._extras_enabled or (builder._tropical!=null and builder.settings.tropical.waterfall_frequency>0 and builder.settings.water_enabled)
-					var feature_mesher=preload("res://scripts/terrain_feature_meshes.gd").new()
+					var feature_mesher=preload("res://scripts/csharp/terrain/TerrainFeatureMeshes.cs").new()
 					var features:Dictionary=feature_mesher.build(builder,Vector2i(item.x,item.y)) if has_features else {}
 					if item.z<=1 and not features.is_empty() and not features.openings.is_empty():features["ground_collision"]=_collision.clipped_ground(arrays,features.openings,item.w)
-					var structures:Array=preload("res://scripts/lod_biome_extension_structures.gd").new().build(builder,Vector2i(item.x,item.y),support_steps,feature_mesher.portal_sites) if builder._extras_enabled else []
+					var structures:Array=preload("res://scripts/csharp/terrain/LodBiomeStructureGeometry.cs").new().build(builder,Vector2i(item.x,item.y),support_steps,feature_mesher.portal_sites) if builder._extras_enabled else []
 					var structure_flow:Dictionary={}
 					if structures.size()>2 and structures[2]!=null:
-						structure_flow=preload("res://scripts/alien_tissue_coordinates.gd").structure_atlas(builder,structures[2],Vector2(item.x,item.y)*builder.chunk_size)
+						structure_flow=AlienTissueCoordinates.structure_atlas(builder,structures[2],Vector2(item.x,item.y)*builder.chunk_size)
 					var collision_data:Dictionary=_collision.prepare(arrays,item.w,item.z<=1,structures,features,index_structures)
 					result.append({"key":Vector3i(item.x,item.y,item.z),"resolution":item.w,"arrays":arrays,"edge_profiles":edge_profiles,"swamp_water":builder.build_swamp_water(arrays,item.w),"extension_data":builder.built_extension_data,"extension_rows":builder.built_extension_rows,"alien_flow":builder.built_alien_tissue_flow,"alien_flow_rows":builder.built_alien_tissue_flow_rows,"structure_flow":structure_flow,"extension_mask":builder.built_extension_mask,"badlands_palette_slot":builder.built_badlands_palette_slot,"structures":structures,"features":features,"collision_data":collision_data,"begin":begin,"end":Time.get_ticks_usec()})
 			)
@@ -1339,7 +1343,7 @@ func _get_biome(world_x: float, world_z: float) -> int:
 
 ## Deterministic world-space placement masks, not spawned vegetation. Main thread only.
 func get_jungle_habitat_at(position:Vector3)->Dictionary:
-	return preload("res://scripts/jungle_placement.gd").habitat(_sampler,position.x,position.z)
+	return JunglePlacement.habitat(_sampler,position.x,position.z)
 
 
 ## Bounded search in the actual mixed world, not a pure-Jungle preview override.
@@ -1537,7 +1541,7 @@ func set_swamp_flood_stage(stage:float)->void:
 ## Optional small query. Future vegetation workers should call JunglePlacement
 ## directly with their own builder, not this main-thread convenience wrapper.
 func get_jungle_spawn_candidates(bounds:Rect2,spacing:float=24,max_candidates:int=128,scan_offset:int=0)->Dictionary:
-	return preload("res://scripts/jungle_placement.gd").candidates(_sampler,bounds,spacing,max_candidates,scan_offset)
+	return JunglePlacement.candidates(_sampler,bounds,spacing,max_candidates,scan_offset)
 
 
 func _create_water() -> void:

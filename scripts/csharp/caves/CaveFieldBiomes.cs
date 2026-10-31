@@ -10,11 +10,10 @@ namespace PredatorIsle.Caves;
 
 internal static class CaveFieldBiomes
 {
-    private static readonly GDScript Regions = GD.Load<GDScript>("res://scripts/caves/biome_regions.gd");
     internal static void Bind(CaveField f, int feature, string from, string to, double first, double last, double length)
     {
-        var a = Regions.Call("along_edge", f._biome_assignment, from, to, first, length).AsGodotDictionary()["weights"].AsGodotDictionary();
-        var b = Regions.Call("along_edge", f._biome_assignment, from, to, last, length).AsGodotDictionary()["weights"].AsGodotDictionary();
+        var a = CaveBiomeSelection.AlongEdge(f._biome_assignment, from, to, first, length)["weights"].AsGodotDictionary();
+        var b = CaveBiomeSelection.AlongEdge(f._biome_assignment, from, to, last, length)["weights"].AsGodotDictionary();
         foreach (var pair in f.BiomeFields) pair.Value[feature] = new Vector2((float)Num(a, pair.Key), (float)Num(b, pair.Key));
         f.InvalidatePacked();
     }
@@ -34,10 +33,12 @@ internal static class CaveFieldBiomes
     {
         double admission = Admission(f, point); if (admission <= 0) return Vector4.Zero;
         double best = Far; var result = Vector4.Zero;
+        Span<int> singleFeature = stackalloc int[1];
         if (f.Bins.TryGetValue(f.bin_cell(point), out var features))
             foreach (int feature in features)
             {
-                double value = f.Evaluate(point, new[] { feature }); if (value >= Far || value > best) continue;
+                singleFeature[0] = feature;
+                double value = f.Evaluate(point, singleFeature); if (value >= Far || value > best) continue;
                 if (value < best) { best = value; result = Vector4.Zero; }
                 var ab = f.Directions[feature]; var begin = f.Begins[feature];
                 double t = Math.Clamp(new Vector2(point.X - begin.X, point.Z - begin.Z).Dot(ab) / f.SpanSquared[feature], 0, 1);

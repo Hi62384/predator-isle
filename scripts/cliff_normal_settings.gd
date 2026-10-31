@@ -1,5 +1,5 @@
 @tool
-class_name CliffNormalSettings
+## Retained reference implementation; the global resource class is now C#.
 extends Resource
 
 @export var enabled: bool = true

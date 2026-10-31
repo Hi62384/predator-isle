@@ -1,0 +1,28 @@
+{
+  "implemented_utc": "2026-10-31T16:22:05.5336575Z",
+  "baseline": {
+    "full_terrain_and_cave_seconds": 42.666,
+    "scope": "Previous source snapshot with uncontrolled caches; not a measurement of this implementation"
+  },
+  "changes": [
+    "Bind native C# terrain, water, surface-context and managed scalar delegates directly for route solving, cave networks, cave fields, portal surfaces and chamber profiles; keep generic provider fallback",
+    "Use one immutable lateral fraction table instead of allocating one per route station",
+    "Stop canonical non-publishing entrance exposure probes after a conclusive positive result; custom providers retain all original probes",
+    "Stop canonical non-publishing chamber footprint probes after rejection; every accepted chamber retains all roof/depth checks",
+    "Cache successful launcher builds by engine, SDK, source/project/ancestor build-input hashes and all required output hashes; continue .NET import repair on direct runs"
+  ],
+  "geometry_settings_or_resource_limits_changed": false,
+  "new_runtime_cache_or_worker_count_increase": false,
+  "build": {
+    "passed": true,
+    "warnings": 0,
+    "errors": 0
+  },
+  "launcher_syntax_errors": 0,
+  "runtime_verified": false,
+  "new_loading_seconds": null,
+  "limitations": [
+    "No fresh runtime suite, benchmark, cold-start or traversal run for this implementation",
+    "Remaining generation time depends on canonical terrain sampling and full cave-region discovery; the numerical speedup is not yet measured"
+  ]
+}

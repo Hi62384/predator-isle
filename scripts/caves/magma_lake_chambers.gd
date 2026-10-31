@@ -1,9 +1,9 @@
 extends RefCounted
 ## Bounded source-backed bank and unequal basalt-vault profile on the shared cave field.
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Basins=preload("res://scripts/caves/seepage_basins.gd")
-const Field=preload("res://scripts/caves/field.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Basins=preload("res://scripts/csharp/caves/CaveSeepageBasins.cs").new()
+const Field=preload("res://scripts/csharp/caves/CaveField.cs")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 static func covered(point:Vector3,radius:float,headroom:float,height:Callable,maximum_depth:float,minimum_roof:float)->bool:
 	for z in range(-2,3):
 		for x in range(-2,3):

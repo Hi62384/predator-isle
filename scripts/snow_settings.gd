@@ -1,5 +1,5 @@
 @tool
-class_name SnowSettings
+# Original resource reference; the global SnowSettings is implemented in C#.
 extends Resource
 ## Static, world-space Snow baseline. Restart terrain after editing.
 @export_group("Regional Terrain")

@@ -19,7 +19,10 @@ func _initialize()->void:
 			check(is_finite(h) and is_finite(water) and control.is_finite(),"Finite Coast data")
 			check(h==b._get_height(p.x,p.y,false),"Height-only identity")
 			records.append([p,h,water,control])
-		b._height_grid_cache.clear();b._coast._nodes.clear();b._coast._patches.clear();b._coast._regions.clear();b._coast._formations.clear();records.reverse()
+		b._height_grid_cache.clear()
+		if b._coast.has_method("clear_numeric_caches"):b._coast.clear_numeric_caches()
+		else:b._coast._nodes.clear();b._coast._patches.clear();b._coast._regions.clear();b._coast._formations.clear()
+		records.reverse()
 		for r:Array in records:check(r[1]==b._sample_grid_height(r[0].x,r[0].y) and r[2]==b._last_swamp_water and r[3]==b._last_coast,"Full Coast data independent of order/cache")
 		for item:Array in records.slice(0,16):
 			var x:float=roundf(item[0].x/8)*8;var z:float=roundf(item[0].y/8)*8
@@ -28,7 +31,8 @@ func _initialize()->void:
 			check(absf(dl-dr)<.04,"C1 canonical Coast boundary")
 		var p:Vector2=records[0][0];var anchor:float=b._get_height(p.x,p.y);var controls:Vector4=b._last_coast
 		for i in range(8500):b._coast._node(Vector2i(i*13,i*17))
-		check(b._coast._nodes.size()<=8192 and b._coast._patches.size()<=2048 and b._coast._regions.size()<=2048 and b._coast._formations.size()<=512,"Bounded Coast caches after actual eviction")
+		var counts:Dictionary=b._coast.cache_counts() if b._coast.has_method("cache_counts") else {"nodes":b._coast._nodes.size(),"patches":b._coast._patches.size(),"regions":b._coast._regions.size(),"formations":b._coast._formations.size()}
+		check(counts.nodes<=8192 and counts.patches<=2048 and counts.regions<=2048 and counts.formations<=512,"Bounded Coast caches after actual eviction")
 		check(anchor==b._get_height(p.x,p.y) and controls==b._last_coast,"Eviction restores exact Coast")
 	var b=builder();var item:Dictionary=manifest.features.tide_pools;var cell:=Vector2i(floori(item.x/256),floori(item.z/256))
 	if FileAccess.file_exists("res://tools/rocky_coast/baseline/coast_preopt.gd"):

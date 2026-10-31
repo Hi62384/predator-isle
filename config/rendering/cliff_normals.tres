@@ -1,7 +1,7 @@
 [gd_resource type="Resource" script_class="CliffNormalSettings" format=3 uid="uid://bi8rm6yulvxb0"]
 
-[ext_resource type="Script" path="res://scripts/cliff_normal_settings.gd" id="1"]
-[ext_resource type="Script" path="res://scripts/cliff_normal_layer.gd" id="2"]
+[ext_resource type="Script" path="res://scripts/csharp/rendering/CliffNormalSettings.cs" id="1"]
+[ext_resource type="Script" path="res://scripts/csharp/rendering/CliffNormalLayer.cs" id="2"]
 [ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock064.res" id="normal_0"]
 [ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock058.res" id="normal_1"]
 [ext_resource type="Texture2D" path="res://materials/cliff_texture_Rock051.res" id="normal_2"]

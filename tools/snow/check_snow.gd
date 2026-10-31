@@ -1,6 +1,6 @@
 extends SceneTree
 func _initialize()->void:
-	var sampler=preload("res://scripts/snow_sampler.gd").new()
+	var sampler=preload("res://scripts/csharp/biomes/SnowSampler.cs").new()
 	sampler.configure(SnowSettings.new(),73921)
 	for p in [Vector2.ZERO,Vector2(-30000,18000),Vector2(64,64)]:
 		print(p," ",sampler.sample(p.x,p.y)," ",sampler.pack())

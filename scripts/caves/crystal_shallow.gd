@@ -2,7 +2,7 @@ extends RefCounted
 ## Private Crystal-only extension of an already admitted connected region.
 ## No new lottery/anchor or depth preference;existing reach must cover it.
 const Shallow=preload("res://scripts/caves/shallow_chambers.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 static func prepare(region:Dictionary,height:Callable,enabled:bool=true,maximum_depth:float=400,minimum_roof:float=10)->Dictionary:
 	if not enabled or not region.get("valid",false) or region.get("cave_family",-1) in [6,7] or region.get("nodes",[]).size()<2:return region
 	for room:Dictionary in region.get("pockets",[]):

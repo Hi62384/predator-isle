@@ -1,5 +1,5 @@
 extends "res://tools/blobs/render_blob_v4_sheets.gd"
-const Oracle=preload("res://scripts/blobs/blob_deformation_oracle.gd")
+var Oracle=preload("res://scripts/csharp/blobs/BlobDeformationOracle.cs").new()
 const Integrity=preload("res://scripts/blobs/blob_mesh_integrity.gd")
 func _run()->void:
 	DirAccess.make_dir_recursive_absolute("res://.godot/blob_v4_motion_frames")

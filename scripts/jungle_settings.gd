@@ -1,5 +1,5 @@
 @tool
-class_name JungleSettings
+## Retained reference implementation; the global resource class is now C#.
 extends Resource
 ## Static worker snapshot; restart the scene after editing.
 @export_group("Regional Geography")

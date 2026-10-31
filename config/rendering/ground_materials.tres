@@ -1,6 +1,6 @@
 [gd_resource type="Resource" script_class="GroundMaterialSettings" format=3 uid="uid://bodyn5igqnyfg"]
 
-[ext_resource type="Script" uid="uid://bu4w7w6wmf7xh" path="res://scripts/ground_material_settings.gd" id="1"]
+[ext_resource type="Script" path="res://scripts/csharp/rendering/GroundMaterialSettings.cs" id="1"]
 
 [resource]
 script = ExtResource("1")

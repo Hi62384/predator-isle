@@ -41,7 +41,7 @@ func source(original:String,slot:int,entry:bool)->String:
 	blend=blend.replace("cave_frozen_sample(frozen_p,frozen_n,","cave_frozen_sample(frozen_p,cave_frozen_texture_position,frozen_n,")
 	return code.insert(final,blend)
 func bind_context(material:ShaderMaterial,context:Dictionary)->void:
-	var sources:=PackedVector4Array();var pools:Array=preload("res://scripts/caves/material_palette.gd").water_sources(context.get("pools",[]))
+	var sources:=PackedVector4Array();var pools:Array=preload("res://scripts/csharp/caves/CaveMaterialPalette.cs").new().water_sources(context.get("pools",[]))
 	for i in range(8):
 		var pool:Dictionary=pools[i] if i<pools.size() else {};sources.append(Vector4(pool.center.x,pool.water_y,pool.center.z,pool.radius) if not pool.is_empty() else Vector4.ZERO)
 	material.set_shader_parameter("cave_frozen_water_sources",sources);material.set_shader_parameter("cave_frozen_water_source_count",mini(8,pools.size()))

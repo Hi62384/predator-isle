@@ -46,7 +46,8 @@ func _initialize()->void:
 				hashes[mode]=mesh_hash(arrays,builder.built_extension_data)+mesh_hash(water,PackedByteArray())
 				if mode=="cached":cached.append(elapsed)
 				else:reference.append(elapsed)
-				assert(builder._badlands._nodes.size()<=16384 and builder._badlands._patches.size()<=1024)
+				var counts:Dictionary=builder._badlands.cache_counts() if builder._badlands.has_method("cache_counts") else {"nodes":builder._badlands._nodes.size(),"patches":builder._badlands._patches.size()}
+				assert(counts.nodes<=16384 and counts.patches<=1024)
 				records.append({"span":dimensions.x,"resolution":dimensions.y,"repeat":repeat,"seed":builder.world_seed,"cell":coordinate,"mode":mode,"ms":elapsed,"atlas_bytes":builder.built_extension_data.size(),"hash":hashes[mode]})
 			assert(hashes.cached==hashes.reference,"Optimization changed complete mesh arrays")
 		var summary:Dictionary={"span":dimensions.x,"resolution":dimensions.y,"cached_median_ms":percentile(cached,.5),"reference_median_ms":percentile(reference,.5),"cached_max_ms":percentile(cached,1),"reference_max_ms":percentile(reference,1),"full_mesh_arrays_exact":true}

@@ -1,10 +1,10 @@
 extends RefCounted
 ## Main-thread bridge for numeric surface snapshots and hidden replacement
 ## nodes. Original parent meshes/materials are never edited here.
-const SurfaceShader=preload("res://scripts/caves/surface_shader.gd")
-const WaterRenderer=preload("res://scripts/caves/water_renderer.gd")
-const Palette=preload("res://scripts/caves/material_palette.gd")
-const Frontiers=preload("res://scripts/caves/stream_frontiers.gd")
+static var SurfaceShader=preload("res://scripts/csharp/caves/CaveSurfaceShader.cs").new()
+static var WaterRenderer=preload("res://scripts/csharp/caves/CaveWaterRenderer.cs").new()
+static var Palette=preload("res://scripts/csharp/caves/CaveMaterialPalette.cs").new()
+static var Frontiers=preload("res://scripts/csharp/caves/CaveStreamFrontiers.cs").new()
 const BiomeMaterials=preload("res://scripts/caves/biome_materials.gd")
 const FeatureRenderer=preload("res://scripts/caves/feature_renderer.gd")
 static var _shaders:Dictionary={}

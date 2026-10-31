@@ -1,9 +1,9 @@
 extends RefCounted
 ## Bounded widening of existing solved short passages. Points,graph IDs,
 ## longitudinal floors and grades remain unchanged;no second route solver.
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Basins=preload("res://scripts/caves/seepage_basins.gd")
+static var Basins=preload("res://scripts/csharp/caves/CaveSeepageBasins.cs").new()
 static func clear(p:Vector3,width:float,headroom:float,region:Dictionary,height:Callable,maximum_depth:float,minimum_roof:float)->bool:
 	if not Profiles.compatible(p,width,headroom,region,region.get("pockets",[])):return false
 	for offset:Vector2 in [Vector2.ZERO,Vector2(width,0),Vector2(-width,0),Vector2(0,width),Vector2(0,-width)]:

@@ -8,7 +8,7 @@ namespace PredatorIsle.Caves;
 
 internal static class CaveFieldEvaluation
 {
-    internal static double Evaluate(CaveField f, Vector3 point, IEnumerable<int> features)
+    internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
         double closed = Far, opening = Far, floorOffset = 0;
         if (f.floor_relief.Count > 0)

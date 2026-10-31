@@ -33,6 +33,7 @@ uniform sampler2D meso_mask : filter_linear_mipmap_anisotropic, repeat_enable;
 uniform float water_level=0.0;
 uniform float texture_blend_sharpness=4.0;
 uniform float detail_distance=180.0;
+uniform int terrain_shader_quality : hint_range(0,3)=1;
 uniform float shore_width=1.5;
 uniform float shore_strength=0.75;
 // Ground-only controls; no texture pixels are stored in the settings resource.
@@ -673,6 +674,7 @@ if(.001<jungle_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec
   vec4 surface; vec3 g;
   float footprint=max(length(position_dx),length(position_dy))/metres;
   float micro=1.0-smoothstep(0.045,0.18,footprint);
+  if(terrain_shader_quality==0) micro*=1.0-smoothstep(35.0,70.0,view_distance);
   if(debug_view==18 || debug_view==20) micro=0.0;
   surface=material_mean(id);g=vec3(0.0);
   if(micro>0.003) {
@@ -755,7 +757,7 @@ if(.001<jungle_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec
   bool use_detail=enable_ambient_cliff_normals && cliff_normal_debug!=1 && debug_view!=27 && debug_view!=7 && diagnostic_surface!=2;
   if(use_detail) {
    if(cliff_normal_debug!=3) ambient_band(true,position_dx,position_dy,n,projection,macro_g,macro_coverage,macro_ids);
-   if(cliff_normal_debug!=2) ambient_band(false,position_dx,position_dy,n,projection,medium_g,medium_coverage,medium_ids);
+   if(cliff_normal_debug!=2 && (terrain_shader_quality>0 || cliff_normal_debug==3)) ambient_band(false,position_dx,position_dy,n,projection,medium_g,medium_coverage,medium_ids);
   }
   if(cliff_normal_debug==2 || cliff_normal_debug==3) gradient*=1.0-cliff;
   // Surface-gradient addition preserves a neutral overlay and avoids RGB-normal blending.

@@ -2,7 +2,7 @@ extends RefCounted
 ## Finite, worker-owned supplementary geometry. Surface portals are shared with
 ## the ground shader and heightfield collision; they are not black decals.
 const Geometry=preload("res://scripts/biome_extension_structures.gd")
-const RetainedLiquid=preload("res://scripts/retained_liquid_geometry.gd")
+static var RetainedLiquid=preload("res://scripts/csharp/terrain/RetainedLiquidGeometry.cs").new()
 var g=Geometry.new()
 var origin:=Vector3.ZERO
 var builder

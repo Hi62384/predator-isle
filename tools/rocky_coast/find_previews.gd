@@ -27,7 +27,8 @@ func _initialize()->void:
 			consider("rocky_estuary",p,h,s,s[18]*s[5]*s[2])
 			consider("underwater_cliff",p,h,s,s[2]*(1-s[12])*smoothstep(3,12,-h)*(1-smoothstep(100,600,absf(s[6]))))
 			consider("submerged_platform",p,h,s,s[2]*s[12]*smoothstep(1,4,-h)*(1-smoothstep(5,15,-h)))
-			for sites:Array in b._coast._formations.values():
+			var cached_formations:Array=b._coast.formation_cache_values() if b._coast.has_method("formation_cache_values") else b._coast._formations.values()
+			for sites:Array in cached_formations:
 				for site:Array in sites:stack_sites[site[0]]=true
 	for p:Vector2 in stack_sites:
 		var h:float=b._get_height(p.x,p.y);var s:PackedFloat64Array=b._coast.state

@@ -1,4 +1,20 @@
-# Current terrain fixes — 2026-10-28
+# Current implementation — 2026-10-30
+
+The main scene now selects the native C# nested-ring renderer. Current controls,
+server residency, canonical ground collision and current test coverage are in
+[the ring streaming notes](TERRAIN_RING_STREAMING.md). The measurements and
+quadtree descriptions below belong to their archived source versions.
+
+The open Badlands material issue has a source-level continuation: subordinate
+silt laminae and thin mineral seams now share the existing geological bedding
+coordinate, with pixel-footprint filtering, small roughness differences and
+millimetre-scale apparent relief. The existing `lamina_strength` control governs
+the addition; scanned materials and saved settings are retained. Terrain shape,
+hardness, drainage, ownership and collision are unchanged. This shader-only
+change has not been imported or viewed in Godot, and has no new performance
+measurement or artistic sign-off.
+
+# Archived terrain fixes — 2026-10-28
 
 The saved world now uses `config/world/terrain_settings.tres` with
 `height_blend = 3`, previously 12. This broadens the shared height-ownership

@@ -1,5 +1,5 @@
 extends SceneTree
-const Volume=preload("res://scripts/blobs/blob_volume_calibration.gd")
+var Volume=preload("res://scripts/csharp/blobs/BlobVolumeCalibration.cs").new()
 func _initialize() -> void: call_deferred("run")
 func run() -> void:
 	var directory:=DirAccess.open("res://.godot/blob_validation_v3")

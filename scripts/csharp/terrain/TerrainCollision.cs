@@ -39,7 +39,8 @@ public partial class TerrainCollision : RefCounted
         return result;
     }
 
-    public D prepare(A arrays, int resolution, bool terrain_enabled, A structures, D features, bool index_structures = false)
+    public D prepare(A arrays, int resolution, bool terrain_enabled, A structures, D features) => prepare(arrays, resolution, terrain_enabled, structures, features, false);
+    public D prepare(A arrays, int resolution, bool terrain_enabled, A structures, D features, bool index_structures)
     {
         var data = new D { ["heights"] = System.Array.Empty<float>(), ["ground_faces"] = System.Array.Empty<Vector3>(),
             ["structure_faces"] = System.Array.Empty<Vector3>(), ["cavity_faces"] = System.Array.Empty<Vector3>(), ["cavity_bounds"] = new Aabb() };
@@ -85,9 +86,12 @@ public partial class TerrainCollision : RefCounted
         return q.Length() - portal.Z * (1 + .1 * Math.Sin(angle * 3 + portal.W) + .06 * Math.Sin(angle * 7 - portal.W));
     }
     public Vector3[] clipped_ground(A arrays, Vector4[] portals, int resolution)
+        => ClipGround(arrays,portals,checked(resolution*resolution*6));
+    public Vector3[] clipped_indexed_ground(A arrays,Vector4[] portals)=>ClipGround(arrays,portals,int.MaxValue);
+    private Vector3[] ClipGround(A arrays, Vector4[] portals, int maximumIndices)
     {
         var source = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array(); var indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array(); var faces = new List<Vector3>();
-        for (int i = 0; i < Math.Min(indices.Length, resolution * resolution * 6); i += 3)
+        for (int i = 0; i < Math.Min(indices.Length, maximumIndices); i += 3)
         {
             var polygon = new List<Vector3> { source[indices[i]], source[indices[i + 1]], source[indices[i + 2]] };
             foreach (var portal in portals)
@@ -112,8 +116,16 @@ public partial class TerrainCollision : RefCounted
         }
         return faces.ToArray();
     }
+    public D prepare_irregular(A arrays,bool terrainEnabled,A structures,D features,bool indexStructures)
+    {
+        var data=prepare(arrays,1,false,structures,features,indexStructures);
+        if(terrainEnabled)data["ground_faces"]=clipped_indexed_ground(arrays,features.TryGetValue("openings",out var portals)?portals.AsVector4Array():System.Array.Empty<Vector4>());
+        return data;
+    }
 
-    public void stage(MeshInstance3D node, double span, int resolution, bool enabled, bool structure_enabled = false, Variant structure_point = default)
+    public void stage(MeshInstance3D node, double span, int resolution, bool enabled) => stage(node, span, resolution, enabled, false, default);
+    public void stage(MeshInstance3D node, double span, int resolution, bool enabled, bool structure_enabled) => stage(node, span, resolution, enabled, structure_enabled, default);
+    public void stage(MeshInstance3D node, double span, int resolution, bool enabled, bool structure_enabled, Variant structure_point)
     {
         var structurePoint = structure_point.VariantType == Variant.Type.Nil ? Vector3.Inf : structure_point.AsVector3();
         bool profiling = node.GetMeta("profile_collision", false).AsBool(); ulong started = profiling ? Time.GetTicksUsec() : 0;

@@ -1,0 +1,12 @@
+{
+  "verified_utc": "2026-10-31T07:12:13.5447490Z",
+  "cause": "Standard Godot editor cannot load C# and rewrote the global script-class cache and C# feature flag",
+  "fix": "Run Predator Isle.cmd selects 4.6.1 .NET, repairs C# flag, builds, refreshes editor imports, then launches",
+  "startup_passed": true,
+  "first_visible_seconds": 2.5957825,
+  "full_terrain_and_cave_seconds": 42.6660625,
+  "movement_and_collision_passed": true,
+  "standalone_launcher_exit_code": 0,
+  "correct_dotnet_game_opened": true,
+  "remaining": "Full background terrain/cave generation is still approximately 43 seconds on this measured run."
+}

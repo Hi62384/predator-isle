@@ -3,7 +3,7 @@ extends RefCounted
 ## existing entry's grade before turning onto its own flat floor. Original
 ## graph nodes/routes remain intact; every old access floor is tested again.
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Field=preload("res://scripts/caves/field.gd")
+const Field=preload("res://scripts/csharp/caves/CaveField.cs")
 static func retained_floors_safe(region:Dictionary,original,candidate,start:Vector3,join:Vector3,point:Vector3)->bool:
 	var low:Vector3=start.min(join).min(point)-Vector3(20,6,20);var high:Vector3=start.max(join).max(point)+Vector3(20,20,20);var changed:=AABB(low,high-low);var edges:Array=region.edges+region.get("pocket_passages",[])
 	for pool:Dictionary in region.get("pools",[]):edges.append_array(pool.get("bank_access",[]))

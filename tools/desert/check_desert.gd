@@ -97,8 +97,8 @@ func _initialize() -> void:
 	var grass_mesh: Array=grass.build(Vector2i(-18,35),16)
 	for channel in [Mesh.ARRAY_CUSTOM1,Mesh.ARRAY_CUSTOM2,Mesh.ARRAY_CUSTOM3]:
 		check(grass_mesh[channel]==null,"Pure Grass has no extra Desert vertex channels")
-	check(a._drainage_graph._catchments.size()<=128,"Bounded catchment descriptors")
-	check(a._drainage_graph._tiles.size()<=a._drainage_graph.MAX_TILES,"Bounded drainage tile cache")
+	check((a._drainage_graph.cache_counts().catchments if a._drainage_graph.has_method("cache_counts") else a._drainage_graph._catchments.size())<=128,"Bounded catchment descriptors")
+	check((a._drainage_graph.cache_counts().tiles if a._drainage_graph.has_method("cache_counts") else a._drainage_graph._tiles.size())<=a._drainage_graph.MAX_TILES,"Bounded drainage tile cache")
 	# Shared graph endpoints and monotone edge bed metadata. Full hydrological
 	# simulation and globally monotone final terrain are not implied by this check.
 	var network=Desert.new();network.configure(DesertSettings.new(),73921)

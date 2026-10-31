@@ -1,5 +1,5 @@
 @tool
-class_name GroundMaterialSettings
+## Retained reference implementation; the global resource class is now C#.
 extends Resource
 
 @export_group("Landscape")

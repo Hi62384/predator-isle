@@ -1,0 +1,20 @@
+{
+  "passed": true,
+  "memory_limit_mib": 2048,
+  "deadline_seconds_per_mode": 180,
+  "sample_period_ms": 500,
+  "records": [
+    {
+      "mode": "startup",
+      "passed": true,
+      "started_utc": "2026-10-31T07:08:59.8317651Z",
+      "completed_utc": "2026-10-31T07:09:50.1603105Z",
+      "exit_code": 0,
+      "sampled_peak_private_bytes": 1291112448,
+      "environment_messages": [],
+      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261031T070859822\\01_startup",
+      "failure": ""
+    }
+  ],
+  "scope": "Only processes started by this runner are managed. Private memory is sampled, not an absolute peak. Existing project sessions are untouched. Certificate-store failures from the restricted execution environment are retained as environment messages; other runtime errors fail the run. No isolated or full-world performance claim."
+}

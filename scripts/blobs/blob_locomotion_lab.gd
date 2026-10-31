@@ -1,6 +1,6 @@
 extends Node3D
-const Cache=preload("res://scripts/blobs/blob_mesh_cache.gd")
-const Organism=preload("res://scripts/blobs/blob_organism.gd")
+static var Cache=preload("res://scripts/csharp/blobs/BlobMeshCache.cs").new()
+const Organism=preload("res://scripts/csharp/blobs/BlobOrganism.cs")
 var organisms: Array[Node3D]=[]
 var elapsed:=.0
 var automatic:=true
@@ -78,7 +78,7 @@ func advance(delta: float) -> void:
 	for organism in organisms:
 		organism.speed=speed
 		organism.simulate(delta)
-	readout.text="PREDATOR ISLE / SOFT TREAD TEST · %.2f s · %s" % [elapsed,"FORWARD" if speed>0 else ("REVERSE" if speed<0 else "SETTLING")]
+	readout.text="PREDATOR ISLE / SOFT TREAD TEST Â· %.2f s Â· %s" % [elapsed,"FORWARD" if speed>0 else ("REVERSE" if speed<0 else "SETTLING")]
 
 func _unhandled_input(event: InputEvent) -> void:
 	if not event is InputEventKey or not event.pressed or event.echo: return

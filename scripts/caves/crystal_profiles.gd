@@ -1,10 +1,10 @@
 extends RefCounted
 ## Bounded, joined geological growth in the existing graph,
 ## never an independent volume/worker or a spherical biome admission field.
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
-const Basins=preload("res://scripts/caves/seepage_basins.gd")
-const BankField=preload("res://scripts/caves/field.gd")
+static var Basins=preload("res://scripts/csharp/caves/CaveSeepageBasins.cs").new()
+const BankField=preload("res://scripts/csharp/caves/CaveField.cs")
 const MAX_ADDITIONS:int=4
 static func dry_bank(field,pool:Dictionary,radius:float)->bool:
 	# A larger descriptor is not enough: its complete dry shore must fit the

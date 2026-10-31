@@ -10,7 +10,7 @@ namespace PredatorIsle.Rendering;
 public partial class TerrainShaderVariants : RefCounted
 {
     private static readonly string[] Legacy = { "jungle", "forest", "savanna", "swamp", "mountain", "tropical", "badlands" };
-    private static readonly string[] Extensions = { "quarry", "wise_mountains", "volcanic", "spore_forest", "radiation_wasteland", "crystal_wastes", "insect_colony", "alien_infected" };
+    private static readonly string[] Extensions = Terrain.TerrainBiomeCatalog.ExtensionKeys;
     private static readonly string[] Controls = { "jungle_control.z", "forest_control.z", "savanna_control.z", "swamp_control.z", "mountain_control.z", "tropical_control.x", "badlands_control.x", "coast_control.x" };
     private static readonly Dictionary<string, Shader> Cache = new();
     private static readonly LinkedList<string> Recency = new();
@@ -79,7 +79,8 @@ public partial class TerrainShaderVariants : RefCounted
         return $"// CONFIGURED_TERRAIN_OWNERS_{mask}\n" + result;
     }
 
-    public Shader? select(Shader? original, Resource? settings, bool enabled = true)
+    public Shader? select(Shader? original, Resource? settings) => select(original, settings, true);
+    public Shader? select(Shader? original, Resource? settings, bool enabled)
     {
         if (!enabled || original == null) return original;
         int mask = configured_mask(settings);

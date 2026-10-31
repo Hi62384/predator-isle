@@ -6,7 +6,7 @@ const LAYOUT=[ ["geology_control",3],["jungle_control",3],["forest_control",3],[
 const BEGIN:String="\n geology_control=CUSTOM0.xyz;"
 const END:String="\n}\n// Shared jittered junctions"
 const Extensions=preload("res://shaders/biome_extensions.gdshaderinc")
-const VertexProjection=preload("res://scripts/caves/vertex_projection.gd")
+static var VertexProjection=preload("res://scripts/csharp/caves/CaveVertexProjection.cs").new()
 static func load_texels()->String:
 	var code:String="\n int surface_base=VERTEX_ID*17;\n"
 	for i in range(17):code+=" vec4 surface_p%d=texelFetch(cave_surface_payload,ivec2((surface_base+%d)%%1024,(surface_base+%d)/1024),0);\n"%[i,i,i]

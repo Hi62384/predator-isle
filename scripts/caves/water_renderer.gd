@@ -1,7 +1,7 @@
 extends RefCounted
 ## Cave-only view of the existing freshwater shader. No global water resource
 ## or flood stage is edited. Rock beds remain the sole walking collision.
-const VertexProjection=preload("res://scripts/caves/vertex_projection.gd")
+static var VertexProjection=preload("res://scripts/csharp/caves/CaveVertexProjection.cs").new()
 static var _materials:Dictionary={}
 static func material(common_projection:bool=true)->ShaderMaterial:
 	if _materials.has(common_projection):return _materials[common_projection]

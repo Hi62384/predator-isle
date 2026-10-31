@@ -131,9 +131,15 @@ public partial class TerrainReadyCut : RefCounted
     }
     private static Vector3I[] Keys(D source) => source.Select(pair => pair.Key.AsVector3I()).ToArray();
 
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point) => choose(a, w, r, p, point, null, null, null, null, null, default);
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point, D ar) => choose(a, w, r, p, point, ar, null, null, null, null, default);
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point, D ar, D rr) => choose(a, w, r, p, point, ar, rr, null, null, null, default);
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point, D ar, D rr, D wr) => choose(a, w, r, p, point, ar, rr, wr, null, null, default);
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point, D ar, D rr, D wr, D ap) => choose(a, w, r, p, point, ar, rr, wr, ap, null, default);
+    public D choose(D a, D w, D r, TerrainPartition p, Vector2 point, D ar, D rr, D wr, D ap, D rp) => choose(a, w, r, p, point, ar, rr, wr, ap, rp, default);
     public D choose(D active, D wanted, D ready, TerrainPartition planner, Vector2 point,
-        D? active_resolutions = null, D? ready_resolutions = null, D? wanted_resolutions = null,
-        D? active_profiles = null, D? ready_profiles = null, Variant diagnostics = default)
+        D? active_resolutions, D? ready_resolutions, D? wanted_resolutions,
+        D? active_profiles, D? ready_profiles, Variant diagnostics)
     {
         var traceData = diagnostics.VariantType == Variant.Type.Dictionary ? diagnostics.AsGodotDictionary() : null;
         traceData?.Clear();

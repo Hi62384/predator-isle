@@ -3,7 +3,7 @@ extends RefCounted
 ## A low36m-radius lobe shares the retained pool parent's exact floor.
 const Profiles=preload("res://scripts/caves/chamber_profiles.gd")
 const Base=preload("res://scripts/caves/crystal_profiles.gd")
-const Regions=preload("res://scripts/caves/biome_regions.gd")
+static var Regions=preload("res://scripts/csharp/caves/CaveBiomeRegions.cs").new()
 static func prepare(region:Dictionary,height:Callable,seed_id:int,settings:Dictionary,maximum_depth:float=400,minimum_roof:float=10)->Dictionary:
 	if not settings.get("lake_chambers",false) or not settings.get("chamber_growth",true) or not region.get("valid",false) or region.get("cave_family",-1) in [6,7]:return region
 	for index in range(region.get("pools",[]).size()):
