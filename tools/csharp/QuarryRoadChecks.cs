@@ -26,6 +26,34 @@ internal static class QuarryRoadChecks
                     Equal(original.Call("sample",p.X,p.Y,true).AsDouble(),native.sample(p.X,p.Y,true),"Quarry complete spiral road height");
                 }
             }
+            // The normal road fixture tests the ramp centerline. Extreme
+            // regional coordinates must also agree before the 8,192-node FIFO
+            // cache fills; a tiny 2D rotation discrepancy changes road heights.
+            foreach(int site in new[]{0,127,840,4095,8199})
+            {
+                var cell=new Vector2I(site,-site);
+                var p=(Vector2)cell*16;
+                var descriptor=native.nearby(p,3200*config.Get("feature_scale").AsDouble());
+                var qExpected=original.Call("local",p,descriptor).AsVector2();
+                var qActual=native.local(p,descriptor);
+                require(qExpected==qActual,
+                    $"Quarry coordinate rotation disagrees: seed={seed} cell={cell} reference={qExpected} native={qActual}");
+                // Sample each of the six regional visual structures before
+                // checking the final mixed and excavated canonical node.
+                for(int region=0;region<6;region++)
+                {
+                    var left=original.Call("evaluate",p,region).AsFloat64Array();
+                    var right=native.evaluate(p,region);
+                    for(int slot=0;slot<5;slot++)
+                        Equal(left[slot],right[slot],
+                            $"Quarry region probe {region} seed={seed} cell={cell} slot={slot}");
+                }
+                var expected=original.Call("_node",cell).AsFloat64Array();
+                var current=native._node(cell);
+                for(int slot=0;slot<5;slot++)
+                    Equal(expected[slot],current[slot],
+                        $"Quarry far-node probe seed={seed} cell={cell} slot={slot}");
+            }
             require(native.RampPlanCount<=256,"Quarry ramp cache exceeded original limit");
         }
         require(admitted>0,"Quarry road fixtures did not admit any physical ramps");
