@@ -108,7 +108,9 @@ public partial class CaveNetwork : RefCounted
         for (int attempt = 0; attempt < 24; attempt++)
         {
             double yaw = angle + Math.Tau * random(cell, 40 + attempt); var p = center + new Vector2((float)Math.Cos(yaw), (float)Math.Sin(yaw)) * (float)(360 + random(cell, 80 + attempt) * 220);
-            double terrain = Height(p.X, p.Y), wet = Water(p.X, p.Y); if (!double.IsFinite(terrain) || !double.IsFinite(wet) || terrain <= wet + 12) continue;
+            if (!CaveHeightSampler.TrySamplePair(height, water, p.X, p.Y, out double terrain, out double wet))
+            { terrain = Height(p.X, p.Y); wet = Water(p.X, p.Y); }
+            if (!double.IsFinite(terrain) || !double.IsFinite(wet) || terrain <= wet + 12) continue;
             double low = terrain, high = terrain;
             foreach (var offset in new[] { new Vector2(8, 0), new Vector2(-8, 0), new Vector2(0, 8), new Vector2(0, -8) }) { double h = Height((double)p.X + offset.X, (double)p.Y + offset.Y); low = Math.Min(low, h); high = Math.Max(high, h); }
             if (high - low > 3) continue;

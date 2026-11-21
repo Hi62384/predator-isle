@@ -22,15 +22,22 @@ public sealed class TerrainRingStream : IDisposable
         private long allocationStart;
         public long AllocatedBytes;
         public long CanonicalEvaluations;
+        public long GpuSampleHits;
+        public int GpuSamples;
+        public bool GpuRejected;
+        public double GpuPreparationMilliseconds;
+        public double GpuMaximumHeightError;
         public void Mark(string next){ulong now=Time.GetTicksUsec();if(start!=0)Milliseconds[Stage]=Milliseconds.GetValueOrDefault(Stage)+(now-start)/1000.0;else allocationStart=GC.GetAllocatedBytesForCurrentThread();start=now;Volatile.Write(ref Stage,next);}
         public void Finish(){Mark("complete");AllocatedBytes=GC.GetAllocatedBytesForCurrentThread()-allocationStart;}
     }
     private readonly Dictionary<string,double> stageMilliseconds=new();
-    private long allocatedWorkerBytes,completedJobs;
-    public Godot.Collections.Dictionary Profile {get{var stages=new Godot.Collections.Dictionary();foreach(var pair in stageMilliseconds)stages[pair.Key]=pair.Value;return new Godot.Collections.Dictionary{["worker_stage_ms"]=stages,["managed_worker_allocated_bytes"]=allocatedWorkerBytes,["completed_jobs"]=completedJobs,["cancelled_jobs"]=CancelledJobs};}}
+    private long allocatedWorkerBytes,completedJobs,gpuSamples,gpuSampleHits,gpuRejected;
+    private double gpuPreparationMilliseconds,gpuMaximumHeightError;
+    public Godot.Collections.Dictionary Profile {get{var stages=new Godot.Collections.Dictionary();foreach(var pair in stageMilliseconds)stages[pair.Key]=pair.Value;return new Godot.Collections.Dictionary{["worker_stage_ms"]=stages,["managed_worker_allocated_bytes"]=allocatedWorkerBytes,["completed_jobs"]=completedJobs,["cancelled_jobs"]=CancelledJobs,["gpu_generated_samples"]=gpuSamples,["gpu_sample_cache_hits"]=gpuSampleHits,["gpu_rejected_batches"]=gpuRejected,["gpu_preparation_ms"]=gpuPreparationMilliseconds,["gpu_maximum_checked_height_error"]=gpuMaximumHeightError};}}
     private sealed record Job(Key Key,TerrainMeshBuilder Builder,CancellationTokenSource Cancellation,Task<TerrainRingMeshGeometry.Data> Task,ulong Started,BuildProgress Progress);
     private sealed record Cached(TerrainRingMeshGeometry.Data Data,long Bytes,LinkedListNode<Key> Order);
     private readonly TerrainRingMeshGeometry geometry;
+    internal TerrainGpuPreparation? GpuPreparation{get;set;}
     private readonly TerrainRingTransitions.Cache transitionCache=new();
     private TerrainSharedSamples sharedSamples=new();
     public bool ShareSamples {get;set;}=true;
@@ -150,7 +157,7 @@ public sealed class TerrainRingStream : IDisposable
         foreach(var job in jobs.Values.ToArray())
         {
             if(!job.Task.IsCompleted)continue;jobs.Remove(job.Key);
-            try{var data=job.Task.GetAwaiter().GetResult();completedJobs++;if(job.Key.Patch.Key.Z==0)NearBuildSeconds=NearBuildSeconds*.8+Math.Clamp((Time.GetTicksUsec()-job.Started)/1000000.0,.001,2)*.2;canonicalEvaluations+=job.Progress.CanonicalEvaluations;allocatedWorkerBytes+=job.Progress.AllocatedBytes;foreach(var pair in job.Progress.Milliseconds)stageMilliseconds[pair.Key]=stageMilliseconds.GetValueOrDefault(pair.Key)+pair.Value;if(job.Key.SourceRevision==revision){Store(job.Key,data);if(wanted.Contains(job.Key))ready[job.Key]=data;else {PrefetchCompletions++;if(cache.ContainsKey(job.Key))prefetched.Add(job.Key);}}}
+            try{var data=job.Task.GetAwaiter().GetResult();completedJobs++;if(job.Key.Patch.Key.Z==0)NearBuildSeconds=NearBuildSeconds*.8+Math.Clamp((Time.GetTicksUsec()-job.Started)/1000000.0,.001,2)*.2;canonicalEvaluations+=job.Progress.CanonicalEvaluations;allocatedWorkerBytes+=job.Progress.AllocatedBytes;gpuSamples+=job.Progress.GpuSamples;gpuSampleHits+=job.Progress.GpuSampleHits;if(job.Progress.GpuRejected)gpuRejected++;gpuPreparationMilliseconds+=job.Progress.GpuPreparationMilliseconds;gpuMaximumHeightError=Math.Max(gpuMaximumHeightError,job.Progress.GpuMaximumHeightError);foreach(var pair in job.Progress.Milliseconds)stageMilliseconds[pair.Key]=stageMilliseconds.GetValueOrDefault(pair.Key)+pair.Value;if(job.Key.SourceRevision==revision){Store(job.Key,data);if(wanted.Contains(job.Key))ready[job.Key]=data;else {PrefetchCompletions++;if(cache.ContainsKey(job.Key))prefetched.Add(job.Key);}}}
             catch(OperationCanceledException){if(wanted.Contains(job.Key)&&!pending.Contains(job.Key))pending.Add(job.Key);}
             catch(Exception error){if(wanted.Contains(job.Key))LastError=error.ToString();else LastRetiredWorkerError=error.ToString();}
             finally{job.Cancellation.Dispose();if(job.Key.SourceRevision==revision&&idle.Count<Math.Max(MaximumWorkers,1))idle.Enqueue((revision,job.Builder));else job.Builder.Dispose();}
@@ -170,7 +177,29 @@ public sealed class TerrainRingStream : IDisposable
         {
             TerrainMeshBuilder builder;try{builder=idle.Count>0?idle.Dequeue().Builder:createBuilder();}catch(Exception error){LastError=error.ToString();pending.Insert(0,key);return;}
             var cancellation=new CancellationTokenSource();var token=cancellation.Token;
-            var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();try{var task=Task.Run(()=>{long evaluations=builder._native_height.CanonicalEvaluations;var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples);progress.CanonicalEvaluations=builder._native_height.CanonicalEvaluations-evaluations;progress.Finish();return data;},token);jobs[key]=new Job(key,builder,cancellation,task,started,progress);}
+            var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();var gpuPreparation=GpuPreparation;
+            try
+            {
+                var task=Task.Run(async ()=>
+                {
+                    long evaluations=builder._native_height.CanonicalEvaluations,hits=builder._native_grass.GpuSampleHits;
+                    if(gpuPreparation is not null)
+                    {
+                        Volatile.Write(ref progress.Stage,"GPU heightmap");ulong gpuStart=Time.GetTicksUsec();
+                        var result=await gpuPreparation.PrepareAsync(builder,key.Patch,key.Resolution,token).ConfigureAwait(false);
+                        progress.GpuPreparationMilliseconds=(Time.GetTicksUsec()-gpuStart)/1000.0;
+                        progress.GpuSamples=result.Samples;progress.GpuRejected=result.Rejected;progress.GpuMaximumHeightError=result.MaximumHeightError;
+                        if(result.Samples>0)geometry.InvalidateHeightFilter(builder);
+                    }
+                    token.ThrowIfCancellationRequested();
+                    // Allocation measurement begins after the await, on the same thread
+                    // that performs the numerical build; thread-local counters cannot span awaits.
+                    var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples);
+                    progress.CanonicalEvaluations=builder._native_height.CanonicalEvaluations-evaluations;
+                    progress.GpuSampleHits=builder._native_grass.GpuSampleHits-hits;progress.Finish();return data;
+                },token);
+                jobs[key]=new Job(key,builder,cancellation,task,started,progress);
+            }
             catch(Exception error){builder.Dispose();cancellation.Dispose();LastError=error.ToString();pending.Insert(0,key);return;}
         }
         TryStartPreparation(allowance);

@@ -297,7 +297,7 @@ public partial class ChunkTerrain : Node3D
     }
     public override void _ExitTree()
     {
-        ringStream?.Dispose();ringStream=null;ringGpuGrids.Clear();
+        ringGpuSampler?.Shutdown();ringStream?.Dispose();ringStream=null;ringGpuSampler=null;ringGpuGrids.Clear();
         foreach (var job in _jobs.Values) WorkerThreadPool.WaitForTaskCompletion(job.AsGodotDictionary()["task"].AsInt64());
         _jobs.Clear(); _workerOutcomes.Clear(); foreach(var stream in CaveStreams())stream.shutdown();authorityCaves.Clear();authorityActors.Clear();
     }

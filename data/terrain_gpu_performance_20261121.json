@@ -1,0 +1,787 @@
+{
+  "schema_version": 1,
+  "recorded_utc": "2026-11-21T20:51:39.869045+00:00",
+  "baseline_commit": "50fa05b9304aae9490a23dade0f009c88ba10ae1",
+  "default_configuration": {
+    "numerical_generation": "CPU",
+    "shared_gpu_render_grids": true,
+    "explicit_gpu_and_auto_generation_available": true
+  },
+  "environment": {
+    "os": "Debian GNU/Linux 13 (Linux 6.18.57 x86_64)",
+    "cpu": "Intel Xeon Platinum 8573C",
+    "dotnet_visible_processors": 9,
+    "dotnet_sdk": "8.0.428",
+    "godot": "4.6.1.stable.mono.official.14d19694e",
+    "rendering_method": "gl_compatibility",
+    "opengl": "4.5 Core Profile",
+    "mesa": "25.0.7-2+deb13u1",
+    "renderer": "llvmpipe (LLVM 19.1.7, 256 bits)",
+    "hardware_gpu_benchmark": false
+  },
+  "methodology": {
+    "repetitions": 3,
+    "order": [
+      [
+        "baseline",
+        "candidate"
+      ],
+      [
+        "candidate",
+        "baseline"
+      ],
+      [
+        "baseline",
+        "candidate"
+      ]
+    ],
+    "clean_processes": 12,
+    "seed": 73921,
+    "patch_resolution": 16,
+    "numerical_backend": "CPU",
+    "terrain_caches": "fresh builder per measured patch; separate warm-up patch",
+    "sampling": "4096 fixed fractional coordinates per case; method warm-up before resetting cache state",
+    "allocation_metric": "GC.GetAllocatedBytesForCurrentThread cumulative allocations during workload, not resident memory",
+    "timed_scope": "Numerical terrain products or sampling. Excludes streaming, render upload, physics installation and game FPS. Hashing/assertions follow generation timing.",
+    "baseline_modifications": "Only existing CS0136 test-local rename, benchmark fixtures and routing; original production generation sources unchanged. Identical explicit Resource graph lifetime fixture on both sides.",
+    "graphics_stress_paused_during_measurement": true,
+    "source_sha256": {
+      "scripts/csharp/terrain/TerrainHeightField.cs": "793fafc2d6be7dd3554c06215edf60f0e6af00b49772760c217db7f5eab0df22",
+      "scripts/csharp/terrain/TerrainParameterSnapshot.cs": "3a2638a20d854dc8248c2c94409756e6b1b8aa0be2bf83e8874edc652d13ed90",
+      "scripts/csharp/terrain/TerrainIslands.cs": "0aa0ed10d22b7028d0363025da62534b3c9f2572eb5112738337d62f60b4971b",
+      "scripts/csharp/terrain/GrasslandField.cs": "47c6577246731abdddae8046d82712a57774b77b508f771a98b3f8ce8e5eae9b",
+      "scripts/csharp/terrain/TerrainRingMeshGeometry.cs": "4a7c22a62f63b9071750e6d9e3450854eff97bf212b759fa0344f9f17b2f2d3d",
+      "scripts/csharp/biomes/TropicalSampler.cs": "1422eaac8715b4f60db7bf01c98124e97b047d3f9f0fbe6a2f7acc690426c249",
+      "scripts/csharp/biomes/BadlandsSampler.cs": "af3b883288cc07d673f5051d4b465bb837ad04a1f3b3b4f28fbc797c8a20688f",
+      "scripts/csharp/biomes/RockyCoastSampler.cs": "b38e16a29e8585a9d4fab749d51b66a32a10abab93e38bf53a9e4d8fb50a9641",
+      "tools/csharp/TerrainBenchmarkResources.cs": "f5c97080c2487c60d62e8e7220facdc54c74c492cf15cbcf50696624c9e22607",
+      "tools/csharp/TerrainGenerationPerformanceChecks.cs": "7c16544e41d9c1cce3768e2c2148cc7d2715d7b42122f05556ab63e9f9ce85dd",
+      "tools/csharp/TerrainSamplingBenchmark.cs": "c915f93a256695f97f8e3f7d80ed2ede9eb4057d6abace3edda958f76cb95b73",
+      "config/world/terrain_settings.tres": "59cf521f57ec644d0ad84d8f64eaa9adfe9ebab75661bca8c4805cc9f9260d76"
+    }
+  },
+  "assembly_sha256": {
+    "baseline": "b97f6337948889a55315509203c6611c8f7de25a4f8c44ae9cd8fb4cae38c694",
+    "candidate": "2e1f5e2ba9ea26efe9405cddae989cdc4fe2d684076ade5f043b8a8dbe42c31d",
+    "current_validation": "8175c5587fab5ed1e0b08ed023fe7ad25fd8a5565a9284ed5ab15d100b52ed5e"
+  },
+  "complete_terrain_products": [
+    {
+      "level": 0,
+      "origin_x": 0.0,
+      "origin_z": 64.0,
+      "size_metres": 16.0,
+      "vertices": 289,
+      "surface_sha256": "d3637d4ffaf86888073b67aa432a2a0a8f976823e941e16d135f13ca5aa02dce",
+      "authoritative_ground_sha256": "e3c80d662120a34703465f30937686b73d0d63e99de20fbdf3d7f6cff295331e",
+      "baseline": {
+        "build_ms_runs": [
+          20.50998,
+          14.85992,
+          22.483712
+        ],
+        "build_ms_median": 20.50998,
+        "managed_allocated_bytes_runs": [
+          1145304,
+          1145304,
+          1145304
+        ],
+        "managed_allocated_bytes_median": 1145304,
+        "canonical_evaluations_runs": [
+          357,
+          357,
+          357
+        ]
+      },
+      "candidate": {
+        "build_ms_runs": [
+          8.82385,
+          8.478451,
+          8.136741
+        ],
+        "build_ms_median": 8.478451,
+        "managed_allocated_bytes_runs": [
+          858592,
+          858592,
+          858592
+        ],
+        "managed_allocated_bytes_median": 858592,
+        "canonical_evaluations_runs": [
+          357,
+          357,
+          357
+        ]
+      },
+      "median_speedup": 2.419071596922598,
+      "managed_allocation_reduction_fraction": 0.2503370284221482,
+      "all_surface_and_ground_hashes_equal": true,
+      "authoritative_ground_is_empty": false
+    },
+    {
+      "level": 2,
+      "origin_x": 0.0,
+      "origin_z": 0.0,
+      "size_metres": 144.0,
+      "vertices": 361,
+      "surface_sha256": "8ca4e1a575ac5e686acd5966100427cb5c76f159dc8d675cf076e4ee8a0e5cf6",
+      "authoritative_ground_sha256": "3c88bf13b58cba9ca7fe10c55db47931f52b52975cf1e9eaa0c9b0ec29c7c6be",
+      "baseline": {
+        "build_ms_runs": [
+          152.850029,
+          142.839108,
+          158.755711
+        ],
+        "build_ms_median": 152.850029,
+        "managed_allocated_bytes_runs": [
+          6834216,
+          6834216,
+          6834216
+        ],
+        "managed_allocated_bytes_median": 6834216,
+        "canonical_evaluations_runs": [
+          2337,
+          2337,
+          2337
+        ]
+      },
+      "candidate": {
+        "build_ms_runs": [
+          37.58962,
+          47.087657,
+          36.936222
+        ],
+        "build_ms_median": 37.58962,
+        "managed_allocated_bytes_runs": [
+          2835744,
+          2835744,
+          2835744
+        ],
+        "managed_allocated_bytes_median": 2835744,
+        "canonical_evaluations_runs": [
+          2337,
+          2337,
+          2337
+        ]
+      },
+      "median_speedup": 4.066282899374881,
+      "managed_allocation_reduction_fraction": 0.5850666704125242,
+      "all_surface_and_ground_hashes_equal": true,
+      "authoritative_ground_is_empty": true
+    },
+    {
+      "level": 4,
+      "origin_x": 0.0,
+      "origin_z": 0.0,
+      "size_metres": 1296.0,
+      "vertices": 361,
+      "surface_sha256": "0f3aa5eb68db7ec6f5ad0aee676ea9342586680a4e0cfcbd92cb9ce2ebb90c1f",
+      "authoritative_ground_sha256": "3c88bf13b58cba9ca7fe10c55db47931f52b52975cf1e9eaa0c9b0ec29c7c6be",
+      "baseline": {
+        "build_ms_runs": [
+          1585.256952,
+          1713.667007,
+          1813.012433
+        ],
+        "build_ms_median": 1713.667007,
+        "managed_allocated_bytes_runs": [
+          82754688,
+          82754688,
+          82754688
+        ],
+        "managed_allocated_bytes_median": 82754688,
+        "canonical_evaluations_runs": [
+          952,
+          952,
+          952
+        ]
+      },
+      "candidate": {
+        "build_ms_runs": [
+          253.521933,
+          285.357428,
+          283.296175
+        ],
+        "build_ms_median": 283.296175,
+        "managed_allocated_bytes_runs": [
+          9965352,
+          9965352,
+          9965352
+        ],
+        "managed_allocated_bytes_median": 9965352,
+        "canonical_evaluations_runs": [
+          952,
+          952,
+          952
+        ]
+      },
+      "median_speedup": 6.049029807762142,
+      "managed_allocation_reduction_fraction": 0.8795796076229543,
+      "all_surface_and_ground_hashes_equal": true,
+      "authoritative_ground_is_empty": true
+    }
+  ],
+  "sampling_workloads": [
+    {
+      "case": "default_height_and_water",
+      "queries": 4096,
+      "checksum": "1d5ed205fc17eda6",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          457.6295,
+          456.2399,
+          474.0634
+        ],
+        "elapsed_ms_median": 457.6295,
+        "managed_allocated_bytes_runs": [
+          62468688,
+          62468688,
+          62468688
+        ],
+        "managed_allocated_bytes_median": 62468688,
+        "canonical_evaluations_runs": [
+          8192,
+          8192,
+          8192
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          331.9442,
+          313.7349,
+          331.8865
+        ],
+        "elapsed_ms_median": 331.8865,
+        "managed_allocated_bytes_runs": [
+          11976064,
+          11976064,
+          11976064
+        ],
+        "managed_allocated_bytes_median": 11976064,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 1.3788735004286103,
+      "managed_allocation_reduction_fraction": 0.8082869292852765
+    },
+    {
+      "case": "default_height_only",
+      "queries": 4096,
+      "checksum": "3d72dfc442407cb8",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          441.1189,
+          480.2032,
+          483.2876
+        ],
+        "elapsed_ms_median": 480.2032,
+        "managed_allocated_bytes_runs": [
+          56608496,
+          56608496,
+          56608496
+        ],
+        "managed_allocated_bytes_median": 56608496,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          359.4432,
+          449.3554,
+          338.6783
+        ],
+        "elapsed_ms_median": 359.4432,
+        "managed_allocated_bytes_runs": [
+          14932344,
+          14932264,
+          14931704
+        ],
+        "managed_allocated_bytes_median": 14932264,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 1.3359640688709649,
+      "managed_allocation_reduction_fraction": 0.7362186764333043
+    },
+    {
+      "case": "grass_height_and_water",
+      "queries": 4096,
+      "checksum": "75f5afa2be4c1109",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          167.4065,
+          250.5163,
+          172.4155
+        ],
+        "elapsed_ms_median": 172.4155,
+        "managed_allocated_bytes_runs": [
+          59530264,
+          59530264,
+          59530264
+        ],
+        "managed_allocated_bytes_median": 59530264,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          88.3005,
+          99.0963,
+          112.1985
+        ],
+        "elapsed_ms_median": 99.0963,
+        "managed_allocated_bytes_runs": [
+          2050536,
+          2050536,
+          2050536
+        ],
+        "managed_allocated_bytes_median": 2050536,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 1.7398782800165093,
+      "managed_allocation_reduction_fraction": 0.9655547302797112
+    },
+    {
+      "case": "grass_height_only",
+      "queries": 4096,
+      "checksum": "75f5afa2be4c1109",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          184.753,
+          189.4112,
+          190.6137
+        ],
+        "elapsed_ms_median": 189.4112,
+        "managed_allocated_bytes_runs": [
+          61283344,
+          61283344,
+          61283344
+        ],
+        "managed_allocated_bytes_median": 61283344,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          141.8566,
+          108.0507,
+          120.2842
+        ],
+        "elapsed_ms_median": 120.2842,
+        "managed_allocated_bytes_runs": [
+          3803616,
+          3803616,
+          3803616
+        ],
+        "managed_allocated_bytes_median": 3803616,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 1.574697258659076,
+      "managed_allocation_reduction_fraction": 0.9379339351977921
+    },
+    {
+      "case": "tropical_height_and_water",
+      "queries": 4096,
+      "checksum": "33fbae847632bb49",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          348.1502,
+          811.2406,
+          380.1465
+        ],
+        "elapsed_ms_median": 380.1465,
+        "managed_allocated_bytes_runs": [
+          20273400,
+          20273400,
+          20273400
+        ],
+        "managed_allocated_bytes_median": 20273400,
+        "canonical_evaluations_runs": [
+          8192,
+          8192,
+          8192
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          170.7401,
+          153.095,
+          136.699
+        ],
+        "elapsed_ms_median": 153.095,
+        "managed_allocated_bytes_runs": [
+          7443368,
+          7443368,
+          7443368
+        ],
+        "managed_allocated_bytes_median": 7443368,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 2.4830758679251446,
+      "managed_allocation_reduction_fraction": 0.6328505332110055
+    },
+    {
+      "case": "tropical_height_only",
+      "queries": 4096,
+      "checksum": "c73e44a5db3fb1ae",
+      "all_double_checksums_equal": true,
+      "baseline": {
+        "elapsed_ms_runs": [
+          397.627,
+          722.2436,
+          411.2734
+        ],
+        "elapsed_ms_median": 411.2734,
+        "managed_allocated_bytes_runs": [
+          24866088,
+          24861560,
+          24864992
+        ],
+        "managed_allocated_bytes_median": 24864992,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "candidate": {
+        "elapsed_ms_runs": [
+          110.0318,
+          134.2841,
+          163.1869
+        ],
+        "elapsed_ms_median": 134.2841,
+        "managed_allocated_bytes_runs": [
+          8154776,
+          8154776,
+          8154776
+        ],
+        "managed_allocated_bytes_median": 8154776,
+        "canonical_evaluations_runs": [
+          4096,
+          4096,
+          4096
+        ]
+      },
+      "median_speedup": 3.0627110730160907,
+      "managed_allocation_reduction_fraction": 0.6720378594933794
+    }
+  ],
+  "validation_checks": [
+    {
+      "mode": "rings",
+      "passed": true,
+      "checks": 2242522,
+      "utc": "2026-11-21T20:45:08.7879070Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "sampling",
+      "passed": true,
+      "checks": 842,
+      "utc": "2026-11-21T20:45:33.1273691Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "gpu-pipeline",
+      "passed": true,
+      "checks": 1925,
+      "utc": "2026-11-21T20:45:26.8517133Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "collision",
+      "passed": true,
+      "checks": 215,
+      "utc": "2026-11-21T20:45:35.2188099Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "authority",
+      "passed": true,
+      "checks": 88,
+      "utc": "2026-11-21T20:45:42.8861560Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "gpu-queues",
+      "passed": true,
+      "checks": 13,
+      "utc": "2026-11-21T20:50:38.3953717Z",
+      "display_server": "X11",
+      "error": ""
+    },
+    {
+      "mode": "gpu-terrain",
+      "passed": true,
+      "checks": 1544,
+      "utc": "2026-11-21T20:50:36.1602947Z",
+      "display_server": "X11",
+      "error": ""
+    },
+    {
+      "mode": "gpu-sampler",
+      "passed": true,
+      "checks": 30,
+      "utc": "2026-11-21T20:50:18.1891524Z",
+      "display_server": "X11",
+      "error": ""
+    },
+    {
+      "mode": "startup",
+      "passed": false,
+      "checks": 0,
+      "utc": "2026-11-21T20:48:44.4775597Z",
+      "display_server": "X11",
+      "error": "Startup or physical move-and-return failed; inspect this run's engine log."
+    },
+    {
+      "mode": "tropical",
+      "passed": true,
+      "checks": 138707,
+      "utc": "2026-11-21T20:08:20.9442523Z",
+      "display_server": "headless",
+      "error": ""
+    },
+    {
+      "mode": "network",
+      "passed": true,
+      "checks": 1024,
+      "utc": "2026-11-21T20:15:02.3847286Z",
+      "display_server": "headless",
+      "error": ""
+    }
+  ],
+  "rendered_gpu_sampler": {
+    "coordinate_bound_metres": 32768,
+    "seeds": [
+      73921,
+      -1789123,
+      2147483711
+    ],
+    "profiles": 2,
+    "height_tolerance_m": 0.01,
+    "control_tolerance": 0.001,
+    "measurements": {
+      "batched_readbacks": 1,
+      "batched_request_ms": 1592.3636,
+      "batched_requests": 3,
+      "batched_unique_raw_samples": 78,
+      "cpu_sample_ms": 90.8154,
+      "gpu_request_ms_including_compile_and_frames": 2104.7782,
+      "gpu_request_ms_per_case": [
+        188.0851,
+        1814.4458,
+        39.299,
+        28.0158,
+        15.8766,
+        19.059
+      ],
+      "maximum_control_error": 2.59876251220703e-05,
+      "maximum_value_error": 0.0054931640625,
+      "readback_bytes": 442368,
+      "readback_ms": 3.754,
+      "samples": 3504,
+      "scalars_compared": 28032
+    },
+    "scope": "Finite default and altered-parameter fixtures over a bounded coordinate range; not a proof for every possible parameter value or coordinate."
+  },
+  "real_gpu_heightmap_collision": {
+    "measurements": {
+      "gpu_sample_hits": 357,
+      "maximum_cpu_height_difference_m": 0.000335693359375,
+      "physics_ray_height_error_m": 0.0,
+      "preparation_ms_including_compile_and_frames": 168.0981,
+      "readback_bytes": 13572,
+      "readback_ms": 1.738,
+      "readbacks": 1,
+      "samples": 357,
+      "visual_collision_vertices_exact": true
+    },
+    "scope": "Forced GPU bake for a 16 m pure-grass near patch. Production builder consumed readback, shared visual/collision vertices exactly matched, and installed Jolt ground was ray-tested. Timing is software rendering with uncontrolled shader-cache state and is not RTX 3060 performance."
+  },
+  "startup_grid": {
+    "passed": false,
+    "utc": "2026-11-21T20:48:44.4775597Z",
+    "measurements": {
+      "cache_state": "uncontrolled",
+      "cave_discovery_seconds": 33.2802209,
+      "first_visible_seconds": 9.8012177,
+      "fixture_started_utc": "2026-11-21T20:45:54.0404191+00:00",
+      "full_coverage_and_cave_bundle_seconds": 51.7681671,
+      "lod0_collision_seconds": 9.8012177,
+      "main_startup_stages": {
+        "cave_setup_and_plan_ms": 65.176,
+        "configuration_ms": 134.41,
+        "initial_position_ms": 36.144,
+        "materials_ms": 1465.038,
+        "surface_resources_ms": 182.894
+      },
+      "ring_progress": {
+        "active": 63,
+        "cache_bytes": 5499882,
+        "cache_hits": 0,
+        "cache_misses": 63,
+        "canonical_evaluations": 71062,
+        "cave_discovery_cache_bytes": 2254282,
+        "cave_discovery_cache_hits": 0,
+        "complete": true,
+        "error": "",
+        "generation": 1,
+        "generation_backend": 0,
+        "gpu_completed_requests": 0,
+        "gpu_completed_samples": 0,
+        "gpu_failed_requests": 0,
+        "gpu_generation_available": false,
+        "gpu_last_failure": "",
+        "gpu_raw_samples": 0,
+        "gpu_readback_bytes": 0,
+        "gpu_readback_ms": 0.0,
+        "gpu_readbacks": 0,
+        "gpu_render_grids": true,
+        "grid_page_bytes_uploaded": 3461472,
+        "grid_page_uploads": 90,
+        "grid_templates_created": 8,
+        "job_stages": [],
+        "jobs": 0,
+        "local_publications": 0,
+        "nearby_published": true,
+        "pending": 0,
+        "prefetch_completions": 0,
+        "prefetch_hits": 0,
+        "prefetch_patches": 0,
+        "profile": {
+          "cancelled_jobs": 0,
+          "completed_jobs": 63,
+          "gpu_generated_samples": 0,
+          "gpu_maximum_checked_height_error": 0.0,
+          "gpu_preparation_ms": 0.0,
+          "gpu_rejected_batches": 0,
+          "gpu_sample_cache_hits": 0,
+          "managed_worker_allocated_bytes": 286053064,
+          "worker_stage_ms": {
+            "collision": 377.229,
+            "feature geometry": 286.771,
+            "filtered normals": 4252.214,
+            "structure geometry": 187.967,
+            "surface samples": 8230.244
+          }
+        },
+        "ready": 63,
+        "requested": 63,
+        "shared_sample_hits": 0,
+        "shared_sample_misses": 0,
+        "shared_samples": false,
+        "staged": 0,
+        "workers": 1
+      },
+      "visible_chunks": 63
+    },
+    "attempts": [
+      {
+        "passed": false,
+        "full_coverage_and_cave_bundle_seconds": 101.3342657,
+        "first_visible_seconds": 39.7161122,
+        "lod0_collision_seconds": 39.7161122,
+        "cave_discovery_seconds": 79.1259157,
+        "failure": "Movement exceeded unchanged 170-second deadline; software rendering and build work overlapped."
+      },
+      {
+        "passed": false,
+        "full_coverage_and_cave_bundle_seconds": 51.7681671,
+        "first_visible_seconds": 9.8012177,
+        "lod0_collision_seconds": 9.8012177,
+        "cave_discovery_seconds": 33.2802209,
+        "observed_movement_nearby_ground_seconds": [
+          13.386,
+          12.089,
+          63.214
+        ],
+        "failure": "Warmed 1920x1080 software-rendered run exceeded unchanged 170-second movement deadline on return; no worker, shader or collision errors."
+      }
+    ]
+  },
+  "known_baseline_failures": [
+    {
+      "mode": "samplers",
+      "message": "Extension FIFO quarry seed=-17 cell=(840,-840) slot=0:311.4959699884967 /311.4959714153545",
+      "tolerance": 1e-12,
+      "reproduced_before_optimization": true
+    },
+    {
+      "mode": "coast",
+      "message": "Coast canonical height:66.62799627279266 /66.62799627279405",
+      "tolerance": 1e-12,
+      "same_failure_in_baseline_and_candidate": true
+    }
+  ],
+  "excluded_exploratory_data": "Early resource-GC-handle error runs and earlier nonfinal timing batches are not used in medians. All 12 retained comparison processes completed with fresh passing semantic reports and no runtime errors.",
+  "limitations": [
+    "No hardware-GPU end-to-end performance or RTX 3060 measurement.",
+    "No minimum-spec or full-game FPS claim.",
+    "Wrapper-process private-memory samples from rendered runs are excluded; they are not engine RAM.",
+    "Far patch ground hashes represent empty authoritative collision payloads.",
+    "Pre-existing strict GDScript-reference failures remain; the full migration suite is not claimed to pass."
+  ],
+  "final_rendered_source_sha256": {
+    "config/world/terrain_rings.tres": "7931788a68b39554fe684f3ba3e91f756b6d48ec3f52965580cd9d098c8fac9a",
+    "scripts/csharp/terrain/ChunkTerrainAuthority.cs": "cf1b223e822e16298b43601d403cef70df8b6f836c1af670b4a73c302a2e27df",
+    "scripts/csharp/terrain/GrasslandGpuCoordinates.cs": "0bf4eeed1b1d6d82ff8cf9e00d2c73af18dccc2615410d3e865f8ad15f10c252",
+    "scripts/csharp/terrain/GrasslandGpuHydrology.cs": "271ba32f4b3ffe19d35760699611ca17b34f9de29bc5f2ecf0226a0713acec5e",
+    "scripts/csharp/terrain/GrasslandGpuParameters.cs": "2f63e5423a46fb520cbcc6a824f7d57982523c231c8581f7acf03d87534f70da",
+    "scripts/csharp/terrain/GrasslandGpuSamplePlan.cs": "ed1130ea274129313a6d9f60c895356b756ecb5a0cea08125b316b01e33ccfdf",
+    "scripts/csharp/terrain/GrasslandGpuSamples.cs": "4ee82d03b9c767ab8aceeabf5a6948ae41898375ca656025eb8c708fc6a1c041",
+    "scripts/csharp/terrain/TerrainCollision.cs": "60e1b25174b278f9b5dab7689a97d55686b81b60ec555b55692ff07c09719a27",
+    "scripts/csharp/terrain/TerrainGpuGridPage.cs": "fb5a69ffc94141d85da0a2badecec23ae7c9c60030732172d594a040bd29456d",
+    "scripts/csharp/terrain/TerrainGpuGrids.cs": "6787c685f8484d0194d1d388fe65593f59f8097fe72358e2e4f175705da07885",
+    "scripts/csharp/terrain/TerrainGpuPreparation.cs": "7d465bd5ace7175e12955ccecdf3b5185c630d109fb399f75b959fdd124658fd",
+    "scripts/csharp/terrain/TerrainGpuSamplePlan.cs": "175cd64c6eba7f4b28665fa4170022cfecf5cc6741975639c0c82593916aba96",
+    "scripts/csharp/terrain/TerrainGpuSampler.cs": "d677869e6d1af55ceca4ca8fcc0ab1cad063a63cf0d75513534c0e04d4c0d6cd",
+    "scripts/csharp/terrain/TerrainRingTransitions.cs": "b825a36e56d53b9968ac37e18fe6e83e0bb0e7f514bd9a4be8dd9cdb334189ef",
+    "shaders/grassland_gpu.gdshader": "a60c65eea04e79c2fe573c4e68145f3fd1fef505ec01a13c7dff2a6e94c4a8a1",
+    "shaders/grassland_gpu_noise.gdshaderinc": "6cadcbdcba8eb95f4363cfa57b66adc1427cf747ae069b00391add14475c53ce",
+    "shaders/terrain_grid_vertex.gdshaderinc": "a00e0d93f4f2b279a01846df64b557bf341ecaccb7bacffc4e5e69ad5874d3b9"
+  },
+  "formatting_after_validation": {
+    "path": "shaders/grassland_gpu_noise.gdshaderinc",
+    "change": "Removed one trailing blank line; shader tokens are unchanged.",
+    "tested_sha256": "6e3c7ef2d46299b72701428882cf70f07cb21a1b8243325cba4579ce170be499",
+    "final_sha256": "6cadcbdcba8eb95f4363cfa57b66adc1427cf747ae069b00391add14475c53ce"
+  }
+}

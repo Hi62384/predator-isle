@@ -14,7 +14,7 @@ internal static class TerrainRingChecks
         TerrainSharedSampleChecks.Run(require);
         // In-flight and cancelled keys must never prevent later runnable work.
         var pending=new List<int>{1,2,3,4};var wanted=new HashSet<int>{1,2,3};var busy=new HashSet<int>{1,3};
-        require(TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out int next)&&next==2&&
+        require(TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out int dequeuedKey)&&dequeuedKey==2&&
                 pending.SequenceEqual(new[]{3,4,1}),"A busy terrain job starved runnable patches behind it");
         require(!TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out _)&&
                 pending.SequenceEqual(new[]{3,1}),"A fully blocked terrain queue did not terminate safely");
@@ -26,6 +26,7 @@ internal static class TerrainRingChecks
             foreach(var p in predicted)require(p.Key.Z==0&&Math.Abs(p.Key.X-(int)Math.Floor(point.X/16))<=4&&Math.Abs(p.Key.Y-(int)Math.Floor(point.Y/16))<=4,"Prefetch escaped its bounded local neighborhood");
         }
         var topology=new TerrainRingTopology();var layout=new TerrainRingLayout(16,6);
+        CheckMixedBackendSeams(require,topology);
         {
             var raw=Surface(new TerrainRingLayout.Patch(new Vector3I(-1,2,0),16,TerrainRingLayout.Mask.None),topology);var data=raw with{GpuPage=TerrainGpuGridPage.Create(raw.Arrays,raw.Topology.Axis.Length)};
             var grids=new TerrainGpuGrids();require(ReferenceEquals(grids.Template(data.Topology),grids.Template(data.Topology)),"Grid instances did not share the actual mesh resource");
@@ -123,5 +124,85 @@ internal static class TerrainRingChecks
         var grid=topology.Get(16,patch.Key.Z>0,patch.Hole);int row=grid.Axis.Length,count=grid.VertexCount;var vertices=new Vector3[count];var normals=new Vector3[count];var colors=new Color[count];var uv=new Vector2[count];var controls=new float[count*4];var axis=grid.Axis.Span;
         for(int z=0;z<row;z++)for(int x=0;x<row;x++){double lx=patch.Size*axis[x]/grid.Denominator,lz=patch.Size*axis[z]/grid.Denominator;int i=z*row+x;vertices[i]=new Vector3((float)lx,(float)(Math.Sin((patch.OriginX+lx)*.003)*3+Math.Cos((patch.OriginZ+lz)*.002)),(float)lz);normals[i]=Vector3.Up;colors[i]=new Color(0,0,0,1);uv[i]=new Vector2(1000,0);controls[i*4]=255*65536;}
         var arrays=new A();arrays.Resize((int)Mesh.ArrayType.Max);arrays[(int)Mesh.ArrayType.Vertex]=vertices;arrays[(int)Mesh.ArrayType.Normal]=normals;arrays[(int)Mesh.ArrayType.Color]=colors;arrays[(int)Mesh.ArrayType.TexUV]=uv;for(int i=0;i<3;i++)arrays[(int)Mesh.ArrayType.Custom0+i]=new float[count*4];arrays[(int)Mesh.ArrayType.Custom3]=controls;arrays[(int)Mesh.ArrayType.Index]=grid.Indices.ToArray();return new(patch,grid,arrays,Array.Empty<byte>(),0,0,-1,Array.Empty<byte>(),0);
+    }
+
+    private static void CheckMixedBackendSeams(Action<bool,string> require,TerrainRingTopology topology)
+    {
+        int totalMultipleCoarse=0;
+        // (16,16) aligns the finest footprint with a coarse cell, so its corners
+        // meet two different coarse owners. Offset layouts exercise masked cells.
+        foreach(var focus in new[]{Vector2.Zero,new Vector2(16,16),new Vector2(15.99f,47.99f),new Vector2(-49,-145)})
+        {
+            var plan=new TerrainRingLayout(16,6).Select(focus);
+            var source=plan.Patches.Select(p=>Surface(p,topology)).ToArray();
+            var originalArrays=new byte[source.Length][];var originalGround=new byte[source.Length][];
+            for(int patchIndex=0;patchIndex<source.Length;patchIndex++)
+            {
+                var data=source[patchIndex];var arrays=data.Arrays;var vertices=arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+                float offset=(patchIndex%3-1)*.002f;
+                for(int i=0;i<vertices.Length;i++)vertices[i].Y+=offset;
+                var normals=Enumerable.Repeat(new Vector3(offset*.05f,1,offset*.03f).Normalized(),vertices.Length).ToArray();
+                arrays[(int)Mesh.ArrayType.Vertex]=vertices;arrays[(int)Mesh.ArrayType.Normal]=normals;
+                data=data with{AuthoritativeGround=arrays,Collision=new Godot.Collections.Dictionary{["ground_faces"]=vertices.Take(3).ToArray()}};
+                if(patchIndex%2==0)
+                {
+                    var products=new TerrainVertexProducts(vertices,normals,arrays[(int)Mesh.ArrayType.Color].AsColorArray(),arrays[(int)Mesh.ArrayType.TexUV].AsVector2Array(),new Vector2[vertices.Length],
+                        arrays[(int)Mesh.ArrayType.Custom0].AsFloat32Array(),arrays[(int)Mesh.ArrayType.Custom1].AsFloat32Array(),arrays[(int)Mesh.ArrayType.Custom2].AsFloat32Array(),arrays[(int)Mesh.ArrayType.Custom3].AsFloat32Array());
+                    data=data with{Products=products,Arrays=null!};
+                }
+                source[patchIndex]=data;originalArrays[patchIndex]=GD.VarToBytes(data.Arrays);originalGround[patchIndex]=GD.VarToBytes(data.AuthoritativeGround);
+            }
+            var cache=new TerrainRingTransitions.Cache();
+            var first=TerrainRingTransitions.Stitch(plan,source,cache:cache,gpuPages:true);
+            require(cache.Boundaries.Count>0,"Mixed CPU/GPU fixture did not exercise differing same-level endpoints");
+            var second=TerrainRingTransitions.Stitch(plan,source.Reverse(),cache:cache,gpuPages:true);
+            require(cache.Hits==source.Length&&cache.BoundaryHits>0&&first.Meshes.Zip(second.Meshes).All(pair=>ReferenceEquals(pair.First,pair.Second)&&pair.First.ProductRevision==pair.Second.ProductRevision),
+                "Repeated mixed-backend cut rebuilt normalized products or depended on worker completion order");
+            var reordered=TerrainRingTransitions.Stitch(plan with{Patches=plan.Patches.Reverse().ToArray()},source);
+            var reorderedByKey=reordered.Meshes.ToDictionary(data=>data.Patch.Key);
+            for(int i=0;i<source.Length;i++)
+            {
+                require(GD.VarToBytes(source[i].Arrays).SequenceEqual(originalArrays[i]),"Seam normalization mutated an original visual product");
+                require(ReferenceEquals(first.Meshes[i].AuthoritativeGround,source[i].AuthoritativeGround)&&ReferenceEquals(first.Meshes[i].Collision,source[i].Collision)&&GD.VarToBytes(first.Meshes[i].AuthoritativeGround).SequenceEqual(originalGround[i]),
+                    "Visual seam normalization changed canonical collision data");
+                require(first.Meshes[i].Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().SequenceEqual(reorderedByKey[source[i].Patch.Key].Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array()),
+                    "Same-level seam ownership depended on the plan enumeration order");
+            }
+            var byKey=first.Meshes.ToDictionary(data=>data.Patch.Key);
+            var shared=new Dictionary<(int Level,double X,double Z),float>();int sameLevel=0,multipleCoarse=0;
+            foreach(var data in first.Meshes)
+            {
+                int row=data.Topology.Axis.Length;var axis=data.Topology.Axis.Span;var vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();var used=data.Topology.Indices.ToArray().ToHashSet();
+                var coarseOwners=new Dictionary<int,HashSet<Vector3I>>();
+                for(int i=0;i<row;i++){Edge(i,0,-.001);Edge((row-1)*row+i,0,.001);Edge(i*row,-.001,0);Edge(i*row+row-1,.001,0);}
+                foreach(var pair in coarseOwners)if(pair.Value.Count>1)multipleCoarse++;
+                var boundary=new HashSet<int>();for(int i=0;i<row;i++){boundary.Add(i);boundary.Add((row-1)*row+i);boundary.Add(i*row);boundary.Add(i*row+row-1);}
+                foreach(int index in boundary)
+                {
+                    if(!used.Contains(index))continue;
+                    var key=(data.Patch.Key.Z,data.Patch.OriginX+data.Patch.Size*axis[index%row]/data.Topology.Denominator,data.Patch.OriginZ+data.Patch.Size*axis[index/row]/data.Topology.Denominator);
+                    if(shared.TryGetValue(key,out float prior)){sameLevel++;require(Math.Abs((double)prior-vertices[index].Y)<.000001,"Same-level emitted terrain edges retained a mixed-backend crack");}
+                    else shared.Add(key,vertices[index].Y);
+                }
+                void Edge(int index,double dx,double dz)
+                {
+                    if(!used.Contains(index))return;
+                    var point=vertices[index];double x=data.Patch.OriginX+point.X,z=data.Patch.OriginZ+point.Z;
+                    double px=dx==0?Math.Clamp(x,data.Patch.OriginX+.001,data.Patch.OriginX+data.Patch.Size-.001):x+dx;
+                    double pz=dz==0?Math.Clamp(z,data.Patch.OriginZ+.001,data.Patch.OriginZ+data.Patch.Size-.001):z+dz;
+                    var owner=plan.Owner(px,pz);if(owner is null||owner.Value.Key.Z<=data.Patch.Key.Z)return;
+                    if(!coarseOwners.TryGetValue(index,out var owners))coarseOwners[index]=owners=new HashSet<Vector3I>();owners.Add(owner.Value.Key);
+                    var coarse=byKey[owner.Value.Key];var knots=coarse.Topology.Axis.Span;var points=coarse.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+                    double ux=(x-coarse.Patch.OriginX)/coarse.Patch.Size*coarse.Topology.Denominator,uz=(z-coarse.Patch.OriginZ)/coarse.Patch.Size*coarse.Topology.Denominator;
+                    int ix=0,iz=0;while(ix<knots.Length-2&&knots[ix+1]<=ux)ix++;while(iz<knots.Length-2&&knots[iz+1]<=uz)iz++;
+                    double tx=Math.Clamp((ux-knots[ix])/(knots[ix+1]-knots[ix]),0,1),tz=Math.Clamp((uz-knots[iz])/(knots[iz+1]-knots[iz]),0,1);int a=iz*knots.Length+ix;
+                    double h0=points[a].Y+((double)points[a+1].Y-points[a].Y)*tx,h1=points[a+knots.Length].Y+((double)points[a+knots.Length+1].Y-points[a+knots.Length].Y)*tx;
+                    require(Math.Abs(point.Y-(h0+(h1-h0)*tz))<.000001,"Mixed-backend fine edge did not follow its finalized coarse owner");
+                }
+            }
+            require(sameLevel>0,"Mixed-backend fixture did not cover shared same-level edges");totalMultipleCoarse+=multipleCoarse;
+            cache.Clear();require(cache.Entries.Count==0&&cache.Boundaries.Count==0,"Transition release retained normalized source products");
+        }
+        require(totalMultipleCoarse>0,"Mixed-backend fixtures did not cover two-coarse-owner corners");
     }
 }

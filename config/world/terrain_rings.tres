@@ -4,6 +4,8 @@
 
 [resource]
 script = ExtResource("1")
+gpu_render_grids = true
+generation_backend = 0
 base_patch_metres = 16.0
 outer_rings = 6
 profile = 1

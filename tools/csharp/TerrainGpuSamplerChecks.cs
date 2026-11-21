@@ -1,0 +1,105 @@
+using Godot;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Threading;
+using System.Threading.Tasks;
+using PredatorIsle.Terrain;
+
+namespace PredatorIsle.Checks;
+
+/// <summary>Runs the actual fragment shader and compares decoded GPU data with the CPU field.</summary>
+public static class TerrainGpuSamplerChecks
+{
+    public static Godot.Collections.Dictionary Measurements {get;private set;}=new();
+    public static async Task Run(Node host,Action<bool,string> require)
+    {
+        require(DisplayServer.GetName()!="headless","GPU sampler checks require a rendered Compatibility viewport.");
+        var sampler=new TerrainGpuSampler{RequestTimeoutSeconds=120};host.AddChild(sampler);
+        require(sampler.Available,"GPU sampler was not available.");
+        var points=new List<Vector2>();
+        foreach(var origin in new[]{new Vector2(0,0),new Vector2(-811,721),new Vector2(5100,-8400),new Vector2(27000,17000),new Vector2(16000,-16000),new Vector2(-16000,16000),new Vector2(32744,32744),new Vector2(-32768,-32768)})
+            for(int z=0;z<7;z++)for(int x=0;x<7;x++)points.Add(origin+new Vector2(x*3.25f,z*2.5f));
+        var random=new Random(7143);
+        for(int i=0;i<192;i++)points.Add(new Vector2((float)(random.NextDouble()*65500-32750),(float)(random.NextDouble()*65500-32750)));
+        var samples=points.ToArray();
+        double maxValueError=0,maxControlError=0,totalCpuMs=0,totalGpuMs=0;
+        int compared=0;var gpuTimes=new List<double>();
+        try
+        {
+            foreach(long seed in new long[]{73921,-1789123,2147483711})
+            for(int profile=0;profile<2;profile++)
+            {
+                using var settings=new TerrainConfiguration();
+                if(profile==1){settings.grass_field_spacing=2.5;settings.grass_river_frequency=2.25;settings.grass_lake_frequency=1;settings.grass_plateau_frequency=.65;settings.grass_mountain_frequency=.65;settings.grass_mountain_height=750;settings.grass_fractal_strength=18;}
+
+                using var builder=new TerrainMeshBuilder{settings=settings,world_seed=seed};builder._configure_noise();
+                var field=builder._native_grass;var expected=new float[samples.Length*8];
+                var timer=Stopwatch.StartNew();
+                for(int i=0;i<samples.Length;i++)
+                {
+                    var point=samples[i];var value=field.sample(point.X,point.Y);var surface=field.last_surface;var geology=field.last_geology;
+                    expected[i*8]=value.X;expected[i*8+1]=value.Y;expected[i*8+2]=value.Z;
+                    expected[i*8+3]=surface.X;expected[i*8+4]=surface.Y;
+                    expected[i*8+5]=geology.X;expected[i*8+6]=geology.Y;expected[i*8+7]=geology.Z;
+                }
+                totalCpuMs+=timer.Elapsed.TotalMilliseconds;
+                timer.Restart();
+                using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(120));
+                var actual=await sampler.SampleAsync(field,samples,timeout.Token);
+                totalGpuMs+=timer.Elapsed.TotalMilliseconds;gpuTimes.Add(timer.Elapsed.TotalMilliseconds);
+                require(actual is not null,"GPU generation failed: "+sampler.LastFailure);
+                require(actual!.Length==expected.Length,"GPU sample count changed.");
+                double seedValueError=0,seedControlError=0;
+                for(int i=0;i<actual.Length;i++)
+                {
+                    double error=Math.Abs(actual[i]-expected[i]);
+                    if(i%8 is 0 or 2)seedValueError=Math.Max(seedValueError,error);else seedControlError=Math.Max(seedControlError,error);
+                    if(error>.01&&(i%8 is 0 or 2))GD.Print($"GPU mismatch seed={seed} profile={profile} point={samples[i/8]} component={i%8} CPU={expected[i]:R} GPU={actual[i]:R} error={error:R}");
+                    compared++;
+                }
+                maxValueError=Math.Max(maxValueError,seedValueError);maxControlError=Math.Max(maxControlError,seedControlError);
+                GD.Print($"GPU sampler seed={seed} profile={profile} max value error={seedValueError:R}, control={seedControlError:R}");
+            }
+            Measurements=new(){["samples"]=samples.Length*6,["scalars_compared"]=compared,["maximum_value_error"]=maxValueError,["maximum_control_error"]=maxControlError,["cpu_sample_ms"]=totalCpuMs,["gpu_request_ms_including_compile_and_frames"]=totalGpuMs,["readback_ms"]=sampler.ReadbackMilliseconds,["readback_bytes"]=sampler.ReadbackBytes,["gpu_request_ms_per_case"]=gpuTimes.ToArray()};
+            require(maxValueError<=.01,"GPU grassland heights exceeded the 0.01 m parity budget: "+maxValueError);
+            require(maxControlError<=.001,"GPU grassland material controls exceeded the 0.001 parity budget: "+maxControlError);
+            using var cancelled=new CancellationTokenSource();cancelled.Cancel();
+            using var cancellationSettings=new TerrainConfiguration();using var cancellationBuilder=new TerrainMeshBuilder{settings=cancellationSettings};cancellationBuilder._configure_noise();
+            require(await sampler.SampleAsync(cancellationBuilder._native_grass,samples,cancelled.Token) is null,"Cancelled GPU request did not fall back.");
+            var fieldForChecks=cancellationBuilder._native_grass;
+            long beforeReadbacks=sampler.Readbacks;
+            foreach(float coordinate in new[]{100000f,-100000f,1000000f,-1000000f})
+                require(await sampler.SampleAsync(fieldForChecks,[new Vector2(coordinate,0)]) is null,"Coordinates outside the validated range did not fall back.");
+            require(await sampler.SampleAsync(fieldForChecks,[new Vector2(float.NaN,0)]) is null,"Non-finite coordinate did not fall back.");
+            require(sampler.Readbacks==beforeReadbacks,"Unsupported coordinates dispatched graphics work.");
+            using var fractionalSettings=new TerrainConfiguration{grass_field_spacing=2.3};
+            using var fractionalBuilder=new TerrainMeshBuilder{settings=fractionalSettings};fractionalBuilder._configure_noise();
+            require(await sampler.SampleAsync(fractionalBuilder._native_grass,[new Vector2(7.25f,13.5f)]) is null,"Inexact coarse field coordinates did not use the CPU fallback.");
+            fieldForChecks.region.NoiseType=FastNoiseLite.NoiseTypeEnum.Perlin;
+            require(await sampler.SampleAsync(fieldForChecks,[Vector2.Zero]) is null,"Unsupported noise configuration did not fall back.");
+            fieldForChecks.region.NoiseType=FastNoiseLite.NoiseTypeEnum.SimplexSmooth;
+
+            var batchPoints=samples.AsSpan(0,49).ToArray();
+            double batchStep=Math.Min(cancellationSettings.grass_field_spacing,Math.Max(1,cancellationSettings.grass_river_width*.25));
+            var batchPlan=GrasslandGpuSamplePlan.Create(batchPoints,batchStep)!;
+            long previousSamples=sampler.GeneratedRawSamples;beforeReadbacks=sampler.Readbacks;
+            var batchTimer=Stopwatch.StartNew();
+            // Three ready workers with the same world must share one render and one
+            // readback. These submissions happen before yielding to the next frame.
+            var batchA=sampler.SampleAsync(fieldForChecks,batchPoints);
+            var batchB=sampler.SampleAsync(fieldForChecks,batchPoints);
+            var batchC=sampler.SampleAsync(fieldForChecks,batchPoints);
+            require(sampler.QueuedRequests==3,"Expected all three requests in the pending batch.");
+            var batch=await Task.WhenAll(batchA,batchB,batchC);
+            require(batch[0] is not null&&batch[1] is not null&&batch[2] is not null,"Batched GPU request did not complete.");
+            require(batch[0]!.AsSpan().SequenceEqual(batch[1])&&batch[0]!.AsSpan().SequenceEqual(batch[2]),"Shared GPU samples changed between workers.");
+            require(sampler.Readbacks-beforeReadbacks==1,"Compatible worker requests did not share a single readback.");
+            require(sampler.GeneratedRawSamples-previousSamples==batchPlan.RawPositions.Length,"Neighboring requests regenerated duplicate raw samples.");
+            Measurements["batched_requests"]=3;Measurements["batched_readbacks"]=sampler.Readbacks-beforeReadbacks;
+            Measurements["batched_unique_raw_samples"]=sampler.GeneratedRawSamples-previousSamples;
+            Measurements["batched_request_ms"]=batchTimer.Elapsed.TotalMilliseconds;
+        }
+        finally{sampler.Shutdown();sampler.Free();}
+    }
+}

@@ -60,16 +60,38 @@ public partial class ChunkTerrain
     {
         var columns=new D();foreach(var stream in CaveStreams())if(stream._surface_transaction is not null&&stream._surface_transaction.committed)foreach(var column in stream._surface_columns.Keys)columns[column]=true;return columns;
     }
+    private long AuthorityGroundCutSignature()
+    {
+        long signature=17;
+        unchecked
+        {
+            foreach(var stream in CaveStreams())
+            {
+                var transaction=stream._surface_transaction;
+                signature=signature*31+(long)(transaction?.GetInstanceId()??0);
+                // A prepared transaction may commit without changing its identity.
+                signature=signature*31+(transaction?.committed==true?1:0);
+            }
+        }
+        return signature;
+    }
     private void ApplyAuthorityGroundCuts(MeshInstance3D node)
     {
-        if(!authority_only||node.Mesh is null)return;var shape=node.GetNodeOrNull<CollisionShape3D>("NearTerrainCollision/Heightfield");if(shape is null)return;
+        if(!authority_only||!terrain_collision_enabled||node.Mesh is null)return;var shape=node.GetNodeOrNull<CollisionShape3D>("NearTerrainCollision/Heightfield");if(shape is null)return;
+        long signature=AuthorityGroundCutSignature(),source=unchecked((long)node.Mesh.GetInstanceId()),installed=unchecked((long)(shape.Shape?.GetInstanceId()??0));
+        // Actor-interest refreshes must not rebuild an unchanged physics BVH each
+        // second. A new mesh, cave transaction, or replaced shape invalidates this.
+        if(node.GetMeta("authority_ground_source",-1L).AsInt64()==source&&
+           node.GetMeta("authority_ground_cut",long.MinValue).AsInt64()==signature&&
+           node.GetMeta("authority_ground_shape",-1L).AsInt64()==installed)return;
         var data=node.Mesh.GetMeta("collision_data",new D()).AsGodotDictionary();if(!data.TryGetValue("ground_faces",out var raw))return;var faces=raw.AsVector3Array();if(faces.Length==0)return;
         var columns=AuthorityColumns();if(columns.Count>0){var clipped=authoritySurfaceCut.ground(faces,node.GlobalPosition,columns);if(!clipped["valid"].AsBool())throw new InvalidOperationException("Authoritative cave ground subtraction rejected.");faces=clipped["faces"].AsVector3Array();}
         shape.Shape=faces.Length==0?null:new ConcavePolygonShape3D{Data=faces};shape.Transform=Transform3D.Identity;
+        node.SetMeta("authority_ground_source",source);node.SetMeta("authority_ground_cut",signature);node.SetMeta("authority_ground_shape",unchecked((long)(shape.Shape?.GetInstanceId()??0)));
     }
     private void RefreshAuthorityGroundCuts()
     {
-        if(!authority_only)return;long signature=17;unchecked{foreach(var stream in CaveStreams())signature=signature*31+(long)(stream._surface_transaction?.GetInstanceId()??0);}
+        if(!authority_only)return;long signature=AuthorityGroundCutSignature();
         if(signature==authorityCutSignature)return;authorityCutSignature=signature;foreach(var value in _active_chunks.Values)ApplyAuthorityGroundCuts(Obj<MeshInstance3D>(value));
     }
     private TerrainRingLayout.Plan AuthorityPlan(Vector2 focus,IEnumerable<Rect2> detail)

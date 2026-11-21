@@ -19,6 +19,19 @@ public partial class AuthorityRuntimeCheck:Node
             Require(terrain.register_collision_actor(1,actors[0])&&terrain.register_collision_actor(2,actors[1]),"Server rejected valid actors");
             await WaitForActors(terrain,1,2);var query=PhysicsRayQueryParameters3D.Create(new Vector3(-714,2000,-548),new Vector3(-714,-1000,-548),1);
             using(query)Require(actors[0].GetWorld3D().DirectSpaceState.IntersectRay(query).Count>0,"Server actor has no physical ground");
+            var key = new Vector3I((int)Math.Floor(actors[0].GlobalPosition.X / 16), (int)Math.Floor(actors[0].GlobalPosition.Z / 16), 0);
+            var resident = terrain.Get("_active_chunks").AsGodotDictionary()[key].As<MeshInstance3D>();
+            var residentShape = resident.GetNode<CollisionShape3D>("NearTerrainCollision/Heightfield");
+            Require(residentShape.Shape is not null, "Authoritative retention fixture has no ground shape");
+            ulong shapeId = residentShape.Shape!.GetInstanceId(), nodeId = resident.GetInstanceId();
+            await ToSignal(GetTree().CreateTimer(1.25), SceneTreeTimer.SignalName.Timeout);
+            await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+            var retained = terrain.Get("_active_chunks").AsGodotDictionary()[key].As<MeshInstance3D>();
+            Require(retained.GetInstanceId() == nodeId && retained.GetNode<CollisionShape3D>("NearTerrainCollision/Heightfield").Shape?.GetInstanceId() == shapeId,
+                "Stable authoritative actor refresh rebuilt resident ground collision");
+            using (var retainedQuery = PhysicsRayQueryParameters3D.Create(new Vector3(-714, 2000, -548), new Vector3(-714, -1000, -548), 1))
+                Require(terrain.collision_actor_ready(1) && actors[0].GetWorld3D().DirectSpaceState.IntersectRay(retainedQuery).Count > 0,
+                    "Retained authoritative collision stopped supporting the actor");
             for(int i=2;i<16;i++)Require(terrain.register_collision_actor(i+1,actors[i]),"Server rejected an actor below the supported limit");
             Require(!terrain.register_collision_actor(17,actors[16]),"Server accepted more than 16 actors");
             for(int i=1;i<=16;i++)terrain.unregister_collision_actor(i);

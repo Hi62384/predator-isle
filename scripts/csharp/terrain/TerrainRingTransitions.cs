@@ -13,9 +13,11 @@ public static class TerrainRingTransitions
     public sealed class Cache
     {
         internal Dictionary<string,(TerrainRingMeshGeometry.Data Data,int Count,double Adjustment)> Entries=new();
+        internal Dictionary<string,(TerrainRingMeshGeometry.Data Data,int Count,double Adjustment)> Boundaries=new();
         public long Hits{get;internal set;}
         public long Misses{get;internal set;}
-        public void Clear()=>Entries.Clear();
+        public long BoundaryHits{get;internal set;}
+        public void Clear(){Entries.Clear();Boundaries.Clear();}
     }
     private sealed class Working
     {
@@ -24,14 +26,19 @@ public static class TerrainRingTransitions
         public Working(TerrainRingMeshGeometry.Data data,bool mutable=true)
         {
             if(data.Products is TerrainVertexProducts products){Vertices=mutable?(Vector3[])products.Vertices.Clone():products.Vertices;Normals=mutable?(Vector3[])products.Normals.Clone():products.Normals;Data=mutable?data with{Products=products with{Vertices=Vertices,Normals=Normals},Arrays=null!}:data;}
-            else{Data=data with{Arrays=data.Arrays.Duplicate()};Vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();Normals=data.Arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();}
+            else{Data=mutable?data with{Arrays=data.Arrays.Duplicate()}:data;Vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();Normals=data.Arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();}
         }
         public void Publish(){if(Data.Products is not null)return;Data.Arrays[(int)Mesh.ArrayType.Vertex]=Vertices;Data.Arrays[(int)Mesh.ArrayType.Normal]=Normals;}
     }
     public static Result Stitch(TerrainRingLayout.Plan plan,IEnumerable<TerrainRingMeshGeometry.Data> source,Func<bool>? cancelled=null,Cache? cache=null,bool gpuPages=false)
     {
         var originals=source.ToDictionary(m=>m.Patch.Key);var final=new Dictionary<Vector3I,TerrainRingMeshGeometry.Data>();var meshes=new Dictionary<Vector3I,Working>();var next=new Dictionary<string,(TerrainRingMeshGeometry.Data Data,int Count,double Adjustment)>();
-        foreach(var patch in plan.Patches)if(!originals.TryGetValue(patch.Key,out var value)||value.Patch!=patch)throw new InvalidOperationException("A complete, matching ring cut is required before stitching.");int stitched=0;double maxAdjustment=0,epsilon=plan.BaseSize*.0001;
+        foreach(var patch in plan.Patches)if(!originals.TryGetValue(patch.Key,out var value)||value.Patch!=patch)throw new InvalidOperationException("A complete, matching ring cut is required before stitching.");
+        // Adjacent workers can use a GPU batch or its CPU fallback independently.
+        // Reconcile their shared raw endpoints before coarser-edge interpolation;
+        // otherwise a fine corner can see two valid but millimetres-apart owners.
+        NormalizeBoundaries(plan,originals,cancelled,cache,out int stitched,out double maxAdjustment);
+        double epsilon=plan.BaseSize*.0001;
         // Coarser rings are finalized first, so a corner shared by three levels has one height.
         foreach(var patch in plan.Patches.OrderByDescending(p=>p.Key.Z))
         {
@@ -75,6 +82,65 @@ public static class TerrainRingTransitions
             }
         }
         if(cache is not null)cache.Entries=next;return new Result(plan.Patches.Select(p=>final[p.Key]).ToArray(),stitched,maxAdjustment);
+    }
+    private readonly record struct BoundaryKey(int Level,double X,double Z);
+    private readonly record struct BoundaryOwner(Vector3I Patch,int Index);
+    private static void NormalizeBoundaries(TerrainRingLayout.Plan plan,Dictionary<Vector3I,TerrainRingMeshGeometry.Data> originals,
+        Func<bool>? cancelled,Cache? cache,out int count,out double adjustment)
+    {
+        var owners=new Dictionary<BoundaryKey,BoundaryOwner>();
+        var views=new Dictionary<Vector3I,Working>();
+        // Sorted ownership makes the choice independent of worker completion and
+        // input enumeration. A shared vertex always takes one original product.
+        foreach(var patch in plan.Patches.OrderBy(p=>p.Key.X).ThenBy(p=>p.Key.Y))
+        {
+            if(cancelled?.Invoke()==true)throw new OperationCanceledException();
+            var data=originals[patch.Key];views.Add(patch.Key,new Working(data,false));
+            foreach(int index in BoundaryIndices(data.Topology.Axis.Length))
+                owners.TryAdd(WorldKey(data,index),new BoundaryOwner(patch.Key,index));
+        }
+        var next=new Dictionary<string,(TerrainRingMeshGeometry.Data Data,int Count,double Adjustment)>();
+        count=0;adjustment=0;
+        foreach(var patch in plan.Patches)
+        {
+            if(cancelled?.Invoke()==true)throw new OperationCanceledException();
+            var original=originals[patch.Key];var source=views[patch.Key];
+            var updates=new List<(int Index,float Height,Vector3 Normal)>();var dependencies=new HashSet<long>();
+            double maximum=0;
+            foreach(int index in BoundaryIndices(original.Topology.Axis.Length))
+            {
+                var owner=owners[WorldKey(original,index)];if(owner.Patch==patch.Key)continue;
+                var winner=views[owner.Patch];float height=winner.Vertices[owner.Index].Y;var normal=winner.Normals[owner.Index];
+                if(source.Vertices[index].Y==height&&source.Normals[index]==normal)continue;
+                updates.Add((index,height,normal));dependencies.Add(winner.Data.ProductRevision);
+                maximum=Math.Max(maximum,Math.Abs((double)source.Vertices[index].Y-height));
+            }
+            if(updates.Count==0)continue;
+            string key=original.ProductRevision+":"+string.Join(",",dependencies.OrderBy(revision=>revision));
+            if(cache is not null&&cache.Boundaries.TryGetValue(key,out var saved))
+            {
+                cache.BoundaryHits++;next[key]=saved;originals[patch.Key]=saved.Data;count+=saved.Count;adjustment=Math.Max(adjustment,saved.Adjustment);continue;
+            }
+            var changed=new Working(original);
+            foreach(var update in updates)
+            {
+                var position=changed.Vertices[update.Index];position.Y=update.Height;changed.Vertices[update.Index]=position;changed.Normals[update.Index]=update.Normal;
+            }
+            changed.Publish();var normalized=changed.Data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision(),GpuPage=null};
+            originals[patch.Key]=normalized;next[key]=(normalized,updates.Count,maximum);count+=updates.Count;adjustment=Math.Max(adjustment,maximum);
+        }
+        if(cache is not null)cache.Boundaries=next;
+    }
+    private static BoundaryKey WorldKey(TerrainRingMeshGeometry.Data data,int index)
+    {
+        var axis=data.Topology.Axis.Span;int row=axis.Length;
+        return new BoundaryKey(data.Patch.Key.Z,data.Patch.OriginX+data.Patch.Size*axis[index%row]/data.Topology.Denominator,
+            data.Patch.OriginZ+data.Patch.Size*axis[index/row]/data.Topology.Denominator);
+    }
+    private static IEnumerable<int> BoundaryIndices(int row)
+    {
+        for(int i=0;i<row;i++){yield return i;yield return (row-1)*row+i;}
+        for(int i=1;i<row-1;i++){yield return i*row;yield return i*row+row-1;}
     }
     private static (float Height,Vector3 Normal) SampleEdge(Working mesh,double worldX,double worldZ)
     {

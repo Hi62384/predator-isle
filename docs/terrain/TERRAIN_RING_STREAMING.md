@@ -18,8 +18,11 @@ settings from C#. A launch argument such as `-- terrain-profile=low` applies the
 profile to a private copy, leaving the saved resource unchanged. Low selects
 2 m visual spacing, fewer rings and conservative budgets; Ultra selects 0.5 m
 visual spacing. Inner spacing, ring count, shader quality, worker allowance,
-upload time and cache memory can also be edited separately. CPU generation is
-the supported backend; optional GPU compute has not been implemented.
+upload time and cache memory can also be edited separately. Optimized CPU
+generation remains the default. An optional grassland generator uses a fragment
+shader and numerical readback in Compatibility; it does not require compute
+shaders. See [GPU terrain generation](GPU_TERRAIN_GENERATION.md) for its scope,
+backend controls and performance limits.
 
 The frame-time budget controller slowly reduces dispatch/upload allowance under
 sustained pressure and restores it after sustained recovery. It does not change
@@ -62,7 +65,7 @@ structure admission/model guards and cave transaction checks remain in use.
 
 ## Canonical ground and world changes
 
-Nearby ground collision is sampled on a one-metre CPU grid independently of
+Nearby ground collision is sampled on a one-metre physics grid independently of
 visual spacing and stitching. Distant visual patches do not receive ground
 collision. Cave surface snapshots use canonical heights in ring mode, so their
 extraction does not depend on the client's terrain quality. Visible stitched
@@ -115,9 +118,9 @@ Local replacement transactions, dependency-based transition reuse, numerical hei
 reuse, reusable GPU grids, CPU cave fallback, bounded predictive prefetch and yielding
 cave discovery are implemented. Acceptance of the complete request is still open.
 
-`NEAR_TERRAIN_LOAD_REQUEST.txt` is the active specification. HEAD remains
-`2a001cf`; this work is in the writable checkout, including earlier uncommitted
-C# changes. The active path is `main.tscn` → native `ChunkTerrain` →
+`NEAR_TERRAIN_LOAD_REQUEST.txt` records the earlier loading specification. The
+following comparison checkpoint was collected against `2a001cf` plus the
+then-uncommitted C# changes. The active path is `main.tscn` → native `ChunkTerrain` →
 `TerrainRingStream` → `TerrainRingMeshGeometry`, using Compatibility rendering.
 
 `TerrainSharedSamples` coalesces immutable canonical heights and controls across
@@ -131,15 +134,17 @@ explicit development option (`terrain-shared-samples=on`) until measured gains j
 making it the default. Worker-local distant filtering remains bounded and cached.
 
 `terrain-render=grid` selects the implemented GPU renderer; `terrain-render=cpu`
-selects the existing CPU renderer. The production default remains CPU while comparative
-performance is tuned. GPU instances share actual vertex/index buffers by masked
+selects the existing CPU renderer. Shared GPU grids are now the saved default;
+the numerical generation backend is selected separately. GPU instances share actual vertex/index buffers by masked
 topology. Nearest RGBA32F pages carry emitted heights, normals and packed controls;
 categorical fields are never bilinearly averaged. Grid coordinates reproduce the
 existing ternary lattice. Per-instance displaced bounds and shadows are retained.
 The per-patch carrier has no render layers, so it does not add a duplicate draw.
 Ordinary GPU patches retain typed CPU fallback buffers without eagerly materializing
 Godot render arrays. Cave capture/transactions materialize the original CPU geometry
-before clipping. This path does not use GPU readback for walking collision.
+before clipping. Grid rendering itself does not require GPU readback for walking
+collision. When the optional GPU numerical generator is selected, its decoded
+samples also feed the fixed physics grid, as described in the GPU terrain notes.
 
 Prefetch predicts incoming rows from velocity and measured near-build latency, retains
 a reversal margin, caps its local candidate set at 24 patches and uses the existing

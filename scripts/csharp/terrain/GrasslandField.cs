@@ -23,7 +23,21 @@ public partial class GrasslandField : RefCounted
     public D river_cache { get; private set; } = new();
     public D river_columns { get; private set; } = new();
     public D lake_cache { get; private set; } = new();
-    public D grid_cache { get; private set; } = new();
+    // Legacy diagnostic projection. Numeric sampling never marshals cached nodes
+    // into native Arrays/Variants just to read them back into the managed cache.
+    public D grid_cache
+    {
+        get
+        {
+            var result = new D();
+            foreach (var pair in _grid)
+            {
+                var node = pair.Value;
+                result[pair.Key] = new A { node.Value, node.Surface, node.Precision, node.Geology };
+            }
+            return result;
+        }
+    }
     public double river_cache_spacing { get; set; } = double.PositiveInfinity;
     public double river_column_spacing { get; set; } = double.PositiveInfinity;
     public Vector2 last_surface { get; private set; }
@@ -33,7 +47,8 @@ public partial class GrasslandField : RefCounted
     private readonly Dictionary<Vector2I, Node> _grid = new();
     private readonly record struct Node(Vector3 Value, Vector2 Surface, double Precision, Vector3 Geology);
     private readonly TerrainParameterSnapshot _parameters = new();
-    private double P(string key) => _parameters["grass_" + key];
+    // Strip the common prefix once at configuration, not at every numeric lookup.
+    private double P(string key) => _parameters[key];
     private double Random(long x, long z, int biome, int salt) => _hash.random(x, z, biome, salt, world_seed);
     private static double N(FastNoiseLite noise, double x, double z) => noise.GetNoise2D((float)x, (float)z);
     private static double L(double a, double b, double t) => a + (b - a) * t;
@@ -45,9 +60,10 @@ public partial class GrasslandField : RefCounted
         FastNoiseLite formsNoise, FastNoiseLite ridgesNoise, FastNoiseLite fractalNoise, FastNoiseLite detailNoise, FastNoiseLite waterNoise)
     {
         settings = config; world_seed = seed; region = regionNoise; macro = macroNoise; forms = formsNoise;
-        _parameters.Capture(config);
+        _parameters.Capture(config, "grass_");
         ridges = ridgesNoise; fractal = fractalNoise; detail = detailNoise; water = waterNoise;
-        river_cache.Clear(); river_columns.Clear(); lake_cache.Clear(); grid_cache.Clear(); _grid.Clear();
+        river_cache.Clear(); river_columns.Clear(); lake_cache.Clear(); _grid.Clear();
+        ClearGpuSamples();
         river_cache_spacing = double.PositiveInfinity; river_column_spacing = double.PositiveInfinity;
     }
     private ulong Stamp() => profile ? Time.GetTicksUsec() : 0;
@@ -102,20 +118,16 @@ public partial class GrasslandField : RefCounted
     }
     private Node Grid(Vector2I cell, double step)
     {
-        if (grid_cache.Count == 0) _grid.Clear();
-        if (grid_cache.TryGetValue(cell, out var payload))
-        {
-            if (_grid.TryGetValue(cell, out var cached)) return cached;
-            var a = payload.AsGodotArray(); return _grid[cell] = new Node(a[0].AsVector3(), a[1].AsVector2(), a[2].AsDouble(), a[3].AsVector3());
-        }
+        if (_grid.TryGetValue(cell, out var cached)) return cached;
         var value = sample_raw(cell.X * step, cell.Y * step); var entry = new Node(value, last_surface, last_precision, last_geology);
-        if (grid_cache.Count >= 8192) { grid_cache.Clear(); _grid.Clear(); }
-        grid_cache[cell] = new A { value, last_surface, last_precision, last_geology }; _grid[cell] = entry; return entry;
+        if (_grid.Count >= 8192) _grid.Clear();
+        _grid[cell] = entry; return entry;
     }
     public A grid_sample(Vector2I cell, double step)
     { var n = Grid(cell, step); return new A { n.Value, n.Surface, n.Precision, n.Geology }; }
     public Vector3 sample(double x, double z)
     {
+        if (TryGpuSample(x, z, out var accelerated)) return accelerated;
         double step = Math.Min(P("field_spacing"), Math.Max(1, P("river_width") * .25));
         var p = new Vector2((float)x, (float)z) / (float)step;
         var cell = new Vector2I((int)Math.Floor(p.X), (int)Math.Floor(p.Y)); var f = p - (Vector2)cell;

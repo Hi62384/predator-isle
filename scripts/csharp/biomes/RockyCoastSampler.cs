@@ -25,7 +25,11 @@ public partial class RockyCoastSampler : RefCounted
     public bool profile {get;set;}
     public D timings {get;set;}=new();
     private static readonly double[] Heights={1.1,.2,.9,.15,.3,.25,.65,.7,.9,.5,1,.9,.7,.18,.1,.4};
-    private GodotObject Host()=>_host!.GetRef().AsGodotObject();
+    private WeakReference<TerrainMeshBuilder>? nativeHost;
+    private double islandRadius,riverFrequency;
+    private GodotObject Host()=>nativeHost is not null&&nativeHost.TryGetTarget(out var host)?host:_host!.GetRef().AsGodotObject();
+    private static double Mask(GodotObject host,double x,double z)=>host is TerrainMeshBuilder native?native._island_mask(x,z):host.Call("_island_mask",x,z).AsDouble();
+    private static double RiverCenter(GodotObject host,double x,long lane,double spacing)=>host is TerrainMeshBuilder native?native._grass_river_center(x,lane,spacing):host.Call("_grass_river_center",x,lane,spacing).AsDouble();
     private readonly TerrainParameterSnapshot numericSettings=new();
     private TerrainParameterSnapshot? beachNumbers;
     private double P(string key)=>numericSettings[key];
@@ -37,7 +41,10 @@ public partial class RockyCoastSampler : RefCounted
     public void configure(Resource config,long seed,RefCounted host)
     {
         settings=config;numericSettings.Capture(config);beachNumbers=null;seed_value=seed;_host?.Dispose();_host=GodotObject.WeakRef(host);beach=null;
-        if(host.Get("settings").AsGodotObject().Get("beaches_enabled").AsBool()){var sand=new BeachSampler();sand.configure(host.Get("settings").AsGodotObject().Get("beach").As<Resource>(),this);beach=sand;}
+        nativeHost=host is TerrainMeshBuilder native?new WeakReference<TerrainMeshBuilder>(native):null;
+        var terrain=host is TerrainMeshBuilder builder?builder.settings:host.Get("settings").As<Resource>();
+        islandRadius=Math.Max(terrain.Get("island_size").AsDouble()*.5,8);riverFrequency=terrain.Get("grass_river_frequency").AsDouble();
+        if(terrain.Get("beaches_enabled").AsBool()){var sand=new BeachSampler();sand.configure(terrain.Get("beach").As<Resource>(),this);beach=sand;}
         neutral=new double[21];state=neutral;var noises=new[]{_macro,_meso,_detail};int[] seeds={31013,31039,31051};double[] frequencies={1/P("bay_scale"),1.0/220,1.0/48};
         for(int i=0;i<3;i++){var n=noises[i];n.Seed=unchecked((int)(seed+seeds[i]));n.Frequency=(float)frequencies[i];n.NoiseType=FastNoiseLite.NoiseTypeEnum.SimplexSmooth;n.FractalType=FastNoiseLite.FractalTypeEnum.Fbm;n.FractalOctaves=2;n.FractalGain=.3f;}
         _nodes.Clear();_patches.Clear();_regions.Clear();_formations.Clear();timings.Clear();
@@ -68,9 +75,8 @@ public partial class RockyCoastSampler : RefCounted
     }
     public Vector3 coast_frame(Vector2 p)
     {
-        var host=Host();double radius=Math.Max(host.Get("settings").AsGodotObject().Get("island_size").AsDouble()*.5,8),d=Mask(p.X,p.Y)*radius;
-        var g=new Vector2((float)(Mask((double)p.X+16,p.Y)-Mask((double)p.X-16,p.Y)),(float)(Mask(p.X,(double)p.Y+16)-Mask(p.X,(double)p.Y-16)))*(float)radius/32;double length=g.Length();g/=(float)Math.Max(length,.001);return new Vector3((float)(d/Math.Clamp(length,.5,2)),g.X,g.Y);
-        double Mask(double x,double z)=>host.Call("_island_mask",x,z).AsDouble();
+        var host=Host();double radius=islandRadius,d=Mask(host,p.X,p.Y)*radius;
+        var g=new Vector2((float)(Mask(host,(double)p.X+16,p.Y)-Mask(host,(double)p.X-16,p.Y)),(float)(Mask(host,p.X,(double)p.Y+16)-Mask(host,p.X,(double)p.Y-16)))*(float)radius/32;double length=g.Length();g/=(float)Math.Max(length,.001);return new Vector3((float)(d/Math.Clamp(length,.5,2)),g.X,g.Y);
     }
     public A _formation_sites(Vector2I cell)
     {
@@ -82,26 +88,36 @@ public partial class RockyCoastSampler : RefCounted
     }
     public double inherited_river(Vector2 p)
     {
-        var host=Host();double frequency=host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),river=0;if(frequency<=0)return river;double spacing=4000/Math.Max(frequency,.1);long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);for(int k=-1;k<=1;k++)river=Math.Max(river,1-Smooth(18,80,Math.Abs(p.Y-host.Call("_grass_river_center",p.X,lane+k,spacing).AsDouble())));return river;
+        var host=Host();double frequency=riverFrequency,river=0;if(frequency<=0)return river;double spacing=4000/Math.Max(frequency,.1);long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);for(int k=-1;k<=1;k++)river=Math.Max(river,1-Smooth(18,80,Math.Abs(p.Y-RiverCenter(host,p.X,lane+k,spacing))));return river;
     }
     public double inherited_river_distance(Vector2 p)
     {
-        var host=Host();double frequency=host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),distance=double.PositiveInfinity;if(frequency<=0)return distance;double spacing=4000/Math.Max(frequency,.1);long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);for(int k=-1;k<=1;k++)distance=Math.Min(distance,Math.Abs(p.Y-host.Call("_grass_river_center",p.X,lane+k,spacing).AsDouble()));return distance;
+        var host=Host();double frequency=riverFrequency,distance=double.PositiveInfinity;if(frequency<=0)return distance;double spacing=4000/Math.Max(frequency,.1);long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);for(int k=-1;k<=1;k++)distance=Math.Min(distance,Math.Abs(p.Y-RiverCenter(host,p.X,lane+k,spacing)));return distance;
     }
     public double[] _raw(Vector2 p)
     {
         if(beach==null)return _raw_rock(p);var frame=coast_frame(p);var w=region_weights(p);double a=_macro.GetNoise2D(p.X,p.Y),b=_meso.GetNoise2D(p.X,p.Y),c=_detail.GetNoise2D(p.X,p.Y),riverDistance=inherited_river_distance(p),river=1-Smooth(18,80,riverDistance);var s=beach is BeachSampler native?native.evaluate(p,frame,w,a,b,c,riverDistance):beach.Call("evaluate",p,frame,w,a,b,c,riverDistance).AsFloat64Array();
         if(s[1]>=1){var result=new double[21];result[0]=s[0];result[2]=1;result[3]=s[2];result[4]=s[3];result[5]=s[4];result[6]=frame.X;result[7]=frame.Y;result[8]=frame.Z;result[18]=river;result[19]=1;result[20]=s[2];return result;}
-        var combinedResult=_raw_rock(p);double combined=Lerp(combinedResult[2],1,s[1]);if(combined>0){double amount=s[1]/combined;combinedResult[0]=Lerp(combinedResult[0],s[0],amount);combinedResult[1]*=1-amount;combinedResult[19]=amount;}combinedResult[2]=combined;combinedResult[20]=s[2];return combinedResult;
+        // Sand evaluation already produced the same shore frame, region and noise
+        // fields. Reuse them for the rock blend instead of tracing the coast twice.
+        var combinedResult=RawRock(p,frame,w,a,b,c,riverDistance,profile?(long)Time.GetTicksUsec():0);double combined=Lerp(combinedResult[2],1,s[1]);if(combined>0){double amount=s[1]/combined;combinedResult[0]=Lerp(combinedResult[0],s[0],amount);combinedResult[1]*=1-amount;combinedResult[19]=amount;}combinedResult[2]=combined;combinedResult[20]=s[2];return combinedResult;
     }
     public double[] _raw_rock(Vector2 p)
     {
-        long start=profile?(long)Time.GetTicksUsec():0;var frame=coast_frame(p);double originalD=frame.X;var n=new Vector2(frame.Y,frame.Z);var tangent=new Vector2(-n.Y,n.X);var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];int id=0;for(int i=1;i<16;i++)if(w[i]>w[id])id=i;
-        double a=_macro.GetNoise2D(p.X,p.Y),b=_meso.GetNoise2D(p.X,p.Y),c=_detail.GetNoise2D(p.X,p.Y),selector=_macro.GetNoise2D((float)(p.X*.23+81731),(float)(p.Y*.23-73191))*.5+.5,ownership=1-Smooth(P("coverage")-.08,P("coverage")+.08,selector);if(P("coverage")>=.999)ownership=1;if(P("coverage")<=0)ownership=0;
+        long start=profile?(long)Time.GetTicksUsec():0;var frame=coast_frame(p);var weights=region_weights(p);
+        double a=_macro.GetNoise2D(p.X,p.Y),b=_meso.GetNoise2D(p.X,p.Y),c=_detail.GetNoise2D(p.X,p.Y);
+        return RawRock(p,frame,weights,a,b,c,inherited_river_distance(p),start);
+    }
+    private double[] RawRock(Vector2 p,Vector3 frame,float[] weights,double a,double b,double c,double riverDistance,long start)
+    {
+        double originalD=frame.X;var n=new Vector2(frame.Y,frame.Z);var tangent=new Vector2(-n.Y,n.X);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];int id=0;for(int i=1;i<16;i++)if(w[i]>w[id])id=i;
+        double selector=_macro.GetNoise2D((float)(p.X*.23+81731),(float)(p.Y*.23-73191))*.5+.5,ownership=1-Smooth(P("coverage")-.08,P("coverage")+.08,selector);if(P("coverage")>=.999)ownership=1;if(P("coverage")<=0)ownership=0;
         double width=influence_width(weights,a),influence=ownership*(1-Smooth(width*.6,width,Math.Abs(originalD))),headland=a*P("headlands")*(300+w[2]*450-w[3]*120),d=originalD+headland*(1-Smooth(width*.35,width*.9,Math.Abs(originalD))),exposure=Math.Clamp(.55+.4*(-n).Dot(new Vector2(.8f,-.6f))+a*.15-w[3]*.35-w[13]*.35,0,1),platform=Math.Clamp((w[1]*.5+w[4]+w[5]*.5+w[7]*.35+w[9]*.5+w[14]*.7)*P("platform_frequency")*1.5,0,1),shelfWidth=P("platform_width")*(.25+platform)*(1+b*.25),height=0;
         for(int i=0;i<16;i++)height+=w[i]*Heights[i];height*=P("cliff_height")*(.8+a*.25+b*.15)*P("cliff_frequency");double cliffWidth=P("cliff_width")*(1+w[3]*1.8+w[5]+w[14]*1.2+w[7]*.5),rise=Smooth(shelfWidth*.5+b*20,shelfWidth*.5+cliffWidth+b*20,d),platformH=1.5+(b*.7+c*.3)*P("platform_relief"),h=platformH+rise*height+Math.Max(d-shelfWidth-cliffWidth,0)*.035,submerged=-6-(1-platform)*10;h=Lerp(submerged,h,Smooth(-shelfWidth,0,d));
         double weather=(1-Smooth(.03,.3,Math.Abs(b+c*.15)))*P("erosion")*rise*(1-rise*.6);h-=weather*(12+w[15]*30);h+=Math.Sin(d/34+b*1.5)*rise*(1-rise)*8*w[8];h+=c*P("ruggedness")*(3+w[5]*4)*Smooth(-20,80,d);
-        var host=Host();double frequency=host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),spacing=4000/Math.Max(frequency,.1),river=0;if(frequency>0){long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);for(int k=-1;k<=1;k++)river=Math.Max(river,1-Smooth(18,80+w[13]*100,Math.Abs(p.Y-host.Call("_grass_river_center",p.X,lane+k,spacing).AsDouble())));}
+        // The bank function decreases monotonically with distance, so the same
+        // nearest inherited river used by sand also determines the strongest bank.
+        double river=1-Smooth(18,80+w[13]*100,riverDistance);
         double inlet=(1-Smooth(.015,.12,Math.Abs(b)))*(w[10]+w[13]+w[15]*.6)*P("inlet_frequency"),outlet=Math.Max(river,inlet)*(1-Smooth(width*.45,width*.95,Math.Max(d,0)));h=Lerp(h,-1.2+Math.Max(d,0)*.001,outlet);double stack=0;
         if(originalD<100&&originalD> -850&&w[6]+w[2]+w[7]+w[14]>.1)foreach(var value in _formation_sites(Cell(p,768)))
         {
@@ -132,10 +148,13 @@ public partial class RockyCoastSampler : RefCounted
         for(int k=3;k<21;k++){int offset=48+(k-3)*4;s[k]=coefficients[offset]+coefficients[offset+1]*f.X+coefficients[offset+2]*f.Y+coefficients[offset+3]*f.X*f.Y;}s[2]=bounded_influence(s[2]);s[3]=Math.Clamp(s[3],0,1);s[4]=Math.Clamp(s[4],0,1);s[5]=Math.Clamp(s[5],0,1);s[1]=Math.Max(s[1],0);if(publish)state=s;return Lerp(baseline,s[0],s[2]);
     }
     public double[] polynomial(double a,double b,double c,double d)=>new[]{b,(c-a)*.5,a-2.5*b+2*c-.5*d,-.5*a+1.5*b-1.5*c+.5*d};
+    private static void Polynomial(double a,double b,double c,double d,Span<double> result)
+    {result[0]=b;result[1]=(c-a)*.5;result[2]=a-2.5*b+2*c-.5*d;result[3]=-.5*a+1.5*b-1.5*c+.5*d;}
     public double[] _patch(Vector2I cell)
     {
         if(_patches.TryGetValue(cell,out var found))return found;var nodes=new double[16][];int at=0;for(int z=-1;z<3;z++)for(int x=-1;x<3;x++)nodes[at++]=_node(cell+new Vector2I(x,z));var result=new double[120];
-        for(int k=0;k<3;k++){var rows=new double[4][];for(int row=0;row<4;row++)rows[row]=polynomial(nodes[row*4][k],nodes[row*4+1][k],nodes[row*4+2][k],nodes[row*4+3][k]);for(int column=0;column<4;column++){var p=polynomial(rows[0][column],rows[1][column],rows[2][column],rows[3][column]);for(int j=0;j<4;j++)result[k*16+column*4+j]=p[j];}}
+        Span<double> rows=stackalloc double[16],columnCoefficients=stackalloc double[4];
+        for(int k=0;k<3;k++){for(int row=0;row<4;row++)Polynomial(nodes[row*4][k],nodes[row*4+1][k],nodes[row*4+2][k],nodes[row*4+3][k],rows.Slice(row*4,4));for(int column=0;column<4;column++){Polynomial(rows[column],rows[4+column],rows[8+column],rows[12+column],columnCoefficients);for(int j=0;j<4;j++)result[k*16+column*4+j]=columnCoefficients[j];}}
         for(int k=3;k<21;k++){double a=nodes[5][k],b=nodes[6][k],c=nodes[9][k],d=nodes[10][k];int offset=48+(k-3)*4;result[offset]=a;result[offset+1]=b-a;result[offset+2]=c-a;result[offset+3]=d-b-c+a;}if(_patches.Count>=2048)_patches.Clear();_patches[cell]=result;return result;
     }
     internal int NodeCount=>_nodes.Count;

@@ -10,6 +10,12 @@ namespace PredatorIsle.Terrain;
 public partial class TerrainCollision : RefCounted
 {
     private readonly StructureCollisionIndex _index = new();
+    private const string SourceMesh = "terrain_collision_source_mesh";
+    private const string SourceSpan = "terrain_collision_source_span";
+    private const string SourceResolution = "terrain_collision_source_resolution";
+    private const string GroundReady = "terrain_collision_ground_ready";
+    private const string StructuresReady = "terrain_collision_structures_ready";
+    private const string CavitiesReady = "terrain_collision_cavities_ready";
     public double heightfield_error_bound(float[] heights, int resolution)
     {
         double low = double.PositiveInfinity, high = double.NegativeInfinity, range = 0;
@@ -138,44 +144,115 @@ public partial class TerrainCollision : RefCounted
         }
         body.CollisionLayer = 0; body.CollisionMask = 0;
         var terrainShape = body.GetNode<CollisionShape3D>("Heightfield"); var structureShape = body.GetNode<CollisionShape3D>("Structures"); var cavityShape = body.GetNode<CollisionShape3D>("Cavities");
-        terrainShape.Shape = null; structureShape.Shape = null; cavityShape.Shape = null;
-        if (!enabled && !structure_enabled) return;
-        var mesh = node.Mesh!;
+        var mesh = node.Mesh;
+        long identity = unchecked((long)(mesh?.GetInstanceId() ?? 0));
+        bool sameSource = body.GetMeta(SourceMesh, -1L).AsInt64() == identity &&
+            body.GetMeta(SourceSpan, double.NaN).AsDouble() == span &&
+            body.GetMeta(SourceResolution, -1).AsInt32() == resolution;
+        if (!sameSource)
+        {
+            // Pooled nodes, replacement meshes and changed sample spacing must never
+            // inherit a shape from another payload, even when their tile keys match.
+            ClearShapes(body);
+            body.SetMeta(SourceMesh, identity); body.SetMeta(SourceSpan, span); body.SetMeta(SourceResolution, resolution);
+            ClearStructureSelection(node);
+        }
+        bool detailsEnabled = enabled || structure_enabled;
+        terrainShape.Disabled = !enabled; structureShape.Disabled = cavityShape.Disabled = !detailsEnabled;
+        if (mesh is null || !detailsEnabled) return;
+        bool groundReady = body.GetMeta(GroundReady, false).AsBool();
+        bool structuresReady = body.GetMeta(StructuresReady, false).AsBool();
+        bool cavitiesReady = body.GetMeta(CavitiesReady, false).AsBool();
         if (mesh.HasMeta("collision_data"))
         {
             var data = mesh.GetMeta("collision_data").AsGodotDictionary(); ulong nodesEnd = profiling ? Time.GetTicksUsec() : 0;
-            if (enabled)
+            if (enabled && !groundReady)
             {
                 var ground = data["ground_faces"].AsVector3Array(); var heights = data["heights"].AsFloat32Array();
                 if (ground.Length > 0) SetGround(terrainShape, ground);
                 else if (heights.Length > 0) SetHeightfield(terrainShape, heights, resolution, span);
+                body.SetMeta(GroundReady, true);
             }
             ulong terrainEnd = profiling ? Time.GetTicksUsec() : 0;
-            if (data["structure_faces"].AsVector3Array().Length > 0) set_structure_subset(node, structureShape, data, structurePoint);
+            var cell = StructureCell(structurePoint);
+            if (!structuresReady || data.ContainsKey("structure_index") && node.GetMeta("structure_collision_cell", Vector3.Inf).AsVector3() != cell)
+            {
+                set_structure_subset(node, structureShape, data, structurePoint);
+                body.SetMeta(StructuresReady, true);
+            }
             ulong structuresEnd = profiling ? Time.GetTicksUsec() : 0;
-            var cavity = data["cavity_faces"].AsVector3Array();
-            if (cavity.Length > 0) cavityShape.Shape = Concave(cavity, true);
+            if (!cavitiesReady)
+            {
+                var cavity = data["cavity_faces"].AsVector3Array();
+                if (cavity.Length > 0) cavityShape.Shape = Concave(cavity, true);
+                body.SetMeta(CavitiesReady, true);
+            }
             if (profiling) node.SetMeta("collision_stage_profile", new D { ["nodes_ms"] = (nodesEnd - started) / 1000.0, ["terrain_shape_ms"] = (terrainEnd - nodesEnd) / 1000.0,
                 ["structure_shape_ms"] = (structuresEnd - terrainEnd) / 1000.0, ["cavity_shape_ms"] = (Time.GetTicksUsec() - structuresEnd) / 1000.0 });
             return;
         }
-        if (enabled)
+        if (enabled && !groundReady)
         {
-            var arrays = mesh.SurfaceGetArrays(0); var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array(); var heights = new float[(resolution + 1) * (resolution + 1)];
-            for (int i = 0; i < heights.Length; i++) heights[i] = vertices[i].Y;
+            var arrays = mesh.SurfaceGetArrays(0);
             if (mesh.HasMeta("cavity_portals")) SetGround(terrainShape, mesh.HasMeta("cavity_ground_faces") ? mesh.GetMeta("cavity_ground_faces").AsVector3Array() : clipped_ground(arrays, mesh.GetMeta("cavity_portals").AsVector4Array(), resolution));
-            else SetHeightfield(terrainShape, heights, resolution, span);
+            else
+            {
+                var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array(); var heights = new float[(resolution + 1) * (resolution + 1)];
+                for (int i = 0; i < heights.Length; i++) heights[i] = vertices[i].Y;
+                SetHeightfield(terrainShape, heights, resolution, span);
+            }
+            body.SetMeta(GroundReady, true);
         }
-        if (mesh.HasMeta("extension_structures"))
+        if (!structuresReady)
         {
-            var faces = MeshFaces(mesh.GetMeta("extension_structures").As<ArrayMesh>());
-            if (faces.Length > 0) structureShape.Shape = Concave(faces);
+            if (mesh.HasMeta("extension_structures"))
+            {
+                var faces = MeshFaces(mesh.GetMeta("extension_structures").As<ArrayMesh>());
+                if (faces.Length > 0) structureShape.Shape = Concave(faces);
+            }
+            body.SetMeta(StructuresReady, true);
         }
-        if (mesh.HasMeta("cavity_collision"))
+        if (!cavitiesReady)
         {
-            var faces = MeshFaces(mesh.GetMeta("cavity_collision").As<ArrayMesh>());
-            if (faces.Length > 0) cavityShape.Shape = Concave(faces, true);
+            if (mesh.HasMeta("cavity_collision"))
+            {
+                var faces = MeshFaces(mesh.GetMeta("cavity_collision").As<ArrayMesh>());
+                if (faces.Length > 0) cavityShape.Shape = Concave(faces, true);
+            }
+            body.SetMeta(CavitiesReady, true);
         }
+    }
+    private static Vector3 StructureCell(Vector3 point) => (point / (float)StructureCollisionIndex.CellMetres).Floor();
+    /// <summary>
+    /// Retain an installed/cave-clipped shape when the shared GPU carrier is replaced
+    /// by its exact CPU surface. Other mesh replacements always invalidate in stage.
+    /// </summary>
+    internal static bool RebindEquivalentMesh(MeshInstance3D node, Mesh oldMesh, Mesh newMesh)
+    {
+        var body = node.GetNodeOrNull<StaticBody3D>("NearTerrainCollision");
+        if (body is null || node.Mesh != newMesh || !oldMesh.HasMeta("terrain_cpu_payload") ||
+            !newMesh.HasMeta("terrain_cpu_arrays") || !oldMesh.HasMeta("collision_data") || !newMesh.HasMeta("collision_data") ||
+            body.GetMeta(SourceMesh, -1L).AsInt64() != unchecked((long)oldMesh.GetInstanceId())) return false;
+        var source = oldMesh.GetMeta("terrain_cpu_payload").As<TerrainCpuSurfacePayload>().Data;
+        int resolution = body.GetMeta(SourceResolution, -1).AsInt32();
+        if (body.GetMeta(SourceSpan, double.NaN).AsDouble() != source.Patch.Size ||
+            resolution != source.Topology.Axis.Length - 1 ||
+            node.GetMeta("resolution", resolution).AsInt32() != resolution ||
+            !oldMesh.GetMeta("collision_data").AsGodotDictionary().RecursiveEqual(newMesh.GetMeta("collision_data").AsGodotDictionary())) return false;
+        body.SetMeta(SourceMesh, unchecked((long)newMesh.GetInstanceId()));
+        return true;
+    }
+    private static void ClearStructureSelection(MeshInstance3D node)
+    {
+        foreach (string name in new[] { "structure_collision_cell", "structure_collision_triangles" })
+            if (node.HasMeta(name)) node.RemoveMeta(name);
+    }
+    private static void ClearShapes(StaticBody3D body)
+    {
+        foreach (var child in body.GetChildren()) if (child is CollisionShape3D shape)
+        { shape.Disabled = true; shape.Shape = null; shape.Transform = Transform3D.Identity; }
+        foreach (string name in new[] { GroundReady, StructuresReady, CavitiesReady })
+            if (body.HasMeta(name)) body.RemoveMeta(name);
     }
     private static Vector3[] MeshFaces(ArrayMesh mesh)
     {
@@ -197,14 +274,18 @@ public partial class TerrainCollision : RefCounted
     {
         var selected = _index.select(data["structure_faces"].AsVector3Array(), data.TryGetValue("structure_index", out var metadata) ? metadata.AsGodotDictionary() : new(), point);
         var faces = selected["faces"].AsVector3Array(); shape_node.Shape = faces.Length == 0 ? null : Concave(faces);
-        node.SetMeta("structure_collision_cell", (point / (float)StructureCollisionIndex.CellMetres).Floor()); node.SetMeta("structure_collision_triangles", faces.Length / 3);
+        node.SetMeta("structure_collision_cell", StructureCell(point)); node.SetMeta("structure_collision_triangles", faces.Length / 3);
     }
     public void refresh_structure_subset(MeshInstance3D node, Vector3 point)
     {
         if (!node.Mesh.HasMeta("collision_data")) return;
         var body = node.GetNodeOrNull<StaticBody3D>("NearTerrainCollision"); if (body == null) return;
         var data = node.Mesh.GetMeta("collision_data").AsGodotDictionary(); if (!data.ContainsKey("structure_index")) return;
-        var key = (point / (float)StructureCollisionIndex.CellMetres).Floor();
+        if (body.GetNode<CollisionShape3D>("Structures").Disabled) return;
+        // A converted/replaced mesh is installed by stage before its new payload
+        // can supply a subset. Do not pair new faces with an old retained source.
+        if (body.GetMeta(SourceMesh, -1L).AsInt64() != unchecked((long)node.Mesh.GetInstanceId())) return;
+        var key = StructureCell(point);
         if (node.GetMeta("structure_collision_cell", Vector3.Inf).AsVector3() == key) return;
         set_structure_subset(node, body.GetNode<CollisionShape3D>("Structures"), data, point);
     }
@@ -215,6 +296,8 @@ public partial class TerrainCollision : RefCounted
     public void release(MeshInstance3D node)
     {
         var body = node.GetNodeOrNull<StaticBody3D>("NearTerrainCollision"); if (body == null) return;
-        body.CollisionLayer = 0; foreach (var child in body.GetChildren()) if (child is CollisionShape3D shape) shape.Shape = null;
+        body.CollisionLayer = 0; body.CollisionMask = 0; ClearShapes(body); ClearStructureSelection(node);
+        foreach (string name in new[] { SourceMesh, SourceSpan, SourceResolution })
+            if (body.HasMeta(name)) body.RemoveMeta(name);
     }
 }

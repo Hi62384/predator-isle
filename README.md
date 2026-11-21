@@ -36,7 +36,8 @@ to capture it again. **Backtick (`)** shows or hides terrain diagnostics.
 
 The main world now selects world-aligned nested 3×3 terrain rings. The standard
 profile uses 16 m nearby patches with 1 m visual vertices; Low uses 2 m and Ultra
-uses 0.5 m. Nearby ground collision uses a fixed 1 m CPU grid for every profile.
+uses 0.5 m. Nearby ground collision uses a fixed 1 m grid from the numerical
+terrain field for every profile.
 The startup path can publish the central nine patches while distant work continues.
 These behaviors have component tests plus a saved-launch physical move and return.
 The saved world uses a broader biome height blend
@@ -45,6 +46,17 @@ changing world generation settings.
 
 Ring settings, quality profiles, server residency, canonical height changes and
 current limitations are described in [the ring streaming notes](docs/terrain/TERRAIN_RING_STREAMING.md).
+
+The saved profile now enables shared GPU terrain grids with the optimized CPU
+generator. GPU-assisted grassland generation is also available through the
+Compatibility renderer using `terrain-generation=gpu` or `terrain-generation=auto`.
+GPU numerical readback feeds the terrain/collision pipeline, while headless
+authority and unsupported requests
+retain CPU generation. Collision shapes are retained until their source changes
+or their chunk is released. Backend settings, implementation coverage and fallbacks
+are described in [the GPU terrain notes](docs/terrain/GPU_TERRAIN_GENERATION.md);
+[the validation report](docs/terrain/GPU_TERRAIN_VALIDATION.md) records measured CPU
+improvements, shader comparisons and hardware limits.
 
 | Folder | Contents |
 | --- | --- |

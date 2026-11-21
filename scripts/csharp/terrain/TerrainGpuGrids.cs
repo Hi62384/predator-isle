@@ -47,7 +47,7 @@ public sealed class TerrainGpuGrids
     {
         var carrier=node.Mesh;if(carrier is null||!carrier.HasMeta("terrain_gpu_template"))return;
         var mesh=new ArrayMesh();var arrays=carrier.GetMeta("terrain_cpu_payload").As<TerrainCpuSurfacePayload>().Data.Arrays;mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays,flags:ControlFlags);
-        mesh.SurfaceSetMaterial(0,carrier.SurfaceGetMaterial(0));foreach(var name in carrier.GetMetaList())if(name!="terrain_gpu_template"&&name!="terrain_gpu_material"&&name!="terrain_cpu_payload")mesh.SetMeta(name,carrier.GetMeta(name));mesh.SetMeta("terrain_cpu_arrays",arrays);node.Mesh=mesh;
+        mesh.SurfaceSetMaterial(0,carrier.SurfaceGetMaterial(0));foreach(var name in carrier.GetMetaList())if(name!="terrain_gpu_template"&&name!="terrain_gpu_material"&&name!="terrain_cpu_payload")mesh.SetMeta(name,carrier.GetMeta(name));mesh.SetMeta("terrain_cpu_arrays",arrays);node.Mesh=mesh;TerrainCollision.RebindEquivalentMesh(node,carrier,mesh);
         Stage(node);
     }
     internal static Mesh.ArrayFormat ControlFlags=>(Mesh.ArrayFormat)(((ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)Mesh.ArrayFormat.FormatCustom0Shift)|((ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)Mesh.ArrayFormat.FormatCustom1Shift)|((ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)Mesh.ArrayFormat.FormatCustom2Shift)|((ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)Mesh.ArrayFormat.FormatCustom3Shift));

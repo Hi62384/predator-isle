@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PredatorIsle.Terrain;
 using A=Godot.Collections.Array;
 using D=Godot.Collections.Dictionary;
 
@@ -39,7 +40,8 @@ public partial class BadlandsSampler : RefCounted
     private readonly Dictionary<Vector2I,double> _carriers=new();
     private readonly BadlandsFanGeometry _fan=new();
     private GodotObject Host()=>_host!.GetRef().AsGodotObject();
-    private double P(string name)=>settings.Get(name).AsDouble();
+    private readonly TerrainParameterSnapshot _parameters=new();
+    private double P(string name)=>_parameters[name];
     private static double Lerp(double a,double b,double t)=>a+(b-a)*t;
     private static double Smooth(double a,double b,double value){double t=Math.Clamp((value-a)/(b-a),0,1);return t*t*(3-2*t);}
     private static Vector2 Normalize(Vector2 p)=>p.LengthSquared()==0?p:p.Normalized();
@@ -48,7 +50,7 @@ public partial class BadlandsSampler : RefCounted
     private static long Lane(double value)=>(long)Math.Round(value,MidpointRounding.AwayFromZero);
     public void configure(Resource config,long world_seed,RefCounted host)
     {
-        settings=config;seed_value=world_seed;_host?.Dispose();_host=GodotObject.WeakRef(host);
+        settings=config;_parameters.Capture(config);seed_value=world_seed;_host?.Dispose();_host=GodotObject.WeakRef(host);
         var noises=new[]{_macro,_weather};int[] salts={31013,31039};double[] frequencies={1.0/2900,1.0/380};
         for(int i=0;i<2;i++){var n=noises[i];n.Seed=unchecked((int)(world_seed+salts[i]));n.Frequency=(float)frequencies[i];n.NoiseType=FastNoiseLite.NoiseTypeEnum.SimplexSmooth;n.FractalType=FastNoiseLite.FractalTypeEnum.Fbm;n.FractalOctaves=2;n.FractalGain=.3f;}
         clear_numeric_caches();timings.Clear();

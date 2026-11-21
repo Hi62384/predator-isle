@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PredatorIsle.Terrain;
 using D=Godot.Collections.Dictionary;
 using A=Godot.Collections.Array;
 
@@ -25,13 +26,14 @@ public partial class TropicalSampler : RefCounted
     public bool profile {get;set;}
     public D timings {get;set;}=new();
     private GodotObject Host()=>_host!.GetRef().AsGodotObject();
-    private double P(string key)=>settings.Get(key).AsDouble();
+    private readonly TerrainParameterSnapshot _parameters=new();
+    private double P(string key)=>_parameters[key];
     private static double Smooth(double a,double b,double value){double t=Math.Clamp((value-a)/(b-a),0,1);return t*t*(3-2*t);}
     private static double Lerp(double a,double b,double t)=>a+(b-a)*t;
     private static Vector2I Cell(Vector2 p,double step)=>new((int)Math.Floor(p.X/step),(int)Math.Floor(p.Y/step));
     public void configure(Resource config,long world_seed,RefCounted host)
     {
-        settings=config;seed_value=world_seed;_host?.Dispose();_host=GodotObject.WeakRef(host);var noises=new[]{_macro,_hills,_weather};int[] seeds={24101,24117,24139};double[] frequencies={1.0/6500,1/Math.Max(P("hill_width"),200),1.0/350};
+        settings=config;_parameters.Capture(config);seed_value=world_seed;_host?.Dispose();_host=GodotObject.WeakRef(host);var noises=new[]{_macro,_hills,_weather};int[] seeds={24101,24117,24139};double[] frequencies={1.0/6500,1/Math.Max(P("hill_width"),200),1.0/350};
         for(int i=0;i<3;i++){var n=noises[i];n.Seed=unchecked((int)(world_seed+seeds[i]));n.Frequency=(float)frequencies[i];n.NoiseType=FastNoiseLite.NoiseTypeEnum.SimplexSmooth;n.FractalType=FastNoiseLite.FractalTypeEnum.Fbm;n.FractalOctaves=2;n.FractalGain=.35f;}_nodes.Clear();_regions.Clear();_carriers.Clear();_structuralNodes.Clear();_cascadeCache.Clear();timings.Clear();
     }
     public double random(long x,long z,long salt){long h=unchecked(x*374761393+z*668265263+seed_value*69069+salt*1274126177)&0x7fffffff;h=unchecked((h^(h>>13))*1274126177)&0x7fffffff;return (double)(h^(h>>16))/2147483647;}

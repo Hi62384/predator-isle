@@ -44,6 +44,7 @@ public sealed class TerrainRingMeshGeometry
     private static double[] CreateSupportSteps(){var steps=new SortedSet<double>();for(int level=0;level<=8;level++)foreach(double nearSpacing in new[]{.5,1.0,2.0})steps.Add(nearSpacing*Math.Pow(3,level));return steps.ToArray();}
     private readonly ConditionalWeakTable<TerrainMeshBuilder,TerrainRingHeightFilter> filters=new();
     public TerrainRingMeshGeometry(TerrainRingTopology sharedTopology,bool filteredDistantHeights=true){topology=sharedTopology;filterDistant=filteredDistantHeights;}
+    internal void InvalidateHeightFilter(TerrainMeshBuilder builder)=>filters.Remove(builder);
     internal readonly record struct Sample(float Height,Vector4 Weights,Vector2 Surface,Vector3 Geology,float Jungle,Vector4 Forest,Vector4 Savanna,Vector4 Swamp,Vector4 Mountain,Vector4 Coast,Vector3 Tropical,Vector3 Badlands,Vector4 Palette,Vector4 E0,Vector4 E1,Vector4 E2,Vector4 E3,Vector4 E4,Vector4 E5,Vector4 E6,Vector4 E7,float Water)
     {
         public Vector4 Extra(int family)=>family switch{0=>E0,1=>E1,2=>E2,3=>E3,4=>E4,5=>E5,6=>E6,_=>E7};

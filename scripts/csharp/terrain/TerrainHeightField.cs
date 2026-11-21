@@ -55,6 +55,9 @@ public partial class TerrainHeightField : RefCounted
     public double last_badlands_remnant { get; private set; }
     public double last_badlands_skirt { get; private set; }
     private static readonly float[] Neutral = new float[4];
+    private static readonly Vector4[] NeutralExtras = new Vector4[8];
+    private bool publishedQuery;
+    private double publishedX, publishedZ, publishedWaterLevel;
     private readonly TerrainParameterSnapshot _parameters = new();
     private readonly TerrainHeightChanges _changes = new();
     private double P(string key) => _parameters[key];
@@ -71,7 +74,7 @@ public partial class TerrainHeightField : RefCounted
     private static long Round(double x) => (long)Math.Round(x, MidpointRounding.AwayFromZero);
     private static Vector2 Rotate(Vector2 v, float angle) { float s = (float)Math.Sin(angle), c = (float)Math.Cos(angle); return new Vector2(v.X * c - v.Y * s, v.X * s + v.Y * c); }
     public void set_context(Vector2 surface, Vector3 geology, double water)
-    { last_surface = surface; last_geology = geology; last_water = water; }
+    { publishedQuery = false; last_surface = surface; last_geology = geology; last_water = water; }
     public void configure(RefCounted host)
     {
         settings = (Resource)host.Get("settings").AsGodotObject(); water_level = host.Get("water_level").AsDouble();
@@ -85,8 +88,8 @@ public partial class TerrainHeightField : RefCounted
         _tropical = host.Get("_tropical").AsGodotObject() as TropicalSampler; _badlands = host.Get("_badlands").AsGodotObject() as BadlandsSampler;
         var extras = host.Get("_extras").AsGodotArray(); for (int i = 0; i < 8; i++) _extras[i] = extras[i].AsGodotObject() as BiomeExtensionSampler;
         _extrasEnabled = host.Get("_extras_enabled").AsBool(); _coastLimit = host.Get("_coast_limit").AsDouble();
-        height_grid_cache.Clear();payloadOrder.Clear();normalHeights.Clear();normalOrder.Clear();savanna_gullies.Clear();normal_height_cache_capacity = 8192;
-        last_jungle = 0; last_forest = last_savanna = last_swamp = Neutral; last_mountain = new float[4];
+        height_grid_cache.Clear();payloadOrder.Clear();normalHeights.Clear();normalOrder.Clear();savanna_gullies.Clear();normal_height_cache_capacity = 8192;publishedQuery = false;
+        last_jungle = 0; last_forest = last_savanna = last_swamp = last_mountain = Neutral;
         last_water = water_level; last_coast = Vector4.Zero; last_tropical = last_badlands = Vector3.Zero;
         last_extras = new Vector4[8]; last_badlands_palette = Vector4.Zero; last_badlands_remnant = last_badlands_skirt = 0;
     }
@@ -95,6 +98,7 @@ public partial class TerrainHeightField : RefCounted
     { double sediment = c[5]; if (c.Length > 20 && c[19] > .001) sediment = -pack(c[19], c[20], 0) - 1; return new Vector4((float)c[2], (float)c[3], (float)c[4], (float)sediment); }
     public double apply_coast(double baseHeight, bool publish, double[] c)
     {
+        publishedQuery = false;
         if (_coast is null || c.Length == 0 || c[2] <= 0) return baseHeight;
         double mult = Math.Max(P("height_multiplier"), .01); last_water = L(last_water, water_level + c[1] * mult, c[2]);
         if (publish) last_coast = coast_payload(c);
@@ -102,6 +106,7 @@ public partial class TerrainHeightField : RefCounted
     }
     public double jungle_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         var jungle = _jungle!; double h = jungle.sample(x, z, true); var config = jungle.settings; var w = jungle.weights;
         double riverCountry = (double)w[5] + w[6] + w[10] * .7, valley = 0, channel = 0, lake = 0;
         if (Q(config, "river_frequency") > 0 && P("grass_river_frequency") > 0 && Water)
@@ -155,6 +160,7 @@ public partial class TerrainHeightField : RefCounted
     }
     public double forest_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         var forest = _forest!; double h = forest.sample(x, z, true); var config = forest.settings; var w = forest.weights;
         double valley = 0, river = 0, lake = 0, lowland = (1 - S(100, 220, h)) * C(.4 + w[0] * .35 + w[3] * .35 + w[7] * .6 + w[8]);
         if (Water && P("grass_river_frequency") > 0 && Q(config, "river_influence") > 0)
@@ -204,6 +210,7 @@ public partial class TerrainHeightField : RefCounted
     }
     public double savanna_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         var savanna = _savanna!; double h = savanna.sample(x, z, true); var c = savanna.settings; var w = savanna.weights;
         double drain = 0, channel = 0, basin = 0, water = 0;
         if (P("grass_river_frequency") > 0 && Q(c, "drainage_strength") > 0 && Q(c, "seasonal_channel_frequency") > 0)
@@ -264,31 +271,42 @@ public partial class TerrainHeightField : RefCounted
     }
     public double mountain_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         double h = _mountain!.sample(x, z, true); var s = _mountain.state; h = L(Math.Min(h, s[1] + 80), h, S(.05, .9, weight));
         if (publish) last_mountain = new[] { (float)pack(s[2], s[3], weight), (float)pack(s[4], s[5], s[6]), (float)pack(s[7], s[8], s[9]), (float)s[10] }; return h;
     }
     public double tropical_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         double h = _tropical!.sample(x, z, true); var s = _tropical.state;
         if (publish) { last_tropical = new Vector3((float)weight, (float)s[2], (float)s[3]); last_geology = last_geology.Lerp(new Vector3((float)s[4], (float)s[5], (float)s[6]), (float)weight); last_surface = last_surface.Lerp(new Vector2((float)s[7], (float)s[6]), (float)weight); } return h;
     }
     public double swamp_height(double x, double z, double weight, bool publish)
     {
+        publishedQuery = false;
         double h = _swamp!.sample(x, z, true); var s = _swamp.state;
         if (publish) last_swamp = new[] { (float)pack(s[2], s[3], weight), (float)pack(s[4], s[5], s[6]), (float)pack(s[7], s[8], s[9]), (float)pack(s[10], s[11], s[12]) }; return h;
     }
     public double height(double x, double z) => height(x, z, true);
     internal long CanonicalEvaluations {get;private set;}
     public double height(double x, double z, bool publish)
-    {CanonicalEvaluations++;return BaseHeight(x,z,publish)+_changes.Offset(x,z);}
+    {
+        CanonicalEvaluations++;
+        double result = BaseHeight(x,z,publish)+_changes.Offset(x,z);
+        if (publish) { publishedQuery = true; publishedX = x; publishedZ = z; publishedWaterLevel = water_level; }
+        return result;
+    }
     private double BaseHeight(double x,double z,bool publish)
     {
         query_changed = true;
-        if (_extrasEnabled) last_extras = new Vector4[8];
+        publishedQuery = false;
+        // Published arrays may be retained by mesh builders; never mutate or recycle them.
+        // Height-only queries don't write any extension controls, so a shared zero value is safe.
+        if (_extrasEnabled) last_extras = publish ? new Vector4[8] : NeutralExtras;
         last_badlands = Vector3.Zero; last_badlands_palette = Vector4.Zero; last_badlands_remnant = last_badlands_skirt = 0;
         last_tropical = Vector3.Zero; last_coast = Vector4.Zero; last_jungle = 0; last_surface = Vector2.Zero; last_geology = Vector3.Zero; last_weights = Vector4.Zero;
         if (_forest is not null) last_forest = Neutral; if (_savanna is not null) last_savanna = Neutral; if (_swamp is not null) last_swamp = Neutral;
-        last_water = water_level; if (_mountain is not null) last_mountain = new float[4];
+        last_water = water_level; if (_mountain is not null) last_mountain = Neutral;
         double island = _islands.mask(x, z, true, _coastLimit); last_island = island;
         double shoreDistance = island * Math.Max(P("island_size") * .5, 8), shoreTransition = Math.Max(P("coast_width") * 694.445, .1), scale = Math.Max(P("terrain_shape_scale"), .01);
         double mult = Math.Max(P("height_multiplier"), .01); double[] coast = System.Array.Empty<double>();
@@ -344,7 +362,13 @@ public partial class TerrainHeightField : RefCounted
         return apply_coast(water_level + land * shore * mult, publish, coast);
     }
     public double water_surface_height(double x, double z)
-    { if (!_extrasEnabled && _swamp is null && _mountain is null && _coast is null && _tropical is null && _badlands is null) return water_level; height(x, z); return last_water; }
+    {
+        if (!_extrasEnabled && _swamp is null && _mountain is null && _coast is null && _tropical is null && _badlands is null) return water_level;
+        // Height and water are produced by the same published sample. Entrance/placement
+        // probes commonly request them back-to-back; do not traverse every biome twice.
+        if (!publishedQuery || publishedX != x || publishedZ != z || publishedWaterLevel != water_level) height(x, z);
+        return last_water;
+    }
     public A payload(double h) => new() { h, last_weights, last_surface, last_geology, last_island, last_jungle, last_forest, last_savanna, last_swamp, last_water, last_mountain, last_coast, last_tropical, last_badlands, last_extras, last_badlands_palette, last_badlands_remnant, last_badlands_skirt };
     private double Restore(A p)
     {
@@ -362,8 +386,21 @@ public partial class TerrainHeightField : RefCounted
     {
         query_changed = true;
         if (!Exact(x, z) || (!cache_dense_payloads && (((int)x & 31) != 0 || ((int)z & 31) != 0))){double sampled=height(x,z);RememberNormal(x,z,sampled);return sampled;}
-        var key = new Vector2I((int)x, (int)z); if (height_grid_cache.TryGetValue(key, out var cached)) return Restore(cached.AsGodotArray());
+        var key = new Vector2I((int)x, (int)z); if (height_grid_cache.TryGetValue(key, out var cached))
+        {
+            double saved = Restore(cached.AsGodotArray());
+            publishedQuery = true; publishedX = x; publishedZ = z; publishedWaterLevel = water_level;
+            return saved;
+        }
         double h=height(x,z);while(height_grid_cache.Count>=8192&&payloadOrder.TryDequeue(out var old))height_grid_cache.Remove(old);height_grid_cache[key]=payload(h);payloadOrder.Enqueue(key);RememberNormal(x,z,h);return h;
+    }
+    internal void ClearSampleCaches()
+    {
+        height_grid_cache.Clear();
+        payloadOrder.Clear();
+        normalHeights.Clear();
+        normalOrder.Clear();
+        publishedQuery = false;
     }
     public void select_normal_cache_capacity(double chunkSize)
     {

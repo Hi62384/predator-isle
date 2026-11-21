@@ -17,6 +17,7 @@ public partial class ChunkTerrain
     private TerrainRingStream? ringStream;
     private TerrainRingBudget? ringBudget;
     private readonly TerrainGpuGrids ringGpuGrids=new();
+    private TerrainGpuSampler? ringGpuSampler;
     private TerrainRingTransitions.Result? ringUploading;
     private D ringNext=new();
     private long ringUploadGeneration=-1,ringSourceRevision;
@@ -29,16 +30,80 @@ public partial class ChunkTerrain
     private Vector2 ringPreviousFocus;
     private bool ringHasPreviousFocus;
     private double ringPrefetchClock;
-    public D get_ring_progress()=>ringStream is null?new D():new D{["requested"]=ringStream.Requested?.Patches.Length??0,["ready"]=ringStream.ReadyPatches,["pending"]=ringStream.PendingPatches,["jobs"]=ringStream.RunningJobs,["job_stages"]=ringStream.JobStages,["active"]=_active_chunks.Count,["staged"]=_staged.Count,["complete"]=ringStream.IsCoverageComplete,["generation"]=ringStream.Generation,["error"]=ringStream.LastError,["workers"]=ringBudget?.WorkerAllowance??0,["nearby_published"]=ringStream.IsNearbyPublished,["local_publications"]=ringStream.LocalPublications,["shared_samples"]=ringStream.ShareSamples,["gpu_render_grids"]=ringStream.GpuGrids,["grid_templates_created"]=ringGpuGrids.TemplatesCreated,["grid_page_uploads"]=ringGpuGrids.PageUploads,["grid_page_bytes_uploaded"]=ringGpuGrids.PageBytesUploaded,["profile"]=ringStream.Profile,["shared_sample_hits"]=ringStream.SharedSampleHits,["shared_sample_misses"]=ringStream.SharedSampleMisses,["canonical_evaluations"]=ringStream.CanonicalEvaluations,["cave_discovery_cache_hits"]=CaveStreams().Sum(stream=>stream.discovery_cache_hits),["cave_discovery_cache_bytes"]=CaveStreams().Sum(stream=>stream.discovery_cache_bytes),["prefetch_patches"]=ringStream.PrefetchPatches,["prefetch_completions"]=ringStream.PrefetchCompletions,["prefetch_hits"]=ringStream.PrefetchHits,["cache_hits"]=ringStream.CacheHits,["cache_misses"]=ringStream.CacheMisses,["cache_bytes"]=ringStream.ResidentCacheBytes};
+    public D get_ring_progress()
+    {
+        if(ringStream is null)return new D();
+        return new D
+        {
+            ["requested"]=ringStream.Requested?.Patches.Length??0,
+            ["ready"]=ringStream.ReadyPatches,
+            ["pending"]=ringStream.PendingPatches,
+            ["jobs"]=ringStream.RunningJobs,
+            ["job_stages"]=ringStream.JobStages,
+            ["active"]=_active_chunks.Count,
+            ["staged"]=_staged.Count,
+            ["complete"]=ringStream.IsCoverageComplete,
+            ["generation"]=ringStream.Generation,
+            ["error"]=ringStream.LastError,
+            ["workers"]=ringBudget?.WorkerAllowance??0,
+            ["nearby_published"]=ringStream.IsNearbyPublished,
+            ["local_publications"]=ringStream.LocalPublications,
+            ["shared_samples"]=ringStream.ShareSamples,
+            ["gpu_render_grids"]=ringStream.GpuGrids,
+            ["generation_backend"]=ring_settings.generation_backend,
+            ["gpu_generation_available"]=ringGpuSampler?.Available??false,
+            ["gpu_completed_requests"]=ringGpuSampler?.CompletedRequests??0,
+            ["gpu_completed_samples"]=ringGpuSampler?.CompletedSamples??0,
+            ["gpu_failed_requests"]=ringGpuSampler?.FailedRequests??0,
+            ["gpu_readback_bytes"]=ringGpuSampler?.ReadbackBytes??0,
+            ["gpu_readbacks"]=ringGpuSampler?.Readbacks??0,
+            ["gpu_raw_samples"]=ringGpuSampler?.GeneratedRawSamples??0,
+            ["gpu_readback_ms"]=ringGpuSampler?.ReadbackMilliseconds??0,
+            ["gpu_last_failure"]=ringGpuSampler?.LastFailure??"",
+            ["grid_templates_created"]=ringGpuGrids.TemplatesCreated,
+            ["grid_page_uploads"]=ringGpuGrids.PageUploads,
+            ["grid_page_bytes_uploaded"]=ringGpuGrids.PageBytesUploaded,
+            ["profile"]=ringStream.Profile,
+            ["shared_sample_hits"]=ringStream.SharedSampleHits,
+            ["shared_sample_misses"]=ringStream.SharedSampleMisses,
+            ["canonical_evaluations"]=ringStream.CanonicalEvaluations,
+            ["cave_discovery_cache_hits"]=CaveStreams().Sum(stream=>stream.discovery_cache_hits),
+            ["cave_discovery_cache_bytes"]=CaveStreams().Sum(stream=>stream.discovery_cache_bytes),
+            ["prefetch_patches"]=ringStream.PrefetchPatches,
+            ["prefetch_completions"]=ringStream.PrefetchCompletions,
+            ["prefetch_hits"]=ringStream.PrefetchHits,
+            ["cache_hits"]=ringStream.CacheHits,
+            ["cache_misses"]=ringStream.CacheMisses,
+            ["cache_bytes"]=ringStream.ResidentCacheBytes,
+        };
+    }
     private void InitializeRings()
     {
         authority_only|=OS.HasFeature("dedicated_server")||OS.GetCmdlineUserArgs().Contains("terrain-server");if(authority_only)nested_rings=true;
         if(!nested_rings)return;
         ring_settings=(TerrainRingSettings)ring_settings.Duplicate();
         foreach(string argument in OS.GetCmdlineUserArgs())if(argument.StartsWith("terrain-profile=",StringComparison.OrdinalIgnoreCase)){string name=argument["terrain-profile=".Length..];int selected=Array.FindIndex(new[]{"low","medium","high","ultra"},p=>p.Equals(name,StringComparison.OrdinalIgnoreCase));if(selected<0)throw new ArgumentException("Unknown terrain profile: "+name);ring_settings.apply_profile(selected);}
-        if(authority_only){ring_settings.base_patch_metres=16;ring_settings.nearby_vertex_metres=1;ring_settings.outer_rings=0;ring_settings.filtered_distant_heights=false;ring_settings.selective_geometry_refinement=false;Visible=false;}
+        foreach(string argument in OS.GetCmdlineUserArgs())if(argument.StartsWith("terrain-generation=",StringComparison.OrdinalIgnoreCase))
+        {
+            string name=argument["terrain-generation=".Length..];int backend=Array.FindIndex(new[]{"cpu","gpu","auto"},value=>value.Equals(name,StringComparison.OrdinalIgnoreCase));
+            if(backend<0)throw new ArgumentException("Unknown terrain generation backend: "+name);ring_settings.generation_backend=backend;
+        }
+        if(authority_only){ring_settings.base_patch_metres=16;ring_settings.nearby_vertex_metres=1;ring_settings.outer_rings=0;ring_settings.filtered_distant_heights=false;ring_settings.selective_geometry_refinement=false;ring_settings.generation_backend=0;Visible=false;}
         var errors=ring_settings.validation_errors();if(errors.Count>0)throw new InvalidOperationException("Invalid ring configuration: "+string.Join(" ",errors));
-        chunk_size=ring_settings.base_patch_metres;maximum_lod=ring_settings.outer_rings;chunk_resolution=close_resolution=middle_resolution=ring_settings.subdivisions();worker_count=Math.Max(1,Math.Min(worker_count,ring_settings.maximum_workers));upload_budget_ms=ring_settings.upload_budget_ms;ringLayout=new TerrainRingLayout(chunk_size,maximum_lod);ringStream=new TerrainRingStream(new TerrainRingTopology(),ring_settings.filtered_distant_heights){ShareSamples=(ring_settings.shared_samples||OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=on"))&&!OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=off"),GpuGrids=!authority_only&&(ring_settings.gpu_render_grids||OS.GetCmdlineUserArgs().Contains("terrain-render=grid"))&&!OS.GetCmdlineUserArgs().Contains("terrain-render=cpu"),MaximumWorkers=worker_count,CacheBudgetBytes=(long)ring_settings.cache_mebibytes*1024*1024};ringBudget=new TerrainRingBudget(ring_settings);
+        chunk_size=ring_settings.base_patch_metres;maximum_lod=ring_settings.outer_rings;chunk_resolution=close_resolution=middle_resolution=ring_settings.subdivisions();worker_count=Math.Max(1,Math.Min(worker_count,ring_settings.maximum_workers));upload_budget_ms=ring_settings.upload_budget_ms;ringLayout=new TerrainRingLayout(chunk_size,maximum_lod);
+        var topology=new TerrainRingTopology();
+        ringStream=new TerrainRingStream(topology,ring_settings.filtered_distant_heights){ShareSamples=(ring_settings.shared_samples||OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=on"))&&!OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=off"),GpuGrids=!authority_only&&(ring_settings.gpu_render_grids||OS.GetCmdlineUserArgs().Contains("terrain-render=grid"))&&!OS.GetCmdlineUserArgs().Contains("terrain-render=cpu"),MaximumWorkers=worker_count,CacheBudgetBytes=(long)ring_settings.cache_mebibytes*1024*1024};ringBudget=new TerrainRingBudget(ring_settings);
+        if(UseGpuGeneration(ring_settings.generation_backend,authority_only,DisplayServer.GetName(),RenderingServer.GetVideoAdapterName()))
+        {
+            ringGpuSampler=new TerrainGpuSampler{Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always};AddChild(ringGpuSampler);
+            ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,ring_settings.generation_backend==2);
+        }
+    }
+    internal static bool UseGpuGeneration(int backend,bool authority,string displayServer,string adapter)
+    {
+        if(backend==0||authority||displayServer.Equals("headless",StringComparison.OrdinalIgnoreCase))return false;
+        if(backend==1)return true;
+        return !new[]{"llvmpipe","lavapipe","softpipe","swiftshader","software","microsoft basic render"}.Any(name=>adapter.Contains(name,StringComparison.OrdinalIgnoreCase));
     }
     private double TileSpan(int level)=>nested_rings?ring_settings.base_patch_metres*Math.Pow(3,level):chunk_size*(1L<<level);
     private void RefreshRings(Vector3 destination)
