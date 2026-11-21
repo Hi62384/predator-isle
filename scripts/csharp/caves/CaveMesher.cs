@@ -41,6 +41,15 @@ public partial class CaveMesher : RefCounted
     private static readonly bool[] Flip = { false, false, true, false, false, true, false, false, true, false, true, true, false, false, true, false };
     private readonly List<Vector3> _vertices = new(), _normals = new();
     private readonly Dictionary<Vector3, Vector3> _normalCache = new();
+    // Expensive protected-shore bisections are identical for a shared tetrahedral
+    // grid edge. Cache only these refinements, not cheap ordinary edge crosses.
+    // Every biome uses this canonical mesher, including portals and specialty caves.
+    private readonly Dictionary<(Vector3 A, Vector3 B), Vector3> _refinedEdges = new();
+    private const int RefinedEdgeCapacity = 32768;
+    private readonly record struct PreciseShore(Vector3 Center, double Radius);
+    private PreciseShore[] _preciseShores = Array.Empty<PreciseShore>();
+    public long RefinedCacheHits { get; private set; }
+    public long RefinedEvaluations { get; private set; }
     protected ICaveField? Field;
     private A _shores = new();
     public Vector3 origin { get; set; }
@@ -54,18 +63,30 @@ public partial class CaveMesher : RefCounted
     public Vector3 crossing(Vector3 a, Vector3 b, double va, double vb)
     {
         if (a.X > b.X || (a.X == b.X && (a.Y > b.Y || (a.Y == b.Y && a.Z > b.Z)))) { (a, b) = (b, a); (va, vb) = (vb, va); }
-        var original = Weld(a.Lerp(b, (float)Math.Clamp(va / (va - vb), 0, 1)));
-        foreach (var value in _shores)
+        if (_preciseShores.Length > 0 &&
+            _refinedEdges.TryGetValue((a, b), out var cached))
         {
-            var shore = value.AsGodotDictionary(); var center = shore["center"].AsVector3();
-            if (new Vector2(original.X - center.X, original.Z - center.Z).Length() > shore["radius"].AsDouble() + 4 || Math.Abs(original.Y - center.Y) > 6) continue;
+            RefinedCacheHits++;
+            return cached;
+        }
+        var original = Weld(a.Lerp(b, (float)Math.Clamp(va / (va - vb), 0, 1)));
+        foreach (var shore in _preciseShores)
+        {
+            var center = shore.Center;
+            // Keep the original float length/rounding test: this predicate is
+            // allowed to determine which edges receive 12 precision bisections.
+            if (new Vector2(original.X - center.X, original.Z - center.Z).Length() > shore.Radius + 4 ||
+                Math.Abs(original.Y - center.Y) > 6) continue;
             var low = a; var high = b; bool inside = va < 0;
             for (int iteration = 0; iteration < 12; iteration++)
             {
                 var middle = (low + high) * .5f;
+                RefinedEvaluations++;
                 if ((Field!.Sample(middle) < 0) == inside) low = middle; else high = middle;
             }
-            return Weld((low + high) * .5f);
+            var refined = Weld((low + high) * .5f);
+            if (_refinedEdges.Count < RefinedEdgeCapacity) _refinedEdges[(a, b)] = refined;
+            return refined;
         }
         return original;
     }
@@ -120,9 +141,21 @@ public partial class CaveMesher : RefCounted
     public A build(GodotObject volume, Vector3I coordinate) => build(volume, coordinate, 2);
     public A build(GodotObject volume, Vector3I coordinate, double step_metres)
     {
-        _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); boundary_values = new();
+        _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); _refinedEdges.Clear();
+        RefinedCacheHits = RefinedEvaluations = 0;
+        boundary_values = new();
         Field = volume as ICaveField ?? new LegacyCaveField(volume); origin = (Vector3)coordinate * 64;
         _shores = Field.PreciseShores;
+        if (_shores.Count == 0) _preciseShores = Array.Empty<PreciseShore>();
+        else
+        {
+            _preciseShores = new PreciseShore[_shores.Count];
+            for (int i = 0; i < _shores.Count; i++)
+            {
+                var shore = _shores[i].AsGodotDictionary();
+                _preciseShores[i] = new PreciseShore(shore["center"].AsVector3(), shore["radius"].AsDouble());
+            }
+        }
         if ((step_metres != 1 && step_metres != 2 && step_metres != 4) || !Field.HasChunk(coordinate)) return new();
         int count = (int)Math.Round(64 / step_metres), row = count + 1, plane = row * row;
         var points = new Vector3[row * plane]; var values = new float[points.Length];

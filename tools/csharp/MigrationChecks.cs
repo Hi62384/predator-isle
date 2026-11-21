@@ -81,7 +81,9 @@ public partial class MigrationChecks : Node
             if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "field-only"))
             {
                 _mode = "field";
-                CaveFieldChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true, CaveFieldChecks.Measurements); GD.Print($"C# cave field checks passed: {_checks}"); await Finish(); return;
+                CaveFieldChecks.Run(Require);
+                CaveMesherOptimizationChecks.Run(Require);
+                MigrationEvidence.Write(_mode, _checks, true, CaveFieldChecks.Measurements); GD.Print($"C# cave field checks passed: {_checks}"); await Finish(); return;
             }
             if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "worker-only"))
             {
