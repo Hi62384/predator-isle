@@ -14,7 +14,10 @@ public partial class QuarrySampler : BiomeExtensionSampler
     {_rampPlans.Clear();base.configure(config,seed_id,host,family_id);}
     private static Vector2 Rotate(Vector2 p,double value)
     {float angle=(float)value,sine=(float)Math.Sin(angle),cosine=(float)Math.Cos(angle);return new Vector2(p.X*cosine-p.Y*sine,p.X*sine+p.Y*cosine);}
-    private static double Angle(Vector2 p)=>(float)Math.Atan2(p.Y,p.X);
+    // GDScript Vector2.angle() uses the engine's native float-vector
+    // operation. Casting a double Math.Atan2 result to float can differ by
+    // one ULP and change a finely graded quarry road by micrometres.
+    private static double Angle(Vector2 p)=>p.Angle();
     public D ramp_plan(D d)
     {
         string id=d["id"].AsString();if(_rampPlans.TryGetValue(id,out var cached))return cached;var plan=new D();double radius=d["radius"].AsDouble();
