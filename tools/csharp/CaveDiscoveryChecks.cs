@@ -25,6 +25,21 @@ internal static class CaveDiscoveryChecks
             }
             require(!actual.ContainsKey("error")&&steps<1024,"Incremental cave discovery failed to finish its bounded graph");
         }while(actual.ContainsKey("discovery_pending")&&steps<1024);
+        // A bounded batch must produce the exact original graph and never
+        // publish a partial bundle, regardless of where the budget yields.
+        using var batched=Make();
+        var batchedResult=new Godot.Collections.Dictionary();int batchCount=0;
+        do
+        {
+            batchedResult=batched.discover_step(cell,8,100);batchCount++;
+            require(!batchedResult.ContainsKey("error")&&batchCount<1024,
+                "Batched cave discovery failed to finish");
+            if(batchedResult.ContainsKey("discovery_pending"))
+                require(!batchedResult.ContainsKey("cells")&&!batchedResult.ContainsKey("regions"),
+                    "Partial batched cave discovery exposed an incomplete network");
+        }while(batchedResult.ContainsKey("discovery_pending")&&batchCount<1024);
+        require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(batchedResult)),
+            "Bounded batches changed the cave graph, entrance exposure or compiled cells");
         require(expected["entrances"].AsGodotArray().Count>0,"Cave discovery fixture did not exercise admitted entrances");
         require(steps>regions&&GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)),"Yielding cave discovery changed the deterministic graph, exposure columns, or compiled cells");
         var cache=new CaveDiscoveryCache();cache.Add(cell,actual,incremental.DiscoveryBytes);require(cache.TryGet(cell,out var reused)&&ReferenceEquals(reused,actual),"Completed cave discovery was not reused across worker consumers");

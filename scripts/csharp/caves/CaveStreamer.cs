@@ -126,7 +126,13 @@ public partial class CaveStreamer : Node3D
             if(resuming){parkedDiscoveryWorker=null;discovery_worker_resumes++;}
             if(work==null){last_error="Invalid cave worker configuration";return;}
             var result=new A();long generation=_generation;var job=new D{["work"]=work,["result"]=result,["generation"]=generation,["kind"]=_discovery_pending?"discovery":"mesh"};Func<D> execute;
-            if(_discovery_pending){_discovery_pending=false;var region=_region;execute=()=>work.discover_step(region);}
+            if(_discovery_pending)
+            {
+                _discovery_pending=false;var region=_region;
+                // Amortize thread-pool dispatch overhead while keeping individual
+                // steps small enough to release old interests promptly.
+                execute=()=>work.discover_step(region,4,5);
+            }
             else if(_surface_batch!=null&&_surface_batch.pending())
             {
                 var part=_surface_batch.take();job["kind"]="portal";job["batch_id"]=part["batch_id"];job["part"]=part["part"];

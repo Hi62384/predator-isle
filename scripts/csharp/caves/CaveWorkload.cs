@@ -99,39 +99,78 @@ public partial class CaveWorkload : RefCounted
         return bundle;
     }
     /// <summary>Same ordered graph as discover(), yielding between regional products. Partial results are never a solid-ground proof.</summary>
-    public D discover_step(Vector2I cell)
+    public D discover_step(Vector2I cell)=>discover_step(cell,1,0);
+    /// <summary>
+    /// Build a bounded sequence of graph products on one worker. The caller must
+    /// keep this worker between partial results; otherwise its cursor is lost.
+    /// The one-step overload remains the exact deterministic reference.
+    /// </summary>
+    public D discover_step(Vector2I cell,int maxOperations,double maxMilliseconds)
     {
         if(network is null)return new D{["error"]="Cave network is not configured"};
-        if(discovery is null||discovery.Cell!=cell)discovery=new Discovery(cell,Registry.Call("discovery_halo").AsInt32());
+        if(maxOperations<1||maxOperations>16||!double.IsFinite(maxMilliseconds)||
+            maxMilliseconds<0||maxMilliseconds>100)
+            return new D{["error"]="Invalid bounded cave discovery allowance"};
+        if(discovery is null||discovery.Cell!=cell)
+            discovery=new Discovery(cell,Registry.Call("discovery_halo").AsInt32());
         var cursor=discovery;int total=cursor.Width*cursor.Width;
-        if(cursor.RegionIndex<total)
+        ulong began=Time.GetTicksUsec();
+        for(int operation=0;operation<maxOperations;operation++)
         {
-            var region=network.region(cursor.At(cursor.RegionIndex++));cursor.Regions.Add(region);
-            if(region["valid"].AsBool())cursor.Entrances.Add(new D{["region"]=region["id"],["point"]=region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"],["access"]=region["edges"].AsGodotArray()[0]});
-            return Pending();
-        }
-        if(cursor.ConnectionIndex<total)
-        {
-            var here=cursor.At(cursor.ConnectionIndex++);
-            foreach(var offset in new[]{Vector2I.Right,Vector2I.Down})
+            if(operation>0&&(Time.GetTicksUsec()-began)/1000.0>=maxMilliseconds)
+                return Pending();
+            if(cursor.RegionIndex<total)
             {
-                var other=here+offset;if(other.X>cell.X+cursor.Halo||other.Y>cell.Y+cursor.Halo)continue;var edge=network.connection(here,other);if(edge.Count>0)cursor.Edges.Add(edge);
+                var region=network.region(cursor.At(cursor.RegionIndex++));
+                cursor.Regions.Add(region);
+                if(region["valid"].AsBool())
+                    cursor.Entrances.Add(new D{["region"]=region["id"],
+                        ["point"]=region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"],
+                        ["access"]=region["edges"].AsGodotArray()[0]});
+                continue;
             }
-            return Pending();
+            if(cursor.ConnectionIndex<total)
+            {
+                var here=cursor.At(cursor.ConnectionIndex++);
+                foreach(var offset in new[]{Vector2I.Right,Vector2I.Down})
+                {
+                    var other=here+offset;
+                    if(other.X>cell.X+cursor.Halo||other.Y>cell.Y+cursor.Halo)continue;
+                    var edge=network.connection(here,other);
+                    if(edge.Count>0)cursor.Edges.Add(edge);
+                }
+                continue;
+            }
+            if(cursor.Bundle is null)
+            {
+                cursor.Bundle=new D{["cell"]=cell,["regions"]=cursor.Regions,
+                    ["connections"]=cursor.Edges,["entrances"]=cursor.Entrances};
+                if(Registry.Get("enabled").AsBool())
+                    cursor.Bundle["cave_biome_regions"]=Regions.combine(cursor.Regions,
+                        cursor.Edges,Registry.Get("fallback_biome_id").AsString());
+                if(!use_bundle(cursor.Bundle))
+                {
+                    discovery=null;
+                    return new D{["error"]="Cave bundle exceeds numeric field bounds"};
+                }
+                cursor.Bundle["cells"]=new A(field.Get("chunks").AsGodotDictionary().Keys);
+                continue;
+            }
+            if(cursor.EntranceIndex<cursor.Entrances.Count)
+            {
+                var entry=cursor.Entrances[cursor.EntranceIndex++].AsGodotDictionary();
+                entry["columns"]=exposed_columns(entry);
+                continue;
+            }
+            var finished=cursor.Bundle;
+            DiscoveryBytes=TerrainPayloadMemory.Estimate(finished);
+            discovery=null;return finished;
         }
-        if(cursor.Bundle is null)
-        {
-            cursor.Bundle=new D{["cell"]=cell,["regions"]=cursor.Regions,["connections"]=cursor.Edges,["entrances"]=cursor.Entrances};
-            if(Registry.Get("enabled").AsBool())cursor.Bundle["cave_biome_regions"]=Regions.combine(cursor.Regions,cursor.Edges,Registry.Get("fallback_biome_id").AsString());
-            if(!use_bundle(cursor.Bundle)){discovery=null;return new D{["error"]="Cave bundle exceeds numeric field bounds"};}
-            cursor.Bundle["cells"]=new A(field.Get("chunks").AsGodotDictionary().Keys);return Pending();
-        }
-        if(cursor.EntranceIndex<cursor.Entrances.Count)
-        {
-            var entry=cursor.Entrances[cursor.EntranceIndex++].AsGodotDictionary();entry["columns"]=exposed_columns(entry);return Pending();
-        }
-        var result=cursor.Bundle;DiscoveryBytes=TerrainPayloadMemory.Estimate(result);discovery=null;return result;
-        D Pending()=>new(){["discovery_pending"]=true,["regions_ready"]=cursor.RegionIndex,["regions_total"]=total,["connections_ready"]=cursor.ConnectionIndex,["entrances_measured"]=cursor.EntranceIndex};
+        return Pending();
+        D Pending()=>new(){["discovery_pending"]=true,
+            ["regions_ready"]=cursor.RegionIndex,["regions_total"]=total,
+            ["connections_ready"]=cursor.ConnectionIndex,
+            ["entrances_measured"]=cursor.EntranceIndex};
     }
     public bool use_bundle(D bundle)
     {
