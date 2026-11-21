@@ -98,7 +98,15 @@ public partial class TerrainRegions : RefCounted
         for(int i=0;i<4;i++)if(enabled[i])return i;if(jungle_coverage>0)return 4;if(mountain_coverage>0)return 5;if(tropical_coverage>0)return 6;if(badlands_coverage>0)return 7;for(int i=0;i<8;i++)if(extra_coverage[i]>0)return 8+i;return 0;
     }
     public int grid_owner(long x,long z,double step)
-    {var key=new Vector2I(unchecked((int)x),unchecked((int)z));if(!label_cache.ContainsKey(key)){if(label_cache.Count>=4096)label_cache.Clear();label_cache[key]=owner(warp_point(x*step,z*step));}return label_cache[key].AsInt32();}
+    {
+        var key=new Vector2I(unchecked((int)x),unchecked((int)z));
+        // Avoid two Godot Dictionary/Variant crossings for every cached
+        // biome ownership probe. A newly computed value is returned directly.
+        if(label_cache.TryGetValue(key,out var cached))return cached.AsInt32();
+        if(label_cache.Count>=4096)label_cache.Clear();
+        int selected=owner(warp_point(x*step,z*step));
+        label_cache[key]=selected;return selected;
+    }
     private double Coverage(int id)=>id<4?coverage[id]:id==4?jungle_coverage:id==5?mountain_coverage:id==6?tropical_coverage:id==7?badlands_coverage:extra_coverage[id-8];
     public bool pure_rect(Rect2 bounds,int id)
     {
@@ -114,7 +122,19 @@ public partial class TerrainRegions : RefCounted
     {
         ResetWeights();for(int i=0;i<8;i++)if(extra_coverage[i]==1){extra_weights[i]=1;return Vector4.Zero;}if(badlands_coverage==1){badlands_weight=1;return Vector4.Zero;}if(tropical_coverage==1){tropical_weight=1;return Vector4.Zero;}if(mountain_coverage==1){mountain_weight=1;return Vector4.Zero;}if(jungle_coverage==1){jungle_weight=1;return Vector4.Zero;}if(coverage.Y==1||coverage.Z==1||coverage.W==1)return coverage;
         double step=Math.Max(minimum_size/(Math.Max(P("height_blend"),.1)*4),1),px=x/step,pz=z/step;long ix=(long)Math.Floor(px),iz=(long)Math.Floor(pz);var cell=new Vector2I(unchecked((int)ix),unchecked((int)iz));
-        if(!cell_cache.ContainsKey(cell)){if(cell_cache.Count>=4096)cell_cache.Clear();cell_cache[cell]=new Vector4I(grid_owner(ix,iz,step),grid_owner(ix+1,iz,step),grid_owner(ix,iz+1,step),grid_owner(ix+1,iz+1,step));}var labels=cell_cache[cell].AsVector4I();var result=Vector4.Zero;
+        Vector4I labels;
+        // Every mixed-biome height sample calls weights(). A single native
+        // TryGetValue replaces ContainsKey followed by the Variant indexer,
+        // without changing the public cache or its 4,096-entry eviction order.
+        if(cell_cache.TryGetValue(cell,out var cached))labels=cached.AsVector4I();
+        else
+        {
+            if(cell_cache.Count>=4096)cell_cache.Clear();
+            labels=new Vector4I(grid_owner(ix,iz,step),grid_owner(ix+1,iz,step),
+                grid_owner(ix,iz+1,step),grid_owner(ix+1,iz+1,step));
+            cell_cache[cell]=labels;
+        }
+        var result=Vector4.Zero;
         if(labels.X==labels.Y&&labels.X==labels.Z&&labels.X==labels.W){Set(labels.X,1);return result;}
         double fx=Smooth(px-ix),fz=Smooth(pz-iz);if(!extras_enabled&&jungle_coverage==0&&mountain_coverage==0&&tropical_coverage==0&&badlands_coverage==0){result[labels.X]=(float)(result[labels.X]+(1-fx)*(1-fz));result[labels.Y]=(float)(result[labels.Y]+fx*(1-fz));result[labels.Z]=(float)(result[labels.Z]+(1-fx)*fz);result[labels.W]=(float)(result[labels.W]+fx*fz);}
         else{var contributions=new Vector4((float)((1-fx)*(1-fz)),(float)(fx*(1-fz)),(float)((1-fx)*fz),(float)(fx*fz));for(int i=0;i<4;i++)Set(labels[i],contributions[i]);}return result;
