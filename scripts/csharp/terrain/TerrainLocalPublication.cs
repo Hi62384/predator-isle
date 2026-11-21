@@ -19,8 +19,32 @@ internal static class TerrainLocalPublication
         var regions=new Dictionary<TerrainRingLayout.Patch,Rectangle[]>();
         Rectangle[] Regions(TerrainRingLayout.Patch p)
         {if(!regions.TryGetValue(p,out var result))regions[p]=result=p.OwnedRegions().Select(r=>new Rectangle(p.OriginX+r.Position.X,p.OriginZ+r.Position.Y,p.OriginX+r.End.X,p.OriginZ+r.End.Y)).ToArray();return result;}
-        bool Overlap(TerrainRingLayout.Patch a,TerrainRingLayout.Patch b)=>Regions(a).Any(x=>Regions(b).Any(x.Overlaps));
-        bool Touch(TerrainRingLayout.Patch a,TerrainRingLayout.Patch b)=>Regions(a).Any(x=>Regions(b).Any(x.Touches));
+        // Reject disjoint bounding envelopes before enumerating partial-hole
+        // ownership rectangles. Cache exact pair answers for the duration of
+        // this publication transaction; repeated dependency closures then
+        // reuse the same proof without rebuilding LINQ enumerations.
+        var overlapping=new Dictionary<(TerrainRingLayout.Patch,TerrainRingLayout.Patch),bool>();
+        var touching=new Dictionary<(TerrainRingLayout.Patch,TerrainRingLayout.Patch),bool>();
+        static bool EnvelopesMeet(TerrainRingLayout.Patch a,TerrainRingLayout.Patch b,bool strict)
+        {
+            if(strict)
+                return a.OriginX<b.OriginX+b.Size&&a.OriginX+a.Size>b.OriginX&&
+                    a.OriginZ<b.OriginZ+b.Size&&a.OriginZ+a.Size>b.OriginZ;
+            return a.OriginX<=b.OriginX+b.Size&&a.OriginX+a.Size>=b.OriginX&&
+                a.OriginZ<=b.OriginZ+b.Size&&a.OriginZ+a.Size>=b.OriginZ;
+        }
+        bool Overlap(TerrainRingLayout.Patch a,TerrainRingLayout.Patch b)
+        {
+            if(overlapping.TryGetValue((a,b),out bool cached))return cached;
+            bool hit=EnvelopesMeet(a,b,true)&&Regions(a).Any(x=>Regions(b).Any(x.Overlaps));
+            overlapping[(a,b)]=hit;return hit;
+        }
+        bool Touch(TerrainRingLayout.Patch a,TerrainRingLayout.Patch b)
+        {
+            if(touching.TryGetValue((a,b),out bool cached))return cached;
+            bool hit=EnvelopesMeet(a,b,false)&&Regions(a).Any(x=>Regions(b).Any(x.Touches));
+            touching[(a,b)]=hit;return hit;
+        }
         double Area(IEnumerable<TerrainRingLayout.Patch> patches)=>patches.Sum(p=>Regions(p).Sum(r=>r.Area));
         bool SameCoverage(IEnumerable<TerrainRingLayout.Patch> a,IEnumerable<TerrainRingLayout.Patch> b)
         {var left=a.SelectMany(Regions).ToArray();var right=b.SelectMany(Regions).ToArray();return left.All(r=>Math.Abs(r.Area-right.Sum(r.IntersectionArea))<=Math.Max(.0001,r.Area*1e-12))&&right.All(r=>Math.Abs(r.Area-left.Sum(r.IntersectionArea))<=Math.Max(.0001,r.Area*1e-12));}
