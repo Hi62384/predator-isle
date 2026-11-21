@@ -116,6 +116,26 @@ public static class TerrainGpuSamplerChecks
     public static async Task RunVertex(Node host,Action<bool,string> require)
     {
         require(DisplayServer.GetName()!="headless","Vertex baking requires a rendered display");
+        var renderer=RenderingServer.GetCurrentRenderingMethod();
+        var adapter=RenderingServer.GetVideoAdapterName();
+        if(TerrainGpuSampler.SoftwareVulkanVertexUnsupported(renderer,adapter))
+        {
+            var fallback=new TerrainGpuSampler {PreferVertexBake=true};
+            host.AddChild(fallback);
+            try
+            {
+                require(fallback.Available&&!fallback.PreferVertexBake&&fallback.VertexBakeFlights==0,
+                    "Software Vulkan failed to select its safe fragment-generation fallback");
+                Measurements=new()
+                {
+                    ["renderer"]=renderer,["adapter"]=adapter,
+                    ["vertex_bake_skipped_software_vulkan"]=true,
+                    ["vertex_bake_flights"]=0
+                };
+            }
+            finally{fallback.Shutdown();fallback.Free();}
+            return;
+        }
         using var settings=new TerrainConfiguration();
         using var builder=TerrainGpuPipelineChecks.Builder(settings);
         var positions=new Vector2[1024];

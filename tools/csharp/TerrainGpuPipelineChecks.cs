@@ -45,6 +45,11 @@ internal static class TerrainGpuPipelineChecks
             require(ReferenceEquals(mesh,quads.Get(1300))&&quads.CachedTemplates==1,
                 "GPU numerical quad topology was unnecessarily rebuilt");
         }
+        require(TerrainGpuSampler.SoftwareVulkanVertexUnsupported("forward_plus","llvmpipe (LLVM 20)")&&
+                TerrainGpuSampler.SoftwareVulkanVertexUnsupported("mobile","lavapipe")&&
+                !TerrainGpuSampler.SoftwareVulkanVertexUnsupported("gl_compatibility","llvmpipe (LLVM 20)")&&
+                !TerrainGpuSampler.SoftwareVulkanVertexUnsupported("forward_plus","NVIDIA RTX 3060"),
+                "Renderer-specific vertex bake guard incorrectly selected a graphics device");
         foreach (int backend in new[] { 0, 1, 2 })
         {
             require(!ChunkTerrain.UseGpuGeneration(backend, true, "X11", "NVIDIA GeForce RTX 3060"), "Authority selected GPU generation");

@@ -124,6 +124,19 @@ public partial class TerrainGpuSampler : Node
     private int available,queued;
     private long drawVersion;
 
+    // Software Vulkan vertex compilers have exceeded bounded multi-GiB memory
+    // budgets in native validation. Compatibility's tested path is retained;
+    // Forward+/Mobile software drivers use their validated fragment fallback.
+    internal static bool SoftwareVulkanVertexUnsupported(string renderingMethod,string adapter)
+    {
+        if(renderingMethod!="forward_plus"&&renderingMethod!="mobile")return false;
+        return adapter.Contains("llvmpipe",StringComparison.OrdinalIgnoreCase)||
+               adapter.Contains("lavapipe",StringComparison.OrdinalIgnoreCase)||
+               adapter.Contains("softpipe",StringComparison.OrdinalIgnoreCase)||
+               adapter.Contains("swiftshader",StringComparison.OrdinalIgnoreCase)||
+               adapter.Contains("software",StringComparison.OrdinalIgnoreCase);
+    }
+
     public override void _Ready()
     {
         ProcessMode=ProcessModeEnum.Always;
@@ -131,6 +144,12 @@ public partial class TerrainGpuSampler : Node
         if(DisplayServer.GetName()=="headless")return;
         shader=GD.Load<Shader>("res://shaders/grassland_gpu.gdshader");
         if(shader is null){LastFailure="Grassland GPU shader could not be loaded.";return;}
+        if(PreferVertexBake&&SoftwareVulkanVertexUnsupported(
+            RenderingServer.GetCurrentRenderingMethod(),RenderingServer.GetVideoAdapterName()))
+        {
+            PreferVertexBake=false;
+            LastFailure="Software Vulkan vertex baking disabled to avoid memory exhaustion; using fragment shader.";
+        }
         if(PreferVertexBake)
         {
             vertexShader=GD.Load<Shader>("res://shaders/grassland_gpu_vertex.gdshader");
