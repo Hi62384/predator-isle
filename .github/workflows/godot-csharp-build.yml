@@ -32,9 +32,22 @@ jobs:
         with:
           dotnet-version: '8.0.x'
           cache: false
-      - name: Restore dependencies
-        run: dotnet restore PredatorIsle.csproj --nologo
+      - name: Create portable NuGet source configuration
+        run: |
+          cat > "$RUNNER_TEMP/predator-nuget.config" <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          XML
+      - name: Restore game dependencies
+        run: dotnet restore PredatorIsle.csproj --nologo --configfile "$RUNNER_TEMP/predator-nuget.config"
+      - name: Restore validation launcher
+        run: dotnet restore tools/csharp-runner/PredatorIsle.Checks.csproj --nologo --configfile "$RUNNER_TEMP/predator-nuget.config"
       - name: Compile terrain, caves, runtime, and regression fixtures
         run: dotnet build PredatorIsle.csproj --no-restore --configuration Debug --nologo -warnaserror
       - name: Compile C# validation launcher
-        run: dotnet build tools/csharp-runner/PredatorIsle.Checks.csproj --configuration Debug --nologo -warnaserror
+        run: dotnet build tools/csharp-runner/PredatorIsle.Checks.csproj --no-restore --configuration Debug --nologo -warnaserror
