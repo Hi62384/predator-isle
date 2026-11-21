@@ -14,6 +14,37 @@ internal static class TerrainGpuPipelineChecks
     internal static Godot.Collections.Dictionary Measurements { get; private set; } = new();
     internal static void Run(Node host, Action<bool, string> require)
     {
+        // The optional shader must use the same numerical field implementation
+        // as the fragment shader. The stage-specific encoding appears afterward.
+        string fragment=Godot.FileAccess.GetFileAsString("res://shaders/grassland_gpu.gdshader");
+        string vertex=Godot.FileAccess.GetFileAsString("res://shaders/grassland_gpu_vertex.gdshader");
+        const string stageStart="vec4 encode_scalar(float value)";
+        int prefix=fragment.IndexOf(stageStart,StringComparison.Ordinal);
+        require(prefix>0&&vertex.StartsWith(fragment[..prefix],StringComparison.Ordinal),
+            "Experimental GPU vertex shader diverged from the reference terrain algorithm");
+
+        // Decode sample-major 1x9 strips without involving the graphics device.
+        const int columns=16,rows=2,count=21;
+        var numericalPixels=new byte[columns*rows*9*4];
+        for(int sample=0;sample<count;sample++)
+        for(int band=0;band<9;band++)
+        {
+            float value=sample*13.125f+band*.0625f+1;
+            int pixel=(sample/columns*9+band)*columns+sample%columns;
+            System.Buffers.Binary.BinaryPrimitives.WriteInt32LittleEndian(
+                numericalPixels.AsSpan(pixel*4,4),BitConverter.SingleToInt32Bits(value));
+        }
+        var decoded=TerrainGpuSampler.Decode(numericalPixels,count,columns,rows,true);
+        for(int sample=0;sample<count;sample++)
+        for(int band=0;band<9;band++)
+            require(decoded[sample*9+band]==sample*13.125f+band*.0625f+1,
+                "Vertex-bake readback decoded the wrong sample or scalar band");
+        using (var quads=new TerrainGpuVertexQuads())
+        {
+            var mesh=quads.Get(1300);
+            require(ReferenceEquals(mesh,quads.Get(1300))&&quads.CachedTemplates==1,
+                "GPU numerical quad topology was unnecessarily rebuilt");
+        }
         foreach (int backend in new[] { 0, 1, 2 })
         {
             require(!ChunkTerrain.UseGpuGeneration(backend, true, "X11", "NVIDIA GeForce RTX 3060"), "Authority selected GPU generation");

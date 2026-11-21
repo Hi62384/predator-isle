@@ -111,4 +111,70 @@ public static class TerrainGpuSamplerChecks
         }
         finally{sampler.Shutdown();sampler.Free();}
     }
+
+    /// <summary>Opt-in real-renderer comparison of numerical vertex and fragment baking.</summary>
+    public static async Task RunVertex(Node host,Action<bool,string> require)
+    {
+        require(DisplayServer.GetName()!="headless","Vertex baking requires a rendered display");
+        using var settings=new TerrainConfiguration();
+        using var builder=TerrainGpuPipelineChecks.Builder(settings);
+        var positions=new Vector2[1024];
+        for(int i=0;i<positions.Length;i++)
+            positions[i]=new Vector2((i%32)*13+.25f,(i/32)*11+.5f);
+        var referenceSampler=new TerrainGpuSampler{RequestTimeoutSeconds=120};
+        var vertexSampler=new TerrainGpuSampler{RequestTimeoutSeconds=120,PreferVertexBake=true};
+        host.AddChild(referenceSampler);host.AddChild(vertexSampler);
+        try
+        {
+            using var timeout=new CancellationTokenSource(TimeSpan.FromSeconds(150));
+            require(referenceSampler.Available&&vertexSampler.Available&&vertexSampler.PreferVertexBake,
+                "The fragment or vertex shader was not available for rendered comparison");
+            var reference=await referenceSampler.SampleAsync(builder._native_grass,positions,timeout.Token);
+            var accelerated=await vertexSampler.SampleAsync(builder._native_grass,positions,timeout.Token);
+            require(reference is not null&&accelerated is not null,
+                "Numerical shader stage returned no result: "+vertexSampler.LastFailure);
+            require(reference!.Length==accelerated!.Length,"Numerical shader output length changed");
+            require(vertexSampler.VertexBakeFlights>0,"Vertex generation shader was not exercised");
+            double maximumHeightError=0,maximumControlError=0;
+            for(int i=0;i<reference.Length;i++)
+            {
+                double difference=Math.Abs(reference[i]-accelerated[i]);
+                if(i%8 is 0 or 2)maximumHeightError=Math.Max(maximumHeightError,difference);
+                else maximumControlError=Math.Max(maximumControlError,difference);
+            }
+            require(maximumHeightError<=.01&&maximumControlError<=.001,
+                $"Vertex and fragment GPU outputs differ: height {maximumHeightError}, controls {maximumControlError}");
+
+            // Match final terrain elevation against independent CPU sampling.
+            // The shader's raw profile is not authoritative for physics until
+            // this parity gate passes on the actual target GPU.
+            using var cpu=TerrainGpuPipelineChecks.Builder(settings);
+            double cpuHeightError=0;
+            for(int i=0;i<32;i++)
+            {
+                var v=cpu._native_grass.sample(positions[i].X,positions[i].Y);
+                double expected=Math.Max(1,v.X)*(1-v.Y)+v.Z*v.Y;
+                int offset=i*8;
+                double observed=Math.Max(1,accelerated[offset])*(1-accelerated[offset+1])+
+                    accelerated[offset+2]*accelerated[offset+1];
+                cpuHeightError=Math.Max(cpuHeightError,Math.Abs(expected-observed));
+            }
+            require(cpuHeightError<=.01,"Vertex GPU heights exceed CPU reference tolerance: "+cpuHeightError);
+            Measurements=new()
+            {
+                ["samples"]=positions.Length,
+                ["vertex_bake_flights"]=vertexSampler.VertexBakeFlights,
+                ["fragment_readbacks"]=referenceSampler.Readbacks,
+                ["vertex_readbacks"]=vertexSampler.Readbacks,
+                ["maximum_gpu_stage_height_error"]=maximumHeightError,
+                ["maximum_gpu_stage_control_error"]=maximumControlError,
+                ["maximum_cpu_height_error"]=cpuHeightError
+            };
+        }
+        finally
+        {
+            referenceSampler.Shutdown();vertexSampler.Shutdown();
+            referenceSampler.Free();vertexSampler.Free();
+        }
+    }
 }
