@@ -40,6 +40,10 @@ public sealed class TerrainRingMeshGeometry
     }
     private readonly TerrainRingTopology topology;
     private readonly bool filterDistant;
+    // Source-agnostic geometry probes can add 180 expensive canonical biome
+    // samples per middle ring, even when the user explicitly disables
+    // refinement. Do not execute those probes in that configuration.
+    internal bool GenerateShapeRefinement {get;set;}=true;
     private static readonly double[] SupportSteps=CreateSupportSteps();
     private static double[] CreateSupportSteps(){var steps=new SortedSet<double>();for(int level=0;level<=8;level++)foreach(double nearSpacing in new[]{.5,1.0,2.0})steps.Add(nearSpacing*Math.Pow(3,level));return steps.ToArray();}
     private readonly ConditionalWeakTable<TerrainMeshBuilder,TerrainRingHeightFilter> filters=new();
@@ -66,7 +70,7 @@ public sealed class TerrainRingMeshGeometry
             stage?.Invoke("structure geometry");using var structuresBuilder=new LodBiomeStructureGeometry();var structures=builder._extras_enabled?structuresBuilder.build(builder,new Vector2I(patch.Key.X,patch.Key.Y),SupportSteps,new Callable(featuresBuilder,"portal_sites")):new A();var flow=new D();if(structures.Count>2&&structures[2].VariantType!=Variant.Type.Nil){using var coordinates=new AlienTissueCoordinates();flow=coordinates.structure_atlas(builder,structures[2].AsGodotArray(),new Vector2((float)patch.OriginX,(float)patch.OriginZ));}
             // Sidecar payloads are bounded by the same numerical cache budget as the surface mesh.
             var detail=structuresBuilder.RefinementRegions.ToList();if(features.TryGetValue("waterfalls",out var falls))foreach(var value in falls.AsGodotArray()){var fall=value.AsGodotDictionary();if(fall.TryGetValue("position",out var p))detail.Add(new Rect2(p.AsVector2()-Vector2.One*160,Vector2.One*320));}
-            detail.AddRange(ShapeRefinement(builder,data,cancelled));
+            if(GenerateShapeRefinement)detail.AddRange(ShapeRefinement(builder,data,cancelled));
             stage?.Invoke("collision");var ground=BuildAuthoritativeGround(builder,patch,cancelled,shared);
             using var collision=new TerrainCollision();var collisionData=collision.prepare_irregular(ground,ground.Count>0,structures,features,true);
             long bytes=TerrainPayloadMemory.Estimate(structures)+TerrainPayloadMemory.Estimate(features)+TerrainPayloadMemory.Estimate(flow)+detail.Count*16L+TerrainPayloadMemory.Estimate(ground)+TerrainPayloadMemory.Estimate(collisionData);return data with{Structures=structures,Features=features,StructureFlow=flow,AuthoritativeGround=ground,Collision=collisionData,AdditionalBytes=bytes,WaterEnabled=builder.settings.Get("water_enabled").AsBool(),BeachesEnabled=builder.settings.Get("beaches_enabled").AsBool(),WaterLevel=builder.water_level,RefinementRegions=detail.ToArray()};

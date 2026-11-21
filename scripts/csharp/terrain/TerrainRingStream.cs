@@ -42,6 +42,11 @@ public sealed class TerrainRingStream : IDisposable
     private TerrainSharedSamples sharedSamples=new();
     public bool ShareSamples {get;set;}=true;
     public bool GpuGrids{get;set;}
+    public bool GenerateShapeRefinement
+    {
+        get=>geometry.GenerateShapeRefinement;
+        set=>geometry.GenerateShapeRefinement=value;
+    }
     public long SharedSampleHits=>sharedSamples.Hits;
     public long SharedSampleMisses=>sharedSamples.Misses;
     private long canonicalEvaluations;

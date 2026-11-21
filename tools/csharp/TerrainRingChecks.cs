@@ -25,7 +25,13 @@ internal static class TerrainRingChecks
             require(predicted.Length<=24&&predicted.Length>=16&&predicted.SequenceEqual(again)&&predicted.Distinct().Count()==predicted.Length,"Prefetch rows are unbounded or unstable");
             foreach(var p in predicted)require(p.Key.Z==0&&Math.Abs(p.Key.X-(int)Math.Floor(point.X/16))<=4&&Math.Abs(p.Key.Y-(int)Math.Floor(point.Y/16))<=4,"Prefetch escaped its bounded local neighborhood");
         }
-        var topology=new TerrainRingTopology();var layout=new TerrainRingLayout(16,6);
+        var topology=new TerrainRingTopology();
+        using(var ring=new TerrainRingStream(topology))
+        {
+            require(ring.GenerateShapeRefinement,"Production shape refinement was incorrectly disabled by default");
+            ring.GenerateShapeRefinement=false;
+            require(!ring.GenerateShapeRefinement,"Disabled selective refinement still schedules shape probes");
+        }var layout=new TerrainRingLayout(16,6);
         // All terrain above the maximum possible local-water excursion can
         // skip the expensive local-water builder without creating a surface.
         {
