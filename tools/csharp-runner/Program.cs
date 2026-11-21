@@ -33,6 +33,15 @@ foreach (string mode in modes)
     { start.ArgumentList.Add("--audio-driver"); start.ArgumentList.Add("Dummy"); }
     if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
     else start.ArgumentList.Add("--headless");
+    // Renderer equivalence checks can explicitly select either Vulkan renderer.
+    // Keep the regular user workflow on its saved Compatibility renderer.
+    string? testRenderer=Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_RENDER_METHOD");
+    if(mode is "gpu-sampler" or "gpu-vertex" or "gpu-terrain" or "gpu-queues" &&
+       (testRenderer=="forward_plus"||testRenderer=="mobile"))
+    {
+        start.ArgumentList.Add("--rendering-method"); start.ArgumentList.Add(testRenderer);
+        start.ArgumentList.Add("--rendering-driver"); start.ArgumentList.Add("vulkan");
+    }
     if(mode is "startup" or "lifecycle")start.ArgumentList.Add("--verbose");
     if(mode.StartsWith("startup-vulkan",StringComparison.Ordinal)){start.ArgumentList.Add("--rendering-method");start.ArgumentList.Add("forward_plus");start.ArgumentList.Add("--rendering-driver");start.ArgumentList.Add("vulkan");}
     start.ArgumentList.Add(mode == "authority" ? "res://tools/csharp/authority_runtime_check.tscn" : mode == "lifecycle" ? "res://tools/csharp/render_lifecycle_check.tscn" : mode.StartsWith("startup",StringComparison.Ordinal) ? "res://tools/csharp/startup_check.tscn" : "res://tools/csharp/migration_checks.tscn");
