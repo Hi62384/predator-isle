@@ -42,7 +42,8 @@ public partial class BeachSampler : RefCounted
         _=>throw new ArgumentOutOfRangeException(nameof(key))}:settings.Get(key).AsDouble();
     private static double Smooth(double a,double b,double value){double t=Math.Clamp((value-a)/(b-a),0,1);return t*t*(3-2*t);}
     private static double Lerp(double a,double b,double t)=>a+(b-a)*t;
-    private static Vector2 FromAngle(double value){float angle=(float)value;return new Vector2((float)Math.Cos(angle),(float)Math.Sin(angle));}
+    // Use the same native Godot math operation as GDScript's Vector2.from_angle.
+    private static Vector2 FromAngle(double value)=>Vector2.FromAngle((float)value);
     public void configure(Resource config,RefCounted coast)
     {
         settings=config;_coast?.Dispose();_coast=GodotObject.WeakRef(coast);nativeCoast=coast is RockyCoastSampler typed?new(typed):null;nativeHost=null;

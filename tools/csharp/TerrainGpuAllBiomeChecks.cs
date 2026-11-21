@@ -18,8 +18,11 @@ internal static class TerrainGpuAllBiomeChecks
         "insect_colony", "alien_infected"
     ];
 
-    internal static void Run(Action<bool,string> require)
+    internal static void Run(Action<bool,string> require,string? onlyBiome=null)
     {
+        if(onlyBiome is not null&&Array.IndexOf(Names,onlyBiome)<0)
+            throw new ArgumentException("Unknown canonical biome "+onlyBiome,nameof(onlyBiome));
+        using var resources=new TerrainBenchmarkResources();
         var topology=new TerrainRingTopology();
         var geometry=new TerrainRingMeshGeometry(topology,false)
             {GenerateShapeRefinement=false};
@@ -31,13 +34,17 @@ internal static class TerrainGpuAllBiomeChecks
         {
             foreach(string biome in Names)
             {
+                if(onlyBiome is not null&&biome!=onlyBiome)continue;
+                GD.Print("GPU visual and collision parity for biome: "+biome);
                 using var settings=TerrainGpuPipelineChecks.GrassSettings();
                 if(biome!="grass")
                 {
                     settings.Set("grass_coverage",0.0);
                     settings.Set(biome+"_coverage",100.0);
                 }
-                using var builder=TerrainGpuPipelineChecks.Builder(settings);
+                resources.Retain(settings);
+                using var builder=new TerrainMeshBuilder{settings=settings,world_seed=73921};
+                builder._configure_noise();
                 var product=geometry.Build(builder,patch,16);
                 var samples=product.Products;
                 require(samples is not null,"GPU visual pipeline lost "+biome+" terrain products");
@@ -81,9 +88,11 @@ internal static class TerrainGpuAllBiomeChecks
                             "GPU "+biome+" lost material control bank "+band+" at "+i);
                 }
                 completed++;
+                require(ReferenceEquals(templates.Template(product.Topology),shared),
+                    "GPU "+biome+" shared topology changed between repeated requests");
             }
-            require(completed==Names.Length,
-                "All surface biome GPU payload cases were not checked");
+            require(completed==(onlyBiome is null?Names.Length:1),
+                "Requested surface biome GPU payload cases were not checked");
         }
         finally{templates.Clear();}
     }

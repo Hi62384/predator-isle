@@ -32,6 +32,17 @@ public partial class MigrationChecks : Node
                 await Finish();return;
             }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-sampler-only")){_mode="gpu-sampler";await TerrainGpuSamplerChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuSamplerChecks.Measurements);GD.Print($"C# GPU terrain sampler checks passed: {_checks}");await Finish();return;}
+            var selectedBiome=System.Linq.Enumerable.FirstOrDefault(OS.GetCmdlineUserArgs(),
+                arg=>arg.StartsWith("gpu-biome-",StringComparison.Ordinal)&&arg.EndsWith("-only",StringComparison.Ordinal));
+            if(selectedBiome is not null)
+            {
+                string id=selectedBiome["gpu-biome-".Length..^"-only".Length];
+                _mode="gpu-biome-"+id;
+                TerrainGpuAllBiomeChecks.Run(Require,id);
+                MigrationEvidence.Write(_mode,_checks,true);
+                GD.Print($"C# GPU visual payload and collision check passed for {id}: {_checks}");
+                await Finish();return;
+            }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-all-biomes-only"))
             {
                 _mode="gpu-all-biomes";TerrainGpuAllBiomeChecks.Run(Require);

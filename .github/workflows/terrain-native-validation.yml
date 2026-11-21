@@ -71,7 +71,16 @@ jobs:
         timeout-minutes: 13
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-            field worker tropical beach placement tissue gpu-all-biomes cave-biomes
+            field worker tropical beach placement tissue cave-biomes
+      - name: Verify GPU visual payloads and collision for each biome in an isolated engine process
+        timeout-minutes: 15
+        run: |
+          set -e
+          for biome in grass forest savanna swamp jungle mountain tropical badlands quarry wise_mountains volcanic spore_forest radiation_wasteland crystal_wastes insect_colony alien_infected; do
+            echo "::group::GPU visual and physics: $biome"
+            dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- "gpu-biome-$biome"
+            echo "::endgroup::"
+          done
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
         timeout-minutes: 12
         run: |
