@@ -10,7 +10,45 @@ internal static class TerrainRingChecks
 {
     internal static void Run(Action<bool,string> require)
     {
+        TerrainSharedSampleChecks.Run(require);
+        foreach(var point in new[]{new Vector2(-.001f,-16.01f),new Vector2(2,3),new Vector2(16384,-32768)})
+        foreach(var velocity in new[]{Vector2.Zero,new Vector2(25,0),new Vector2(-100,80)})
+        {
+            var predicted=TerrainPrefetch.Select(point,velocity,.2,16);var again=TerrainPrefetch.Select(point,velocity,.2,16);
+            require(predicted.Length<=24&&predicted.Length>=16&&predicted.SequenceEqual(again)&&predicted.Distinct().Count()==predicted.Length,"Prefetch rows are unbounded or unstable");
+            foreach(var p in predicted)require(p.Key.Z==0&&Math.Abs(p.Key.X-(int)Math.Floor(point.X/16))<=4&&Math.Abs(p.Key.Y-(int)Math.Floor(point.Y/16))<=4,"Prefetch escaped its bounded local neighborhood");
+        }
         var topology=new TerrainRingTopology();var layout=new TerrainRingLayout(16,6);
+        {
+            var raw=Surface(new TerrainRingLayout.Patch(new Vector3I(-1,2,0),16,TerrainRingLayout.Mask.None),topology);var data=raw with{GpuPage=TerrainGpuGridPage.Create(raw.Arrays,raw.Topology.Axis.Length)};
+            var grids=new TerrainGpuGrids();require(ReferenceEquals(grids.Template(data.Topology),grids.Template(data.Topology)),"Grid instances did not share the actual mesh resource");
+            using var shader=new Shader{Code="shader_type spatial;uniform bool terrain_grid_enabled=false;uniform sampler2D terrain_grid_payload;uniform int terrain_grid_rows=17;"};using var material=new ShaderMaterial{Shader=shader};
+            using var carrier=new ArrayMesh();var a=new A();a.Resize((int)Mesh.ArrayType.Max);a[(int)Mesh.ArrayType.Vertex]=new[]{data.GpuPage.Bounds.Position,data.GpuPage.Bounds.End,data.GpuPage.Bounds.Position};carrier.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,a);carrier.SurfaceSetMaterial(0,material);carrier.SetMeta("collision_data",new Godot.Collections.Dictionary{["proof"]=7});grids.AttachPayload(carrier,data);
+            var node=new MeshInstance3D{Mesh=carrier};TerrainGpuGrids.Stage(node);var child=node.GetNode<MeshInstance3D>("TerrainGrid");require(child.Mesh==grids.Template(data.Topology)&&((ShaderMaterial)child.MaterialOverride).GetShaderParameter("terrain_grid_enabled").AsBool(),"Shared grid payload was not installed on its render instance");
+            require(node.Mesh.GetAabb().Size.IsEqualApprox(data.GpuPage.Bounds.Size),"Carrier bounds lost displaced terrain extent");
+            TerrainGpuGrids.EnsureCpuSurface(node);require(node.Mesh!=carrier&&child.Mesh is null&&node.Mesh.GetMeta("collision_data").AsGodotDictionary()["proof"].AsInt32()==7,"Cave CPU fallback lost original collision or left the grid drawing");
+            require(((ArrayMesh)node.Mesh).SurfaceGetArrays(0)[(int)Mesh.ArrayType.Vertex].AsVector3Array().SequenceEqual(data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array()),"Cave fallback changed emitted terrain positions");node.Free();grids.Clear();
+        }
+        foreach(var focus in new[]{new Vector2(1,1),new Vector2(-31,-31),new Vector2(16385,-32735)})
+        foreach(var move in new[]{new Vector2(16,0),new Vector2(16,16)})
+        {
+            var old=layout.Select(focus);var next=layout.Select(focus+move);
+            var available=next.Patches.Where(p=>p.Key.Z<=1||old.Patches.Contains(p)).ToHashSet();
+            var local=TerrainLocalPublication.Select(old.Patches,next.Patches,available);
+            require(local is not null,"Ready nearby replacement waited for unrelated distant patches");
+            var plan=old with{Patches=local!,Camera=next.Camera};Check(plan);
+            require(plan.Patches.Any(p=>p.Key.Z==6&&old.Patches.Contains(p)),"Local publication lost distant published coverage");
+            var fineOnly=next.Patches.Where(p=>p.Key.Z==0||old.Patches.Contains(p)).ToHashSet();
+            var partial=TerrainLocalPublication.Select(old.Patches,next.Patches,fineOnly);
+            // A diagonal move can entirely fill a previously partial coarse cell;
+            // that complete fine-only closure is safe without a replacement parent.
+            if(partial is not null){require(partial.All(p=>fineOnly.Contains(p)||old.Patches.Contains(p)),"Unready owner entered a local cut");Check(old with{Patches=partial,Camera=next.Camera});}
+            require(TerrainLocalPublication.Select(next.Patches,next.Patches,next.Patches.ToHashSet()) is null,"Unchanged owners triggered another transaction");
+        }
+        var parent=new TerrainRingLayout.Patch(new Vector3I(0,0,1),48,TerrainRingLayout.Mask.None);
+        var children=Enumerable.Range(0,9).Select(i=>new TerrainRingLayout.Patch(new Vector3I(i%3,i/3,0),16,TerrainRingLayout.Mask.None)).ToArray();
+        require(TerrainLocalPublication.Select(new[]{parent},children,children.Skip(1).ToHashSet()) is null,"Eight ready children exposed the ninth child's hole");
+        require(TerrainLocalPublication.Select(new[]{parent},children,children.ToHashSet())?.Length==9,"A complete nine-child closure waited for unrelated data");
         foreach(var focus in new[]{Vector2.Zero,new Vector2(-.01f,-.01f),new Vector2(15.99f,47.99f),new Vector2(16,48),new Vector2(-49,-145),new Vector2(16384,-32768)})
         {
             var plan=layout.Select(focus);Check(plan);
@@ -24,12 +62,28 @@ internal static class TerrainRingChecks
             var source=plan.Patches.Select(p=>Surface(p,topology)).ToArray();
             foreach(var data in source)
             {
+                var page=TerrainGpuGridPage.Create(data.Arrays,data.Topology.Axis.Length);var points=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+                require(page.Bytes.Length==points.Length*112,"GPU page size differs from its declared layout");
+                for(int i=0;i<points.Length;i++)
+                {
+                    float scale=(float)(data.Patch.Size/data.Topology.Denominator);var axis=data.Topology.Axis.Span;
+                    var reconstructed=new Vector3(axis[i%page.Rows]*scale,BitConverter.ToSingle(page.Bytes,(i*4+3)*sizeof(float)),axis[i/page.Rows]*scale);
+                    require(reconstructed==points[i],"GPU page reconstruction changed emitted canonical or stitched vertices");
+                }
+            }
+            foreach(var data in source)
+            {
                 var vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();var indices=data.Topology.Indices.Span;double triangleArea=0;
                 for(int i=0;i<indices.Length;i+=3){var a=vertices[indices[i]];var b=vertices[indices[i+1]];var c=vertices[indices[i+2]];var center=(a+b+c)/3;require(data.Patch.Contains(data.Patch.OriginX+center.X,data.Patch.OriginZ+center.Z),"Triangle crosses finer terrain ownership");triangleArea+=Math.Abs((double)(b.X-a.X)*(c.Z-a.Z)-(double)(b.Z-a.Z)*(c.X-a.X))*.5;}
                 require(Math.Abs(triangleArea-data.Patch.OwnedRegions().Sum(r=>(double)r.Size.X*r.Size.Y))<.01,"Masked topology area differs from ownership");
                 var water=TerrainRingWater.Build(data,0,true,true);require(water.Count>0&&water[(int)Mesh.ArrayType.Index].AsInt32Array().SequenceEqual(indices.ToArray()),"Water escaped or lost its masked ownership");
             }
             var cut=TerrainRingTransitions.Stitch(plan,source);require(cut.Meshes.Length==source.Length&&cut.StitchedVertices>0,"Complete cut failed to stitch");
+            var memo=new TerrainRingTransitions.Cache();var first=TerrainRingTransitions.Stitch(plan,source,cache:memo);var second=TerrainRingTransitions.Stitch(plan,source,cache:memo);
+            require(memo.Hits==source.Length&&first.Meshes.Zip(second.Meshes).All(pair=>ReferenceEquals(pair.First,pair.Second)),"Unchanged cut copied or rebuilt its products");
+            require(first.Meshes.Zip(cut.Meshes).All(pair=>pair.First.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().SequenceEqual(pair.Second.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array())),"Dependency cache changed stitched geometry");
+            var changed=source.ToArray();changed[0]=changed[0] with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision(),WaterEnabled=!changed[0].WaterEnabled};var third=TerrainRingTransitions.Stitch(plan,changed,cache:memo);
+            require(first.Meshes[0].GeometryFingerprint!=third.Meshes[0].GeometryFingerprint,"A non-position product revision failed to invalidate publication");
             foreach(var data in cut.Meshes)
             {
                 int row=data.Topology.Axis.Length;var vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();

@@ -12,7 +12,7 @@ if (!File.Exists(assembly) || compileSources.Any(path => File.GetLastWriteTimeUt
 string engine = Path.Combine(project, ".tools", "Godot_v4.6.1-stable_mono_win64", "Godot_v4.6.1-stable_mono_win64.exe");
 if (!File.Exists(engine)) throw new FileNotFoundException("Godot 4.6.1 .NET is required in the local .tools folder.", engine);
 string[] modes = args.Length == 0 || args.SequenceEqual(new[] { "all" }) ? new[] { "blob", "authority", "lifecycle", "rings", "general", "field", "worker", "network", "samplers", "placement", "tissue", "beach", "coast", "tropical", "startup" } : args;
-if (modes.Any(mode => !new[] { "blob", "authority", "lifecycle", "rings", "general", "field", "worker", "startup", "network", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
+if (modes.Any(mode => !new[] { "blob", "authority", "lifecycle", "rings", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
 var records = new List<object>();
 string logDirectory = Path.Combine(project, ".godot", "csharp_checks", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff")); Directory.CreateDirectory(logDirectory);
 bool passed = true;
@@ -23,11 +23,16 @@ foreach (string mode in modes)
     var start = new ProcessStartInfo(engine) { WorkingDirectory = project, UseShellExecute = false, CreateNoWindow = true,
         WindowStyle = ProcessWindowStyle.Hidden, RedirectStandardOutput = true, RedirectStandardError = true };
     foreach (string argument in new[] { "--path", project, "--log-file", prefix + ".engine.log" }) start.ArgumentList.Add(argument);
-    if (mode is "general" or "startup" or "lifecycle") { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
+    if (mode is "general" or "lifecycle" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
     else start.ArgumentList.Add("--headless");
     if(mode is "startup" or "lifecycle")start.ArgumentList.Add("--verbose");
-    start.ArgumentList.Add(mode == "authority" ? "res://tools/csharp/authority_runtime_check.tscn" : mode == "lifecycle" ? "res://tools/csharp/render_lifecycle_check.tscn" : mode == "startup" ? "res://tools/csharp/startup_check.tscn" : "res://tools/csharp/migration_checks.tscn");
+    if(mode.StartsWith("startup-vulkan",StringComparison.Ordinal)){start.ArgumentList.Add("--rendering-method");start.ArgumentList.Add("forward_plus");start.ArgumentList.Add("--rendering-driver");start.ArgumentList.Add("vulkan");}
+    start.ArgumentList.Add(mode == "authority" ? "res://tools/csharp/authority_runtime_check.tscn" : mode == "lifecycle" ? "res://tools/csharp/render_lifecycle_check.tscn" : mode.StartsWith("startup",StringComparison.Ordinal) ? "res://tools/csharp/startup_check.tscn" : "res://tools/csharp/migration_checks.tscn");
     if (mode is "blob" or "rings" or "field" or "worker" or "network" or "samplers" or "placement" or "tissue" or "beach" or "coast" or "tropical") { start.ArgumentList.Add("--"); start.ArgumentList.Add(mode + "-only"); }
+    if(mode=="startup-reference"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=cpu");start.ArgumentList.Add("terrain-shared-samples=off");}
+    if(mode is "startup-grid" or "startup-vulkan-grid"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=grid");}
+    if(mode=="startup-path"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-path-check");}
+    if(mode=="startup-shared"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=cpu");start.ArgumentList.Add("terrain-shared-samples=on");}
     DateTime started = DateTime.UtcNow; long peak = 0; string failure = "";
     using var process = Process.Start(start) ?? throw new IOException("Could not start owned Godot check.");
     Task<string> stdout = process.StandardOutput.ReadToEndAsync(), stderr = process.StandardError.ReadToEndAsync();
@@ -54,7 +59,7 @@ foreach (string mode in modes)
         && line.Trim() != "ERROR: Failed to read the root certificate store.").ToArray();
     if (process.ExitCode != 0) failure += $" Godot exit code {process.ExitCode}.";
     if (runtimeErrors.Length > 0) failure += " " + string.Join("\n", runtimeErrors);
-    string reportPath = Path.Combine(project, "data", "csharp_check_" + mode + "_latest.json");
+    string reportPath = Path.Combine(project, "data", "csharp_check_" + (mode.StartsWith("startup",StringComparison.Ordinal)?"startup":mode) + "_latest.json");
     if (failure.Length == 0)
     {
         if (!File.Exists(reportPath) || File.GetLastWriteTimeUtc(reportPath) < started.AddSeconds(-2)) failure = "No fresh semantic report was produced.";
@@ -64,6 +69,8 @@ foreach (string mode in modes)
             if (!report.RootElement.GetProperty("passed").GetBoolean()) failure = "Semantic report failed.";
         }
     }
+    if(File.Exists(reportPath))File.Copy(reportPath,prefix+".semantic.json",true);
+    string capture=Path.Combine(project,"data","startup_verified_render.png");if(mode.StartsWith("startup",StringComparison.Ordinal)&&File.Exists(capture)&&File.GetLastWriteTimeUtc(capture)>=started.AddSeconds(-2))File.Copy(capture,prefix+".png",true);
     bool ok = failure.Length == 0;
     records.Add(new { mode, passed = ok, started_utc = started, completed_utc = DateTime.UtcNow, exit_code = process.ExitCode,
         sampled_peak_private_bytes = peak > 0 ? (long?)peak : null, environment_messages = environmentMessages, log_prefix = prefix, failure });

@@ -77,14 +77,19 @@ uniform int debug_view=0;
 uniform int diagnostic_surface=0;
 uniform float chunk_lod=0.0;
 uniform float chunk_size_metres=256.0;
-varying vec3 world_position;
+// Pack smooth values with matching interpolation; leave room for all cave adapters.
+varying vec4 terrain_world_values;
+#define world_position terrain_world_values.xyz
 varying vec3 world_normal;
-varying float view_distance;
-varying vec3 geology_control;
+#define view_distance terrain_world_values.w
+varying vec4 terrain_geology_values;
+#define geology_control terrain_geology_values.xyz
 varying vec3 jungle_control;
 varying vec3 forest_control;
-varying vec3 forest_ecology;
-varying vec2 forest_geology;
+varying vec4 terrain_forest_values;
+#define forest_ecology terrain_forest_values.xyz
+varying vec4 terrain_coast_geology_values;
+#define forest_geology terrain_coast_geology_values.xy
 varying vec3 forest_local_position;
 varying flat vec3 forest_origin;
 varying vec3 savanna_control;
@@ -95,17 +100,19 @@ varying vec3 swamp_control;
 varying vec3 swamp_hydro;
 varying vec3 swamp_land;
 varying vec3 swamp_ecology;
-varying float swamp_water_level;
+#define swamp_water_level terrain_forest_values.w
 varying vec3 mountain_control;
 varying vec3 mountain_geology;
 varying vec3 mountain_shape;
-varying float mountain_wet;
-varying vec2 terrain_surface;
-varying vec3 coast_control; // influence, regional appearance, wave exposure
-varying float coast_sediment;
-varying vec2 beach_control; // decoded sand fraction, sand regional identity
+#define mountain_wet terrain_geology_values.w
+varying vec4 terrain_surface_values;
+#define terrain_surface terrain_surface_values.xy
+varying vec4 terrain_coast_values; // influence, regional appearance, wave exposure
+#define coast_control terrain_coast_values.xyz
+#define coast_sediment terrain_coast_values.w
+#define beach_control terrain_coast_geology_values.zw // decoded sand fraction, sand regional identity
 varying vec3 tropical_control; // ownership, moisture, regional appearance
-varying vec2 badlands_control; // ownership, regional appearance
+#define badlands_control terrain_surface_values.zw // ownership, regional appearance
 float field(vec2 p) {
  vec2 i=floor(p),f=fract(p); f=f*f*(3.0-2.0*f);
  vec4 h=fract(sin(vec4(dot(i,vec2(127.1,311.7)),dot(i+vec2(1,0),vec2(127.1,311.7)),dot(i+vec2(0,1),vec2(127.1,311.7)),dot(i+vec2(1,1),vec2(127.1,311.7))))*43758.5453);
@@ -132,37 +139,49 @@ uniform sampler2D cavity_portals:filter_nearest,repeat_disable;
 uniform int cavity_portal_count=0;
 uniform float extension_normals[8];
 uniform float extension_emission[8];
+#include "res://shaders/terrain_grid_vertex.gdshaderinc"
 void vertex() {
+ vec4 grid_control0=CUSTOM0,grid_control1=CUSTOM1,grid_control2=CUSTOM2,grid_control3=CUSTOM3;
+ if(terrain_grid_enabled){
+  ivec2 grid_index=ivec2(VERTEX_ID%terrain_grid_rows,VERTEX_ID/terrain_grid_rows);
+  vec4 grid_ground=terrain_grid_value(grid_index,0);
+  VERTEX.xz*=terrain_grid_scale;VERTEX.y=grid_ground.w;NORMAL=grid_ground.xyz;
+  COLOR=terrain_grid_value(grid_index,1);
+  vec4 grid_uv=terrain_grid_value(grid_index,2);UV=grid_uv.xy;UV2=grid_uv.zw;
+  grid_control0=terrain_grid_value(grid_index,3);grid_control1=terrain_grid_value(grid_index,4);
+  grid_control2=terrain_grid_value(grid_index,5);grid_control3=terrain_grid_value(grid_index,6);
+ }
  world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
  world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);
  view_distance=length((VIEW_MATRIX*vec4(world_position,1.0)).xyz);
  geology_control=CUSTOM0.xyz;
- jungle_control=unpack_control24(CUSTOM0.w);
+ if(terrain_grid_enabled)geology_control=grid_control0.xyz;
+ jungle_control=unpack_control24(grid_control0.w);
  badlands_control=vec2(0);
- if(CUSTOM0.w<0.0){
-  jungle_control=unpack_control24(-CUSTOM0.w-1.0);
+ if(grid_control0.w<0.0){
+  jungle_control=unpack_control24(-grid_control0.w-1.0);
   vec3 b=unpack_control24(UV.y);badlands_control=b.xy;
   UV.y=(round(b.z*255.0)-127.0)/254.0;
  }
- forest_control=unpack_control24(CUSTOM1.x);
- forest_ecology=unpack_control24(CUSTOM1.y);
- forest_geology=CUSTOM1.zw;
+ forest_control=unpack_control24(grid_control1.x);
+ forest_ecology=unpack_control24(grid_control1.y);
+ forest_geology=grid_control1.zw;
  coast_control=vec3(0);coast_sediment=0.0;beach_control=vec2(0);
- if(CUSTOM1.z<0.0){vec3 a=unpack_control24(-CUSTOM1.z-1.0),b=unpack_control24(CUSTOM1.w);forest_geology=vec2(a.x,b.x);coast_control=vec3(a.yz,b.y);coast_sediment=b.z;}
- if(CUSTOM1.z<0.0 && CUSTOM1.w<0.0){vec3 b=unpack_control24(-CUSTOM1.w-1.0);forest_geology.y=b.x;beach_control=b.yz;coast_control.z=.5;coast_sediment=0.0;}
+ if(grid_control1.z<0.0){vec3 a=unpack_control24(-grid_control1.z-1.0),b=unpack_control24(grid_control1.w);forest_geology=vec2(a.x,b.x);coast_control=vec3(a.yz,b.y);coast_sediment=b.z;}
+ if(grid_control1.z<0.0 && grid_control1.w<0.0){vec3 b=unpack_control24(-grid_control1.w-1.0);forest_geology.y=b.x;beach_control=b.yz;coast_control.z=.5;coast_sediment=0.0;}
  forest_local_position=VERTEX;
  forest_origin=MODEL_MATRIX[3].xyz;
- savanna_control=unpack_control24(CUSTOM2.x);
- savanna_geology=unpack_control24(CUSTOM2.y);
- savanna_water=unpack_control24(CUSTOM2.z);
- savanna_surface=unpack_control24(CUSTOM2.w);
- swamp_control=unpack_control24(CUSTOM3.x);
- swamp_hydro=unpack_control24(CUSTOM3.y);
- swamp_land=unpack_control24(CUSTOM3.z);
- swamp_ecology=unpack_control24(CUSTOM3.w);
+ savanna_control=unpack_control24(grid_control2.x);
+ savanna_geology=unpack_control24(grid_control2.y);
+ savanna_water=unpack_control24(grid_control2.z);
+ savanna_surface=unpack_control24(grid_control2.w);
+ swamp_control=unpack_control24(grid_control3.x);
+ swamp_hydro=unpack_control24(grid_control3.y);
+ swamp_land=unpack_control24(grid_control3.z);
+ swamp_ecology=unpack_control24(grid_control3.w);
  tropical_control=vec3(0);
- if(CUSTOM2.x<0.0){
-  vec3 s=unpack_control24(-CUSTOM2.x-1.0),w=unpack_control24(-CUSTOM3.x-1.0),f=unpack_control24(-CUSTOM1.x-1.0);
+ if(grid_control2.x<0.0){
+  vec3 s=unpack_control24(-grid_control2.x-1.0),w=unpack_control24(-grid_control3.x-1.0),f=unpack_control24(-grid_control1.x-1.0);
   tropical_control=vec3(s.z,w.z,f.z);
   savanna_control=vec3(s.xy,round(COLOR.b*255.0)/255.0);
   swamp_control=vec3(w.xy,round(COLOR.a*255.0)/255.0);
@@ -171,10 +190,10 @@ void vertex() {
  swamp_water_level=UV.x;
  mountain_control=vec3(0);mountain_geology=vec3(0);mountain_shape=vec3(0);mountain_wet=0.0;
  terrain_surface=UV2;
- if(CUSTOM0.x<0.0){
-  geology_control=unpack_control24(-CUSTOM0.x-1.0);
-  mountain_control=unpack_control24(CUSTOM0.y);
-  mountain_geology=unpack_control24(CUSTOM0.z);
+ if(grid_control0.x<0.0){
+  geology_control=unpack_control24(-grid_control0.x-1.0);
+  mountain_control=unpack_control24(grid_control0.y);
+  mountain_geology=unpack_control24(grid_control0.z);
   vec3 legacy_ridge=unpack_control24(UV2.x);
   vec3 erosion_wet=unpack_control24(UV2.y);
   terrain_surface=legacy_ridge.xy;

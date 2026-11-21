@@ -1,0 +1,669 @@
+# CODEX TASK — MAKE PREDATOR ISLE’S NEARBY TERRAIN LOAD ALMOST INSTANTLY
+
+## OBJECTIVE
+
+Optimize the existing C# terrain system so the central 3×3 area becomes visible and safely playable extremely quickly, including on lower-end PCs, while preserving realistic terrain, existing biomes, caves, and large viewing distances.
+
+The project already has nested terrain rings and small nearby patches. Do not create another competing terrain architecture or assume that simply reducing polygon counts will solve the remaining delays.
+
+The intended architecture is:
+
+SHARED TERRAIN DATA
+→ independently ready nearby terrain and collision
+→ reusable GPU-displaced render grids
+→ detailed terrain materials
+→ separately streamed cave interiors and supplementary features.
+
+Implement these changes in the actual project. Profile, test, inspect rendered results, and report measured improvements.
+
+---
+
+## 1. INSPECT THE CURRENT IMPLEMENTATION
+
+Read AGENTS.md and inspect the current checkout before editing. The previous review used commit 2a001cf; HEAD may have changed.
+
+Start with these files and their current replacements:
+
+Terrain orchestration:
+- scripts/csharp/terrain/ChunkTerrain.cs
+- scripts/csharp/terrain/ChunkTerrainRings.cs
+- scripts/csharp/terrain/ChunkTerrainStartup.cs
+- scripts/csharp/terrain/ChunkTerrainUploads.cs
+- scripts/csharp/terrain/ChunkTerrainAuthority.cs
+
+Generation and streaming:
+- TerrainRingStream.cs
+- TerrainRingMeshGeometry.cs
+- TerrainRingTopology.cs
+- TerrainRingTransitions.cs
+- TerrainRingHeightFilter.cs
+- TerrainHeightField.cs
+- TerrainMeshBuilder.cs
+- TerrainRegions.cs
+- TerrainCollision.cs
+
+Caves and startup:
+- scripts/csharp/caves/CaveStreamer.cs
+- scripts/csharp/caves/CaveWorkload.cs
+- scripts/csharp/WorldStartup.cs
+- scripts/csharp/rendering/TerrainShaderPreparation.cs
+
+Configuration and diagnostics:
+- config/world/terrain_rings.tres
+- config/world/terrain_settings.tres
+- project.godot
+- docs/terrain/TERRAIN_RING_STREAMING.md
+- data/loading_optimization_current.json
+- data/csharp_check_startup_latest.json
+- Existing C# regression runner and terrain test scenes.
+
+Verify the actual active execution path. Do not optimize unused legacy GDScript.
+
+The previous inspection found:
+- C# nested rings enabled in the main scene.
+- 16 m patches and 1 m nearby visual spacing.
+- Partial publication during startup, but complete replacement requirements after initial coverage.
+- Terrain patch generation bundled with features, structures, collision, and refinement.
+- Repeated terrain queries for surface samples, normals, and collision.
+- Full-payload height caching poorly matched to dense nearby samples.
+- Broad cave discovery substantially slower than initial surface readiness.
+- Serialization used to estimate cache payload sizes.
+- Compatibility rendering selected.
+- Shader preparation occurring before the main world scene starts.
+
+Confirm each finding before acting. Preserve improvements already made.
+
+Do not reuse withdrawn Hoogie code, textures, or assets.
+
+---
+
+## 2. ESTABLISH AN HONEST PERFORMANCE BASELINE
+
+Instrument the running game, not just an isolated mesh-building function.
+
+Measure these separately:
+
+- Application startup and resource loading.
+- Shader preparation.
+- Initial terrain configuration.
+- Regional terrain lookup.
+- Canonical height sampling.
+- Material-control generation.
+- Normal generation.
+- Ground collision preparation and installation.
+- Feature and structure generation.
+- Cave discovery and entrance preparation.
+- Queue wait.
+- GPU uploads.
+- Time spent ready but waiting for publication.
+- Time until the central 3×3 is visibly rendered.
+- Time until the central 3×3 has usable collision.
+- Time until distant coverage and caves finish.
+
+Record actual sample counts, cache hits/misses, allocated bytes, cancellation counts, and per-stage durations.
+
+Distinguish:
+1. Cold application startup.
+2. Warm engine, uncached destination.
+3. Cached revisit.
+4. Continuous movement with prefetch.
+5. Teleportation.
+
+Previous saved measurements are historical evidence, not benchmarks of this implementation. Never report them as newly measured results.
+
+Define the minimum-spec test configuration explicitly. Running a low-quality preset on a powerful machine does not prove performance on weak hardware.
+
+Targets:
+- Prefetched movement: no visible loading pause.
+- Warm-engine, uncached central 3×3: aim for approximately 100–250 ms on the selected minimum-spec machine.
+- No routine generation-related multi-second stalls.
+- Main-thread terrain work should normally remain within the configured budget, initially around 1–2 ms per frame.
+
+These are targets, not invented guarantees. Report actual results and remaining bottlenecks.
+
+---
+
+## 3. REMOVE UNNECESSARY WHOLE-WORLD PUBLICATION BARRIERS
+
+The central 3×3 must not wait for every distant patch or unrelated underground region.
+
+Refactor publication into independently safe LOCAL transactions.
+
+A local surface group should require only:
+- Its terrain data.
+- Required collision.
+- Valid connections to its currently published neighbors.
+- Any cave-mouth or geological geometry that affects that group.
+
+Do not require all requested rings to finish before publishing newly ready nearby terrain during ordinary movement.
+
+Use explicit readiness states such as:
+
+Requested
+→ DataReady
+→ SurfaceReady
+→ CollisionReady
+→ Published
+→ OptionalDetailReady
+
+Readiness must be versioned by terrain source revision, patch ownership, and boundary dependencies.
+
+A local transaction must retain:
+- Exactly one visible owner for each surface region.
+- Valid 3:1 transitions.
+- No exposed holes.
+- No conflicting overlapping terrain.
+- Correct nearby collision.
+- Existing valid terrain until its replacement is usable.
+
+Determine the smallest dependency closure needed for a replacement. Do not casually remove safety checks or replace them with skirts hiding incorrect ownership.
+
+Keep distant rings independently publishable where safe.
+
+Avoid repeated uploads or staging destruction when a small camera movement changes only part of the plan.
+
+---
+
+## 4. MAKE TERRAIN DATA THE PRIMARY REUSABLE PRODUCT
+
+Stop treating each render patch as an isolated request to regenerate the surrounding world.
+
+Introduce a shared, bounded terrain-data cache containing immutable or safely versioned numerical pages.
+
+Cache products should include:
+- Canonical heights.
+- Required material/biome controls.
+- Water information.
+- Local feature and cave-entrance metadata.
+- Derivative data where useful.
+- Filtered visual representations at different scales.
+
+Separate three concepts:
+- Data-page size.
+- Render-patch size.
+- Collision-region size.
+
+Render patches can remain 16 m. Broader regional data can use larger pages, but generating the first nearby patch must not require completing a huge page.
+
+Permit partial-page production or small critical subpages.
+
+### Nearby sampling
+
+A 48×48 m central region sampled every meter has:
+- 49×49 unique grid positions.
+- 51×51 positions with a one-sample border for normal calculations.
+
+Use this as a reuse opportunity, not a requirement to generate the entire area as one monolithic job.
+
+Share overlapping samples between neighboring patches. Derive normals from already available neighboring heights whenever appropriate.
+
+Reuse canonical samples for ground collision instead of evaluating the same positions again.
+
+### Cache requirements
+
+Keys must include:
+- World identity and generator version.
+- Terrain-change revision.
+- World-space page coordinates.
+- Sampling level or spacing.
+- Data-product type.
+
+Handle negative coordinates and supported large coordinates consistently. Use exact lattice coordinates where possible instead of fragile floating-point equality tests.
+
+Do not silently quantize genuine off-grid cave queries into an inaccurate cache.
+
+Support:
+- Bounded eviction.
+- Resident near-page protection.
+- Coalescing of identical in-flight requests.
+- Cancellation that respects multiple consumers.
+- Targeted invalidation.
+- Optional persistent caching after the memory path is correct.
+
+Do not share mutable sampler “last result” fields between workers. Capture results into owned typed data.
+
+---
+
+## 5. OPTIMIZE THE C# SAMPLING HOT PATH
+
+C# migration alone is not enough.
+
+Use ordinary .NET arrays, typed records/structs, and appropriate .NET collections inside numerical generation. Convert to Godot collections only at engine boundaries where required.
+
+Priorities:
+
+### Avoid repeated world evaluation
+Separate height-only, material, water, and feature queries. A collision or derivative sample should not calculate visual payloads it does not need.
+
+Cache regional descriptors such as island influence, biome regions, drainage networks, and feature locations when they are reusable.
+
+Evaluate only relevant biome contributions. Preserve meaningful transition weights.
+
+### Remove unnecessary allocations
+Replace repeated temporary dictionaries, arrays, Variant conversions, LINQ allocations, and resource-property lookups inside tight loops where profiling supports it.
+
+Use immutable settings snapshots and worker-owned scratch buffers.
+
+### Remove serialization-based memory accounting
+Do not call GD.VarToBytes merely to determine the size of newly built payloads.
+
+Track array lengths and allocation sizes directly. Estimate container overhead conservatively.
+
+### Improve eviction
+Replace whole-cache clearing at capacity with bounded page or entry eviction.
+
+Keep frequently reused nearby samples alive.
+
+### Improve change tracking
+Do not hash and copy every unchanged mesh during every publication.
+
+Use explicit source, topology, boundary, material, and feature revisions to identify dirty products.
+
+Do not reduce correctness by checking only vertex positions. Material-only changes, water, cave cuts, and collision updates must still invalidate their relevant products.
+
+Preserve canonical terrain results. Distinguish exact caching optimizations from approximations that could change the landscape.
+
+---
+
+## 6. SPLIT ESSENTIAL TERRAIN FROM SUPPLEMENTARY WORK
+
+Refactor the patch builder so its first usable result is small and bounded.
+
+The critical path should resemble:
+
+Acquire regional context
+→ sample missing canonical ground data
+→ derive necessary normals/material controls
+→ prepare required collision and local boundary data
+→ upload
+→ publish locally.
+
+Move nonessential work into independent follow-up jobs:
+- Cosmetic biome structures.
+- Detailed material masks.
+- Decorative geometry.
+- Additional surface effects.
+- Distant water detail.
+- Underground content outside immediate traversal needs.
+
+Do not classify everything except the heightfield as optional.
+
+A rock shelf, cave mouth, mound, or structure that changes traversable ground must have its gameplay-relevant geometry and collision ready before the player can use it.
+
+Cosmetic refinements must not move the ground under players after publication.
+
+Allow optional detail failures to be reported without making otherwise valid terrain disappear.
+
+---
+
+## 7. IMPLEMENT REUSABLE GPU-DISPLACED TERRAIN GRIDS
+
+This is the main rendering optimization.
+
+Do not reconstruct and upload complete vertex arrays for every ordinary terrain patch when a reusable grid plus height data can represent it.
+
+Create reusable grid templates once.
+
+Initial visual options per 16 m patch:
+- 17×17 vertices for the simplest representation.
+- 33×33 vertices for a more detailed visual grid.
+- 65×65 vertices for higher-quality close rendering when worthwhile.
+
+Use appropriate cheaper templates farther away.
+
+The CPU can still produce canonical heights at approximately 1 m spacing where sufficient. The render grid samples those cached heights through a vertex shader.
+
+This is actual displacement of EXISTING vertices. Do not claim that an ordinary Godot shader creates additional vertices.
+
+### Required implementation details
+
+- World-aligned height sampling.
+- Texture/page borders to prevent edge contamination.
+- Suitable height precision.
+- Matching coordinate conventions between CPU and GPU.
+- Correct normals after displacement.
+- Correct displaced bounds for visibility culling.
+- Correct shadows.
+- Reusable topology compatible with 3:1 transitions.
+- Appropriate handling of masked patches and cave openings.
+- No dependence on GPU readback for ordinary collision.
+
+Sharing a grid mesh does not mean forcing the whole world into one giant draw call. Preserve useful patch-level culling.
+
+### Reconstruction versus invented detail
+
+Interpolation cannot recover an absent cliff, narrow ridge, or cave entrance.
+
+Begin with a reconstruction that can match the canonical collision triangles closely. If smoother reconstruction is added, bound and measure its deviation.
+
+Do not accidentally use bilinear height reconstruction over a cell while assuming it exactly matches a differently triangulated collision surface.
+
+Higher visual grid density may support:
+- Smoother bounded reconstruction.
+- Small cosmetic displacement.
+- Better transition geometry.
+
+It must not manufacture meter-scale terrain absent from collision.
+
+Keep dedicated geometry for overhangs, cave mouths, and important non-heightfield structures.
+
+Do not use fragment-only hole hiding as a substitute for correct cave collision and surface ownership.
+
+---
+
+## 8. RETAIN HIGH QUALITY THROUGH SCALE-SEPARATED DETAIL
+
+Use three detail scales:
+
+A. Canonical geometry:
+Hills, valleys, ridges, coastlines, movement-relevant ground.
+
+B. Additional real geometry:
+Cliffs, shelves, cave entrances, important geological formations, and locally necessary refinement.
+
+C. Surface shading:
+Fine sand, soil grains, pores, cracks, small stones, and material irregularity.
+
+Reuse the project’s existing licensed textures and biome material systems.
+
+Maintain:
+- Correct world texture scale.
+- Natural material transitions.
+- Directional geological detail.
+- Non-repetitive color variation.
+- Correct normal orientation.
+- Realistic roughness and wetness.
+
+Use normal maps for fine detail. Make expensive parallax optional and limited to locations and distances where it visibly helps.
+
+Do not move the entire expensive biome generator into a per-pixel shader executed every frame.
+
+Bake or generate expensive visual data when a page changes, then render it cheaply.
+
+Small cosmetic displacement must remain within a documented gameplay tolerance. Near cave openings, sharp seams, and contact-critical surfaces, reduce or disable it where necessary.
+
+Shaders cannot fix a genuinely broken silhouette. Refine geometry where needed.
+
+---
+
+## 9. FIX DISTANT FILTERING WITHOUT REPEATED EXPENSIVE QUERIES
+
+Retain the nested scale progression:
+
+16 m → 48 m → 144 m → 432 m → larger rings.
+
+Preserve the existing correct handling of partial ownership and 3:1 boundaries.
+
+Replace repeated on-demand filtering neighborhoods with reusable filtered pages or an equivalently cached hierarchy.
+
+Calculate normals from the filtered data itself rather than repeatedly applying the full filter to new offset samples.
+
+Avoid generating an entire high-resolution landscape just to build one distant page. Support direct bounded-cost coarse generation with validated error, or reuse appropriate existing pages.
+
+Preserve:
+- Mountain silhouettes.
+- Major valleys and ridges.
+- Large cliffs.
+- Coastlines and islands.
+- Important water boundaries.
+
+Do not average material IDs or packed categorical controls as ordinary colors. Filter continuous weights separately and preserve categorical meaning.
+
+Feature preservation must not reintroduce uncontrolled high-frequency spikes.
+
+Use an error criterion to decide where coarse geometry needs refinement. Verify results against the canonical terrain and existing visual references.
+
+Update only affected transition dependencies rather than restitching all unchanged terrain.
+
+---
+
+## 10. MAKE CAVE GENERATION INCREMENTAL AND LOCAL
+
+The nearby surface must not depend on completing broad underground discovery.
+
+Refactor cave work into separately scheduled products where the existing deterministic generation permits:
+
+1. Local entrance and surface-intersection metadata.
+2. Surface cuts and entrance collision.
+3. Traversable entrance sections.
+4. Nearby connected cave sections.
+5. Distant cave regions, formations, and decoration.
+
+Preserve deterministic topology and valid connections across region boundaries.
+
+Do not simply shorten discovery ranges and change the world.
+
+Investigate lazy evaluation of region nodes, connections, and exposure tests so only the dependencies needed for local entrances are solved first.
+
+Cache completed region descriptions and reuse them across workers and consumers.
+
+If current entrance decisions genuinely depend on broad network calculations, expose that dependency and refactor it explicitly. Do not pretend unknown cave locations are safely known to be solid ground.
+
+Publish surface cuts and the corresponding entrance geometry/collision atomically.
+
+Never allow:
+- Players entering missing collision.
+- A known entrance being temporarily sealed.
+- Holes appearing beneath players.
+- Unrelated cave work blocking distant or unrelated surface patches.
+
+Measure local entrance readiness separately from complete cave-network readiness.
+
+---
+
+## 11. ADD PREDICTIVE PREFETCH AND BOUNDED JOBS
+
+Keep the selected maximum-quality visible area centered on the active camera, with independent physics interests around players and other relevant actors.
+
+Maintain a larger data/collision prefetch region, biased toward movement.
+
+Use measured latency and velocity to choose lead distance:
+
+prefetch distance ≈ speed × generation latency + safety margin.
+
+When one row of the central 3×3 is replaced, reuse the remaining rows. Prepare the incoming row before the player reaches it.
+
+Support:
+- Movement-direction prediction.
+- Conservative coverage behind the player for reversals.
+- Camera/player separation.
+- Teleport destinations.
+- Bounded queues.
+- Short, cooperatively cancellable tasks.
+- Fair shared scheduling with caves.
+
+Do not reserve excessive workers for distant work while nearby safety tasks wait.
+
+Do not repeatedly cancel useful shared page work because one render patch became obsolete.
+
+Give publication/preparation jobs their own scheduling consideration so a queue full of long sampling jobs cannot indefinitely delay already-ready terrain.
+
+Avoid main-thread waits, Task.Result, or immediate GPU synchronization in the normal streaming path.
+
+---
+
+## 12. MAKE GPU COMPUTE OPTIONAL, NOT A REQUIREMENT
+
+First implement and benchmark reusable grids with CPU-produced height pages.
+
+Then prototype GPU generation of suitable visual products:
+- Detail height pages.
+- Normal pages.
+- Filtered visual pages.
+- Material-control maps.
+- Regular batched procedural fields.
+
+Keep generated data resident on the GPU when it is only needed for rendering.
+
+Do not compute data on the GPU, synchronously download it, build a CPU mesh, and upload it again as the default pipeline.
+
+Verify the actual Godot version and renderer capabilities.
+
+The Compatibility path must remain functional. Compute acceleration may use a supported Forward+ or Mobile configuration where measured performance justifies it.
+
+Do not silently change the whole project’s renderer to enable compute.
+
+If RenderingDevice textures are used, verify that they are created through a renderer-compatible device and updated on the correct thread. Do not assume a texture from a separate local RenderingDevice is automatically usable by the scene renderer.
+
+Budget compute against normal rendering. A busy integrated GPU may perform worse if terrain compute consumes its remaining capacity.
+
+Benchmark complete frame time and readiness latency, not shader execution alone.
+
+Retain CPU fallback when:
+- Compute is unavailable.
+- The selected renderer does not support it.
+- GPU memory is constrained.
+- Measurements favor CPU generation.
+- A compute job fails.
+
+A computer without a dedicated GPU may still have integrated graphics. A truly headless server must not require any terrain rendering or RenderingDevice access.
+
+---
+
+## 13. KEEP GAMEPLAY TERRAIN CONSISTENT
+
+Visual quality must not change the authoritative world.
+
+Clients with different render settings must agree on:
+- Ground and cave topology.
+- Collision-relevant elevations.
+- Resource placement.
+- Terrain modifications.
+- Walkable entrances.
+- Gameplay structures.
+
+Do not change collision spacing just because a player selects Low graphics.
+
+Use shared canonical samples and validated reconstruction. GPU-only cosmetic detail must remain bounded and non-authoritative.
+
+For dedicated servers, provide a numerical terrain/collision path that avoids generating visual materials, render meshes, and texture payloads where they are unnecessary.
+
+Preserve existing cave integration while removing visual dependencies from server generation.
+
+Test overlapping player interests and ensure shared pages are not duplicated unnecessarily.
+
+---
+
+## 14. IMPROVE STARTUP WITHOUT HIDING ITS COST
+
+Measure shader preparation, material loading, and world generation independently.
+
+Where thread-safe and useful:
+- Prepare initial CPU terrain data while rendering shaders are warming.
+- Load essential material resources first.
+- Load nonessential regional resources progressively.
+- Reuse prepared resources.
+- Cache persistent terrain data with proper source/version validation.
+
+Do not move work before the benchmark timer and claim it became free.
+
+Do not introduce severe shader compilation hitches when the first visible patch appears.
+
+The total player-visible startup time and the terrain-specific readiness time must both be reported.
+
+---
+
+## 15. REGRESSION TESTS AND ACCEPTANCE
+
+Keep the existing implementation available behind a development switch until the new path passes comparisons.
+
+Test:
+- Startup.
+- Continuous walking and running.
+- Fast traversal.
+- Sudden direction reversal.
+- Negative world coordinates.
+- Crossing chunk edges and diagonal corners.
+- Ring ownership changes.
+- Teleportation.
+- Cache eviction and revisits.
+- Cave entrance approach, entry, and exit.
+- Terrain modifications.
+- Low/medium/high visual settings.
+- Multiple collision interests.
+- Long-duration exploration.
+
+Add targeted assertions:
+- Ready nearby patches do not wait for unrelated distant work.
+- Local transactions preserve complete coverage.
+- Shared border heights agree.
+- CPU/GPU coordinate mapping agrees.
+- Visible/collision disagreement stays within defined tolerance.
+- Cave openings and collision publish together.
+- Material-only changes invalidate materials correctly.
+- Stale jobs cannot overwrite newer data.
+- Cache cancellation does not break other consumers.
+- Bounds and shadows remain valid after GPU displacement.
+
+Compare identical seeds, settings, camera paths, lighting, and materials.
+
+Inspect plains, mountains, cliffs, beaches, mixed biomes, alien terrain, and cave mouths.
+
+Do not relax existing correctness tests merely to obtain a faster result. Add a separate “nearby playable” milestone without deleting full-coverage and cave-completion tests.
+
+Report:
+- Central 3×3 visible/playable latency.
+- Cold and warm startup.
+- Per-stage CPU timings.
+- GPU frame time.
+- p50/p95/p99 frame times.
+- Main-thread spikes.
+- Canonical height evaluations.
+- Cache effectiveness.
+- Memory and allocations.
+- Newly generated versus reused patches/pages.
+- Cancellation and wasted work.
+- Rendered triangles and draw calls.
+
+Clearly distinguish measured results, estimates, and untested hardware configurations.
+
+---
+
+## 16. IMPLEMENTATION ORDER
+
+1. Audit HEAD and add trustworthy stage-level profiling.
+2. Fix local publication and near-terrain prioritization.
+3. Add shared canonical height pages and eliminate redundant sampling.
+4. Remove avoidable collection conversion, serialization, and unchanged-data processing.
+5. Separate essential terrain from supplementary features.
+6. Refactor cave discovery toward local entrance readiness.
+7. Implement reusable GPU-displaced grids with the existing CPU fallback.
+8. Improve distant filtered pages and transition reuse.
+9. Add predictive prefetch and fair bounded scheduling.
+10. Benchmark optional GPU compute acceleration.
+11. Run regression tests, inspect screenshots, and tune weaker-hardware profiles.
+
+Measure after each significant change so improvements and regressions can be attributed correctly.
+
+Do not let optional compute experiments delay the core CPU/data/publication improvements.
+
+---
+
+## DELIVERABLES
+
+Deliver:
+- Updated working project.
+- Faster near-terrain generation and local publication.
+- Shared terrain-data cache.
+- Reusable GPU-displaced render grids and fallback.
+- Incremental cave/surface coordination.
+- Predictive prefetch.
+- Regression tests.
+- Before/after measurements.
+- Comparable rendered screenshots.
+- Accurate documentation of limitations.
+
+At completion, identify:
+- Which bottlenecks were confirmed.
+- Which changes produced measured gains.
+- Whether the near-terrain target was reached.
+- Which remaining stages dominate.
+- Which hardware and renderers were actually tested.
+
+FINAL PRIORITY:
+
+A small nearby terrain patch should require a small, bounded amount of work.
+
+It should appear as soon as its own terrain, boundaries, and gameplay dependencies are ready—not after distant scenery or unrelated cave regions finish.
+
+Preserve the landscape’s quality by reusing data and moving appropriate visual work to the GPU, not by flattening terrain, removing biomes, or disguising broken geometry with noisy materials.

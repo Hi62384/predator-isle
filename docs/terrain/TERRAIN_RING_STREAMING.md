@@ -25,8 +25,8 @@ The frame-time budget controller slowly reduces dispatch/upload allowance under
 sustained pressure and restores it after sustained recovery. It does not change
 geometry resolution or material quality while moving. Low shader quality reduces
 medium cliff-normal work and distant microtexture sampling; the higher profiles
-extend material detail distance. Godot shader import has not been exercised for
-the latest shader edit.
+extend material detail distance. The current terrain shader has been exercised by
+rendered CPU and shared-grid startup checks; this does not certify every scenic outcome.
 
 ## Geometry and publication
 
@@ -38,10 +38,13 @@ temporal animation of an entire LOD replacement is not implemented.
 
 The scheduler retains unchanged source patches, reuses worker-local generators,
 cancels obsolete work and caches canonical arrays and fixed collision data.
-Final stitching, water preparation and fingerprints run on a worker. Uploads are
-spread across frames; unchanged meshes are reused. After initial central coverage,
-the committed terrain remains until a complete replacement and its cave cut are
-ready. Teleport destinations also wait for the existing cave readiness check.
+Final stitching and water preparation run on a worker. Immutable product identities
+and finalized coarse-edge dependencies replace whole-mesh hashing. Unchanged cuts
+reuse their numerical products and uploaded meshes, including material/water/collision
+invalidation through the source product identity. Uploads are spread across frames.
+During movement, complete local overlap/boundary closures can replace nearby owners
+while distant owners remain published. Equal area, exact coverage, non-overlap and
+3:1 edge guards remain required. Teleports retain the full destination/cave gate.
 Worker or upload failure retains the committed cut and exposes an error.
 
 Far terrain uses footprint-sized height filtering with continuous protection for
@@ -105,13 +108,75 @@ the game's networking layer; no networking layer existed in the supplied runtime
 
 ## Verification status
 
+### Nearby loading request: implementation in progress
+
+`data/near_terrain_optimization_current.json` records the comparison checkpoints.
+Local replacement transactions, dependency-based transition reuse, numerical height
+reuse, reusable GPU grids, CPU cave fallback, bounded predictive prefetch and yielding
+cave discovery are implemented. Acceptance of the complete request is still open.
+
+`NEAR_TERRAIN_LOAD_REQUEST.txt` is the active specification. HEAD remains
+`2a001cf`; this work is in the writable checkout, including earlier uncommitted
+C# changes. The active path is `main.tscn` → native `ChunkTerrain` →
+`TerrainRingStream` → `TerrainRingMeshGeometry`, using Compatibility rendering.
+
+`TerrainSharedSamples` coalesces immutable canonical heights and controls across
+patch workers. Sparse 16 m numerical pages fill only requested lattice samples;
+off-grid coordinates retain exact keys. Collision and derivative queries also reuse
+the worker's typed height cache populated by surface sampling. Eviction replaces
+whole-cache clearing. Eight MiB is reserved from the stream's numerical cache allowance
+when shared sampling is enabled. Source revisions use separate cache instances, so
+cancelled old work cannot repopulate the new source. The shared cache remains an
+explicit development option (`terrain-shared-samples=on`) until measured gains justify
+making it the default. Worker-local distant filtering remains bounded and cached.
+
+`terrain-render=grid` selects the implemented GPU renderer; `terrain-render=cpu`
+selects the existing CPU renderer. The production default remains CPU while comparative
+performance is tuned. GPU instances share actual vertex/index buffers by masked
+topology. Nearest RGBA32F pages carry emitted heights, normals and packed controls;
+categorical fields are never bilinearly averaged. Grid coordinates reproduce the
+existing ternary lattice. Per-instance displaced bounds and shadows are retained.
+The per-patch carrier has no render layers, so it does not add a duplicate draw.
+Ordinary GPU patches retain typed CPU fallback buffers without eagerly materializing
+Godot render arrays. Cave capture/transactions materialize the original CPU geometry
+before clipping. This path does not use GPU readback for walking collision.
+
+Prefetch predicts incoming rows from velocity and measured near-build latency, retains
+a reversal margin, caps its local candidate set at 24 patches and uses the existing
+worker/cache limits. Current requested work has priority. Completed cave discoveries
+are cached independently within a 16 MiB/eight-bundle bound per immutable stream world
+snapshot. Region/connection/exposure discovery yields between products while preserving
+the complete deterministic graph and existing entrance transaction gates. This is not
+yet a claim that every entrance can be admitted without broad network completion.
+
+Serialization-based patch-size accounting is replaced by conservative numerical
+storage estimates. Worker diagnostics report stage durations, cumulative managed
+allocations, completed/cancelled jobs and shared-sample hits/misses. Stage totals
+sum parallel worker time and must not be described as application wall time.
+
+Fresh comparison artifacts are under `.godot/near_load_comparison/`. These use
+the saved seed, camera, lighting and materials on Ryzen 7 6800H / 16 GB installed
+RAM / RTX 3060 Laptop graphics, Compatibility. They are uncontrolled-cache runs,
+not cold-start results or proof on weaker hardware. The agreed working target is
+1080p, a six-core CPU, 16 GB RAM and RTX 3060-class graphics; that target machine
+has not been separately tested. Some measured one-row moves reached 100–250 ms;
+larger uncached destinations and initial loading have not reached that target.
+
+Still required: end-to-end optimization/acceptance of paged and filtered products,
+finer essential/supplementary separation, local entrance admission independent of
+broad discovery, cold-shader latency, broader stage telemetry and the specified
+quality/entrance/long-duration visual acceptance. Frame/GPU timestamps, continuous
+movement, prefetch consumption and atomic uncached/cached teleports now have a separate
+`startup-path` check. GPU timing queries run only in that profiling mode.
+No existing cave, collision or 3:1 ownership guard has been removed to publish sooner.
+
 The later loading implementation in `data/loading_optimization_current.json`
 replaces generic callbacks with direct C# sampling on known native providers,
 stops conclusive canonical height-only entrance/chamber probes early, and avoids
 rebuilding an unchanged game at every launcher invocation. It compiles with zero
-warnings/errors, but has not received a new gameplay or timing run. The completed
-15-group suite and its roughly 43-second full-startup measurements describe the
-preceding source snapshot; they are not a measured result for these changes.
+warnings/errors. Subsequent focused gameplay and timing runs are retained in
+`.godot/csharp_checks`; historical 15-group receipts retain their original source
+scope and must not be relabeled as proof of later changes.
 
 The user has now requested runtime testing. The current C# build passes, and
 the checks run with the bundled Godot 4.6.1 .NET executable. Run the full suite:

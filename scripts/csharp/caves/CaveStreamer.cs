@@ -23,6 +23,11 @@ public partial class CaveStreamer : Node3D
     public Vector2I _region {get;set;}=new(int.MaxValue,int.MaxValue);
     public long _generation {get;set;}
     public bool _discovery_pending {get;set;}
+    public D discovery_progress{get;set;}=new();
+    private readonly CaveDiscoveryCache discoveryCache=new();
+    public long discovery_cache_bytes=>discoveryCache.ResidentBytes;
+    public long discovery_cache_hits=>discoveryCache.Hits;
+    public long discovery_cache_misses=>discoveryCache.Misses;
     public Vector3 _last_plan {get;set;}=Vector3.Inf;
     public D _materials {get;set;}=new();
     public string last_error {get;set;}="";
@@ -66,7 +71,7 @@ public partial class CaveStreamer : Node3D
     private bool Teleport=>host!.Get("_teleport_pending").AsBool();
     private static Vector2I Region(Vector3 point)=>new((int)Math.Floor(point.X/1536.0),(int)Math.Floor(point.Z/1536.0));
     public void initialize(Node3D terrain_node)
-    {host=terrain_node;configuration=host.Get("cave_settings").As<Resource>().DuplicateDeep(Resource.DeepDuplicateMode.All);configure_biome_runtime();}
+    {discoveryCache.Clear();host=terrain_node;configuration=host.Get("cave_settings").As<Resource>().DuplicateDeep(Resource.DeepDuplicateMode.All);configure_biome_runtime();}
     public void configure_biome_runtime()
     {
         foreach(var item in _biome_runtime_controllers)item.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();
@@ -95,7 +100,7 @@ public partial class CaveStreamer : Node3D
         if(cell!=_region)
         {
             clear_surface_staging();_surface_request=new();_surface_batch=null;_surface_build_pending=false;_rebuild_nodes=new();_rebuild_columns=new();
-            _region=cell;_generation++;_bundle=new();_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=true;
+            _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;discovery_progress=new D{["cached"]=!_discovery_pending};
         }
         if(_bundle.Count>0){if(!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16)plan(point,protected_point);else if(_pending.Count==0)refill_pending();}
         if(host!.HasMethod("_commit_partition"))service_surface(point);
@@ -108,7 +113,7 @@ public partial class CaveStreamer : Node3D
         {
             var work=worker();if(work==null){last_error="Invalid cave worker configuration";return;}
             var result=new A();long generation=_generation;var job=new D{["work"]=work,["result"]=result,["generation"]=generation,["kind"]=_discovery_pending?"discovery":"mesh"};Func<D> execute;
-            if(_discovery_pending){_discovery_pending=false;var region=_region;execute=()=>work.discover(region);}
+            if(_discovery_pending){_discovery_pending=false;var region=_region;execute=()=>work.discover_step(region);}
             else if(_surface_batch!=null&&_surface_batch.pending())
             {
                 var part=_surface_batch.take();job["kind"]="portal";job["batch_id"]=part["batch_id"];job["part"]=part["part"];
@@ -133,7 +138,7 @@ public partial class CaveStreamer : Node3D
             if(kind=="mesh"&&Get(_inflight,job["key"].AsVector3I(),-1).AsInt64()==generation)_inflight.Remove(job["key"]);
             var results=job["result"].AsGodotArray();if(generation!=_generation||results.Count==0)continue;var data=results[0].AsGodotDictionary();
             if(kind=="discovery")
-            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}_bundle=data;_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
+            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}if(Get(data,"discovery_pending",false).AsBool()){discovery_progress=data;_discovery_pending=true;continue;}discovery_progress=new D{["complete"]=true};_bundle=data;discoveryCache.Add(_region,data,job["work"].As<CaveWorkload>().DiscoveryBytes);_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
             else if(kind=="portal")
             {
                 if(_surface_batch==null||job["batch_id"].AsInt64()!=_surface_batch.id)continue;
@@ -199,7 +204,7 @@ public partial class CaveStreamer : Node3D
     public bool traversal_ready(Vector3 point)
     {
         if(Flag("seal_stream_frontiers")){if(!_traversal.ready(point,_cells,_wanted))return false;}else if(!_cells.ContainsKey(new Vector3I((int)Math.Floor(point.X/64.0),(int)Math.Floor(point.Y/64.0),(int)Math.Floor(point.Z/64.0))))return false;
-        foreach(var value in Get(_bundle,"entrances",new A()).AsGodotArray()){var entrance=value.AsGodotDictionary();if(!entrance_needed(entrance,point))continue;if(_surface_transaction==null||!_surface_transaction.committed)return false;foreach(var column in entrance["columns"].AsGodotArray())if(!_surface_columns.ContainsKey(column))return false;}return true;
+        foreach(var value in Get(_bundle,"entrances",new A()).AsGodotArray()){var entrance=value.AsGodotDictionary();if(!entrance_needed(entrance,point))continue;if(_surface_transaction==null||!_surface_transaction.committed)return false;foreach(var column in entrance["columns"].AsGodotDictionary().Keys)if(!_surface_columns.ContainsKey(column))return false;}return true;
     }
     public bool entrance_needed(D entrance,Vector3 point)
     {var mouth=entrance["point"].AsVector3();return point.Y>=Get(entrance,"minimum_exposed_floor",mouth.Y).AsDouble()-Number("main_route_height_metres")*2&&point.DistanceTo(mouth)<=Number("preload_radius_metres");}
@@ -224,6 +229,7 @@ public partial class CaveStreamer : Node3D
     }
     public void shutdown()
     {
+        discoveryCache.Clear();
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();foreach(var task in _jobs.Keys)WorkerThreadPool.WaitForTaskCompletion(task.AsInt64());
         _jobs.Clear();_ready.Clear();_idle.Clear();_surface_batch=null;_surface_request=new();_surface_build_pending=false;_surface_transaction?.reset();clear_surface_staging();_frontiers.synchronize(_cells,false);
         foreach(var value in _cells.Values){var node=value.As<Node3D>();if(Valid(node))node!.GetNode<StaticBody3D>("CaveCollision").CollisionLayer=0;}_cells.Clear();

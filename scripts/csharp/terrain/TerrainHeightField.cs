@@ -17,7 +17,11 @@ public partial class TerrainHeightField : RefCounted
     public int normal_height_cache_capacity { get; private set; } = 8192;
     public bool query_changed { get; private set; }
     public D height_grid_cache { get; private set; } = new();
-    public D normal_height_cache { get; private set; } = new();
+    // Numerical sampling stays in .NET. The dictionary projection is a legacy diagnostic boundary.
+    public D normal_height_cache { get {var result=new D();foreach(var pair in normalHeights)if(Exact(pair.Key.X,pair.Key.Z))result[new Vector2I((int)pair.Key.X,(int)pair.Key.Z)]=pair.Value;return result;} }
+    private readonly Dictionary<(double X,double Z),double> normalHeights=new();
+    private readonly Queue<(double X,double Z)> normalOrder=new();
+    private readonly Queue<Vector2I> payloadOrder=new();
     public D savanna_gullies { get; private set; } = new();
     private TerrainRegions _regions = null!;
     private TerrainIslands _islands = null!;
@@ -59,7 +63,7 @@ public partial class TerrainHeightField : RefCounted
     {
         if(!resourceNumbers.TryGetValue(config,out var values)){values=new TerrainParameterSnapshot();values.Capture(config);resourceNumbers.Add(config,values);}return values[key];
     }
-    private bool Water => settings.Get("water_enabled").AsBool();
+    private bool Water => settings is TerrainConfiguration native?native.water_enabled:settings.Get("water_enabled").AsBool();
     private double Random(long x, long z, int biome, int salt) => _regions.random(x, z, biome, salt);
     private static double L(double a, double b, double t) => a + (b - a) * t;
     private static double C(double x, double a = 0, double b = 1) => Math.Clamp(x, a, b);
@@ -81,7 +85,7 @@ public partial class TerrainHeightField : RefCounted
         _tropical = host.Get("_tropical").AsGodotObject() as TropicalSampler; _badlands = host.Get("_badlands").AsGodotObject() as BadlandsSampler;
         var extras = host.Get("_extras").AsGodotArray(); for (int i = 0; i < 8; i++) _extras[i] = extras[i].AsGodotObject() as BiomeExtensionSampler;
         _extrasEnabled = host.Get("_extras_enabled").AsBool(); _coastLimit = host.Get("_coast_limit").AsDouble();
-        height_grid_cache.Clear(); normal_height_cache.Clear(); savanna_gullies.Clear(); normal_height_cache_capacity = 8192;
+        height_grid_cache.Clear();payloadOrder.Clear();normalHeights.Clear();normalOrder.Clear();savanna_gullies.Clear();normal_height_cache_capacity = 8192;
         last_jungle = 0; last_forest = last_savanna = last_swamp = Neutral; last_mountain = new float[4];
         last_water = water_level; last_coast = Vector4.Zero; last_tropical = last_badlands = Vector3.Zero;
         last_extras = new Vector4[8]; last_badlands_palette = Vector4.Zero; last_badlands_remnant = last_badlands_skirt = 0;
@@ -274,8 +278,9 @@ public partial class TerrainHeightField : RefCounted
         if (publish) last_swamp = new[] { (float)pack(s[2], s[3], weight), (float)pack(s[4], s[5], s[6]), (float)pack(s[7], s[8], s[9]), (float)pack(s[10], s[11], s[12]) }; return h;
     }
     public double height(double x, double z) => height(x, z, true);
+    internal long CanonicalEvaluations {get;private set;}
     public double height(double x, double z, bool publish)
-        => BaseHeight(x,z,publish)+_changes.Offset(x,z);
+    {CanonicalEvaluations++;return BaseHeight(x,z,publish)+_changes.Offset(x,z);}
     private double BaseHeight(double x,double z,bool publish)
     {
         query_changed = true;
@@ -356,21 +361,26 @@ public partial class TerrainHeightField : RefCounted
     public double grid_height(double x, double z)
     {
         query_changed = true;
-        if (!Exact(x, z) || (!cache_dense_payloads && (((int)x & 31) != 0 || ((int)z & 31) != 0))) return height(x, z);
+        if (!Exact(x, z) || (!cache_dense_payloads && (((int)x & 31) != 0 || ((int)z & 31) != 0))){double sampled=height(x,z);RememberNormal(x,z,sampled);return sampled;}
         var key = new Vector2I((int)x, (int)z); if (height_grid_cache.TryGetValue(key, out var cached)) return Restore(cached.AsGodotArray());
-        double h = height(x, z); if (height_grid_cache.Count >= 8192) height_grid_cache.Clear(); height_grid_cache[key] = payload(h); return h;
+        double h=height(x,z);while(height_grid_cache.Count>=8192&&payloadOrder.TryDequeue(out var old))height_grid_cache.Remove(old);height_grid_cache[key]=payload(h);payloadOrder.Enqueue(key);RememberNormal(x,z,h);return h;
     }
     public void select_normal_cache_capacity(double chunkSize)
     {
         bool coastalOrganic = coastal_structure_height_cache_enabled && _coast is not null && _extras[7] is not null && chunkSize >= 8192;
-        normal_height_cache_capacity = coastalOrganic ? 65536 : 8192; if (normal_height_cache.Count > normal_height_cache_capacity) normal_height_cache.Clear();
+        normal_height_cache_capacity=coastalOrganic?65536:8192;while(normalHeights.Count>normal_height_cache_capacity&&normalOrder.TryDequeue(out var old))normalHeights.Remove(old);
     }
     public double normal_height(double x, double z)
     {
         query_changed = false;
-        if (!Exact(x, z)) return height(x, z, false); var key = new Vector2I((int)x, (int)z);
-        if (height_grid_cache.TryGetValue(key, out var payload)) return payload.AsGodotArray()[0].AsDouble();
-        if (normal_height_cache.TryGetValue(key, out var cached)) return cached.AsDouble();
-        double h = height(x, z, false); if (normal_height_cache.Count >= normal_height_cache_capacity) normal_height_cache.Clear(); normal_height_cache[key] = h; return h;
+        if(normalHeights.TryGetValue((x,z),out double saved))return saved;
+        if(Exact(x,z)&&height_grid_cache.TryGetValue(new Vector2I((int)x,(int)z),out var payload))return payload.AsGodotArray()[0].AsDouble();
+        double h=height(x,z,false);RememberNormal(x,z,h);return h;
+    }
+    private void RememberNormal(double x,double z,double height)
+    {
+        var key=(x,z);if(normalHeights.ContainsKey(key))return;
+        while(normalHeights.Count>=normal_height_cache_capacity&&normalOrder.TryDequeue(out var old))normalHeights.Remove(old);
+        normalHeights[key]=height;normalOrder.Enqueue(key);
     }
 }

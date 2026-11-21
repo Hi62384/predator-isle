@@ -1,0 +1,82 @@
+{
+  "request": "docs/terrain/NEAR_TERRAIN_LOAD_REQUEST.txt",
+  "request_complete": false,
+  "target_reached": false,
+  "shared_cache_default_enabled": false,
+  "development_enable_argument": "terrain-shared-samples=on",
+  "comparison_scope": "One ordered, uncontrolled-cache pair on this machine; not cold-start or minimum-spec acceptance. Image captures disable swash and freeze standalone shader time only after readiness.",
+  "hardware": {
+    "cpu": [
+      {
+        "Name": "AMD Ryzen 7 6800H with Radeon Graphics         ",
+        "NumberOfCores": 8,
+        "NumberOfLogicalProcessors": 16
+      }
+    ],
+    "ram_gib": 15.3,
+    "graphics": [
+      {
+        "Name": "AMD Radeon(TM) Graphics",
+        "DriverVersion": "32.0.12011.1036"
+      },
+      {
+        "Name": "NVIDIA GeForce RTX 3060 Laptop GPU",
+        "DriverVersion": "32.0.15.9621"
+      }
+    ],
+    "renderer": "Compatibility",
+    "minimum_spec_tested": false
+  },
+  "reference": {
+    "near_seconds": 2.5686159,
+    "full_seconds": 39.3625554,
+    "canonical_evaluations": 103770,
+    "managed_worker_allocated_bytes": 2500390224,
+    "stages": {
+      "collision": 345.516,
+      "feature geometry": 272.497,
+      "filtered normals": 38893.764,
+      "structure geometry": 210.465,
+      "surface samples": 64287.925
+    },
+    "raw_report": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T024914607\\02_startup-reference.semantic.json",
+    "capture": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T024914607\\02_startup-reference.png"
+  },
+  "candidate": {
+    "near_seconds": 2.4304212,
+    "full_seconds": 46.9028048,
+    "canonical_evaluations": 92410,
+    "managed_worker_allocated_bytes": 2319703840,
+    "stages": {
+      "collision": 477.024,
+      "feature geometry": 312.587,
+      "filtered normals": 49609.135,
+      "structure geometry": 393.18,
+      "surface samples": 69394.078
+    },
+    "raw_report": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T024914607\\03_startup.semantic.json",
+    "capture": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T024914607\\03_startup.png"
+  },
+  "image_comparison": {
+    "dimensions": [
+      2560,
+      1346
+    ],
+    "maximum_channel_difference": 0,
+    "mean_channel_difference": 0.0,
+    "changed_pixels": 0
+  },
+  "checks": "1,111,168 cache/seam assertions and cache-off/on saved startup, full coverage/caves and physical move/return passed; general migration run passed 1,848,304 checks in the preceding checkpoint.",
+  "build": "Zero warnings/errors",
+  "interpretation": "Reduced evaluations and cumulative allocations, but no demonstrated end-to-end latency gain. Do not enable by default or claim the almost-instant target.",
+  "remaining": [
+    "Independent local publication and boundary closures during ordinary movement",
+    "Full paged product hierarchy, regional descriptors and filtered-page reuse",
+    "Essential/supplementary job separation and local incremental cave readiness",
+    "Reusable GPU-displaced grids and CPU fallback",
+    "Predictive prefetch and independent player/camera interests",
+    "Full application/shader/GPU/frame-percentile/queue/publication telemetry",
+    "Controlled warm-uncached/revisit/teleport/continuous movement and long exploration measurements",
+    "Requested biome/cave/quality/reference visual comparisons and target-hardware acceptance"
+  ]
+}

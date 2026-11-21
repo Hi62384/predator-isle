@@ -113,7 +113,8 @@ public partial class CaveNetwork : RefCounted
             foreach (var offset in new[] { new Vector2(8, 0), new Vector2(-8, 0), new Vector2(0, 8), new Vector2(0, -8) }) { double h = Height((double)p.X + offset.X, (double)p.Y + offset.Y); low = Math.Min(low, h); high = Math.Max(high, h); }
             if (high - low > 3) continue;
             var entry = new D { ["id"] = FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance"), ["point"] = new Vector3(p.X, (float)(low - .1), p.Y), ["level"] = -1 }; var q = Xz(first["point"].AsVector3()); var delta = q - p; var middle = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * .12f;
-            var access = route(entry, first, new[] { p, middle, q }, true); if (access.Count == 0) continue; if (Valid(access_admission) && !access_admission.Call(access).AsBool()) continue;
+            var access=route(entry,first,new[]{p,middle,q},true);if(access.Count==0)continue;
+            if(access_admission.Target is CaveInsectEntryGuard guard&&access_admission.Method==nameof(CaveInsectEntryGuard.clear_access)){if(!guard.clear_access(access))continue;}else if(Valid(access_admission)&&!access_admission.Call(access).AsBool())continue;
             nodes.Add(entry); nodes.Add(first); edges.Add(access); entrances.Add(entry["id"]); break;
         }
         if (entrances.Count == 0) return empty;
@@ -145,14 +146,14 @@ public partial class CaveNetwork : RefCounted
             var from = layerNodes[3].AsGodotDictionary(); var to = layerNodes[0].AsGodotDictionary(); var loop = route(from, to, new[] { Xz(from["point"].AsVector3()), Xz(to["point"].AsVector3()) }); if (loop.Count > 0) edges.Add(loop); previous = to;
         }
         var result = new D { ["id"] = cell, ["center"] = center, ["nodes"] = nodes, ["edges"] = edges, ["entrances"] = entrances, ["valid"] = true, ["reason"] = "", ["default_biome_id"] = 0, ["geology"] = Math.Min(5, (int)(random(cell, 102) * 6)) };
-        if (geological_morphology) result["cross_section_style"] = result["geology"]; if (Valid(region_decorator)) result = region_decorator.Call(result, _active_context).AsGodotDictionary();
+        if(geological_morphology)result["cross_section_style"]=result["geology"];if(region_decorator.Target is CaveHiveNetwork decoration&&region_decorator.Method==nameof(CaveHiveNetwork.decorate))result=decoration.decorate(result,_active_context);else if(Valid(region_decorator))result=region_decorator.Call(result,_active_context).AsGodotDictionary();
         if (chamber_variety && !result.ContainsKey("pockets")) { result["pockets"] = Profiles.make(result, height, seed_id, max_depth, minimum_roof); result["pocket_passages"] = Profiles.passages(result, result["pockets"].AsGodotArray()); }
-        if (seepage_density > 0) result["pools"] = Basins.make(result, seed_id, seepage_density); if (Valid(region_finalizer)) result = region_finalizer.Call(result).AsGodotDictionary(); return result;
+        if(seepage_density>0)result["pools"]=Basins.make(result,seed_id,seepage_density);if(region_finalizer.Target is CaveBiomeRegions finalizer&&region_finalizer.Method==nameof(CaveBiomeRegions.decorate))result=finalizer.decorate(result);else if(Valid(region_finalizer))result=region_finalizer.Call(result).AsGodotDictionary();return result;
     }
     public D region(Vector2I cell)
     {
         if (_regions.ContainsKey(cell)) return _regions[cell].AsGodotDictionary(); double width = half_width, room = headroom, flat = flat_radius;
-        _active_context = Valid(region_context) ? region_context.Call(cell).AsGodotDictionary() : new D(); half_width = Number(_active_context, "half_width", half_width); headroom = Number(_active_context, "headroom", headroom); flat_radius = Number(_active_context, "flat_radius", flat_radius);
+        _active_context=region_context.Target is CaveHiveNetwork context&&region_context.Method==nameof(CaveHiveNetwork.context)?context.context(cell):Valid(region_context)?region_context.Call(cell).AsGodotDictionary():new D();half_width=Number(_active_context,"half_width",half_width);headroom=Number(_active_context,"headroom",headroom);flat_radius=Number(_active_context,"flat_radius",flat_radius);
         D data; try { data = _build(cell); } finally { half_width = width; headroom = room; flat_radius = flat; }
         if (_active_context.ContainsKey("render_style")) data["render_style"] = _active_context["render_style"]; if (_active_context.ContainsKey("hive_region")) data["hive_region"] = _active_context["hive_region"]; _active_context = new D();
         if (_ring.Count >= 32) _regions.Remove(_ring.Dequeue()); _ring.Enqueue(cell); _regions[cell] = data; return data;

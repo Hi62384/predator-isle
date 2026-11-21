@@ -8,20 +8,54 @@ public partial class BeachSampler : RefCounted
     public Godot.Collections.Array NAMES {get;}=new() {"wide_beach","narrow_beach","dune_field","high_foredunes","backdunes","parabolic_dunes","sandy_cove","barrier_beach","sand_spit","lagoon","tidal_flat","sandy_estuary","low_sandy_island","storm_scarps","mixed_rock_sand","sandbars"};
     public Resource settings {get;set;}=null!;
     private WeakRef? _coast;
+    private WeakReference<RockyCoastSampler>? nativeCoast;
+    
+    private WeakReference<PredatorIsle.Terrain.TerrainMeshBuilder>? nativeHost;
+    private double islandSize;
     private readonly FastNoiseLite _wind=new();
     private readonly Dictionary<Vector2I,double> _shoreNodes=new();
     private readonly Dictionary<Vector2I,double[]> _shorePatches=new();
-    private GodotObject Coast()=>_coast!.GetRef().AsGodotObject();
-    private double P(string key)=>settings.Get(key).AsDouble();
+    private GodotObject Coast()=>nativeCoast is not null&&nativeCoast.TryGetTarget(out var coast)?coast:_coast!.GetRef().AsGodotObject();
+    private double P(string key)=>settings is BeachSettings native?key switch{
+        "asymmetry"=>native.asymmetry,
+        "backdune_relief"=>native.backdune_relief,
+        "barrier_frequency"=>native.barrier_frequency,
+        "beach_slope"=>native.beach_slope,
+        "beach_width"=>native.beach_width,
+        "berm_height"=>native.berm_height,
+        "blowouts"=>native.blowouts,
+        "coverage"=>native.coverage,
+        "crest_irregularity"=>native.crest_irregularity,
+        "dune_frequency"=>native.dune_frequency,
+        "foredune_height"=>native.foredune_height,
+        "foredune_width"=>native.foredune_width,
+        "lagoon_frequency"=>native.lagoon_frequency,
+        "sandbar_frequency"=>native.sandbar_frequency,
+        "secondary_dunes"=>native.secondary_dunes,
+        "shoreline_irregularity"=>native.shoreline_irregularity,
+        "spit_frequency"=>native.spit_frequency,
+        "storm_erosion"=>native.storm_erosion,
+        "tidal_flat_frequency"=>native.tidal_flat_frequency,
+        "width_variation"=>native.width_variation,
+        "wind_degrees"=>native.wind_degrees,
+        "wind_variation"=>native.wind_variation,
+        _=>throw new ArgumentOutOfRangeException(nameof(key))}:settings.Get(key).AsDouble();
     private static double Smooth(double a,double b,double value){double t=Math.Clamp((value-a)/(b-a),0,1);return t*t*(3-2*t);}
     private static double Lerp(double a,double b,double t)=>a+(b-a)*t;
     private static Vector2 FromAngle(double value){float angle=(float)value;return new Vector2((float)Math.Cos(angle),(float)Math.Sin(angle));}
     public void configure(Resource config,RefCounted coast)
-    {settings=config;_coast?.Dispose();_coast=GodotObject.WeakRef(coast);_wind.Seed=unchecked((int)(coast.Get("seed_value").AsInt64()+61441));_wind.Frequency=(float)(1.0/9000);_wind.FractalOctaves=2;}
+    {
+        settings=config;_coast?.Dispose();_coast=GodotObject.WeakRef(coast);nativeCoast=coast is RockyCoastSampler typed?new(typed):null;nativeHost=null;
+        if(coast is RockyCoastSampler sampler&&sampler._host?.GetRef().AsGodotObject() is PredatorIsle.Terrain.TerrainMeshBuilder host){nativeHost=new(host);islandSize=host.settings is PredatorIsle.Terrain.TerrainConfiguration preset?preset.island_size:host.settings.Get("island_size").AsDouble();}
+        _wind.Seed=unchecked((int)((coast is RockyCoastSampler native?native.seed_value:coast.Get("seed_value").AsInt64())+61441));_wind.Frequency=(float)(1.0/9000);_wind.FractalOctaves=2;
+    }
     public double wind_angle(Vector2 p)=>P("wind_degrees")*(Math.PI/180)+P("wind_variation")*(Math.PI/180)*Math.Sin(p.X/18000.0+Math.Sin(p.Y/21000.0));
     public double _shore_node(Vector2I cell)
     {
-        if(_shoreNodes.TryGetValue(cell,out double value))return value;var host=Coast().Get("_host").As<WeakRef>().GetRef().AsGodotObject();var p=(Vector2)cell*256;value=host.Call("_island_mask",p.X,p.Y).AsDouble()*Math.Max(host.Get("settings").AsGodotObject().Get("island_size").AsDouble()*.5,8);if(_shoreNodes.Count>=4096)_shoreNodes.Clear();_shoreNodes[cell]=value;return value;
+        if(_shoreNodes.TryGetValue(cell,out double value))return value;var p=(Vector2)cell*256;
+        if(nativeHost is not null&&nativeHost.TryGetTarget(out var native))value=native._island_mask(p.X,p.Y)*Math.Max(islandSize*.5,8);
+        else {var host=Coast().Get("_host").As<WeakRef>().GetRef().AsGodotObject();value=host.Call("_island_mask",p.X,p.Y).AsDouble()*Math.Max(host.Get("settings").AsGodotObject().Get("island_size").AsDouble()*.5,8);}
+        if(_shoreNodes.Count>=4096)_shoreNodes.Remove(System.Linq.Enumerable.First(_shoreNodes.Keys));_shoreNodes[cell]=value;return value;
     }
     public double shore_distance(Vector2 p)
     {
@@ -29,8 +63,9 @@ public partial class BeachSampler : RefCounted
         if(!_shorePatches.TryGetValue(cell,out var coefficients))
         {
             var coast=Coast();var rows=new double[4][];
-            for(int z=-1;z<3;z++)rows[z+1]=coast.Call("polynomial",_shore_node(cell+new Vector2I(-1,z)),_shore_node(cell+new Vector2I(0,z)),_shore_node(cell+new Vector2I(1,z)),_shore_node(cell+new Vector2I(2,z))).AsFloat64Array();
-            coefficients=new double[16];for(int i=0;i<4;i++){var column=coast.Call("polynomial",rows[0][i],rows[1][i],rows[2][i],rows[3][i]).AsFloat64Array();for(int j=0;j<4;j++)coefficients[i*4+j]=column[j];}if(_shorePatches.Count>=2048)_shorePatches.Clear();_shorePatches[cell]=coefficients;
+            double[] Polynomial(double a,double b,double c,double d)=>coast is RockyCoastSampler native?native.polynomial(a,b,c,d):coast.Call("polynomial",a,b,c,d).AsFloat64Array();
+            for(int z=-1;z<3;z++)rows[z+1]=Polynomial(_shore_node(cell+new Vector2I(-1,z)),_shore_node(cell+new Vector2I(0,z)),_shore_node(cell+new Vector2I(1,z)),_shore_node(cell+new Vector2I(2,z)));
+            coefficients=new double[16];for(int i=0;i<4;i++){var column=Polynomial(rows[0][i],rows[1][i],rows[2][i],rows[3][i]);for(int j=0;j<4;j++)coefficients[i*4+j]=column[j];}if(_shorePatches.Count>=2048)_shorePatches.Remove(System.Linq.Enumerable.First(_shorePatches.Keys));_shorePatches[cell]=coefficients;
         }
         double result=0;for(int i=3;i>=0;i--){int k=i*4;result=result*f.X+coefficients[k]+f.Y*(coefficients[k+1]+f.Y*(coefficients[k+2]+f.Y*coefficients[k+3]));}return result;
     }
@@ -43,7 +78,7 @@ public partial class BeachSampler : RefCounted
         double d=shore_distance(p)+shift,slope=P("beach_slope")*(1+w[1]*1.8-w[0]*.4-flat*.85),beach=d*slope;if(d<0)beach=d*(.035-flat*.025)+Math.Max(d+600,0)*.001;double upper=width*slope;if(d>width)beach=upper+(d-width)*.008;
         double berm=P("berm_height")*Math.Exp(-Math.Pow((d-width*.72)/(35+width*.12),2))*(.65+.35*b)*(1-flat);beach+=berm;
         double crest=width+P("foredune_width")*(.9+a*.35+b*.1*P("crest_irregularity")),q=d-crest,scale=P("foredune_width")*(1+P("asymmetry")*alignment*(q<0?.35:-.35)),fore=Math.Exp(-Math.Pow(q/Math.Max(scale,80),2)),height=P("foredune_height")*(.55+w[3]*1.5+w[5]*.5)*(1+a*.25+b*.15);
-        double blow=(1-Smooth(.05,.45,Math.Abs(coast.Get("_meso").As<FastNoiseLite>().GetNoise2D((float)(p.X*.4+921),(float)(p.Y*.4-317)))))*P("blowouts")*(w[2]+w[5]+w[13]);fore*=1-blow*.65;double dunes=fore*height;
+        double blow=(1-Smooth(.05,.45,Math.Abs((coast is RockyCoastSampler native?native._meso:coast.Get("_meso").As<FastNoiseLite>()).GetNoise2D((float)(p.X*.4+921),(float)(p.Y*.4-317)))))*P("blowouts")*(w[2]+w[5]+w[13]);fore*=1-blow*.65;double dunes=fore*height;
         for(int k=1;k<4;k++){double center=crest+k*P("foredune_width")*(1.7+k*.17+a*.35),ridge=Math.Exp(-Math.Pow((d-center)/(P("foredune_width")*(.8+k*.15)),2));dunes+=ridge*height*(.65/k)*P("secondary_dunes")*(.7+b*.25)*(1-blow*.4);}
         double back=Smooth(crest,crest+400,d)*(1-Smooth(1500,2300,d));dunes+=back*P("backdune_relief")*height*(.5+a*.3+b*.2);
         var prevailing=FromAngle(P("wind_degrees")*(Math.PI/180));double along=p.Dot(new Vector2(-prevailing.Y,prevailing.X))/700.0+a*.6,arm=Math.Abs(Math.Sin(along+b*.3)),parabola=crest+350+arm*arm*450;dunes+=w[5]*height*.8*Math.Exp(-Math.Pow((d-parabola)/180,2))*Smooth(.2,.65,arm);

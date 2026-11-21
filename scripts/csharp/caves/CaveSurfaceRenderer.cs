@@ -49,6 +49,7 @@ public partial class CaveSurfaceRenderer : RefCounted
         foreach (var value in nodes)
         {
             var node = value.As<MeshInstance3D>(); if (!touches(node, columns)) continue;
+            PredatorIsle.Terrain.TerrainGpuGrids.EnsureCpuSurface(node);
             if (!node.GlobalBasis.IsEqualApprox(Basis.Identity)) return Reject("Unsupported rotated/scaled terrain parent");
             int resolution = node.GetMeta("resolution", 0).AsInt32(); var key = node.GetMeta("tile", Vector3I.Zero).AsVector3I(); float span = node.Mesh.GetAabb().Size.X;
             if (key.Z != 0 || resolution < 1 || span / (double)resolution > 2.00001) return Reject("Portal awaits complete fine terrain parents");

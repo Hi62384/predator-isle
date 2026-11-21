@@ -11,8 +11,8 @@ public partial class ChunkTerrain
     public A _material_variants()
     {
         var variants=Values(_lod_materials);
-        foreach(var collection in new[]{_active_chunks,_staged})foreach(var item in collection.Values){var mesh=Obj<MeshInstance3D>(item).Mesh;if(mesh is null||mesh.GetSurfaceCount()==0)continue;var m=mesh.SurfaceGetMaterial(0);if(!variants.Contains(m))variants.Add(m);}
-        foreach(var item in _mesh_cache.Values){var m=Obj<ArrayMesh>(item).SurfaceGetMaterial(0);if(!variants.Contains(m))variants.Add(m);}
+        foreach(var collection in new[]{_active_chunks,_staged})foreach(var item in collection.Values){var mesh=Obj<MeshInstance3D>(item).Mesh;if(mesh is null||mesh.GetSurfaceCount()==0)continue;var m=mesh.SurfaceGetMaterial(0);if(!variants.Contains(m))variants.Add(m);if(mesh.HasMeta("terrain_gpu_material")){var gridMaterial=mesh.GetMeta("terrain_gpu_material");if(!variants.Contains(gridMaterial))variants.Add(gridMaterial);}}
+        foreach(var item in _mesh_cache.Values){var mesh=Obj<ArrayMesh>(item);var m=mesh.SurfaceGetMaterial(0);if(!variants.Contains(m))variants.Add(m);if(mesh.HasMeta("terrain_gpu_material")){var gridMaterial=mesh.GetMeta("terrain_gpu_material");if(!variants.Contains(gridMaterial))variants.Add(gridMaterial);}}
         foreach(var stream in CaveStreams())foreach(var material in stream.surface_materials())if(!variants.Contains(material))variants.Add(material);
         return variants;
     }

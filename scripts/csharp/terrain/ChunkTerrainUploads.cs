@@ -10,14 +10,21 @@ public partial class ChunkTerrain
 {
     private static ImageTexture Texture(int width,int height,Image.Format format,byte[] bytes)
     {using var image=Image.CreateFromData(width,height,false,format,bytes);return ImageTexture.CreateFromImage(image);}
-    private ArrayMesh Upload(D result,Vector3I key,out ulong surfaceEnd)
+    private ArrayMesh Upload(D result,Vector3I key,out ulong surfaceEnd,TerrainRingMeshGeometry.Data? gridData=null)
     {
-        var arrays=result["arrays"].AsGodotArray();var mesh=new ArrayMesh();int vertices=arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().Length;
-        ulong flags=(ulong)(arrays[(int)Mesh.ArrayType.Custom0].AsFloat32Array().Length==vertices*4?Mesh.ArrayCustomFormat.RgbaFloat:Mesh.ArrayCustomFormat.RgbFloat)<<(int)Mesh.ArrayFormat.FormatCustom0Shift;
+        var arrays=result["arrays"].AsGodotArray();var mesh=new ArrayMesh();int vertices=gridData?.GpuPage is not null?gridData.Topology.VertexCount:arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().Length;
+        ulong flags=(ulong)(gridData?.GpuPage is not null||arrays[(int)Mesh.ArrayType.Custom0].AsFloat32Array().Length==vertices*4?Mesh.ArrayCustomFormat.RgbaFloat:Mesh.ArrayCustomFormat.RgbFloat)<<(int)Mesh.ArrayFormat.FormatCustom0Shift;
         var shifts=new[]{Mesh.ArrayFormat.FormatCustom1Shift,Mesh.ArrayFormat.FormatCustom2Shift,Mesh.ArrayFormat.FormatCustom3Shift};
-        for(int i=0;i<3;i++)if(arrays[(int)Mesh.ArrayType.Custom1+i].VariantType!=Variant.Type.Nil)flags|=(ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)shifts[i];
-        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays,null,null,(Mesh.ArrayFormat)flags);mesh.SetMeta("collision_data",result["collision_data"]);mesh.SetMeta("edge_profiles",result["edge_profiles"]);
-        if(_cave_streamer is not null&&key.Z<=1)mesh.SetMeta("terrain_cpu_arrays",arrays);
+        for(int i=0;i<3;i++)if(gridData?.GpuPage is null&&arrays[(int)Mesh.ArrayType.Custom1+i].VariantType!=Variant.Type.Nil)flags|=(ulong)Mesh.ArrayCustomFormat.RgbaFloat<<(int)shifts[i];
+        if(gridData?.GpuPage is TerrainGpuGridPage page)
+        {
+            // Legacy consumers retain a per-patch resource identity and material. Its single
+            // degenerate triangle carries bounds; only the shared child grid draws terrain.
+            var carrier=new A();carrier.Resize((int)Mesh.ArrayType.Max);carrier[(int)Mesh.ArrayType.Vertex]=new[]{page.Bounds.Position,page.Bounds.End,page.Bounds.Position};mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,carrier);
+        }
+        else mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays,null,null,(Mesh.ArrayFormat)flags);
+        mesh.SetMeta("collision_data",result["collision_data"]);mesh.SetMeta("edge_profiles",result["edge_profiles"]);
+        if(gridData?.GpuPage is null&&_cave_streamer is not null&&key.Z<=1)mesh.SetMeta("terrain_cpu_arrays",arrays);
         surfaceEnd=Time.GetTicksUsec();
         var material=_tile_material(key);var bytes=result["extension_data"].AsByteArray();
         if(bytes.Length>0)
@@ -94,6 +101,7 @@ public partial class ChunkTerrain
         Child("BiomeStructures","extension_structures",key.Z<=1&&terrain_shadows?GeometryInstance3D.ShadowCastingSetting.On:GeometryInstance3D.ShadowCastingSetting.Off);
         Child("SwampWater","swamp_water_mesh",GeometryInstance3D.ShadowCastingSetting.Off);
         node.CastShadow=terrain_shadows&&key.Z<=1?GeometryInstance3D.ShadowCastingSetting.On:GeometryInstance3D.ShadowCastingSetting.Off;
+        TerrainGpuGrids.Stage(node);
         node.SetMeta("resolution",resolution);node.SetMeta("tile",key);node.SetMeta("published_usec",0);node.SetMeta("edge_profiles",mesh.GetMeta("edge_profiles",new D()));node.SetMeta("profile_collision",profile_streaming);_update_near_collision(node,true);_staged[key]=node;_staging_revision++;
         void Child(string name,string metadata,GeometryInstance3D.ShadowCastingSetting shadow)
         {var child=node.GetNodeOrNull<MeshInstance3D>(name);if(mesh.HasMeta(metadata)){if(child is null){child=new MeshInstance3D{Name=name};node.AddChild(child);}child.Mesh=Obj<Mesh>(mesh.GetMeta(metadata));child.CastShadow=shadow;}else if(child is not null)child.Mesh=null;}
@@ -119,7 +127,7 @@ public partial class ChunkTerrain
     {
         foreach(var stream in CaveStreams())stream.release_parent(node);_collision.release(node);var key=node.GetMeta("tile").AsVector3I();
         if(!nested_rings&&cached_mesh_limit>0){_mesh_cache[new Vector4I(key.X,key.Y,key.Z,node.GetMeta("resolution").AsInt32())]=node.Mesh;while(_mesh_cache.Count>cached_mesh_limit)_mesh_cache.Remove(_mesh_cache.Keys.First());}
-        node.Visible=false;node.Mesh=null;foreach(string name in new[]{"TerrainFeatures","BiomeStructures","SwampWater"}){var child=node.GetNodeOrNull<MeshInstance3D>(name);if(child is not null)child.Mesh=null;}
+        node.Visible=false;node.Mesh=null;foreach(string name in new[]{"TerrainFeatures","BiomeStructures","SwampWater","TerrainGrid"}){var child=node.GetNodeOrNull<MeshInstance3D>(name);if(child is not null){child.Mesh=null;child.MaterialOverride=null;}}
         if(_chunk_pool.Count<128)_chunk_pool.Add(node);else node.QueueFree();
     }
 }

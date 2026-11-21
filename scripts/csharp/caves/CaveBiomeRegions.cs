@@ -128,20 +128,19 @@ public partial class CaveBiomeRegions : RefCounted
     public D along_edge(D assignment, string from_id, string to_id, double station, double length_m) => CaveBiomeSelection.AlongEdge(assignment, from_id, to_id, station, length_m);
     public D surface_mix(Vector3 point)
     {
-        var owner = builder!; var weights = owner.Call("_biome_weights", point.X, point.Z).AsVector4();
-        var native=owner as Terrain.TerrainMeshBuilder;
+        var owner=builder!;var native=owner as Terrain.TerrainMeshBuilder;var weights=native is not null?native._biome_weights(point.X,point.Z):owner.Call("_biome_weights",point.X,point.Z).AsVector4();
         var mix = new D { ["grass"] = weights.X, ["forest"] = weights.Y, ["savanna"] = weights.Z, ["swamp"] = weights.W,
             ["jungle"] = native is not null?native._jungle_weight:owner.Get("_jungle_weight"), ["mountain"] = native is not null?native._mountain_weight:owner.Get("_mountain_weight"), ["tropical"] = native is not null?native._tropical_weight:owner.Get("_tropical_weight"), ["badlands"] = native is not null?native._badlands_weight:owner.Get("_badlands_weight") };
         var extensionKeys = Terrain.TerrainBiomeCatalog.ExtensionKeys;
-        var extra = owner.Get("_extra_weights").AsFloat64Array();
+        var extra=native is not null?native._extra_weights:owner.Get("_extra_weights").AsFloat64Array();
         for (int i = 0; i < 8; i++) mix[extensionKeys[i]] = extra[i];
         bool wantsCoast = settings!.Get("definitions").AsGodotArray().Any(v => {
             var definition = v.AsGodotObject(); return definition.Get("enabled").AsBool() && definition.Get("spawn_chance_percent").AsDouble() > 0 && definition.Get("surface_preferences").AsGodotDictionary().ContainsKey("rocky_coast"); });
-        var terrain = owner.Get("settings").AsGodotObject(); var coast = owner.Get("_coast").AsGodotObject();
-        if (wantsCoast && owner.HasMethod("_coast_payload") && terrain.Get("rocky_coast_enabled").AsBool() && coast != null)
+        var terrain=native is not null?native.settings:owner.Get("settings").As<Resource>();var coast=native is not null?native._coast:owner.Get("_coast").AsGodotObject();var preset=terrain as Terrain.TerrainConfiguration;
+        if(wantsCoast&&(native is not null||owner.HasMethod("_coast_payload"))&&(preset is not null?preset.rocky_coast_enabled:terrain.Get("rocky_coast_enabled").AsBool())&&coast is not null)
         {
-            double hint = owner.Call("_island_mask", point.X, point.Z).AsDouble() * Math.Max(terrain.Get("island_size").AsDouble() * .5, 8);
-            coast.Call("sample", point.X, point.Z, 0, hint, true); var state = coast.Get("state").AsFloat64Array();
+            double hint=(native is not null?native._island_mask(point.X,point.Z):owner.Call("_island_mask",point.X,point.Z).AsDouble())*Math.Max((preset is not null?preset.island_size:terrain.Get("island_size").AsDouble())*.5,8);
+            double[] state;if(coast is Biomes.RockyCoastSampler typed){typed.sample(point.X,point.Z,0,hint,true);state=typed.state;}else{coast.Call("sample",point.X,point.Z,0,hint,true);state=coast.Get("state").AsFloat64Array();}
             double amount = Math.Clamp(state[2], 0, 1) * (1 - Math.Clamp(state[19], 0, 1));
             if (amount > 0) { foreach (var key in mix.Keys.ToArray()) mix[key] = mix[key].AsDouble() * (1 - amount); mix["rocky_coast"] = amount; }
         }
@@ -157,7 +156,7 @@ public partial class CaveBiomeRegions : RefCounted
         foreach (string anchor in Keys(nodes))
         {
             var room = nodes[anchor].AsGodotDictionary(); if (Get(room, "level", -1).AsInt32() < 0) continue;
-            var point = room["point"].AsVector3(); double depth = builder!.Call("_get_height", point.X, point.Z).AsDouble() - point.Y;
+            var point=room["point"].AsVector3();double depth=(builder is Terrain.TerrainMeshBuilder native?native._get_height(point.X,point.Z):builder!.Call("_get_height",point.X,point.Z).AsDouble())-point.Y;
             var mix = surface_mix(point); var eligible = new System.Collections.Generic.List<D>(); var independent = new System.Collections.Generic.List<D>(); double total = 0;
             foreach (var definition in definitions)
             {
@@ -196,7 +195,7 @@ public partial class CaveBiomeRegions : RefCounted
             }
         }
         region["cave_biome_regions"] = new D { ["fallback"] = settings.Get("fallback_biome_id").AsString(), ["candidates"] = candidates, ["edges"] = topology["edges"], ["depth_bands"] = settings.Get("depth_bands").AsFloat32Array() };
-        return Valid(geometry_provider) ? geometry_provider.Call(region).AsGodotDictionary() : region;
+        return geometry_provider.Delegate is Func<D,D> direct?direct(region):Valid(geometry_provider)?geometry_provider.Call(region).AsGodotDictionary():region;
     }
     public string description(D assignment)
     {

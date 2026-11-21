@@ -1,18 +1,51 @@
 {
-  "passed": true,
+  "passed": false,
   "memory_limit_mib": 2048,
   "deadline_seconds_per_mode": 180,
   "sample_period_ms": 500,
   "records": [
     {
-      "mode": "startup",
-      "passed": true,
-      "started_utc": "2026-10-31T07:08:59.8317651Z",
-      "completed_utc": "2026-10-31T07:09:50.1603105Z",
+      "mode": "startup-vulkan",
+      "passed": false,
+      "started_utc": "2026-11-01T05:12:34.8401528Z",
+      "completed_utc": "2026-11-01T05:13:07.211755Z",
       "exit_code": 0,
-      "sampled_peak_private_bytes": 1291112448,
+      "sampled_peak_private_bytes": 1752739840,
       "environment_messages": [],
-      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261031T070859822\\01_startup",
+      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T051234830\\01_startup-vulkan",
+      "failure": " SHADER ERROR: Too many varyings used in shader (33 used, maximum supported is 32).\r\nERROR: Shader compilation failed.\r\nSHADER ERROR: Too many varyings used in shader (33 used, maximum supported is 32).\r\nERROR: Shader compilation failed.\r"
+    },
+    {
+      "mode": "startup-vulkan-grid",
+      "passed": false,
+      "started_utc": "2026-11-01T05:13:07.2172505Z",
+      "completed_utc": "2026-11-01T05:13:37.0243953Z",
+      "exit_code": 0,
+      "sampled_peak_private_bytes": 1769811968,
+      "environment_messages": [],
+      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T051234830\\02_startup-vulkan-grid",
+      "failure": " SHADER ERROR: Too many varyings used in shader (33 used, maximum supported is 32).\r\nERROR: Shader compilation failed.\r\nSHADER ERROR: Too many varyings used in shader (33 used, maximum supported is 32).\r\nERROR: Shader compilation failed.\r"
+    },
+    {
+      "mode": "startup-reference",
+      "passed": true,
+      "started_utc": "2026-11-01T05:13:37.0245656Z",
+      "completed_utc": "2026-11-01T05:15:02.4187614Z",
+      "exit_code": 0,
+      "sampled_peak_private_bytes": 1863233536,
+      "environment_messages": [],
+      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T051234830\\03_startup-reference",
+      "failure": ""
+    },
+    {
+      "mode": "general",
+      "passed": true,
+      "started_utc": "2026-11-01T05:15:02.4188798Z",
+      "completed_utc": "2026-11-01T05:17:27.9453919Z",
+      "exit_code": 0,
+      "sampled_peak_private_bytes": 841113600,
+      "environment_messages": [],
+      "log_prefix": "C:\\Users\\User1\\Documents\\GodotProjects\\predator-isle\\.godot\\csharp_checks\\20261101T051234830\\04_general",
       "failure": ""
     }
   ],

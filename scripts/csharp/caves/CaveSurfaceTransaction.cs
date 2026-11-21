@@ -40,6 +40,7 @@ public partial class CaveSurfaceTransaction : RefCounted
         if (patches.Count == 0) return false;
         foreach (var raw in nodes)
         {
+            if(raw.AsGodotObject() is MeshInstance3D candidate)TerrainGpuGrids.EnsureCpuSurface(candidate);
             if (raw.VariantType != Variant.Type.Object || raw.AsGodotObject() is not MeshInstance3D node || !GodotObject.IsInstanceValid(node) || node.Mesh == null || node.Mesh.GetSurfaceCount() == 0 || !node.GlobalBasis.IsEqualApprox(Basis.Identity)) return false;
             var inherited = prior != null ? prior.Call("baseline", node).AsGodotDictionary() : new D();
             var originalOverride = inherited.Count == 0 ? node.GetSurfaceOverrideMaterial(0) : inherited["original_override"].As<Material>();

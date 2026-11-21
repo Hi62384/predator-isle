@@ -40,10 +40,21 @@ public partial class CaveWorkload : RefCounted
     private Callable Height => new(builder, builder is TerrainMeshBuilder?"_sample_normal_height":"_get_height");
     private static D Failure(string reason) => new() { ["valid"] = false, ["reason"] = reason };
     private static Variant Get(D d, string name, Variant fallback) => d.ContainsKey(name) ? d[name] : fallback;
+    private sealed class Discovery(Vector2I cell,int halo)
+    {
+        internal readonly Vector2I Cell=cell;
+        internal readonly int Halo=halo,Width=halo*2+1;
+        internal int RegionIndex,ConnectionIndex,EntranceIndex;
+        internal readonly A Regions=new(),Edges=new(),Entrances=new();
+        internal D? Bundle;
+        internal Vector2I At(int index)=>Cell+new Vector2I(index%Width-Halo,index/Width-Halo);
+    }
+    private Discovery? discovery;
+    internal long DiscoveryBytes{get;private set;}
     public bool configure(Resource terrain_settings, Resource caves, long seed_value, double water)
     {
         if (caves == null || caves.Call("validation_errors").AsGodotArray().Count > 0) return false;
-        _water_cache.Clear(); configuration = caves.DuplicateDeep(Resource.DeepDuplicateMode.All); _seed = seed_value; _regions = new();
+        _water_cache.Clear();discovery=null;configuration = caves.DuplicateDeep(Resource.DeepDuplicateMode.All); _seed = seed_value; _regions = new();
         builder = new TerrainMeshBuilder(); builder.Set("settings", terrain_settings.DuplicateDeep(Resource.DeepDuplicateMode.All));
         builder.Set("world_seed", seed_value); builder.Set("water_level", water); builder.Call("_configure_noise");
         network = new CaveNetwork(); network.configure(Height, new Callable(builder, "get_water_surface_height"), seed_value, Number("maximum_depth_metres"));
@@ -86,6 +97,41 @@ public partial class CaveWorkload : RefCounted
         bundle["cells"] = new A(field.Get("chunks").AsGodotDictionary().Keys);
         foreach (var item in entrances) { var entrance = item.AsGodotDictionary(); entrance["columns"] = exposed_columns(entrance); }
         return bundle;
+    }
+    /// <summary>Same ordered graph as discover(), yielding between regional products. Partial results are never a solid-ground proof.</summary>
+    public D discover_step(Vector2I cell)
+    {
+        if(network is null)return new D{["error"]="Cave network is not configured"};
+        if(discovery is null||discovery.Cell!=cell)discovery=new Discovery(cell,Registry.Call("discovery_halo").AsInt32());
+        var cursor=discovery;int total=cursor.Width*cursor.Width;
+        if(cursor.RegionIndex<total)
+        {
+            var region=network.region(cursor.At(cursor.RegionIndex++));cursor.Regions.Add(region);
+            if(region["valid"].AsBool())cursor.Entrances.Add(new D{["region"]=region["id"],["point"]=region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"],["access"]=region["edges"].AsGodotArray()[0]});
+            return Pending();
+        }
+        if(cursor.ConnectionIndex<total)
+        {
+            var here=cursor.At(cursor.ConnectionIndex++);
+            foreach(var offset in new[]{Vector2I.Right,Vector2I.Down})
+            {
+                var other=here+offset;if(other.X>cell.X+cursor.Halo||other.Y>cell.Y+cursor.Halo)continue;var edge=network.connection(here,other);if(edge.Count>0)cursor.Edges.Add(edge);
+            }
+            return Pending();
+        }
+        if(cursor.Bundle is null)
+        {
+            cursor.Bundle=new D{["cell"]=cell,["regions"]=cursor.Regions,["connections"]=cursor.Edges,["entrances"]=cursor.Entrances};
+            if(Registry.Get("enabled").AsBool())cursor.Bundle["cave_biome_regions"]=Regions.combine(cursor.Regions,cursor.Edges,Registry.Get("fallback_biome_id").AsString());
+            if(!use_bundle(cursor.Bundle)){discovery=null;return new D{["error"]="Cave bundle exceeds numeric field bounds"};}
+            cursor.Bundle["cells"]=new A(field.Get("chunks").AsGodotDictionary().Keys);return Pending();
+        }
+        if(cursor.EntranceIndex<cursor.Entrances.Count)
+        {
+            var entry=cursor.Entrances[cursor.EntranceIndex++].AsGodotDictionary();entry["columns"]=exposed_columns(entry);return Pending();
+        }
+        var result=cursor.Bundle;DiscoveryBytes=TerrainPayloadMemory.Estimate(result);discovery=null;return result;
+        D Pending()=>new(){["discovery_pending"]=true,["regions_ready"]=cursor.RegionIndex,["regions_total"]=total,["connections_ready"]=cursor.ConnectionIndex,["entrances_measured"]=cursor.EntranceIndex};
     }
     public bool use_bundle(D bundle)
     {

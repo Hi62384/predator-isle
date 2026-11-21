@@ -466,5 +466,12 @@
       "No fresh runtime suite, benchmark, cold-start or traversal run for this implementation",
       "Remaining generation time depends on canonical terrain sampling and full cave-region discovery; the numerical speedup is not yet measured"
     ]
+  },
+  "nearby_terrain_request": {
+    "complete": false,
+    "report": "data/near_terrain_optimization_current.json",
+    "shared_cache": "Development switch only; end-to-end gain not demonstrated",
+    "gpu_grid_implementation_complete": false,
+    "local_publication_implementation_complete": false
   }
 }

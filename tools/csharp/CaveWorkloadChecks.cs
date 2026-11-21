@@ -14,6 +14,7 @@ internal static class CaveWorkloadChecks
     internal static D Measurements { get; private set; } = new();
     internal static void Run(Action<bool, string> require)
     {
+        CaveDiscoveryChecks.Run(require);
         var settings = GD.Load<Resource>("res://config/world/terrain_settings.tres").Duplicate(true);
         foreach (string name in new[] { "grass", "forest", "savanna", "swamp", "jungle", "mountain", "tropical", "badlands", "quarry", "wise_mountains", "volcanic", "spore_forest", "radiation_wasteland", "crystal_wastes", "insect_colony", "alien_infected" }) settings.Set(name + "_coverage", name == "volcanic" ? 100 : 0);
         settings.Set("beaches_enabled", false); settings.Set("rocky_coast_enabled", false);
