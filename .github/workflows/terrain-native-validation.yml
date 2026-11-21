@@ -5,9 +5,13 @@ on:
     branches: [main]
     paths:
       - '.github/workflows/terrain-native-validation.yml'
-      - 'scripts/csharp/terrain/**'
-      - 'scripts/csharp/caves/**'
-      - 'shaders/grassland_gpu*'
+      # Native regression coverage includes every live biome, cave, blob,
+      # terrain, shader, scene and registered world/resource configuration.
+      - 'scripts/csharp/**'
+      - 'scripts/*.gd'
+      - 'shaders/**'
+      - 'config/**'
+      - 'scenes/**'
       - 'tools/csharp/**'
       - 'tools/csharp-runner/**'
   workflow_dispatch:
@@ -66,7 +70,7 @@ jobs:
         timeout-minutes: 12
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-            rings sampling gpu-pipeline collision network discovery
+            quarry rings sampling gpu-pipeline collision network discovery
       - name: Verify all primary cave biome and terrain-specific paths
         timeout-minutes: 13
         run: |

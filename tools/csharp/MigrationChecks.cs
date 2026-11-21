@@ -66,6 +66,13 @@ public partial class MigrationChecks : Node
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-queues-only")){_mode="gpu-queues";await TerrainGpuPipelineChecks.RunQueues(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# GPU terrain queue checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-terrain-only")){_mode="gpu-terrain";await TerrainGpuPipelineChecks.RunRendered(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuPipelineChecks.Measurements);GD.Print($"C# GPU terrain collision checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"collision-only")){_mode="collision";CollisionChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# collision checks passed: {_checks}");await Finish();return;}
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "quarry-only"))
+            {
+                _mode="quarry";QuarryRoadChecks.Run(Require);
+                MigrationEvidence.Write(_mode,_checks,true);
+                GD.Print($"C# quarry road and landscape checks passed: {_checks}");
+                await Finish();return;
+            }
             if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "tropical-only"))
             {
                 _mode = "tropical"; TropicalSamplerChecks.Run(Require); BadlandsFanChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);

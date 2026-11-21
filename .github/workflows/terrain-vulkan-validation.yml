@@ -7,7 +7,7 @@ on:
       - '.github/workflows/terrain-vulkan-validation.yml'
       - 'tools/csharp-runner/Program.cs'
       - 'scripts/csharp/terrain/**'
-      - 'shaders/grassland_gpu*'
+      - 'shaders/**'
       - 'tools/csharp/TerrainGpu*'
   workflow_dispatch:
 
