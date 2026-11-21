@@ -25,6 +25,9 @@ jobs:
     timeout-minutes: 28
     strategy:
       fail-fast: false
+      // Software Vulkan reserves several GiB for its graphics driver. Run one
+      // device-mode fixture at a time on hosted VMs to avoid aggregate OOM.
+      max-parallel: 1
       matrix:
         method: [forward_plus, mobile]
     steps:
@@ -74,6 +77,7 @@ jobs:
         env:
           PREDATOR_ISLE_TEST_RENDER_METHOD: ${{ matrix.method }}
           PREDATOR_ISLE_TEST_DUMMY_AUDIO: '1'
+          PREDATOR_ISLE_TEST_MEMORY_MIB: '5120'
           LIBGL_ALWAYS_SOFTWARE: '1'
         run: |
           xvfb-run -a dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \

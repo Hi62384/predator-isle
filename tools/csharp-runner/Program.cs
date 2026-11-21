@@ -20,6 +20,13 @@ if (modes.Any(mode => !new[] { "blob", "authority", "lifecycle", "rings", "sampl
 var records = new List<object>();
 string logDirectory = Path.Combine(project, ".godot", "csharp_checks", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff")); Directory.CreateDirectory(logDirectory);
 bool passed = true;
+// The usual 2-GiB bound protects game checks. Mesa's software Vulkan backend
+// can allocate multiple GiB during renderer initialization, so CI may request
+// a larger *bounded* limit without changing the default gameplay acceptance.
+long memoryLimitMiB=2048;
+if(long.TryParse(Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_MEMORY_MIB"),out long requestedMiB)
+   && requestedMiB is >=2048 and <=6144)
+    memoryLimitMiB=requestedMiB;
 int modeIndex = 0;
 foreach (string mode in modes)
 {
@@ -59,8 +66,8 @@ foreach (string mode in modes)
         {
             process.Refresh(); if (process.HasExited) break;
             peak = Math.Max(peak, process.PrivateMemorySize64);
-            if ((DateTime.UtcNow - started).TotalSeconds > 180 || process.PrivateMemorySize64 > 2L * 1024 * 1024 * 1024)
-            { failure = "Owned check exceeded its 180-second/2GiB bound."; process.Kill(entireProcessTree: true); break; }
+            if ((DateTime.UtcNow - started).TotalSeconds > 180 || process.PrivateMemorySize64 > memoryLimitMiB * 1024L * 1024)
+            { failure = $"Owned check exceeded its 180-second/{memoryLimitMiB}MiB bound."; process.Kill(entireProcessTree: true); break; }
         }
     }
     finally
@@ -95,7 +102,7 @@ foreach (string mode in modes)
     foreach (string line in output.Split('\n').Where(line => line.Contains("checks passed") || line.Contains("startup check passed") || line.Contains("Actual volcanic cave cell"))) Console.WriteLine(line.Trim());
     if (!ok) { Console.Error.WriteLine(failure); passed = false; }
 }
-var receipt = new { passed, memory_limit_mib = 2048, deadline_seconds_per_mode = 180, sample_period_ms = 500, records,
+var receipt = new { passed, memory_limit_mib = memoryLimitMiB, deadline_seconds_per_mode = 180, sample_period_ms = 500, records,
     scope = "Only processes started by this runner are managed. Private memory is sampled, not an absolute peak. Existing project sessions are untouched. Certificate-store failures from the restricted execution environment are retained as environment messages; other runtime errors fail the run. No isolated or full-world performance claim." };
 string receiptJson = JsonSerializer.Serialize(receipt, new JsonSerializerOptions { WriteIndented = true });
 await File.WriteAllTextAsync(Path.Combine(logDirectory, "receipt.json"), receiptJson);
