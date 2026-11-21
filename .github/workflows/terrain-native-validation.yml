@@ -81,6 +81,14 @@ jobs:
             dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- "gpu-biome-$biome"
             echo "::endgroup::"
           done
+      - name: Measure direct terrain generation and memory allocations
+        timeout-minutes: 5
+        run: |
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- terrain-performance
+      - name: Verify remaining runtime, gameplay and scene migration
+        timeout-minutes: 13
+        run: |
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- blob general authority
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
         timeout-minutes: 12
         run: |

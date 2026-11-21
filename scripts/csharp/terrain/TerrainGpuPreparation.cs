@@ -12,9 +12,11 @@ internal sealed class TerrainGpuPreparation
     private readonly TerrainGpuSampler sampler;
     private readonly TerrainRingTopology topology;
     private readonly bool filterDistant;
-    private readonly bool automatic;
-    internal TerrainGpuPreparation(TerrainGpuSampler gpu,TerrainRingTopology sharedTopology,bool filteredDistant,bool automaticSelection=false)
-    {sampler=gpu;topology=sharedTopology;filterDistant=filteredDistant;automatic=automaticSelection;}
+    private readonly bool automatic,includeShapeRefinement;
+    internal TerrainGpuPreparation(TerrainGpuSampler gpu,TerrainRingTopology sharedTopology,
+        bool filteredDistant,bool automaticSelection=false,bool shapeRefinement=true)
+    {sampler=gpu;topology=sharedTopology;filterDistant=filteredDistant;automatic=automaticSelection;
+        includeShapeRefinement=shapeRefinement;}
 
     internal async Task<Result> PrepareAsync(TerrainMeshBuilder builder,TerrainRingLayout.Patch patch,int resolution,CancellationToken cancellation)
     {
@@ -22,7 +24,8 @@ internal sealed class TerrainGpuPreparation
         // A tiny nearby grid already shares a very small set of cached 4 m field
         // nodes. Avoid adding a render/readback round trip to its physics readiness.
         if(automatic&&patch.Size/resolution<4)return default;
-        var positions=TerrainGpuSamplePlan.Create(builder,topology,patch,resolution,filterDistant,cancellation);
+        var positions=TerrainGpuSamplePlan.Create(builder,topology,patch,resolution,filterDistant,
+            cancellation,includeShapeRefinement);
         if(positions.Length==0)return default;
         if(automatic&&positions.Length<1024)return default;
         var values=await sampler.SampleAsync(builder._native_grass,positions,cancellation).ConfigureAwait(false);

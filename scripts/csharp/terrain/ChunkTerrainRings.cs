@@ -107,7 +107,8 @@ public partial class ChunkTerrain
                 Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always,
                 PreferVertexBake=ring_settings.gpu_vertex_bake||OS.GetCmdlineUserArgs().Contains("terrain-gpu-bake=vertex")
             };AddChild(ringGpuSampler);
-            ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,ring_settings.generation_backend==2);
+            ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,
+                ring_settings.generation_backend==2,ring_settings.selective_geometry_refinement);
         }
     }
     internal static bool UseGpuGeneration(int backend,bool authority,string displayServer,string adapter)

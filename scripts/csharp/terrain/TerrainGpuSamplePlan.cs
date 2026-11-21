@@ -14,7 +14,8 @@ internal static class TerrainGpuSamplePlan
 {
     internal const int MaximumPoints=GrasslandField.GpuSampleCapacity;
     internal static Vector2[] Create(TerrainMeshBuilder builder,TerrainRingTopology topology,
-        TerrainRingLayout.Patch patch,int resolution,bool filterDistant,CancellationToken cancellation)
+        TerrainRingLayout.Patch patch,int resolution,bool filterDistant,CancellationToken cancellation,
+        bool includeShapeRefinement=true)
     {
         double scale=Math.Max(builder.settings.Get("terrain_shape_scale").AsDouble(),.01);
         var positions=new List<Vector2>();
@@ -48,7 +49,8 @@ internal static class TerrainGpuSamplePlan
                     Add(patch.OriginX+patch.Size*groundAxis[x]/ground.Denominator,patch.OriginZ+patch.Size*groundAxis[z]/ground.Denominator);
             }
         }
-        if(patch.Key.Z is 1 or 2)
+        // Only pre-bake shape probes if the mesh actually refines those rings.
+        if(includeShapeRefinement&&patch.Key.Z is 1 or 2)
         {
             double step=patch.Size/6;
             for(int z=0;z<6;z++)for(int x=0;x<6;x++)

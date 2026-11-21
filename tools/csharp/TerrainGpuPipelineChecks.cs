@@ -79,6 +79,15 @@ internal static class TerrainGpuPipelineChecks
         var topology = new TerrainRingTopology();
         var geometry = new TerrainRingMeshGeometry(topology);
         var patch = new TerrainRingLayout.Patch(new Vector3I(-1, 2, 0), 16, TerrainRingLayout.Mask.None);
+        // GPU planning must not bake samples for disabled middle-ring
+        // refinement; all required surface and physics points must remain.
+        var middle=new TerrainRingLayout.Patch(new Vector3I(0,0,2),144,TerrainRingLayout.Mask.None);
+        var enabled=TerrainGpuSamplePlan.Create(baked,topology,middle,16,false,
+            CancellationToken.None,true);
+        var disabled=TerrainGpuSamplePlan.Create(baked,topology,middle,16,false,
+            CancellationToken.None,false);
+        require(enabled.Length>disabled.Length&&disabled.All(enabled.Contains),
+            "Disabled refinement wasted GPU samples or removed essential coverage");
         var positions = TerrainGpuSamplePlan.Create(baked, topology, patch, 16, true, CancellationToken.None);
         require(positions.Length > 0 && positions.Length <= TerrainGpuSamplePlan.MaximumPoints, "GPU plan was empty or unbounded");
         require(positions.Distinct().Count() == positions.Length, "GPU plan contained duplicate sample positions");
