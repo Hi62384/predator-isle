@@ -26,6 +26,17 @@ internal static class TerrainRingChecks
             foreach(var p in predicted)require(p.Key.Z==0&&Math.Abs(p.Key.X-(int)Math.Floor(point.X/16))<=4&&Math.Abs(p.Key.Y-(int)Math.Floor(point.Y/16))<=4,"Prefetch escaped its bounded local neighborhood");
         }
         var topology=new TerrainRingTopology();var layout=new TerrainRingLayout(16,6);
+        // All terrain above the maximum possible local-water excursion can
+        // skip the expensive local-water builder without creating a surface.
+        {
+            var dry=Surface(new TerrainRingLayout.Patch(new Vector3I(0,0,0),16,TerrainRingLayout.Mask.None),topology);
+            var dryArrays=dry.Arrays.Duplicate();
+            var uv=dry.Arrays[(int)Mesh.ArrayType.TexUV].AsVector2Array();
+            for(int i=0;i<uv.Length;i++)uv[i]=new Vector2(-100,uv[i].Y);
+            dryArrays[(int)Mesh.ArrayType.TexUV]=uv;
+            require(TerrainRingWater.Build(dry with { Arrays=dryArrays },0,true,true).Count==0,
+                "Dry terrain unexpectedly allocated a local-water mesh");
+        }
         CheckMixedBackendSeams(require,topology);
         {
             var raw=Surface(new TerrainRingLayout.Patch(new Vector3I(-1,2,0),16,TerrainRingLayout.Mask.None),topology);var data=raw with{GpuPage=TerrainGpuGridPage.Create(raw.Arrays,raw.Topology.Axis.Length)};

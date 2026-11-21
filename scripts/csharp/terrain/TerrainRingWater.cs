@@ -12,7 +12,16 @@ public static class TerrainRingWater
     {
         var result=new A();if(!waterEnabled)return result;var products=data.Products;var arrays=products is null?data.Arrays:null;
         var terrain=products?.Vertices??arrays![(int)Mesh.ArrayType.Vertex].AsVector3Array();var source=data.Topology.Indices.Span;
-        var uv=products?.Uv??arrays![(int)Mesh.ArrayType.TexUV].AsVector2Array();var controls=products?.C3??arrays![(int)Mesh.ArrayType.Custom3].AsFloat32Array();var mountain=products?.C0??arrays![(int)Mesh.ArrayType.Custom0].AsFloat32Array();var coast=products?.C1??arrays![(int)Mesh.ArrayType.Custom1].AsFloat32Array();var tropical=products?.C2??arrays![(int)Mesh.ArrayType.Custom2].AsFloat32Array();var terrainColors=products?.Colors??arrays![(int)Mesh.ArrayType.Color].AsColorArray();int count=terrain.Length;var vertices=new Vector3[count];var normals=new Vector3[count];var colors=new Color[count];var uvs=new Vector2[count];var classes=new Vector2[count];var wet=new byte[count];var marine=new byte[count];
+        var uv=products?.Uv??arrays![(int)Mesh.ArrayType.TexUV].AsVector2Array();
+        // Every water contribution requires ground below water height plus
+        // at most one metre of encoded wetland weight. Reject entirely dry
+        // chunks before allocating seven dense output arrays or decoding
+        // terrain materials. This cannot discard a potentially wet triangle.
+        bool potentiallyWet=false;
+        for(int i=0;i<terrain.Length;i++)
+            if((double)terrain[i].Y<(double)uv[i].X+1.0){potentiallyWet=true;break;}
+        if(!potentiallyWet)return result;
+        var controls=products?.C3??arrays![(int)Mesh.ArrayType.Custom3].AsFloat32Array();var mountain=products?.C0??arrays![(int)Mesh.ArrayType.Custom0].AsFloat32Array();var coast=products?.C1??arrays![(int)Mesh.ArrayType.Custom1].AsFloat32Array();var tropical=products?.C2??arrays![(int)Mesh.ArrayType.Custom2].AsFloat32Array();var terrainColors=products?.Colors??arrays![(int)Mesh.ArrayType.Color].AsColorArray();int count=terrain.Length;var vertices=new Vector3[count];var normals=new Vector3[count];var colors=new Color[count];var uvs=new Vector2[count];var classes=new Vector2[count];var wet=new byte[count];var marine=new byte[count];
         for(int i=0;i<count;i++)
         {
             int at=i*4;double weight=Math.Floor(controls[at]/65536.0)/255;if(controls[at]<0)weight=terrainColors[i].A;double tw=tropical[at]<0?(((long)(-(double)tropical[at]-1)>>16)&255)/255.0:0;double mw=mountain[at]<0?Math.Floor(mountain[at+1]/65536.0)/255:0,cw=coast[at+2]<0?(((long)(-(double)coast[at+2]-1)>>8)&255)/255.0:0;
