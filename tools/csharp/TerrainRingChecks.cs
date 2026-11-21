@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Linq;
+using System.Collections.Generic;
 using PredatorIsle.Terrain;
 using A=Godot.Collections.Array;
 
@@ -11,6 +12,12 @@ internal static class TerrainRingChecks
     internal static void Run(Action<bool,string> require)
     {
         TerrainSharedSampleChecks.Run(require);
+        // In-flight and cancelled keys must never prevent later runnable work.
+        var pending=new List<int>{1,2,3,4};var wanted=new HashSet<int>{1,2,3};var busy=new HashSet<int>{1,3};
+        require(TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out int next)&&next==2&&
+                pending.SequenceEqual(new[]{3,4,1}),"A busy terrain job starved runnable patches behind it");
+        require(!TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out _)&&
+                pending.SequenceEqual(new[]{3,1}),"A fully blocked terrain queue did not terminate safely");
         foreach(var point in new[]{new Vector2(-.001f,-16.01f),new Vector2(2,3),new Vector2(16384,-32768)})
         foreach(var velocity in new[]{Vector2.Zero,new Vector2(25,0),new Vector2(-100,80)})
         {
@@ -64,6 +71,13 @@ internal static class TerrainRingChecks
             {
                 var page=TerrainGpuGridPage.Create(data.Arrays,data.Topology.Axis.Length);var points=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
                 require(page.Bytes.Length==points.Length*112,"GPU page size differs from its declared layout");
+                for(int band=0;band<4;band++)
+                {
+                    var controls=data.Arrays[(int)Mesh.ArrayType.Custom0+band].AsFloat32Array();
+                    for(int i=0;i<Math.Min(controls.Length,12);i++)
+                        require(BitConverter.ToSingle(page.Bytes,((band+3)*points.Length*4+i)*sizeof(float))==controls[i],
+                            "Direct GPU upload changed a terrain material control");
+                }
                 for(int i=0;i<points.Length;i++)
                 {
                     float scale=(float)(data.Patch.Size/data.Topology.Denominator);var axis=data.Topology.Axis.Span;

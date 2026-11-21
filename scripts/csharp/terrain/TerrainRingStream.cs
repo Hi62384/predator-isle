@@ -130,6 +130,20 @@ public sealed class TerrainRingStream : IDisposable
         foreach(var job in jobs.Values)if(!wanted.Contains(job.Key)&&!prefetch.Contains(job.Key)&&!job.Cancellation.IsCancellationRequested){job.Cancellation.Cancel();CancelledJobs++;}
         foreach(var key in prefetch)if(!cache.ContainsKey(key)&&!jobs.ContainsKey(key))pending.Add(key);
     }
+    // An in-flight cancelled job may still own a key. Examine the bounded queue
+    // rather than blocking runnable work behind that key.
+    internal static bool TryDequeueAvailable<T>(List<T> queue,Func<T,bool> eligible,Func<T,bool> busy,out T item)
+    {
+        int remaining=queue.Count;
+        while(remaining-->0)
+        {
+            T candidate=queue[0];queue.RemoveAt(0);
+            if(!eligible(candidate))continue;
+            if(busy(candidate)){queue.Add(candidate);continue;}
+            item=candidate;return true;
+        }
+        item=default!;return false;
+    }
     public void Tick(int availableSharedWorkers,Func<TerrainMeshBuilder> createBuilder)
     {
         ObjectDisposedException.ThrowIf(disposed,this);
@@ -150,9 +164,10 @@ public sealed class TerrainRingStream : IDisposable
         }
         Trim();if(LastError.Length>0)return;int allowance=Math.Max(0,Math.Min(MaximumWorkers,availableSharedWorkers));
         TryStartPreparation(allowance);
-        while(RunningJobs<allowance&&pending.Count>0)
+        while(RunningJobs<allowance&&TryDequeueAvailable(pending,
+            key=>(wanted.Contains(key)||prefetch.Contains(key))&&!ready.ContainsKey(key),
+            key=>jobs.ContainsKey(key),out var key))
         {
-            var key=pending[0];pending.RemoveAt(0);if((!wanted.Contains(key)&&!prefetch.Contains(key))||ready.ContainsKey(key))continue;if(jobs.ContainsKey(key)){pending.Add(key);break;}
             TerrainMeshBuilder builder;try{builder=idle.Count>0?idle.Dequeue().Builder:createBuilder();}catch(Exception error){LastError=error.ToString();pending.Insert(0,key);return;}
             var cancellation=new CancellationTokenSource();var token=cancellation.Token;
             var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();try{var task=Task.Run(()=>{long evaluations=builder._native_height.CanonicalEvaluations;var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples);progress.CanonicalEvaluations=builder._native_height.CanonicalEvaluations-evaluations;progress.Finish();return data;},token);jobs[key]=new Job(key,builder,cancellation,task,started,progress);}

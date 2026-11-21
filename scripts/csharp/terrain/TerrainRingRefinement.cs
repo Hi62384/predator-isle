@@ -28,7 +28,11 @@ public static class TerrainRingRefinement
         while(true)
         {
             var current=patches.Values.OrderBy(p=>p.Key.Z).ToArray();var rectangles=current.ToDictionary(p=>p.Key,Owned);var split=new HashSet<Vector3I>();
-            for(int i=0;i<current.Length;i++)for(int j=i+1;j<current.Length;j++){var fine=current[i];var coarse=current[j];if(coarse.Key.Z-fine.Key.Z<=1||split.Contains(coarse.Key))continue;bool adjacent=false;foreach(var a in rectangles[fine.Key]){foreach(var b in rectangles[coarse.Key])if(a.Adjacent(b)){adjacent=true;break;}if(adjacent)break;}if(adjacent)split.Add(coarse.Key);}
+            for(int i=0;i<current.Length;i++)for(int j=i+1;j<current.Length;j++){var fine=current[i];var coarse=current[j];if(coarse.Key.Z-fine.Key.Z<=1||split.Contains(coarse.Key))continue;
+                // Disjoint envelopes cannot share an edge; skip costly owned-rectangle comparisons.
+                if(fine.OriginX>coarse.OriginX+coarse.Size||fine.OriginX+fine.Size<coarse.OriginX||
+                   fine.OriginZ>coarse.OriginZ+coarse.Size||fine.OriginZ+fine.Size<coarse.OriginZ)continue;
+                bool adjacent=false;foreach(var a in rectangles[fine.Key]){foreach(var b in rectangles[coarse.Key])if(a.Adjacent(b)){adjacent=true;break;}if(adjacent)break;}if(adjacent)split.Add(coarse.Key);}
             if(split.Count==0)break;foreach(var key in split)Split(patches,key,maximumPatches);
         }
         return plan with{Patches=patches.Values.OrderBy(p=>p.Key.Z).ThenBy(p=>p.Key.Y).ThenBy(p=>p.Key.X).ToArray()};
