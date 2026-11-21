@@ -232,3 +232,7 @@ GPU input planning now honors `selective_geometry_refinement`, avoiding costly s
 ## Deformable organism GPU/CPU split
 
 The full-project audit also identified unnecessary main-thread physics work in the `BlobOrganism` runtime. Its body and appendage *visual deformation was already shader-driven on the GPU*. The C# step now computes expensive body-contact position arrays only for contractile/peristaltic/undulating/pulse locomotion, which are the only modes that consume them; leg, vine, roll, drag and other modes no longer allocate and map unused contact samples. Optional contact-debug drawing reuses one `ImmediateMesh` and one `StandardMaterial3D` instead of allocating fresh GPU resources each physics frame. Native blob smoke tests check GPU debug resource identity across ticks. GPU physics readback is intentionally not introduced for authoritative gameplay.
+
+### Exact C# and GDScript angular parity for extension biomes
+
+Quarry, volcanic, spore forest, and radiation terrain geometry use Godot's canonical Vector2 angle and rotation APIs to reproduce the source GDScript operations, including at large world coordinates. Native CI now runs the full eight-family numerical extension sampler comparison first, before spending time on the longer world/scene checks. The single-ULP height mismatches this addresses are CPU numerical correctness issues; GPU numerical baking for these families is a separate, still-unported optimization.

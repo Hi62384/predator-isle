@@ -17,7 +17,7 @@ public partial class SporeForestSampler : BiomeExtensionSampler
         for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++)
         {
             var owner=cell+new Vector2I(dx,dz);var d=descriptor(owner,span);var q=local(p,d)/(float)d["radius"].AsDouble();double age=d["age"].AsDouble(),elongation=.55+age*.45;
-            double edge=new Vector2(q.X,(float)(q.Y*elongation)).Length()+noise(p)*.2+.09*Math.Sin((float)Math.Atan2(q.Y,q.X)*3.0+d["angle"].AsDouble());double cover=1-Smooth(.35+age*.16,1.1+age*.3,edge),link=0;
+            double edge=new Vector2(q.X,(float)(q.Y*elongation)).Length()+noise(p)*.2+.09*Math.Sin(q.Angle()*3.0+d["angle"].AsDouble());double cover=1-Smooth(.35+age*.16,1.1+age*.3,edge),link=0;
             foreach(var direction in new[]{Vector2I.Right,Vector2I.Down})
             {
                 if(random(owner.X,owner.Y,801+direction.X*7)>.48)continue;var other=descriptor(owner+direction,span);var position=d["position"].AsVector2();var otherPosition=other["position"].AsVector2();var axis=otherPosition-position;var bend=(position+otherPosition)*.5f+new Vector2(-axis.Y,axis.X)*(float)((age-.5)*.3);

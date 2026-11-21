@@ -9,7 +9,7 @@ public partial class VolcanicSampler : BiomeExtensionSampler
     public override double[] evaluate(Vector2 p,int id)
     {
         double span=(id<3?7200:2600)*P("feature_scale");var d=nearby(p,span);var q=local(p,d);
-        double radius=d["radius"].AsDouble()*(1+noise(p*.25f)*.12),r=new Vector2(q.X,(float)((double)q.Y*.88)).Length()/radius,angle=(float)Math.Atan2(q.Y,q.X),age=d["age"].AsDouble()*P("weathering");
+        double radius=d["radius"].AsDouble()*(1+noise(p*.25f)*.12),r=new Vector2(q.X,(float)((double)q.Y*.88)).Length()/radius,angle=q.Angle(),age=d["age"].AsDouble()*P("weathering");
         double height=P("volcano_height")*(.65+d["age"].AsDouble()*.5),edifice=0,crater=0;
         switch(id)
         {

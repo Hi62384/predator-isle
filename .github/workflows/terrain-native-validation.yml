@@ -66,6 +66,10 @@ jobs:
         timeout-minutes: 8
         run: |
           "$GODOT_BIN" --headless --editor --path . --import --quit
+      - name: Verify all extension-biome numerical generators before slow world checks
+        timeout-minutes: 9
+        run: |
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- samplers
       - name: Verify authoritative numerical and collision paths
         timeout-minutes: 12
         run: |
