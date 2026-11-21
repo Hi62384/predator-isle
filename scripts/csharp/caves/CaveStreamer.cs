@@ -23,6 +23,12 @@ public partial class CaveStreamer : Node3D
     public Vector2I _region {get;set;}=new(int.MaxValue,int.MaxValue);
     public long _generation {get;set;}
     public bool _discovery_pending {get;set;}
+    // A partially evaluated cave graph belongs to exactly one worker. Returning
+    // that worker to the general pool can restart another worker's cursor.
+    // This lease exists only between completed discovery tasks, never while
+    // the worker is running.
+    private CaveWorkload? parkedDiscoveryWorker;
+    public long discovery_worker_resumes {get;private set;}
     public D discovery_progress{get;set;}=new();
     private readonly CaveDiscoveryCache discoveryCache=new();
     public long discovery_cache_bytes=>discoveryCache.ResidentBytes;
@@ -99,6 +105,10 @@ public partial class CaveStreamer : Node3D
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("update",this,protected_point);
         if(cell!=_region)
         {
+            // The old discovery cursor is idle between steps. Old in-flight
+            // jobs are NOT parked and remain owned by their thread-pool tasks.
+            if(parkedDiscoveryWorker is not null)
+            {_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}
             clear_surface_staging();_surface_request=new();_surface_batch=null;_surface_build_pending=false;_rebuild_nodes=new();_rebuild_columns=new();
             _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;discovery_progress=new D{["cached"]=!_discovery_pending};
         }
@@ -111,7 +121,10 @@ public partial class CaveStreamer : Node3D
         int allowance=dispatch_allowance(terrain_free_slots,_jobs.Count,terrain_waiting,host.Get("worker_count").AsInt64());
         while(allowance>0&&_ready.Count<8)
         {
-            var work=worker();if(work==null){last_error="Invalid cave worker configuration";return;}
+            var resuming=_discovery_pending&&parkedDiscoveryWorker is not null;
+            var work=resuming?parkedDiscoveryWorker:worker();
+            if(resuming){parkedDiscoveryWorker=null;discovery_worker_resumes++;}
+            if(work==null){last_error="Invalid cave worker configuration";return;}
             var result=new A();long generation=_generation;var job=new D{["work"]=work,["result"]=result,["generation"]=generation,["kind"]=_discovery_pending?"discovery":"mesh"};Func<D> execute;
             if(_discovery_pending){_discovery_pending=false;var region=_region;execute=()=>work.discover_step(region);}
             else if(_surface_batch!=null&&_surface_batch.pending())
@@ -134,11 +147,22 @@ public partial class CaveStreamer : Node3D
         foreach(var taskValue in _jobs.Keys.ToArray())
         {
             long task=taskValue.AsInt64();if(!WorkerThreadPool.IsTaskCompleted(task))continue;WorkerThreadPool.WaitForTaskCompletion(task);
-            var job=_jobs[task].AsGodotDictionary();_jobs.Remove(task);_idle.Add(job["work"]);string kind=job["kind"].AsString();long generation=job["generation"].AsInt64();
+            var job=_jobs[task].AsGodotDictionary();_jobs.Remove(task);string kind=job["kind"].AsString();long generation=job["generation"].AsInt64();
+            var work=job["work"].As<CaveWorkload>();
             if(kind=="mesh"&&Get(_inflight,job["key"].AsVector3I(),-1).AsInt64()==generation)_inflight.Remove(job["key"]);
-            var results=job["result"].AsGodotArray();if(generation!=_generation||results.Count==0)continue;var data=results[0].AsGodotDictionary();
+            var results=job["result"].AsGodotArray();
+            if(generation!=_generation||results.Count==0){_idle.Add(work);continue;}
+            var data=results[0].AsGodotDictionary();
+            if(kind=="discovery"&&!data.ContainsKey("error")&&Get(data,"discovery_pending",false).AsBool())
+            {
+                // An incomplete graph can resume only on this exact worker.
+                // Keep it out of the shared pool until it completes, fails,
+                // or the player moves to another discovery region.
+                parkedDiscoveryWorker=work;discovery_progress=data;_discovery_pending=true;continue;
+            }
+            _idle.Add(work);
             if(kind=="discovery")
-            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}if(Get(data,"discovery_pending",false).AsBool()){discovery_progress=data;_discovery_pending=true;continue;}discovery_progress=new D{["complete"]=true};_bundle=data;discoveryCache.Add(_region,data,job["work"].As<CaveWorkload>().DiscoveryBytes);_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
+            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}discovery_progress=new D{["complete"]=true};_bundle=data;discoveryCache.Add(_region,data,work.DiscoveryBytes);_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
             else if(kind=="portal")
             {
                 if(_surface_batch==null||job["batch_id"].AsInt64()!=_surface_batch.id)continue;
@@ -231,6 +255,7 @@ public partial class CaveStreamer : Node3D
     {
         discoveryCache.Clear();
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();foreach(var task in _jobs.Keys)WorkerThreadPool.WaitForTaskCompletion(task.AsInt64());
+        if(parkedDiscoveryWorker is not null){_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}
         _jobs.Clear();_ready.Clear();_idle.Clear();_surface_batch=null;_surface_request=new();_surface_build_pending=false;_surface_transaction?.reset();clear_surface_staging();_frontiers.synchronize(_cells,false);
         foreach(var value in _cells.Values){var node=value.As<Node3D>();if(Valid(node))node!.GetNode<StaticBody3D>("CaveCollision").CollisionLayer=0;}_cells.Clear();
     }
