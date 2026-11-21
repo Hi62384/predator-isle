@@ -25,8 +25,7 @@ jobs:
     timeout-minutes: 28
     strategy:
       fail-fast: false
-      // Software Vulkan reserves several GiB for its graphics driver. Run one
-      // device-mode fixture at a time on hosted VMs to avoid aggregate OOM.
+      # Software Vulkan reserves several GiB. Avoid concurrent OOM on hosted VMs.
       max-parallel: 1
       matrix:
         method: [forward_plus, mobile]
