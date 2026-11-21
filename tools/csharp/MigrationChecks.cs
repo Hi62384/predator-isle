@@ -66,6 +66,13 @@ public partial class MigrationChecks : Node
                 _mode = "samplers"; ExtensionSamplerChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
                 GD.Print($"C# extension sampler checks passed: {_checks}"); await Finish(); return;
             }
+            if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "discovery-only"))
+            {
+                _mode="discovery"; CaveDiscoveryChecks.Run(Require);
+                MigrationEvidence.Write(_mode,_checks,true);
+                GD.Print($"C# deterministic cave discovery checks passed: {_checks}");
+                await Finish();return;
+            }
             if (System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(), "network-only"))
             {
                 _mode = "network"; CaveRouteChecks.Run(Require); MigrationEvidence.Write(_mode, _checks, true);
