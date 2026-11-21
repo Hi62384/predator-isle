@@ -1,0 +1,40 @@
+name: Godot C# build validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'scripts/csharp/**'
+      - 'tools/csharp/**'
+      - 'tools/csharp-runner/**'
+      - 'PredatorIsle.csproj'
+      - '.github/workflows/godot-csharp-build.yml'
+  pull_request:
+    paths:
+      - 'scripts/csharp/**'
+      - 'tools/csharp/**'
+      - 'tools/csharp-runner/**'
+      - 'PredatorIsle.csproj'
+      - '.github/workflows/godot-csharp-build.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  compile:
+    name: Build Godot 4.6.1 C# on .NET 8
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+          cache: false
+      - name: Restore dependencies
+        run: dotnet restore PredatorIsle.csproj --nologo
+      - name: Compile terrain, caves, runtime, and regression fixtures
+        run: dotnet build PredatorIsle.csproj --no-restore --configuration Debug --nologo -warnaserror
+      - name: Compile C# validation launcher
+        run: dotnet build tools/csharp-runner/PredatorIsle.Checks.csproj --configuration Debug --nologo -warnaserror
