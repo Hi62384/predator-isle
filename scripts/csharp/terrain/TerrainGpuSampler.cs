@@ -60,7 +60,9 @@ public partial class TerrainGpuSampler : Node
             Lifetime=CancellationTokenSource.CreateLinkedTokenSource(cancellation);
             Lifetime.CancelAfter(TimeSpan.FromSeconds(Math.Clamp(timeoutSeconds,1,120)));
             Cancellation=Lifetime.Token;
-            Registration=Cancellation.Register(()=>Completion.TrySetResult(null));
+            // Register the linked lifetime token, not just the caller token:
+            // CancelAfter must unblock a worker even if the renderer never draws.
+            Registration=Lifetime.Token.Register(()=>Completion.TrySetResult(null));
         }
         public void Dispose(){Registration.Dispose();Lifetime.Dispose();}
     }

@@ -140,6 +140,19 @@ internal static class TerrainGpuPipelineChecks
         }
         finally { sampler.Free(); }
 
+        // Simulate a device that never produces a frame. The request must
+        // timeout and unblock the waiting worker without requiring Shutdown().
+        sampler = new TerrainGpuSampler { RequestTimeoutSeconds = 1 };
+        host.AddChild(sampler); sampler.SetProcess(false);
+        try
+        {
+            var timedOut=sampler.SampleAsync(builder._native_grass,new[]{Vector2.Zero});
+            var finished=await Task.WhenAny(timedOut,Task.Delay(4000));
+            require(ReferenceEquals(finished,timedOut)&&await timedOut is null,
+                "GPU request timeout did not unblock a suspended terrain worker");
+        }
+        finally { sampler.Shutdown(); sampler.Free(); }
+
         sampler = new TerrainGpuSampler { MaximumQueuedRequests = 2 };
         host.AddChild(sampler); sampler.SetProcess(false);
         try
