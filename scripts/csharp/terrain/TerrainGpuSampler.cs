@@ -37,6 +37,7 @@ public partial class TerrainGpuSampler : Node
     public int RawCacheEntries { get { lock (rawCacheLock) return rawCache.Count; } }
     public long CreatedRenderTargets { get; private set; }
     public long ReusedRenderTargets { get; private set; }
+    public long ReusedPlanTextures { get; private set; }
     public long RejectedNumericalBatches => Interlocked.Read(ref numericalRejections);
     public long CompletedRequests { get; private set; }
     public long CompletedSamples { get; private set; }
@@ -379,7 +380,8 @@ public partial class TerrainGpuSampler : Node
             if(material is null)material=new ShaderMaterial();
             material.Shader=vertexMode?vertexShader:shader;
             requests[0].Parameters.Apply(material);
-            (rivers,int riverColumns)=DataTexture(riverValues);(lakes,int lakeColumns)=DataTexture(lakeValues);
+            (rivers,int riverColumns)=DataTexture(riverValues,previous?.Rivers);
+            (lakes,int lakeColumns)=DataTexture(lakeValues,previous?.Lakes);
             material.SetShaderParameter("planned_rivers",rivers);material.SetShaderParameter("planned_lakes",lakes);
             material.SetShaderParameter("river_columns",riverColumns);material.SetShaderParameter("lake_columns",lakeColumns);
             material.SetShaderParameter("sample_positions",input);material.SetShaderParameter("sample_count",points.Count);
@@ -434,23 +436,31 @@ public partial class TerrainGpuSampler : Node
             // The material now owns the new textures; the previous flight is no
             // longer rendering, so its numerical inputs can be released.
             if(previous is not null&&!ReferenceEquals(previous.Input,input))previous.Input.Dispose();
-            previous?.Rivers.Dispose();previous?.Lakes.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Rivers,rivers))previous.Rivers.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Lakes,lakes))previous.Lakes.Dispose();
         }
         catch
         {
             if(viewport is not null)viewport.Free();
             material?.Dispose();input?.Dispose();rivers?.Dispose();lakes?.Dispose();
             if(previous is not null&&!ReferenceEquals(previous.Input,input))previous.Input.Dispose();
-            previous?.Rivers.Dispose();previous?.Lakes.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Rivers,rivers))previous.Rivers.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Lakes,lakes))previous.Lakes.Dispose();
             throw;
         }
     }
 
-    private static (ImageTexture Texture,int Columns) DataTexture(List<Vector4> values)
+    private (ImageTexture Texture,int Columns) DataTexture(List<Vector4> values,ImageTexture? previous=null)
     {
         int columns=Math.Min(512,Math.Max(2,values.Count));int rows=Math.Max(2,(values.Count+columns-1)/columns);
         var bytes=new byte[checked(columns*rows*16)];CollectionsMarshal.AsSpan(values).CopyTo(MemoryMarshal.Cast<byte,Vector4>(bytes));
         using var image=Image.CreateFromData(columns,rows,false,Image.Format.Rgbaf,bytes);
+        if(previous is not null&&previous.GetWidth()==columns&&previous.GetHeight()==rows)
+        {
+            previous.Update(image);
+            ReusedPlanTextures++;
+            return (previous,columns);
+        }
         return (ImageTexture.CreateFromImage(image),columns);
     }
 

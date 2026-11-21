@@ -62,6 +62,7 @@ public partial class ChunkTerrain
             ["gpu_raw_cache_entries"]=ringGpuSampler?.RawCacheEntries??0,
             ["gpu_render_targets_created"]=ringGpuSampler?.CreatedRenderTargets??0,
             ["gpu_render_targets_reused"]=ringGpuSampler?.ReusedRenderTargets??0,
+            ["gpu_plan_textures_reused"]=ringGpuSampler?.ReusedPlanTextures??0,
             ["gpu_vertex_bake_flights"]=ringGpuSampler?.VertexBakeFlights??0,
             ["gpu_parity_rejections"]=ringGpuSampler?.RejectedNumericalBatches??0,
             ["gpu_readback_ms"]=ringGpuSampler?.ReadbackMilliseconds??0,
