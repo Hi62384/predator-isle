@@ -119,3 +119,53 @@ Both full `startup-grid` attempts used the fixture's actual 1,920×1,080 viewpor
 These runs had no terrain worker, shader, or collision errors. They nevertheless remain failed full traversal checks. The final screenshot and complete movement/return assertions were not reached. The deadline was not relaxed and the viewport was not reduced to obtain a pass. Focused stitching, physical ground, queued-worker disposal, and actual readback checks provide narrower evidence; they do not turn the timed-out full-world test into a passing one.
 
 Hardware end-to-end generation performance, complete saved-world traversal within the deadline, minimum-spec frame rate, and cave entrance continuity remain separate acceptance requirements from these focused numerical checks.
+
+
+## Cross-biome generation and renderer regression — November 21, 2026
+
+The [successful native Compatibility CI run](https://github.com/Hi62384/predator-isle/actions/runs/44958026283)
+compiled Godot 4.6.1 .NET and ran strict native checks for all sixteen surface
+biome families in separate engine processes: grass, forest, savanna, swamp,
+jungle, mountain, tropical, badlands, quarry, wise mountains, volcanic,
+spore forest, radiation wasteland, crystal wastes, insect colony, and alien
+infected. Every fixture compared the full GPU grid displacement payload,
+normals, UVs, four categorical material-control banks and authoritative
+one-metre physics positions. All sixteen passed. The cave-biome region,
+material, shader-source composition, feature and renderer checks passed (the
+four registered cave definitions are default, frozen, crystal and magma).
+
+The same run passed the exact GDScript/C# protected-shore cave geometry
+comparison and deterministic cave network/discovery checks. The beach
+reference passed 54,912 strict assertions after switching the native C#
+wind-vector helper to Godot's Vector2.FromAngle. Compatibility graphics tests
+also passed actual grassland shader readback, vertex-baking differential tests,
+cancellation, and GPU-height-to-Jolt physics integration.
+
+Subsequent common-path optimizations reuse per-cell 3D cave lattice buffers
+through System.Buffers.ArrayPool and remove redundant Godot Dictionary/Variant
+lookups during mixed-biome region ownership. Those changes are independently
+compile-checked; their native revalidation should be reviewed in the matching
+latest GitHub Actions run before attributing any performance gain to them.
+
+### What these results do **not** prove
+
+- All-biome GPU grid rendering does not imply every *numerical height generator*
+  has been ported into a GPU shader. Grassland is the only validated numerical
+  GPU bake; other terrain families still use CPU evaluation and then upload
+  canonical visual products for GPU displacement and material rendering.
+- Cave materials and procedural visual effects run in GPU shaders, but
+  arbitrary tunnel/chamber topology, protected entrance cuts, portal safety,
+  and authoritative collision remain CPU/physics operations; Compatibility
+  does not support arbitrary geometry-producing compute shaders.
+- A native test pass is not evidence of near-optimal framerate, world loading,
+  GPU utilization, or low memory use. Comparison requires an RTX 3060, an
+  integrated GPU, and low-end compatibility-class hardware with cold/warm
+  streaming paths, caves, edits and full-world traversal.
+- Mobile Vulkan's large software-renderer sampling fixture has not completed
+  within its first-use compilation timeout. Its focused real shader-to-collision
+  check passed; the more complete Vulkan hardware matrix remains outstanding.
+- An earlier 1080p full-world movement/return fixture timed out under Mesa
+  llvmpipe. Focused coverage and collision checks cannot replace that test.
+
+These acceptance limits are intentionally preserved rather than weakened to
+claim that optimization is complete.
