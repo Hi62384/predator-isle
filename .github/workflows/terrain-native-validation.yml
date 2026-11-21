@@ -67,6 +67,11 @@ jobs:
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
             rings sampling gpu-pipeline collision network discovery
+      - name: Verify all primary cave biome and terrain-specific paths
+        timeout-minutes: 13
+        run: |
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
+            field worker tropical beach placement tissue
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
         timeout-minutes: 12
         run: |
