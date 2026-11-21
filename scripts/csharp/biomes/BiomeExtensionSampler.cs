@@ -41,11 +41,10 @@ public partial class BiomeExtensionSampler : RefCounted
     }
     public Vector2 local(Vector2 p,D d)
     {
-        var q=p-d["position"].AsVector2();float angle=(float)-d["angle"].AsDouble();
-        // Match the engine's float-angle/double-trig/float-result path.
-        // MathF trig differs by one ULP at some far descriptor angles.
-        float sine=(float)Math.Sin(angle),cosine=(float)Math.Cos(angle);
-        return new Vector2(q.X*cosine-q.Y*sine,q.X*sine+q.Y*cosine);
+        // The native engine rotation is the canonical GDScript operation.
+        // A hand-expanded sin/cos matrix differs by one float ULP at some far
+        // descriptor angles, enough to alter quarry heights and seams.
+        return (p-d["position"].AsVector2()).Rotated((float)-d["angle"].AsDouble());
     }
     public Vector2 segment(Vector2 p,Vector2 a,Vector2 b){var ab=b-a;double t=Math.Clamp((p-a).Dot(ab)/Math.Max(ab.LengthSquared(),.001),0,1);return new Vector2(p.DistanceTo(a+ab*(float)t),(float)t);}
     public double noise(Vector2 p)=>_meso.GetNoise2Dv(p);

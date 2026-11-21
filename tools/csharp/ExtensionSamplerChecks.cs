@@ -28,6 +28,13 @@ internal static class ExtensionSamplerChecks
                 if(i%20==0)
                 {
                     var cell=new Vector2I(i-160,32-i);var a=original.Call("descriptor",cell,1700.5);var b=native.descriptor(cell,1700.5);require(GD.VarToBytes(a).SequenceEqual(GD.VarToBytes(b)),"Extension finite descriptor differs: "+MigrationComparison.FirstDifference(a,b));
+                    // Every extension family uses this local coordinate
+                    // rotation; require the exact engine vector operation
+                    // rather than merely approximate trigonometric parity.
+                    var referenceLocal=original.Call("local",p,a.AsGodotDictionary()).AsVector2();
+                    var nativeLocal=native.local(p,a.AsGodotDictionary());
+                    require(referenceLocal==nativeLocal,
+                        $"Extension local rotation differs: {name} seed={seed} p={p} reference={referenceLocal} native={nativeLocal}");
                     if(native is InsectColonySampler insect)require(GD.VarToBytes(original.Call("satellites",a)).SequenceEqual(GD.VarToBytes(insect.satellites(b))),"Insect satellite sites differ");
                     if(native is VolcanicSampler volcanic)require(GD.VarToBytes(original.Call("active_lava_descriptor",p)).SequenceEqual(GD.VarToBytes(volcanic.active_lava_descriptor(p))),"Volcanic retained lava-source eligibility differs");
                     if(native is WiseMountainsSampler wise)require(GD.VarToBytes(original.Call("tributary",p)).SequenceEqual(GD.VarToBytes(wise.tributary(p))),"Wise Mountains tributary geometry differs");
