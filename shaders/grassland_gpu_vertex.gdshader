@@ -256,14 +256,14 @@ void vertex() {
         baked_surface = vec2(0.0);
         baked_geology = vec3(0.0);
         baked_detail = 0.0;
-        return;
+    } else {
+        vec4 point = prepared_input(sample_index, 0);
+        GrassSample value = sample_raw(point.x, point.y, int(point.z), int(point.w), sample_index);
+        baked_land = value.value;
+        baked_surface = value.surface;
+        baked_geology = value.geology;
+        baked_detail = value.detail_weight;
     }
-    vec4 point = prepared_input(sample_index, 0);
-    GrassSample value = sample_raw(point.x, point.y, int(point.z), int(point.w), sample_index);
-    baked_land = value.value;
-    baked_surface = value.surface;
-    baked_geology = value.geology;
-    baked_detail = value.detail_weight;
 }
 vec4 encode_scalar(float value) {
     uint bits = floatBitsToUint(value);
