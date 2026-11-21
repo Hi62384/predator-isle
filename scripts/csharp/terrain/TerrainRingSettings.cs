@@ -9,6 +9,8 @@ public partial class TerrainRingSettings : Resource
     // Experimental until the measured end-to-end cache cost improves.
     [Export] public bool shared_samples {get;set;}
     [Export] public bool gpu_render_grids {get;set;}=true;
+    // Keep the proven fragment shader as default until renderer parity passes.
+    [Export] public bool gpu_vertex_bake {get;set;}=false;
     [ExportGroup("World-aligned terrain rings")]
     [Export(PropertyHint.Range,"16,64,16")] public double base_patch_metres{get;set;}=16;
     [Export(PropertyHint.Range,"0,8,1")] public int outer_rings{get;set;}=6;

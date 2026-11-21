@@ -24,6 +24,10 @@ public partial class TerrainGpuSampler : Node
     // the canonical double-coordinate terrain. Use the CPU there, even on fast GPUs.
     public const float MaximumCoordinate = 32768;
     public int MaximumInFlight { get; set; } = 2;
+    // Experimental until actual shader parity and GPU timings have passed on
+    // the active driver. Existing fragment baking is the safe default.
+    public bool PreferVertexBake { get; set; }
+    public long VertexBakeFlights { get; private set; }
     public int MaximumReadbacksPerFrame { get; set; } = 1;
     public int MaximumQueuedRequests { get; set; } = 16;
     public double RequestTimeoutSeconds { get; set; } = 30;
@@ -108,11 +112,13 @@ public partial class TerrainGpuSampler : Node
         public required int Columns;
         public required int Rows;
         public required long DrawVersion;
+        public bool SampleMajor;
     }
     private readonly ConcurrentQueue<Request> pending = new();
     private readonly List<Flight> flights = new();
     private readonly object lifecycle = new();
-    private Shader? shader;
+    private Shader? shader,vertexShader;
+    private readonly TerrainGpuVertexQuads vertexQuads=new();
     private bool subscribed;
     private int available,queued;
     private long drawVersion;
@@ -124,6 +130,12 @@ public partial class TerrainGpuSampler : Node
         if(DisplayServer.GetName()=="headless")return;
         shader=GD.Load<Shader>("res://shaders/grassland_gpu.gdshader");
         if(shader is null){LastFailure="Grassland GPU shader could not be loaded.";return;}
+        if(PreferVertexBake)
+        {
+            vertexShader=GD.Load<Shader>("res://shaders/grassland_gpu_vertex.gdshader");
+            if(vertexShader is null)
+            {PreferVertexBake=false;LastFailure="Vertex-bake shader unavailable; fragment-bake fallback retained.";}
+        }
         RenderingServer.FramePostDraw+=OnPostDraw;
         subscribed=true;
         Volatile.Write(ref available,1);
@@ -211,6 +223,10 @@ public partial class TerrainGpuSampler : Node
     }
     internal void RejectNumericalResults()
     {
+        // A parity failure in the new shader should demote that shader
+        // immediately, before the existing repeated-failure CPU circuit-breaker.
+        if(PreferVertexBake)
+        {PreferVertexBake=false;LastFailure="GPU vertex baking rejected by numerical parity; falling back to fragment baking.";}
         lock(rawCacheLock){rawCache.Clear();rawCacheOrder.Clear();rawCacheParameters=null;}
         // A device that repeatedly returns unacceptable data should stop
         // dispatching GPU work instead of repeatedly blocking terrain workers.
@@ -252,7 +268,7 @@ public partial class TerrainGpuSampler : Node
                     throw new InvalidOperationException("GPU heightmap readback returned an unexpected image layout.");
                 var bytes=image.GetData();
                 ReadbackMilliseconds+=(Time.GetTicksUsec()-start)/1000.0;
-                var values=Decode(bytes,flight.SampleCount,flight.Columns,flight.Rows);
+                var values=Decode(bytes,flight.SampleCount,flight.Columns,flight.Rows,flight.SampleMajor);
                 Readbacks++;ReadbackBytes+=bytes.LongLength;GeneratedRawSamples+=flight.SampleCount;
                 for(int requestIndex=0;requestIndex<flight.Requests.Length;requestIndex++)
                 {
@@ -265,7 +281,11 @@ public partial class TerrainGpuSampler : Node
                 }
             }
             catch(Exception error)
-            {FailedRequests+=flight.Requests.Length;LastFailure=error.Message;foreach(var request in flight.Requests)request.Completion.TrySetResult(null);}
+            {
+                if(flight.SampleMajor)PreferVertexBake=false;
+                FailedRequests+=flight.Requests.Length;LastFailure=error.Message;
+                foreach(var request in flight.Requests)request.Completion.TrySetResult(null);
+            }
             finally{Retire(i);}
         }
         while(flights.Count<Math.Clamp(MaximumInFlight,1,4)&&pending.TryDequeue(out var request))
@@ -281,7 +301,12 @@ public partial class TerrainGpuSampler : Node
                 Interlocked.Decrement(ref queued);points+=next.Positions.Length;batch.Add(next);
             }
             try{Dispatch(batch.ToArray());}
-            catch(Exception error){FailedRequests+=batch.Count;LastFailure=error.Message;foreach(var item in batch){item.Completion.TrySetResult(null);item.Dispose();}}
+            catch(Exception error)
+            {
+                if(PreferVertexBake)PreferVertexBake=false;
+                FailedRequests+=batch.Count;LastFailure=error.Message;
+                foreach(var item in batch){item.Completion.TrySetResult(null);item.Dispose();}
+            }
         }
     }
 
@@ -321,7 +346,10 @@ public partial class TerrainGpuSampler : Node
                 map[i]=index;
             }
         }
-        int columns=Math.Min(512,Math.Max(2,points.Count));
+        // Four shader invocations per sample replace nine expensive fragment
+        // evaluations. Small jobs use the lower-overhead existing fragment path.
+        bool vertexMode=PreferVertexBake&&vertexShader is not null&&points.Count>=1024;
+        int columns=vertexMode?512:Math.Min(512,Math.Max(2,points.Count));
         int rows=Math.Max(1,(points.Count+columns-1)/columns);
         // A SubViewport must be at least 2 pixels in both dimensions. Output has nine bands.
         int positionRows=Math.Max(2,rows),plane=columns*positionRows;
@@ -348,7 +376,8 @@ public partial class TerrainGpuSampler : Node
                 input.Update(image);
             }
             else input=ImageTexture.CreateFromImage(image);
-            if(material is null)material=new ShaderMaterial{Shader=shader};
+            if(material is null)material=new ShaderMaterial();
+            material.Shader=vertexMode?vertexShader:shader;
             requests[0].Parameters.Apply(material);
             (rivers,int riverColumns)=DataTexture(riverValues);(lakes,int lakeColumns)=DataTexture(lakeValues);
             material.SetShaderParameter("planned_rivers",rivers);material.SetShaderParameter("planned_lakes",lakes);
@@ -367,17 +396,41 @@ public partial class TerrainGpuSampler : Node
                     RenderTargetUpdateMode=SubViewport.UpdateMode.Disabled,
                     CanvasItemDefaultTextureFilter=Viewport.DefaultCanvasItemTextureFilter.Nearest
                 };
-                viewport.AddChild(new ColorRect{Size=new Vector2(columns,rows*RawScalarsPerSample),Color=Colors.White,Material=material,MouseFilter=Control.MouseFilterEnum.Ignore});
                 AddChild(viewport);CreatedRenderTargets++;
             }
             else
             {
                 viewport.Size=new Vector2I(columns,rows*RawScalarsPerSample);
-                ((ColorRect)viewport.GetChild(0)).Size=new Vector2(columns,rows*RawScalarsPerSample);
                 ReusedRenderTargets++;
             }
+            var previousChild=viewport.GetChildCount()>0?viewport.GetChild(0):null;
+            if(vertexMode)
+            {
+                var instance=previousChild as MeshInstance2D;
+                if(instance is null)
+                {
+                    previousChild?.Free();
+                    instance=new MeshInstance2D{Name="TerrainNumericVertexQuads"};
+                    viewport.AddChild(instance);
+                }
+                instance.Material=material;
+                instance.Mesh=vertexQuads.Get(points.Count);
+                VertexBakeFlights++;
+            }
+            else
+            {
+                var rectangle=previousChild as ColorRect;
+                if(rectangle is null)
+                {
+                    previousChild?.Free();
+                    rectangle=new ColorRect{Color=Colors.White,MouseFilter=Control.MouseFilterEnum.Ignore};
+                    viewport.AddChild(rectangle);
+                }
+                rectangle.Material=material;
+                rectangle.Size=new Vector2(columns,rows*RawScalarsPerSample);
+            }
             viewport.RenderTargetUpdateMode=SubViewport.UpdateMode.Once;
-            flights.Add(new Flight{Requests=requests,SampleIndices=maps,SampleCount=points.Count,Viewport=viewport,Material=material,Input=input,Rivers=rivers,Lakes=lakes,Columns=columns,Rows=rows,DrawVersion=Interlocked.Read(ref drawVersion)});
+            flights.Add(new Flight{Requests=requests,SampleIndices=maps,SampleCount=points.Count,Viewport=viewport,Material=material,Input=input,Rivers=rivers,Lakes=lakes,Columns=columns,Rows=rows,DrawVersion=Interlocked.Read(ref drawVersion),SampleMajor=vertexMode});
             // The material now owns the new textures; the previous flight is no
             // longer rendering, so its numerical inputs can be released.
             if(previous is not null&&!ReferenceEquals(previous.Input,input))previous.Input.Dispose();
@@ -401,13 +454,16 @@ public partial class TerrainGpuSampler : Node
         return (ImageTexture.CreateFromImage(image),columns);
     }
 
-    internal static float[] Decode(byte[] bytes,int count,int columns,int rows)
+    internal static float[] Decode(byte[] bytes,int count,int columns,int rows,bool sampleMajor=false)
     {
         if(bytes.Length!=checked(columns*rows*RawScalarsPerSample*4))throw new ArgumentException("Invalid numerical texture byte count.",nameof(bytes));
         var result=new float[checked(count*RawScalarsPerSample)];
         for(int band=0;band<RawScalarsPerSample;band++)for(int sample=0;sample<count;sample++)
         {
-            float value=BitConverter.Int32BitsToSingle(BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan((band*rows*columns+sample)*4,4)));
+            // Fragment baking uses scalar-major horizontal strips. Vertex
+            // baking writes nine vertical texels per sample, row by row.
+            int pixel=sampleMajor?((sample/columns*RawScalarsPerSample+band)*columns+sample%columns):band*rows*columns+sample;
+            float value=BitConverter.Int32BitsToSingle(BinaryPrimitives.ReadInt32LittleEndian(bytes.AsSpan(pixel*4,4)));
             if(!float.IsFinite(value))throw new InvalidOperationException("GPU heightmap contained a non-finite sample.");
             result[sample*RawScalarsPerSample+band]=value;
         }
@@ -437,6 +493,7 @@ public partial class TerrainGpuSampler : Node
         for(int i=flights.Count-1;i>=0;i--){foreach(var request in flights[i].Requests)request.Completion.TrySetResult(null);Retire(i);}
         while(idleTargets.Count>0)ReleaseTarget(idleTargets.Pop());
         lock(rawCacheLock){rawCache.Clear();rawCacheOrder.Clear();rawCacheParameters=null;}
+        vertexQuads.Dispose();
     }
     public override void _ExitTree(){Shutdown();if(subscribed){RenderingServer.FramePostDraw-=OnPostDraw;subscribed=false;}}
 }

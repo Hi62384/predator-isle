@@ -62,6 +62,7 @@ public partial class ChunkTerrain
             ["gpu_raw_cache_entries"]=ringGpuSampler?.RawCacheEntries??0,
             ["gpu_render_targets_created"]=ringGpuSampler?.CreatedRenderTargets??0,
             ["gpu_render_targets_reused"]=ringGpuSampler?.ReusedRenderTargets??0,
+            ["gpu_vertex_bake_flights"]=ringGpuSampler?.VertexBakeFlights??0,
             ["gpu_parity_rejections"]=ringGpuSampler?.RejectedNumericalBatches??0,
             ["gpu_readback_ms"]=ringGpuSampler?.ReadbackMilliseconds??0,
             ["gpu_last_failure"]=ringGpuSampler?.LastFailure??"",
@@ -100,7 +101,11 @@ public partial class ChunkTerrain
         ringStream=new TerrainRingStream(topology,ring_settings.filtered_distant_heights){ShareSamples=(ring_settings.shared_samples||OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=on"))&&!OS.GetCmdlineUserArgs().Contains("terrain-shared-samples=off"),GpuGrids=!authority_only&&(ring_settings.gpu_render_grids||OS.GetCmdlineUserArgs().Contains("terrain-render=grid"))&&!OS.GetCmdlineUserArgs().Contains("terrain-render=cpu"),MaximumWorkers=worker_count,CacheBudgetBytes=(long)ring_settings.cache_mebibytes*1024*1024};ringBudget=new TerrainRingBudget(ring_settings);
         if(UseGpuGeneration(ring_settings.generation_backend,authority_only,DisplayServer.GetName(),RenderingServer.GetVideoAdapterName()))
         {
-            ringGpuSampler=new TerrainGpuSampler{Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always};AddChild(ringGpuSampler);
+            ringGpuSampler=new TerrainGpuSampler
+            {
+                Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always,
+                PreferVertexBake=ring_settings.gpu_vertex_bake||OS.GetCmdlineUserArgs().Contains("terrain-gpu-bake=vertex")
+            };AddChild(ringGpuSampler);
             ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,ring_settings.generation_backend==2);
         }
     }
