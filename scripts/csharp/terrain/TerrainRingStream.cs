@@ -165,8 +165,8 @@ public sealed class TerrainRingStream : IDisposable
         Trim();if(LastError.Length>0)return;int allowance=Math.Max(0,Math.Min(MaximumWorkers,availableSharedWorkers));
         TryStartPreparation(allowance);
         while(RunningJobs<allowance&&TryDequeueAvailable(pending,
-            key=>(wanted.Contains(key)||prefetch.Contains(key))&&!ready.ContainsKey(key),
-            key=>jobs.ContainsKey(key),out var key))
+            candidate=>(wanted.Contains(candidate)||prefetch.Contains(candidate))&&!ready.ContainsKey(candidate),
+            candidate=>jobs.ContainsKey(candidate),out var key))
         {
             TerrainMeshBuilder builder;try{builder=idle.Count>0?idle.Dequeue().Builder:createBuilder();}catch(Exception error){LastError=error.ToString();pending.Insert(0,key);return;}
             var cancellation=new CancellationTokenSource();var token=cancellation.Token;
