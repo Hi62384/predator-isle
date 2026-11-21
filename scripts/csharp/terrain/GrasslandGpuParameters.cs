@@ -5,7 +5,7 @@ using System.Collections.Generic;
 namespace PredatorIsle.Terrain;
 
 /// <summary>Immutable numerical snapshot; no engine object crosses into the render queue.</summary>
-internal sealed record GrasslandGpuParameters(int Seed, string[] Names, float[] Values,
+internal sealed record GrasslandGpuParameters(int Seed,long SourceSeed,string[] Names, float[] Values,
     int[] NoiseSeeds,int[] Octaves,Vector4[] NoiseConfig,Vector2[] NoiseOffsets,double[] CanonicalValues)
 {
     internal static readonly string[] ParameterNames =
@@ -61,7 +61,7 @@ internal sealed record GrasslandGpuParameters(int Seed, string[] Names, float[] 
         var values=new float[ParameterNames.Length];var canonicalValues=new double[ParameterNames.Length];
         for(int i=0;i<values.Length;i++){double value=field.settings.Get("grass_"+ParameterNames[i]).AsDouble();if(!double.IsFinite(value)||!float.IsFinite((float)value))return null;canonicalValues[i]=value;values[i]=(float)value;}
         if(field.settings.Get("grass_field_spacing").AsDouble()<=0)return null;
-        return new(unchecked((int)field.world_seed),ParameterNames,values,seeds,octaves,config,offsets,canonicalValues);
+        return new(unchecked((int)field.world_seed),field.world_seed,ParameterNames,values,seeds,octaves,config,offsets,canonicalValues);
     }
     public void Apply(ShaderMaterial material)
     {
@@ -70,7 +70,7 @@ internal sealed record GrasslandGpuParameters(int Seed, string[] Names, float[] 
         material.SetShaderParameter("noise_seed",NoiseSeeds);material.SetShaderParameter("noise_octaves",Octaves);
         material.SetShaderParameter("noise_config",NoiseConfig);material.SetShaderParameter("noise_offset",NoiseOffsets);
     }
-    public bool Equivalent(GrasslandGpuParameters other)=>Seed==other.Seed&&
+    public bool Equivalent(GrasslandGpuParameters other)=>Seed==other.Seed&&SourceSeed==other.SourceSeed&&
         CanonicalValues.AsSpan().SequenceEqual(other.CanonicalValues)&&NoiseSeeds.AsSpan().SequenceEqual(other.NoiseSeeds)&&
         Octaves.AsSpan().SequenceEqual(other.Octaves)&&NoiseConfig.AsSpan().SequenceEqual(other.NoiseConfig)&&
         NoiseOffsets.AsSpan().SequenceEqual(other.NoiseOffsets);

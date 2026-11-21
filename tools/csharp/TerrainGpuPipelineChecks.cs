@@ -26,6 +26,18 @@ internal static class TerrainGpuPipelineChecks
             require(!ChunkTerrain.UseGpuGeneration(2, false, "X11", adapter), "Automatic generation selected a software renderer");
 
         using var settings = GrassSettings();
+        // The GPU's int noise seed can wrap, while the CPU's river and lake
+        // planning retains the original long seed. Never share cached raw
+        // samples across distinct high-bit world seeds.
+        using (var otherSettings=GrassSettings())
+        using (var seedA=Builder(otherSettings))
+        using (var seedB=new TerrainMeshBuilder{settings=otherSettings,world_seed=seedA.world_seed+(1L<<32)})
+        {
+            seedB._configure_noise();
+            var a=GrasslandGpuParameters.Capture(seedA._native_grass);
+            var b=GrasslandGpuParameters.Capture(seedB._native_grass);
+            require(a is not null&&b is not null&&!a.Equivalent(b),"GPU cache aliased different 64-bit world seeds");
+        }
         using var cpu = Builder(settings);
         using var baked = Builder(settings);
         var topology = new TerrainRingTopology();

@@ -336,7 +336,16 @@ public partial class TerrainGpuSampler : Node
         ShaderMaterial? material=previous?.Material;SubViewport? viewport=previous?.Viewport;
         try
         {
-            input=ImageTexture.CreateFromImage(image);
+            // Avoid repeated GPU texture allocations when the next batch uses
+            // the same data dimensions. A retired flight no longer draws, so its
+            // input image can be updated in place on the main thread.
+            if(previous is not null&&previous.Input.GetWidth()==columns&&
+                previous.Input.GetHeight()==positionRows*(1+GrasslandGpuCoordinates.Bands))
+            {
+                input=previous.Input;
+                input.Update(image);
+            }
+            else input=ImageTexture.CreateFromImage(image);
             if(material is null)material=new ShaderMaterial{Shader=shader};
             requests[0].Parameters.Apply(material);
             (rivers,int riverColumns)=DataTexture(riverValues);(lakes,int lakeColumns)=DataTexture(lakeValues);
@@ -369,13 +378,15 @@ public partial class TerrainGpuSampler : Node
             flights.Add(new Flight{Requests=requests,SampleIndices=maps,SampleCount=points.Count,Viewport=viewport,Material=material,Input=input,Rivers=rivers,Lakes=lakes,Columns=columns,Rows=rows,DrawVersion=Interlocked.Read(ref drawVersion)});
             // The material now owns the new textures; the previous flight is no
             // longer rendering, so its numerical inputs can be released.
-            previous?.Input.Dispose();previous?.Rivers.Dispose();previous?.Lakes.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Input,input))previous.Input.Dispose();
+            previous?.Rivers.Dispose();previous?.Lakes.Dispose();
         }
         catch
         {
             if(viewport is not null)viewport.Free();
             material?.Dispose();input?.Dispose();rivers?.Dispose();lakes?.Dispose();
-            previous?.Input.Dispose();previous?.Rivers.Dispose();previous?.Lakes.Dispose();
+            if(previous is not null&&!ReferenceEquals(previous.Input,input))previous.Input.Dispose();
+            previous?.Rivers.Dispose();previous?.Lakes.Dispose();
             throw;
         }
     }
