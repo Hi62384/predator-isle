@@ -1,0 +1,90 @@
+name: Godot terrain and cave native validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/terrain-native-validation.yml'
+      - 'scripts/csharp/terrain/**'
+      - 'scripts/csharp/caves/**'
+      - 'shaders/grassland_gpu*'
+      - 'tools/csharp/**'
+      - 'tools/csharp-runner/**'
+  workflow_dispatch:
+
+concurrency:
+  group: terrain-native-main
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    name: Godot 4.6.1 .NET CPU and Compatibility GPU regression
+    runs-on: ubuntu-24.04
+    timeout-minutes: 35
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '8.0.x'
+      - name: Install source-independent NuGet configuration
+        run: |
+          cat > NuGet.Config <<'XML'
+          <?xml version="1.0" encoding="utf-8"?>
+          <configuration>
+            <packageSources>
+              <clear />
+              <add key="nuget.org" value="https://api.nuget.org/v3/index.json" />
+            </packageSources>
+          </configuration>
+          XML
+      - name: Install Godot 4.6.1 .NET for Linux
+        run: |
+          mkdir -p .tools/godot-ci
+          if ! find .tools/godot-ci -type f -name 'Godot_v4.6.1-stable_mono_linux.x86_64' -print -quit | grep -q .; then
+            curl --fail --location --retry 3 --retry-delay 2 \
+              'https://github.com/godotengine/godot-builds/releases/download/4.6.1-stable/Godot_v4.6.1-stable_mono_linux_x86_64.zip' \
+              --output "$RUNNER_TEMP/godot.zip"
+            unzip -q "$RUNNER_TEMP/godot.zip" -d .tools/godot-ci
+          fi
+          ENGINE="$(find .tools/godot-ci -type f -name 'Godot_v4.6.1-stable_mono_linux.x86_64' -print -quit)"
+          test -n "$ENGINE"
+          chmod +x "$ENGINE"
+          echo "GODOT_BIN=$GITHUB_WORKSPACE/$ENGINE" >> "$GITHUB_ENV"
+      - name: Restore and compile the runtime
+        run: |
+          dotnet restore PredatorIsle.csproj --nologo
+          dotnet build PredatorIsle.csproj --no-restore --configuration Debug --nologo -warnaserror
+          dotnet build tools/csharp-runner/PredatorIsle.Checks.csproj --configuration Debug --nologo -warnaserror
+      - name: Import Godot resources
+        timeout-minutes: 8
+        run: |
+          "$GODOT_BIN" --headless --editor --path . --import --quit
+      - name: Verify authoritative numerical and collision paths
+        timeout-minutes: 12
+        run: |
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
+            rings sampling gpu-pipeline collision network
+      - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
+        timeout-minutes: 12
+        run: |
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y xvfb libgl1-mesa-dri
+          fi
+          LIBGL_ALWAYS_SOFTWARE=1 xvfb-run -a \
+            dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
+              gpu-queues gpu-sampler gpu-vertex gpu-terrain
+      - name: Upload diagnostic reports even after failure
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: terrain-native-evidence
+          if-no-files-found: ignore
+          retention-days: 7
+          path: |
+            data/csharp_check_*_latest.json
+            data/csharp_runner_latest.json
+            .godot/csharp_checks/**/*.log
