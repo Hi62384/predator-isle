@@ -71,7 +71,7 @@ jobs:
         timeout-minutes: 13
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-            field worker tropical beach placement tissue
+            field worker tropical beach placement tissue gpu-all-biomes cave-biomes
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
         timeout-minutes: 12
         run: |

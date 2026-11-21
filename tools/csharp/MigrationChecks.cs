@@ -32,6 +32,24 @@ public partial class MigrationChecks : Node
                 await Finish();return;
             }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-sampler-only")){_mode="gpu-sampler";await TerrainGpuSamplerChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuSamplerChecks.Measurements);GD.Print($"C# GPU terrain sampler checks passed: {_checks}");await Finish();return;}
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-all-biomes-only"))
+            {
+                _mode="gpu-all-biomes";TerrainGpuAllBiomeChecks.Run(Require);
+                MigrationEvidence.Write(_mode,_checks,true);
+                GD.Print($"C# GPU grid tests passed across all surface biomes: {_checks}");
+                await Finish();return;
+            }
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"cave-biomes-only"))
+            {
+                _mode="cave-biomes";
+                CaveBiomeRegionChecks.Run(Require);
+                CaveBiomeMaterialChecks.Run(this,Require);
+                CaveFeatureDispatchChecks.Run(Require);
+                CaveRendererChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true);
+                GD.Print($"C# all cave biome material/feature checks passed: {_checks}");
+                await Finish();return;
+            }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-pipeline-only")){_mode="gpu-pipeline";TerrainGpuPipelineChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# GPU terrain pipeline checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-queues-only")){_mode="gpu-queues";await TerrainGpuPipelineChecks.RunQueues(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# GPU terrain queue checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-terrain-only")){_mode="gpu-terrain";await TerrainGpuPipelineChecks.RunRendered(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuPipelineChecks.Measurements);GD.Print($"C# GPU terrain collision checks passed: {_checks}");await Finish();return;}
