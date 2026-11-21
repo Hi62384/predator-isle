@@ -58,7 +58,13 @@ public sealed class TerrainRingMeshGeometry
     private static byte Byte(double x)=>(byte)Round(Math.Clamp(x,0,1)*255);
     private static Sample Capture(TerrainMeshBuilder builder,double x,double z,out double canonicalHeight)
     {
-        var f=builder._native_height;canonicalHeight=f.grid_height(x,z);float h=(float)canonicalHeight;var e=f.last_extras;return new Sample(h,f.last_weights==Vector4.Zero?builder._native_regions.weights(x,z):f.last_weights,f.last_surface,f.last_geology,(float)f.last_jungle,Four(f.last_forest),Four(f.last_savanna),Four(f.last_swamp),Four(f.last_mountain),f.last_coast,f.last_tropical,f.last_badlands,f.last_badlands_palette,e[0],e[1],e[2],e[3],e[4],e[5],e[6],e[7],(float)f.last_water);
+        var f=builder._native_height;canonicalHeight=f.grid_height(x,z);float h=(float)canonicalHeight;var e=f.last_extras;
+        // Published canonical land heights already resolved biome ownership.
+        // Zero primary weights are legitimate in pure specialized biomes.
+        // Submerged heights can return before resolving their region.
+        var weights=f.last_weights;
+        if(weights==Vector4.Zero&&f.last_island<=0)weights=builder._native_regions.weights(x,z);
+        return new Sample(h,weights,f.last_surface,f.last_geology,(float)f.last_jungle,Four(f.last_forest),Four(f.last_savanna),Four(f.last_swamp),Four(f.last_mountain),f.last_coast,f.last_tropical,f.last_badlands,f.last_badlands_palette,e[0],e[1],e[2],e[3],e[4],e[5],e[6],e[7],(float)f.last_water);
     }
     internal Data Build(TerrainMeshBuilder builder,TerrainRingLayout.Patch patch,int resolution,Func<bool>? cancelled=null,Action<string>? stage=null,TerrainSharedSamples? shared=null)
     {

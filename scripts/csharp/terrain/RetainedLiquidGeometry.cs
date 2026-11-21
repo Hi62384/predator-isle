@@ -8,7 +8,8 @@ namespace PredatorIsle.Terrain;
 /// <summary>Shared canonical rim, water level and clipped footprint for existing finite surface pools.</summary>
 public partial class RetainedLiquidGeometry : RefCounted
 {
-    private static double Height(GodotObject builder,double x,double z)=>builder.Call("_get_height",x,z).AsDouble();
+    private static double Height(GodotObject builder,double x,double z)=>builder is TerrainMeshBuilder native?
+        native._get_height(x,z):builder.Call("_get_height",x,z).AsDouble();
     public D measure(GodotObject builder,Vector2 point,double radius)
     {
         if(!point.IsFinite()||!double.IsFinite(radius)||radius<=0)return new D {["retained"]=false};
