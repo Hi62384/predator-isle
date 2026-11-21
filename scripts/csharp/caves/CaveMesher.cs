@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using A = Godot.Collections.Array;
 using D = Godot.Collections.Dictionary;
@@ -158,7 +159,15 @@ public partial class CaveMesher : RefCounted
         }
         if ((step_metres != 1 && step_metres != 2 && step_metres != 4) || !Field.HasChunk(coordinate)) return new();
         int count = (int)Math.Round(64 / step_metres), row = count + 1, plane = row * row;
-        var points = new Vector3[row * plane]; var values = new float[points.Length];
+        // Reuse two large lattice buffers across all cave biomes. They contain
+        // only temporary values: emitted mesh vertices and frontier arrays copy
+        // their data before the buffers return to the pool. Every indexed value
+        // is populated before being read, including repeated cave builds.
+        int latticeCount = checked(row * plane);
+        var points = ArrayPool<Vector3>.Shared.Rent(latticeCount);
+        var values = ArrayPool<float>.Shared.Rent(latticeCount);
+        try
+        {
         for (int z = 0; z < row; z++)
         for (int y = 0; y < row; y++)
         for (int x = 0; x < row; x++)
@@ -200,5 +209,11 @@ public partial class CaveMesher : RefCounted
         var arrays = new A(); arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = vertices; arrays[(int)Mesh.ArrayType.Normal] = normals; arrays[(int)Mesh.ArrayType.Color] = colors;
         return arrays;
+        }
+        finally
+        {
+            ArrayPool<Vector3>.Shared.Return(points, clearArray:false);
+            ArrayPool<float>.Shared.Return(values, clearArray:false);
+        }
     }
 }
