@@ -85,10 +85,19 @@ jobs:
         timeout-minutes: 5
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- terrain-performance
-      - name: Verify remaining runtime, gameplay and scene migration
-        timeout-minutes: 13
+      - name: Verify remaining runtime and authority without a graphical device
+        timeout-minutes: 6
         run: |
-          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- blob general authority
+          dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- blob authority
+      - name: Verify general scene and gameplay migration on a virtual display
+        timeout-minutes: 6
+        run: |
+          if ! command -v xvfb-run >/dev/null; then
+            sudo apt-get update -qq
+            sudo apt-get install -y xvfb libgl1-mesa-dri
+          fi
+          LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 xvfb-run -a \
+            dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- general
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
         timeout-minutes: 12
         run: |

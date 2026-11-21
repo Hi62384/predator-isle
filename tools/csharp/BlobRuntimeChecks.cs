@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Linq;
 using PredatorIsle.Blobs;
 using D=Godot.Collections.Dictionary;
 namespace PredatorIsle.Checks;
@@ -23,6 +24,20 @@ internal static class BlobRuntimeChecks
                 require(actor.GlobalTransform.IsFinite()&&double.IsFinite(actor.solver.height),"Blob pose became invalid: "+mode);
                 foreach(var v in vertices.AsSpan(0,Math.Min(32,vertices.Length)))require(actor.solver.map_point(v).IsFinite(),"Blob deformation became invalid: "+mode);
             }
+            // Debug anatomy is refreshed every physics frame, but its mesh
+            // and material resources must be retained (not recreated).
+            actor.debug_contacts=true;
+            actor.simulate(1.0/60);
+            var debug=actor.GetChildren().OfType<MeshInstance3D>().Single();
+            require(debug.Mesh is ImmediateMesh&&debug.Visible,
+                "Blob debug geometry did not render");
+            var first=debug.Mesh;
+            for(int i=0;i<12;i++)actor.simulate(1.0/60);
+            require(ReferenceEquals(first,debug.Mesh),
+                "Blob debug physics recreated a GPU mesh each frame");
+            actor.debug_contacts=false;
+            actor.simulate(1.0/60);
+            require(!debug.Visible,"Disabling blob debug draw left rendering active");
         }
         finally{actor.Free();}
     }

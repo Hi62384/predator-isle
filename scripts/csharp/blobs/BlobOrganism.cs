@@ -48,6 +48,15 @@ public partial class BlobOrganism : CharacterBody3D
     private double stallTime,strokeTime,rearLag,rearLagVelocity;
     private int lastCycles;
     private readonly MeshInstance3D debugMesh=new();
+    // The deformable organism already runs visual deformation on the GPU.
+    // Reuse its optional debug draw resources instead of creating a new
+    // ImmediateMesh and material on every physics frame.
+    private readonly ImmediateMesh debugLines=new();
+    private readonly StandardMaterial3D debugLineMaterial=new()
+    {
+        ShadingMode=BaseMaterial3D.ShadingModeEnum.Unshaded,
+        VertexColorUseAsAlbedo=true
+    };
     private readonly List<int> bodyVertexIds=new();
     private readonly Dictionary<int,Vector3> bodyGrips=new();
     private readonly List<CollisionShape3D> collisionNodes=new();
@@ -102,10 +111,15 @@ public partial class BlobOrganism : CharacterBody3D
         if(anatomy.Count==0)return;ulong started=Time.GetTicksUsec();double dt=Math.Clamp(delta*playback_rate,0,.04);if(dt<=0)return;
         if(direction.LengthSquared()>.01){double desired=Math.Atan2(-direction.X,-direction.Z);solver.heading+=Math.Clamp(Mathf.AngleDifference(solver.heading,desired),-dt*.65,dt*.65);}var steering=Vector3.Forward.Rotated(Vector3.Up,(float)solver.heading);SampleGround();double traction=gait_enabled?contacts.traction(locomotion):0,drive=1;
         if(Is(locomotion,"limb","vine","drag","multicontact"))drive=traction;else if(locomotion=="hybrid")drive=.55+.45*traction;
-        var previous=BodyContactPoints();strokeTime+=dt*Math.Abs(speed);solver.strain=Vector3.Zero;
+        // Body contact is used exclusively by contractile movement. Other
+        // locomotion modes previously copied the full body mesh and bind
+        // buffers every physics tick without ever consuming the result.
+        bool muscle=Is(locomotion,"contractile","peristaltic","undulate","pulse");
+        var previous=muscle?BodyContactPoints():Array.Empty<Vector3>();
+        strokeTime+=dt*Math.Abs(speed);solver.strain=Vector3.Zero;
         if(Is(locomotion,"contractile","peristaltic","undulate","pulse")){double stroke=Mod(strokeTime,1.4)/1.4;var strain=Vector3.Zero;for(int chamber=0;chamber<3;chamber++){double t=Mod(stroke-chamber*(Is(locomotion,"peristaltic","undulate")?.22:0),1),envelope=Smooth(0,.3,t)*(1-Smooth(.55,.95,t));strain[chamber]=(float)(envelope*(locomotion=="pulse"?.13:.22));}solver.strain=strain;drive=.25+.75*Smooth(0,.35,stroke)*(1-Smooth(.6,.95,stroke));}
         double dragTarget=locomotion=="drag"?.12*Math.Min(Math.Abs(speed),1)*traction:0;rearLagVelocity+=((dragTarget-rearLag)*12-rearLagVelocity*6)*dt;rearLag+=rearLagVelocity*dt;var strainValue=solver.strain;strainValue.Z+=(float)rearLag;solver.strain=strainValue;if(locomotion=="drag")drive*=.45;
-        solver.step(dt,speed*drive,locomotion);bool muscle=Is(locomotion,"contractile","peristaltic","undulate","pulse");var muscleDelta=muscle?BodyContactDrive(previous):Vector3.Zero;if(!muscle)bodyGrips.Clear();double distance=solver.current_speed*dt;
+        solver.step(dt,speed*drive,locomotion);var muscleDelta=muscle?BodyContactDrive(previous):Vector3.Zero;if(!muscle)bodyGrips.Clear();double distance=solver.current_speed*dt;
         if(travel_enabled){var before=GlobalPosition;var displacement=steering*(float)distance;if(Is(locomotion,"vine","limb","drag","multicontact"))displacement=contacts.pull_displacement(dt,steering,solver.current_speed,locomotion);if(muscle)displacement=muscleDelta;if(IsInsideTree())MoveAndCollide(displacement);else Position+=displacement;distance=(GlobalPosition-before).Dot(steering);if(IsInstanceValid(terrain))ground_height=terrain!.Call("get_height_at",GlobalPosition).AsDouble();var p=GlobalPosition;p.Y=(float)(p.Y+(ground_height-p.Y)*(1-Math.Exp(-dt*14)));GlobalPosition=p;}
         solver.advance_distance(distance);solver._solve_support(0,false);phase=solver.phase;roll_angle=solver.circulation;contacts.gait_enabled=gait_enabled;contacts.secondary_enabled=solver.secondary_enabled;contacts.step(dt,locomotion,steering,solver.current_speed);
         int cycles=contacts.chains.Sum(c=>c.AsGodotDictionary()["cycles"].AsInt32());if(cycles>lastCycles)stallTime=0;else if(travel_enabled&&gait_enabled&&Math.Abs(speed)>.2&&Is(locomotion,"vine","limb","drag","multicontact"))stallTime+=dt;if(!gait_enabled)stallTime=0;lastCycles=cycles;
@@ -135,9 +149,13 @@ public partial class BlobOrganism : CharacterBody3D
     }
     private void DrawDebug()
     {
-        debugMesh.Visible=debug_contacts;if(!debug_contacts)return;var mesh=new ImmediateMesh();var mat=new StandardMaterial3D{ShadingMode=BaseMaterial3D.ShadingModeEnum.Unshaded,VertexColorUseAsAlbedo=true};mesh.SurfaceBegin(Mesh.PrimitiveType.Lines,mat);
-        foreach(var value in contacts.chains){var c=value.AsGodotDictionary();mesh.SurfaceSetColor(c["state"].AsString()=="stance"&&c["active"].AsBool()?Colors.Green:Colors.Orange);var points=c["points"].AsVector3Array();for(int i=0;i<7;i++){mesh.SurfaceAddVertex(points[i]-GlobalPosition);mesh.SurfaceAddVertex(points[i+1]-GlobalPosition);}var target=c["target"].AsVector3()-GlobalPosition;foreach(var axis in new[]{Vector3.Right,Vector3.Up,Vector3.Forward}){mesh.SurfaceAddVertex(target-axis*.07f);mesh.SurfaceAddVertex(target+axis*.07f);}}
-        mesh.SurfaceSetColor(Colors.Cyan);foreach(var sample in solver.support_samples){var point=solver.map_bound(sample["p"].AsVector3(),sample["group"].AsInt32(),sample["weight"].AsDouble())+Vector3.Up*(float)solver.height;mesh.SurfaceAddVertex(point);mesh.SurfaceAddVertex(point+Vector3.Up*.05f);}mesh.SurfaceEnd();debugMesh.Mesh=mesh;
+        debugMesh.Visible=debug_contacts;
+        if(!debug_contacts)return;
+        debugLines.ClearSurfaces();
+        debugLines.SurfaceBegin(Mesh.PrimitiveType.Lines,debugLineMaterial);
+        foreach(var value in contacts.chains){var c=value.AsGodotDictionary();debugLines.SurfaceSetColor(c["state"].AsString()=="stance"&&c["active"].AsBool()?Colors.Green:Colors.Orange);var points=c["points"].AsVector3Array();for(int i=0;i<7;i++){debugLines.SurfaceAddVertex(points[i]-GlobalPosition);debugLines.SurfaceAddVertex(points[i+1]-GlobalPosition);}var target=c["target"].AsVector3()-GlobalPosition;foreach(var axis in new[]{Vector3.Right,Vector3.Up,Vector3.Forward}){debugLines.SurfaceAddVertex(target-axis*.07f);debugLines.SurfaceAddVertex(target+axis*.07f);}}
+        debugLines.SurfaceSetColor(Colors.Cyan);foreach(var sample in solver.support_samples){var point=solver.map_bound(sample["p"].AsVector3(),sample["group"].AsInt32(),sample["weight"].AsDouble())+Vector3.Up*(float)solver.height;debugLines.SurfaceAddVertex(point);debugLines.SurfaceAddVertex(point+Vector3.Up*.05f);}debugLines.SurfaceEnd();
+        if(!ReferenceEquals(debugMesh.Mesh,debugLines))debugMesh.Mesh=debugLines;
     }
     private Vector3[] BodyContactPoints()
     {
