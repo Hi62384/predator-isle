@@ -47,9 +47,13 @@ internal sealed class TerrainGpuPreparation
             var geology=new Vector3(values[at+5],values[at+6],values[at+7]);
             if(!value.IsFinite()||!surface.IsFinite()||!geology.IsFinite()||error>.005||
                 surface.DistanceTo(reference.Surface)>.001||geology.DistanceTo(reference.Geology)>.001)
+            {
+                sampler.RejectNumericalResults();
                 return new(0,true,maximumError);
+            }
         }
         cancellation.ThrowIfCancellationRequested();
+        sampler.AcceptNumericalResults();
         builder._native_grass.InstallGpuSamples(positions,values);
         // Cached final CPU heights must not conceal newly baked input samples. Within
         // this build, the visual mesh and physics grid share this same numerical field.

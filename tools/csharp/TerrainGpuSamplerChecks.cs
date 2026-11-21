@@ -96,6 +96,15 @@ public static class TerrainGpuSamplerChecks
             require(batch[0]!.AsSpan().SequenceEqual(batch[1])&&batch[0]!.AsSpan().SequenceEqual(batch[2]),"Shared GPU samples changed between workers.");
             require(sampler.Readbacks-beforeReadbacks==1,"Compatible worker requests did not share a single readback.");
             require(sampler.GeneratedRawSamples-previousSamples==batchPlan.RawPositions.Length,"Neighboring requests regenerated duplicate raw samples.");
+            // Once decoded, another worker requesting exactly the same raw field
+            // must not submit a new draw or readback.
+            long cachedReadbacks=sampler.Readbacks;
+            var cached=await sampler.SampleAsync(fieldForChecks,batchPoints);
+            require(cached is not null&&cached.AsSpan().SequenceEqual(batch[0])&&sampler.Readbacks==cachedReadbacks&&
+                    sampler.RawCacheHits>=batchPlan.RawPositions.Length,
+                    "Repeated terrain samples bypassed the bounded GPU raw cache.");
+            require(sampler.RawCacheEntries<=32768&&sampler.CreatedRenderTargets<=2,
+                    "GPU cache or render target count exceeded its configured bound.");
             Measurements["batched_requests"]=3;Measurements["batched_readbacks"]=sampler.Readbacks-beforeReadbacks;
             Measurements["batched_unique_raw_samples"]=sampler.GeneratedRawSamples-previousSamples;
             Measurements["batched_request_ms"]=batchTimer.Elapsed.TotalMilliseconds;

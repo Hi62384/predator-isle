@@ -27,8 +27,13 @@ public partial class TerrainGpuSampler : Node
     public int MaximumReadbacksPerFrame { get; set; } = 1;
     public int MaximumQueuedRequests { get; set; } = 16;
     public double RequestTimeoutSeconds { get; set; } = 30;
-    public bool Available => Volatile.Read(ref available) != 0;
+    public bool Available => Volatile.Read(ref available)!=0&&Volatile.Read(ref disabledByValidation)==0;
     public int QueuedRequests => Volatile.Read(ref queued);
+    public long RawCacheHits => Interlocked.Read(ref rawCacheHits);
+    public int RawCacheEntries { get { lock (rawCacheLock) return rawCache.Count; } }
+    public long CreatedRenderTargets { get; private set; }
+    public long ReusedRenderTargets { get; private set; }
+    public long RejectedNumericalBatches => Interlocked.Read(ref numericalRejections);
     public long CompletedRequests { get; private set; }
     public long CompletedSamples { get; private set; }
     public long FailedRequests { get; private set; }
@@ -59,6 +64,35 @@ public partial class TerrainGpuSampler : Node
         }
         public void Dispose(){Registration.Dispose();Lifetime.Dispose();}
     }
+    // Cache only the immutable raw grassland field, never final terrain/cave
+    // products. Parameter equivalence includes the world seed and every supported
+    // noise/material control, so revisits and adjacent workers reuse identical work.
+    private readonly record struct RawSample(Vector4 First,Vector4 Second,float Detail)
+    {
+        public void CopyTo(Span<float> target)
+        {
+            target[0]=First.X;target[1]=First.Y;target[2]=First.Z;target[3]=First.W;
+            target[4]=Second.X;target[5]=Second.Y;target[6]=Second.Z;target[7]=Second.W;target[8]=Detail;
+        }
+        public static RawSample From(ReadOnlySpan<float> values)=>
+            new(new Vector4(values[0],values[1],values[2],values[3]),
+                new Vector4(values[4],values[5],values[6],values[7]),values[8]);
+    }
+    private const int RawCacheCapacity=32768;
+    private readonly object rawCacheLock=new();
+    private readonly Dictionary<Vector2,RawSample> rawCache=new();
+    private readonly Queue<Vector2> rawCacheOrder=new();
+    private GrasslandGpuParameters? rawCacheParameters;
+    private long rawCacheHits,numericalRejections;
+    private int disabledByValidation;
+
+    // Viewport construction and shader material setup are expensive on integrated
+    // GPUs. A retired target is reused for the next bake; its input textures stay
+    // valid until they are replaced or the target is destroyed.
+    private sealed record RenderTarget(SubViewport Viewport,ShaderMaterial Material,
+        ImageTexture Input,ImageTexture Rivers,ImageTexture Lakes);
+    private readonly Stack<RenderTarget> idleTargets=new();
+
     private sealed class Flight
     {
         public required Request[] Requests;
@@ -123,9 +157,32 @@ public partial class TerrainGpuSampler : Node
                 if(plan is null)return null;
                 // Network/site placement is CPU planning. Its cached columns use double
                 // intermediates before publishing floats, exactly like the canonical field.
-                var hydrology=GrasslandGpuHydrology.Capture(field,plan.RawPositions,cancellation);
-                var raw=await Enqueue(field,parameters,plan.RawPositions,hydrology,cancellation).ConfigureAwait(false);
-                if(raw is null||cancellation.IsCancellationRequested)return null;
+                var raw=new float[checked(plan.RawPositions.Length*RawScalarsPerSample)];
+                var missing=new List<Vector2>();var indices=new List<int>();
+                lock(rawCacheLock)
+                {
+                    if(rawCacheParameters is null||!rawCacheParameters.Equivalent(parameters))
+                    {rawCache.Clear();rawCacheOrder.Clear();rawCacheParameters=parameters;}
+                    for(int i=0;i<plan.RawPositions.Length;i++)
+                    {
+                        if((i&1023)==0)cancellation.ThrowIfCancellationRequested();
+                        if(rawCache.TryGetValue(plan.RawPositions[i],out var stored))
+                        {stored.CopyTo(raw.AsSpan(i*RawScalarsPerSample,RawScalarsPerSample));Interlocked.Increment(ref rawCacheHits);}
+                        else {missing.Add(plan.RawPositions[i]);indices.Add(i);}
+                    }
+                }
+                if(missing.Count>0)
+                {
+                    var needed=missing.ToArray();
+                    var hydrology=GrasslandGpuHydrology.Capture(field,needed,cancellation);
+                    var fetched=await Enqueue(field,parameters,needed,hydrology,cancellation).ConfigureAwait(false);
+                    if(fetched is null||cancellation.IsCancellationRequested)return null;
+                    if(fetched.Length!=needed.Length*RawScalarsPerSample)return null;
+                    for(int i=0;i<needed.Length;i++)
+                        fetched.AsSpan(i*RawScalarsPerSample,RawScalarsPerSample)
+                            .CopyTo(raw.AsSpan(indices[i]*RawScalarsPerSample,RawScalarsPerSample));
+                    StoreRaw(parameters,needed,fetched);
+                }
                 var values=plan.Interpolate(raw);values.CopyTo(result,offset*ScalarsPerSample);
             }
             return result;
@@ -133,6 +190,33 @@ public partial class TerrainGpuSampler : Node
         catch(OperationCanceledException) when(cancellation.IsCancellationRequested){return null;}
         catch(OverflowException){return null;}
     }
+    private void StoreRaw(GrasslandGpuParameters parameters,Vector2[] positions,float[] values)
+    {
+        lock(rawCacheLock)
+        {
+            // Another world or settings snapshot can take over while this GPU job
+            // awaits its frame. Never insert stale data into the newer source.
+            if(rawCacheParameters is null||!rawCacheParameters.Equivalent(parameters))return;
+            for(int i=0;i<positions.Length;i++)
+            {
+                if(rawCache.ContainsKey(positions[i]))continue;
+                while(rawCache.Count>=RawCacheCapacity&&rawCacheOrder.Count>0)
+                    rawCache.Remove(rawCacheOrder.Dequeue());
+                rawCache.Add(positions[i],RawSample.From(values.AsSpan(i*RawScalarsPerSample,RawScalarsPerSample)));
+                rawCacheOrder.Enqueue(positions[i]);
+            }
+        }
+    }
+    internal void RejectNumericalResults()
+    {
+        lock(rawCacheLock){rawCache.Clear();rawCacheOrder.Clear();rawCacheParameters=null;}
+        // A device that repeatedly returns unacceptable data should stop
+        // dispatching GPU work instead of repeatedly blocking terrain workers.
+        if(Interlocked.Increment(ref numericalRejections)>=3)
+        {LastFailure="Repeated GPU/CPU numerical parity failures. Using CPU terrain generation.";Volatile.Write(ref disabledByValidation,1);}
+    }
+    internal void AcceptNumericalResults()=>Interlocked.Exchange(ref numericalRejections,0);
+
     private static bool SupportedPosition(Vector2 point)=>float.IsFinite(point.X)&&float.IsFinite(point.Y)&&Math.Abs(point.X)<=MaximumCoordinate&&Math.Abs(point.Y)<=MaximumCoordinate;
     private Task<float[]?> Enqueue(GrasslandField field,GrasslandGpuParameters parameters,Vector2[] positions,GrasslandGpuHydrology hydrology,CancellationToken cancellation)
     {
@@ -149,6 +233,7 @@ public partial class TerrainGpuSampler : Node
 
     public override void _Process(double delta)
     {
+        if(Volatile.Read(ref disabledByValidation)!=0){Shutdown();return;}
         if(!Available)return;
         int remaining=Math.Max(0,MaximumReadbacksPerFrame);
         for(int i=flights.Count-1;i>=0;i--)
@@ -246,10 +331,13 @@ public partial class TerrainGpuSampler : Node
             for(int band=0;band<GrasslandGpuCoordinates.Bands;band++)coordinates[(band+1)*plane+i]=source.Request.Coordinates[source.Index*GrasslandGpuCoordinates.Bands+band];
         }
         using var image=Image.CreateFromData(columns,positionRows*(1+GrasslandGpuCoordinates.Bands),false,Image.Format.Rgbaf,bytes);
-        ImageTexture? input=null,rivers=null,lakes=null;ShaderMaterial? material=null;SubViewport? viewport=null;
+        ImageTexture? input=null,rivers=null,lakes=null;
+        RenderTarget? previous=idleTargets.Count>0?idleTargets.Pop():null;
+        ShaderMaterial? material=previous?.Material;SubViewport? viewport=previous?.Viewport;
         try
         {
-            input=ImageTexture.CreateFromImage(image);material=new ShaderMaterial{Shader=shader};
+            input=ImageTexture.CreateFromImage(image);
+            if(material is null)material=new ShaderMaterial{Shader=shader};
             requests[0].Parameters.Apply(material);
             (rivers,int riverColumns)=DataTexture(riverValues);(lakes,int lakeColumns)=DataTexture(lakeValues);
             material.SetShaderParameter("planned_rivers",rivers);material.SetShaderParameter("planned_lakes",lakes);
@@ -257,20 +345,39 @@ public partial class TerrainGpuSampler : Node
             material.SetShaderParameter("sample_positions",input);material.SetShaderParameter("sample_count",points.Count);
             material.SetShaderParameter("sample_columns",columns);material.SetShaderParameter("sample_rows",rows);
             material.SetShaderParameter("position_rows",positionRows);
-            viewport=new SubViewport
+            if(viewport is null)
             {
-                Name="GrasslandHeightBake",Size=new Vector2I(columns,rows*RawScalarsPerSample),
-                Disable3D=true,TransparentBg=true,UseHdr2D=false,UseDebanding=false,
-                Msaa2D=Viewport.Msaa.Disabled,GuiDisableInput=true,
-                RenderTargetClearMode=SubViewport.ClearMode.Always,
-                RenderTargetUpdateMode=SubViewport.UpdateMode.Disabled,
-                CanvasItemDefaultTextureFilter=Viewport.DefaultCanvasItemTextureFilter.Nearest
-            };
-            viewport.AddChild(new ColorRect{Size=new Vector2(columns,rows*RawScalarsPerSample),Color=Colors.White,Material=material,MouseFilter=Control.MouseFilterEnum.Ignore});
-            AddChild(viewport);viewport.RenderTargetUpdateMode=SubViewport.UpdateMode.Once;
+                viewport=new SubViewport
+                {
+                    Name="GrasslandHeightBake",Size=new Vector2I(columns,rows*RawScalarsPerSample),
+                    Disable3D=true,TransparentBg=true,UseHdr2D=false,UseDebanding=false,
+                    Msaa2D=Viewport.Msaa.Disabled,GuiDisableInput=true,
+                    RenderTargetClearMode=SubViewport.ClearMode.Always,
+                    RenderTargetUpdateMode=SubViewport.UpdateMode.Disabled,
+                    CanvasItemDefaultTextureFilter=Viewport.DefaultCanvasItemTextureFilter.Nearest
+                };
+                viewport.AddChild(new ColorRect{Size=new Vector2(columns,rows*RawScalarsPerSample),Color=Colors.White,Material=material,MouseFilter=Control.MouseFilterEnum.Ignore});
+                AddChild(viewport);CreatedRenderTargets++;
+            }
+            else
+            {
+                viewport.Size=new Vector2I(columns,rows*RawScalarsPerSample);
+                ((ColorRect)viewport.GetChild(0)).Size=new Vector2(columns,rows*RawScalarsPerSample);
+                ReusedRenderTargets++;
+            }
+            viewport.RenderTargetUpdateMode=SubViewport.UpdateMode.Once;
             flights.Add(new Flight{Requests=requests,SampleIndices=maps,SampleCount=points.Count,Viewport=viewport,Material=material,Input=input,Rivers=rivers,Lakes=lakes,Columns=columns,Rows=rows,DrawVersion=Interlocked.Read(ref drawVersion)});
+            // The material now owns the new textures; the previous flight is no
+            // longer rendering, so its numerical inputs can be released.
+            previous?.Input.Dispose();previous?.Rivers.Dispose();previous?.Lakes.Dispose();
         }
-        catch{viewport?.Free();material?.Dispose();input?.Dispose();rivers?.Dispose();lakes?.Dispose();throw;}
+        catch
+        {
+            if(viewport is not null)viewport.Free();
+            material?.Dispose();input?.Dispose();rivers?.Dispose();lakes?.Dispose();
+            previous?.Input.Dispose();previous?.Rivers.Dispose();previous?.Lakes.Dispose();
+            throw;
+        }
     }
 
     private static (ImageTexture Texture,int Columns) DataTexture(List<Vector4> values)
@@ -296,7 +403,15 @@ public partial class TerrainGpuSampler : Node
     private void Retire(int index)
     {
         var flight=flights[index];flights.RemoveAt(index);foreach(var request in flight.Requests)request.Dispose();
-        flight.Viewport.Free();flight.Material.Dispose();flight.Input.Dispose();flight.Rivers.Dispose();flight.Lakes.Dispose();
+        flight.Viewport.RenderTargetUpdateMode=SubViewport.UpdateMode.Disabled;
+        if(Available&&idleTargets.Count<Math.Clamp(MaximumInFlight,1,4))
+            idleTargets.Push(new RenderTarget(flight.Viewport,flight.Material,flight.Input,flight.Rivers,flight.Lakes));
+        else ReleaseTarget(new RenderTarget(flight.Viewport,flight.Material,flight.Input,flight.Rivers,flight.Lakes));
+    }
+    private static void ReleaseTarget(RenderTarget target)
+    {
+        target.Viewport.Free();target.Material.Dispose();
+        target.Input.Dispose();target.Rivers.Dispose();target.Lakes.Dispose();
     }
     /// <summary>Main-thread shutdown; call before waiting for terrain worker disposal.</summary>
     public void Shutdown()
@@ -307,6 +422,8 @@ public partial class TerrainGpuSampler : Node
             while(pending.TryDequeue(out var request)){Interlocked.Decrement(ref queued);request.Completion.TrySetResult(null);request.Dispose();}
         }
         for(int i=flights.Count-1;i>=0;i--){foreach(var request in flights[i].Requests)request.Completion.TrySetResult(null);Retire(i);}
+        while(idleTargets.Count>0)ReleaseTarget(idleTargets.Pop());
+        lock(rawCacheLock){rawCache.Clear();rawCacheOrder.Clear();rawCacheParameters=null;}
     }
     public override void _ExitTree(){Shutdown();if(subscribed){RenderingServer.FramePostDraw-=OnPostDraw;subscribed=false;}}
 }

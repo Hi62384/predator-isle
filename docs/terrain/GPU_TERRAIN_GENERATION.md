@@ -184,3 +184,11 @@ The CPU path has also been improved, including when GPU generation is disabled:
 Measured results, exact-output comparisons, commands, and the limits of the test
 hardware are documented in [GPU_TERRAIN_VALIDATION.md](GPU_TERRAIN_VALIDATION.md)
 and [the performance evidence](../../data/terrain_gpu_performance_20261121.json).
+
+## Additional GPU workload reuse (November 21, 2026)
+
+The Compatibility GPU generator now caches the **raw, unblended grassland samples** across concurrent/adjacent chunk requests under a bounded 32,768-sample FIFO. It checks the complete seed/noise/grassland parameter snapshot before lookup, and invalidates entries when a different source takes over. When only some samples are absent, canonical hydrology planning, input-texture creation, shader execution and readback run only for the misses; hits are reassembled into the original request order before CPU interpolation. Other biome generators and the CPU canonical path remain unchanged.
+
+GPU generation render targets and materials are also reused, rather than allocating a new SubViewport and shader material for every job. The pool holds at most four idle targets. Per-request input textures remain alive through their draw and are released when replaced or when the service shuts down. Three consecutive GPU/CPU parity rejections disable further GPU submissions on that renderer and preserve CPU generation; both backends retain the same numerical acceptance gate.
+
+Telemetry now includes `gpu_raw_cache_hits`, `gpu_raw_cache_entries`, `gpu_render_targets_created`, `gpu_render_targets_reused`, and `gpu_parity_rejections`. These changes reduce redundant GPU work, scheduling and resource creation. They are **not** a full GPU port of the remaining biome and cave topology generators, and they need fresh Godot shader/physics and hardware timings to quantify speedups on Compatibility, Mobile and Forward+.
