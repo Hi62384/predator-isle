@@ -47,6 +47,7 @@ internal static class TerrainFeatureOptimizationChecks
         // winding, threshold comparisons, midpoint precision and intersection
         // order when the hot path switches from a List to stack storage.
         var clipper=new RetainedLiquidGeometry();
+        Span<Vector3> direct=stackalloc Vector3[6];
         for(int mask=0;mask<8;mask++)
         {
             var a=new Vector3(-2,(mask&1)!=0?8:15,-2);
@@ -58,7 +59,6 @@ internal static class TerrainFeatureOptimizationChecks
                 var actualClip=clipper.clipped_polygon(optimizedField,a,b,c,clipLevel);
                 require(expectedClip.SequenceEqual(actualClip),
                     "Stack-based liquid clipping changed reference triangle at mask "+mask+" level "+clipLevel);
-                Span<Vector3> direct=stackalloc Vector3[6];
                 int count=clipper.clip_into(optimizedField,a,b,c,clipLevel,direct);
                 require(count==expectedClip.Length&&expectedClip.SequenceEqual(direct[..count].ToArray()),
                     "Allocation-free liquid clipping changed reference triangle at mask "+mask+" level "+clipLevel);
