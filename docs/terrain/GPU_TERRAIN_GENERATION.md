@@ -342,3 +342,13 @@ shader path also skips unused joint calculations. This preserves the original
 material expressions for the non-glass families and eliminates zero-contribution
 GPU noise work for glass features. The cave renderer still uses canonical CPU
 mesh topology and collision; actual hardware speedup remains unmeasured.
+
+### Bounded page-eviction metadata
+
+GPU grid cache order uses one linked FIFO node per resident revision. Replacing
+a page under an unchanged (but accidentally reused) product revision now
+removes its obsolete order node immediately. Both the native texture budget
+and the cache's bookkeeping remain bounded by actual resident entries, even
+under repeated invalidation. Native regression explicitly rebuilds multiple
+pages under a shared revision and checks that cache/order counts stay equal
+and no old GPU image is aliased.

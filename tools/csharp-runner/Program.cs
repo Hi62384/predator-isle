@@ -19,7 +19,7 @@ string[] modes = args.Length == 0 || args.SequenceEqual(new[] { "all" }) ? new[]
 if (modes.Any(mode => !(mode.StartsWith("gpu-biome-",StringComparison.Ordinal)&&
     new[] {"grass","forest","savanna","swamp","jungle","mountain","tropical","badlands","quarry",
         "wise_mountains","volcanic","spore_forest","radiation_wasteland","crystal_wastes",
-        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, collision, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
+        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "runner-race", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, collision, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
 var records = new List<object>();
 string logDirectory = Path.Combine(project, ".godot", "csharp_checks", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff")); Directory.CreateDirectory(logDirectory);
 bool passed = true;
@@ -30,6 +30,48 @@ long memoryLimitMiB=2048;
 if(long.TryParse(Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_MEMORY_MIB"),out long requestedMiB)
    && requestedMiB is >=2048 and <=6144)
     memoryLimitMiB=requestedMiB;
+// Godot workers often exit between WaitForExit(500) and a memory probe.
+// A process lifetime race is not a failed terrain assertion; the runner must
+// still collect the child exit code and its semantic report.
+static bool TrySampleRunningMemory(Process process,out long sampledBytes)
+{
+    sampledBytes=0;
+    try
+    {
+        process.Refresh();
+        if(process.HasExited)return false;
+        sampledBytes=process.PrivateMemorySize64;
+        return true;
+    }
+    catch(InvalidOperationException) when(process.HasExited){return false;}
+}
+static void StopOwnedProcess(Process process)
+{
+    try{if(!process.HasExited)process.Kill(entireProcessTree:true);}
+    catch(InvalidOperationException) when(process.HasExited){}
+}
+// This standalone probe validates that a short-lived child can exit before
+// or during memory collection without crashing the entire check launcher.
+if (modes.SequenceEqual(new[] { "runner-race" }))
+{
+    for(int attempt=0;attempt<24;attempt++)
+    {
+        var info=new ProcessStartInfo("dotnet")
+        {
+            RedirectStandardOutput=true,RedirectStandardError=true,
+            UseShellExecute=false,CreateNoWindow=true
+        };
+        info.ArgumentList.Add("--version");
+        using var quick=Process.Start(info)??throw new IOException("Could not launch short-lived runtime probe.");
+        while(!quick.WaitForExit(1))
+            if(!TrySampleRunningMemory(quick,out _))break;
+        quick.WaitForExit();
+        if(TrySampleRunningMemory(quick,out _)||quick.ExitCode!=0)
+            throw new InvalidOperationException("Short-lived process exit/memory probe failed.");
+    }
+    Console.WriteLine("runner-race: PASS (24 short-lived child processes)");
+    return 0;
+}
 int modeIndex = 0;
 foreach (string mode in modes)
 {
@@ -67,15 +109,19 @@ foreach (string mode in modes)
     {
         while (!process.WaitForExit(500))
         {
-            process.Refresh(); if (process.HasExited) break;
-            peak = Math.Max(peak, process.PrivateMemorySize64);
-            if ((DateTime.UtcNow - started).TotalSeconds > 180 || process.PrivateMemorySize64 > memoryLimitMiB * 1024L * 1024)
-            { failure = $"Owned check exceeded its 180-second/{memoryLimitMiB}MiB bound."; process.Kill(entireProcessTree: true); break; }
+            if(!TrySampleRunningMemory(process,out long usedBytes))break;
+            peak=Math.Max(peak,usedBytes);
+            if((DateTime.UtcNow-started).TotalSeconds>180||usedBytes>memoryLimitMiB*1024L*1024)
+            {
+                failure=$"Owned check exceeded its 180-second/{memoryLimitMiB}MiB bound.";
+                StopOwnedProcess(process);
+                break;
+            }
         }
     }
     finally
     {
-        if (!process.HasExited) process.Kill(entireProcessTree: true);
+        StopOwnedProcess(process);
         await process.WaitForExitAsync();
     }
     string output = await stdout, errors = await stderr;

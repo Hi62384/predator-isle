@@ -66,6 +66,9 @@ jobs:
         timeout-minutes: 8
         run: |
           "$GODOT_BIN" --headless --editor --path . --import --quit
+      - name: Verify short-lived process exit sampling in the check launcher
+        timeout-minutes: 2
+        run: dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- runner-race
       - name: Verify all extension-biome numerical generators before slow world checks
         timeout-minutes: 9
         run: |

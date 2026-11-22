@@ -14,12 +14,16 @@ public sealed class TerrainGpuGrids
     // reference the same native image without another GPU transfer. Page
     // identity also rejects a rebuilt page under an accidentally reused
     // source revision; older materials retain their own native references.
-    private sealed record CachedPage(TerrainGpuGridPage Page,ImageTexture Texture,long Bytes);
+    // A linked FIFO node belongs to the exact cached revision. Replacing a
+    // page with the same revision unlinks the old node immediately, rather
+    // than leaking stale queue entries between occasional evictions.
+    private sealed record CachedPage(TerrainGpuGridPage Page,ImageTexture Texture,long Bytes,LinkedListNode<long> Order);
     private readonly Dictionary<long,CachedPage> pageCache=new();
-    private readonly Queue<(long Revision,TerrainGpuGridPage Page)> pageOrder=new();
+    private readonly LinkedList<long> pageOrder=new();
     private long cachedPageBytes;
     public long PageReuseHits{get;private set;}
     public int CachedPages=>pageCache.Count;
+    internal int CachedPageOrderEntries=>pageOrder.Count;
     public long CachedPageBytes=>cachedPageBytes;
     public long PageCacheBudgetBytes{get;set;}=16L*1024*1024;
     public long TemplatesCreated{get;private set;}
@@ -56,6 +60,7 @@ public sealed class TerrainGpuGrids
         // preserved the revision while replacing the byte payload.
         if(pageCache.Remove(revision,out var stale))
         {
+            pageOrder.Remove(stale.Order);
             cachedPageBytes-=stale.Bytes;
             stale.Texture.Dispose();
         }
@@ -67,19 +72,18 @@ public sealed class TerrainGpuGrids
         if(page.Bytes.LongLength>limit)return texture;
         // FIFO is bounded by total native texture bytes and entry count.
         // Live ShaderMaterials hold their own references to evicted textures.
-        while((pageCache.Count>=128||cachedPageBytes+page.Bytes.LongLength>limit)&&pageOrder.Count>0)
+        while((pageCache.Count>=128||cachedPageBytes+page.Bytes.LongLength>limit)&&pageOrder.First is not null)
         {
-            var oldest=pageOrder.Dequeue();
-            if(pageCache.TryGetValue(oldest.Revision,out var retired)&&
-                ReferenceEquals(retired.Page,oldest.Page))
+            long oldest=pageOrder.First.Value;
+            pageOrder.RemoveFirst();
+            if(pageCache.Remove(oldest,out var retired))
             {
-                pageCache.Remove(oldest.Revision);
                 cachedPageBytes-=retired.Bytes;
                 retired.Texture.Dispose();
             }
         }
-        pageCache[revision]=new CachedPage(page,texture,page.Bytes.LongLength);
-        pageOrder.Enqueue((revision,page));
+        var entry=pageOrder.AddLast(revision);
+        pageCache[revision]=new CachedPage(page,texture,page.Bytes.LongLength,entry);
         cachedPageBytes+=page.Bytes.LongLength;
         return texture;
     }

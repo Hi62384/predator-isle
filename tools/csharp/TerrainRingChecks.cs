@@ -61,8 +61,20 @@ internal static class TerrainRingChecks
             require(firstTexture.GetRid()==secondTexture.GetRid(),
                 "GPU payload cache failed to share the same immutable image resource");
             grids.AttachPayload(sibling,data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision()});
-            require(grids.PageUploads==2&&grids.CachedPages==2,
+            require(grids.PageUploads==2&&grids.CachedPages==2&&grids.CachedPageOrderEntries==2,
                 "Changed terrain products incorrectly reused a stale GPU image");
+            // Revision reuse is not normal streaming, but it must never
+            // alias stale textures or grow metadata beyond the byte bound.
+            long replacementRevision=TerrainRingMeshGeometry.Data.NewRevision();
+            for(int trial=0;trial<4;trial++)
+            {
+                var rebuilt=TerrainGpuGridPage.Create(raw.Arrays,raw.Topology.Axis.Length);
+                grids.AttachPayload(sibling,data with{ProductRevision=replacementRevision,GpuPage=rebuilt});
+                require(grids.CachedPages==3&&grids.CachedPageOrderEntries==3,
+                    "Repeated same-revision GPU payload replacement leaked FIFO entries");
+            }
+            require(grids.PageUploads==6,
+                "Different numerical payload objects incorrectly reused an older GPU upload");
             var node=new MeshInstance3D{Mesh=carrier};TerrainGpuGrids.Stage(node);var child=node.GetNode<MeshInstance3D>("TerrainGrid");require(child.Mesh==grids.Template(data.Topology)&&((ShaderMaterial)child.MaterialOverride).GetShaderParameter("terrain_grid_enabled").AsBool(),"Shared grid payload was not installed on its render instance");
             require(node.Mesh.GetAabb().Size.IsEqualApprox(data.GpuPage.Bounds.Size),"Carrier bounds lost displaced terrain extent");
             TerrainGpuGrids.EnsureCpuSurface(node);require(node.Mesh!=carrier&&child.Mesh is null&&node.Mesh.GetMeta("collision_data").AsGodotDictionary()["proof"].AsInt32()==7,"Cave CPU fallback lost original collision or left the grid drawing");
