@@ -318,3 +318,27 @@ reports cache hit count, page count and cached bytes; the native ring regression
 checks shared resource identity, revision invalidation and shutdown cleanup.
 This is resource reuse, not additional procedural GPU generation, and device-
 specific streaming gains still require profiling.
+
+## Correct specialized biome shader variants after atlas extraction
+
+The compact atlas helper moved one of the terrain shader's two original
+inline extension loops into a shared include. The shader-variant compiler had
+an old two-loop-only guard and silently returned the unoptimized full shader
+for valid packed-atlas sources. Both the native C# variant compiler and the
+legacy GDScript reference now accept a one-loop packed shader *only* when the
+expected weight-helper call is present, and retain two-loop compatibility for
+older sources. Unexpected layouts still fail open without rewriting shader
+source. The general migration test asserts actual loop-range pruning for
+one-owner and no-owner masks instead of accepting identical unoptimized
+shader sources as successful optimization. This preserves configured shader
+specialization for all terrain biomes and renderers.
+
+### Cave magma glass shading fast path
+
+The cooled-volcanic cave material now evaluates its expensive 3D grain/weather
+and fracture fields only for non-glass surfaces. Glass surfaces never use those
+fields in albedo, roughness, specular or normal calculations. The same glass
+shader path also skips unused joint calculations. This preserves the original
+material expressions for the non-glass families and eliminates zero-contribution
+GPU noise work for glass features. The cave renderer still uses canonical CPU
+mesh topology and collision; actual hardware speedup remains unmeasured.

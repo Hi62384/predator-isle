@@ -41,7 +41,11 @@ public partial class TerrainShaderVariants : RefCounted
         for (int unused = 0; unused < 2; unused++)
         {
             int begin = source.IndexOf(Loop, search, StringComparison.Ordinal);
-            if (begin < 0) return source;
+            if (begin < 0)
+            {
+                if (loops.Count == 0) return source;
+                break; // The packed-weight helper replaced the first inline loop.
+            }
             int depth = 1, end = begin + Loop.Length;
             while (end < source.Length && depth > 0)
             {
@@ -52,6 +56,12 @@ public partial class TerrainShaderVariants : RefCounted
             if (depth != 0) return source;
             loops.Add(source[begin..end]); search = end;
         }
+        // Accept exactly one inline family-material loop only when the second
+        // loop has moved into the known shared atlas include. Otherwise fail
+        // open: a truncated/malformed shader must never be partially rewritten.
+        if (loops.Count == 1 && !source.Contains(
+            "if(extension_payload_enabled)extension_weight_banks(extension_weights_a,extension_weights_b);",
+            StringComparison.Ordinal)) return source;
         if (source.IndexOf(Loop, search, StringComparison.Ordinal) >= 0) return source;
         foreach (string control in Controls)
             foreach (string threshold in new[] { ".999", ".001" })

@@ -305,6 +305,21 @@ public partial class MigrationChecks : Node
             string expected = original.Call("source_for", source, mask).AsString();
             Require(expected == candidate.source_for(source, mask), $"Shader source differs for mask {mask}");
         }
+        // Packing family weights moved one shader loop into an include.
+        // A stale two-loop assumption silently disabled *all* configured
+        // biome shader specialization without producing a compiler error.
+        string onlyGrass=candidate.source_for(source,0);
+        Require(onlyGrass.StartsWith("// CONFIGURED_TERRAIN_OWNERS_0\n",StringComparison.Ordinal)&&
+            !onlyGrass.Contains("for(int i=0;i<8;i++){",StringComparison.Ordinal),
+            "Packed atlas shader accidentally disabled all biome variant pruning");
+        string quarryOnly=candidate.source_for(source,1<<8);
+        Require(quarryOnly.Contains("for(int i=0;i<1;i++){",StringComparison.Ordinal),
+            "Packed atlas shader failed to narrow extension material dispatch");
+        var unexpected=source.Replace(
+            "if(extension_payload_enabled)extension_weight_banks(extension_weights_a,extension_weights_b);",
+            "if(extension_payload_enabled)unrecognized_atlas_layout();");
+        Require(candidate.source_for(unexpected,1<<8)==unexpected,
+            "Unknown one-loop shader dispatch was unsafely specialized");
         foreach (string malformed in new[] { "", source.Replace("jungle_control.z>.999", "jungle_control.z>.998"), source + "for(int i=0;i<8;i++){" })
             Require(original.Call("source_for", malformed, 191).AsString() == candidate.source_for(malformed, 191), "Malformed dispatch handling differs");
         var settings = GD.Load<Resource>("res://config/world/terrain_settings.tres");

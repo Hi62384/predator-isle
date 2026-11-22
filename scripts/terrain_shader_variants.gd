@@ -34,7 +34,9 @@ static func source_for(source:String,mask:int)->String:
 	var search:int=0
 	for unused in range(2):
 		var begin:int=source.find("for(int i=0;i<8;i++){",search)
-		if begin<0:return source
+		if begin<0:
+			if loops.is_empty():return source
+			break # Packed weight fetches now live in a shared shader include.
 		var depth:int=1;var end:int=begin+"for(int i=0;i<8;i++){".length()
 		while end<source.length() and depth>0:
 			if source[end]=="{":depth+=1
@@ -42,6 +44,9 @@ static func source_for(source:String,mask:int)->String:
 			end+=1
 		if depth!=0:return source
 		loops.append(source.substr(begin,end-begin));search=end
+	# Fail open on unexpected shader changes. One inline loop is legitimate
+	# only for the packed atlas layout; the old shader had two.
+	if loops.size()==1 and not source.contains("if(extension_payload_enabled)extension_weight_banks(extension_weights_a,extension_weights_b);"):return source
 	if source.find("for(int i=0;i<8;i++){",search)>=0:return source
 	for control:String in CONTROLS:
 		for threshold:String in [".999",".001"]:

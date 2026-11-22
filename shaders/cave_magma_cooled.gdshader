@@ -24,11 +24,18 @@ void fragment(){
 	vec3 p=rock_position*.25;
 	vec4 detail=texture(volcanic_color,p.zy)*w.x+texture(volcanic_color,p.xz)*w.y+texture(volcanic_color,p.xy)*w.z;
 	float grain=clamp(dot(detail.rgb,vec3(.3,.5,.2))*2.1,.38,1.35);
-	float joints=pow(.5+.5*cos(rock_position.y*4.7+UV.y*6.0),24.0);
+	// Glass ignores weathering and fracture completely, but previously paid
+	// for two eight-corner 3D noise fields on every glass fragment.
+	float joints=0.0;
+	if(family<.5)joints=pow(.5+.5*cos(rock_position.y*4.7+UV.y*6.0),24.0);
 	ALBEDO=(glass?vec3(.022,.025,.027):COLOR.rgb)*grain*(1.0-(family<.5?.16:0.0)*joints);
-	float weather=volcanic_grain(rock_position*2.0,7680.0),pores=volcanic_grain(rock_position*16.0,61440.0);
-	float joint_phase=rock_position.y/.6+weather*.14;
-	float fracture=pow(.5+.5*cos(joint_phase*6.28318530718),32.0);
+	float weather=0.0,pores=0.0,fracture=0.0;
+	if(!glass){
+	 weather=volcanic_grain(rock_position*2.0,7680.0);
+	 pores=volcanic_grain(rock_position*16.0,61440.0);
+	 float joint_phase=rock_position.y/.6+weather*.14;
+	 fracture=pow(.5+.5*cos(joint_phase*6.28318530718),32.0);
+	}
 	// Vertex tint is linear albedo. The old .13 grey read like pale concrete
 	// beside dark volcanic host rock; cooled basalt has a dark fresh interior
 	// with subdued iron weathering, irregular cross-joints and fine vesicles.
