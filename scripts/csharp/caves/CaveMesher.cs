@@ -51,6 +51,8 @@ public partial class CaveMesher : RefCounted
     private PreciseShore[] _preciseShores = Array.Empty<PreciseShore>();
     public long RefinedCacheHits { get; private set; }
     public long RefinedEvaluations { get; private set; }
+    public long SurfaceColumnEvaluations { get; private set; }
+    public long SurfaceColumnReuseHits { get; private set; }
     protected ICaveField? Field;
     private A _shores = new();
     public Vector3 origin { get; set; }
@@ -144,6 +146,7 @@ public partial class CaveMesher : RefCounted
     {
         _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); _refinedEdges.Clear();
         RefinedCacheHits = RefinedEvaluations = 0;
+        SurfaceColumnEvaluations = SurfaceColumnReuseHits = 0;
         boundary_values = new();
         Field = volume as ICaveField ?? new LegacyCaveField(volume); origin = (Vector3)coordinate * 64;
         _shores = Field.PreciseShores;
@@ -166,14 +169,34 @@ public partial class CaveMesher : RefCounted
         int latticeCount = checked(row * plane);
         var points = ArrayPool<Vector3>.Shared.Rent(latticeCount);
         var values = ArrayPool<float>.Shared.Rent(latticeCount);
+        // A portal's surface term depends only on X/Z. Sampling it again
+        // for every Y voxel traverses terrain height caches needlessly.
+        // Other cave fields and portals with surface air disabled keep the
+        // original exact sample callback.
+        var portal = Field as PortalCaveField;
+        bool reuseSurface = portal is not null && portal.include_surface_air;
+        var surfaceColumns = reuseSurface?ArrayPool<double>.Shared.Rent(plane):null;
+        var surfaceReady = reuseSurface?ArrayPool<bool>.Shared.Rent(plane):null;
+        if(surfaceReady is not null)Array.Clear(surfaceReady,0,plane);
         try
         {
         for (int z = 0; z < row; z++)
         for (int y = 0; y < row; y++)
         for (int x = 0; x < row; x++)
         {
-            int index = x + row * y + plane * z; var point = origin + new Vector3(x, y, z) * (float)step_metres;
-            points[index] = point; values[index] = (float)Field.Sample(point);
+            int index = x + row * y + plane * z;
+            var point = origin + new Vector3(x, y, z) * (float)step_metres;
+            points[index] = point;
+            if(!reuseSurface){values[index]=(float)Field.Sample(point);continue;}
+            if(!CaveField.SafePoint(point)){values[index]=(float)CaveField.Far;continue;}
+            int column=x+row*z;
+            if(!surfaceReady![column])
+            {
+                surfaceColumns![column]=portal!.SurfaceHeight(new Vector2(point.X,point.Z));
+                surfaceReady[column]=true;SurfaceColumnEvaluations++;
+            }
+            else SurfaceColumnReuseHits++;
+            values[index]=(float)portal!.SampleWithSurfaceHeight(point,surfaceColumns![column]);
         }
         if (capture_boundary_values && step_metres == 2)
             for (int face = 0; face < 6; face++)
@@ -212,8 +235,10 @@ public partial class CaveMesher : RefCounted
         }
         finally
         {
-            ArrayPool<Vector3>.Shared.Return(points, clearArray:false);
-            ArrayPool<float>.Shared.Return(values, clearArray:false);
+            ArrayPool<Vector3>.Shared.Return(points,clearArray:false);
+            ArrayPool<float>.Shared.Return(values,clearArray:false);
+            if(surfaceColumns is not null)ArrayPool<double>.Shared.Return(surfaceColumns,clearArray:false);
+            if(surfaceReady is not null)ArrayPool<bool>.Shared.Return(surfaceReady,clearArray:false);
         }
     }
 }

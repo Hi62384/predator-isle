@@ -19,11 +19,12 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         require(shader is not null,"GPU extension atlas validation shader was not imported");
         var cases=new Godot.Collections.Array();
         for(int extra=0;extra<2;extra++)
+        foreach(int activeMask in new[]{0,1,128,129,255})
         {
             const int row=9, output=64;
             bool withPalette=extra!=0;
-            var legacy=Atlas(row,withPalette,false);
-            var packed=Atlas(row,withPalette,true);
+            var legacy=Atlas(row,withPalette,false,activeMask);
+            var packed=Atlas(row,withPalette,true,activeMask);
             var viewports=new List<SubViewport>();
             var textures=new List<ImageTexture>();
             var materials=new List<ShaderMaterial>();
@@ -36,7 +37,7 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
                     var texture=ImageTexture.CreateFromImage(image);
                     var material=new ShaderMaterial{Shader=shader};
                     material.SetShaderParameter("extension_payload",texture);
-                    material.SetShaderParameter("extension_active_mask",255);
+                    material.SetShaderParameter("extension_active_mask",activeMask);
                     var viewport=new SubViewport
                     {
                         Name="ExtensionAtlasParity",Size=new Vector2I(output,output),
@@ -74,13 +75,16 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
                     if(i%4!=3&&a[i]>2)active++;
                     if(i%4!=3&&a[i]>20&&a[i]<235)varied++;
                 }
-                require(active>output&&varied>output,
+                if(activeMask==0)require(active==0,
+                    "Inactive extension atlas shader emitted nonexistent family weights");
+                else require(active>output&&varied>output,
                     "Extension atlas shader did not produce varying weight channels");
                 require(maximum<=1,
                     "Packed extension atlas changes GPU-filtered weights: maximum RGBA8 error "+maximum);
                 cases.Add(new D
                 {
                     ["badlands_palette"]=withPalette,
+                    ["active_family_mask"]=activeMask,
                     ["legacy_atlas_strips"]=withPalette?9:8,
                     ["packed_atlas_strips"]=withPalette?11:10,
                     ["pixels_checked"]=output*output,
@@ -104,7 +108,7 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         };
     }
 
-    private static byte[] Atlas(int rows,bool palette,bool packed)
+    private static byte[] Atlas(int rows,bool palette,bool packed,int activeMask)
     {
         int strips=(packed?10:8)+(palette?1:0);
         var bytes=new byte[rows*rows*strips*4];
@@ -113,7 +117,8 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         {
             for(int family=0;family<8;family++)
             {
-                byte weight=(byte)(8+(family*23+x*11+z*17)%230);
+                byte weight=(activeMask&(1<<family))!=0?
+                    (byte)(8+(family*23+x*11+z*17)%230):(byte)0;
                 int at=(z*rows*strips+family*rows+x)*4;
                 bytes[at]=weight;bytes[at+1]=(byte)(weight/2);
                 bytes[at+2]=(byte)(weight/3);bytes[at+3]=(byte)(weight/4);

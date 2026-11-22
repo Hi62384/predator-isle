@@ -12,8 +12,11 @@ void extension_weight_banks(out vec4 weights_a,out vec4 weights_b){
  weights_a=vec4(0);weights_b=vec4(0);
  ivec2 size=textureSize(extension_payload,0);
  if(size.x>=size.y*10){
-  weights_a=extension_texel(8);
-  weights_b=extension_texel(9);
+  // Chunks with no active families in a half atlas have exact zero weights
+  // there. Skip that full-screen RGBA8 texture fetch; single-family chunks
+  // commonly require only one of the two packed weight strips.
+  if((extension_active_mask & 15)!=0)weights_a=extension_texel(8);
+  if((extension_active_mask & 240)!=0)weights_b=extension_texel(9);
  }else{
   // Reference/legacy atlases: eight family strips plus optional palette.
   for(int i=0;i<8;i++){

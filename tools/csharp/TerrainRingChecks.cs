@@ -58,6 +58,9 @@ internal static class TerrainRingChecks
                 "Repeated GPU mesh publication re-uploaded identical numerical pages");
             var firstTexture=carrier.GetMeta("terrain_gpu_material").As<ShaderMaterial>().GetShaderParameter("terrain_grid_payload").As<Texture2D>();
             var secondTexture=sibling.GetMeta("terrain_gpu_material").As<ShaderMaterial>().GetShaderParameter("terrain_grid_payload").As<Texture2D>();
+            require(firstTexture.GetHeight()==data.GpuPage.Rows*data.GpuPage.Bands &&
+                firstTexture.GetWidth()==data.GpuPage.Rows,
+                "GPU cache uploaded a padded or incorrect texture instead of the compact numerical page");
             require(firstTexture.GetRid()==secondTexture.GetRid(),
                 "GPU payload cache failed to share the same immutable image resource");
             grids.AttachPayload(sibling,data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision()});

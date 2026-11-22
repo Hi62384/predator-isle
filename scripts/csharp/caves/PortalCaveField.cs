@@ -24,8 +24,14 @@ public partial class PortalCaveField : CaveField
     {
         if (!include_surface_air) return base.sample(point);
         if (!SafePoint(point)) return Far;
-        double terrain = SurfaceHeight(new Vector2(point.X, point.Z)); if (!double.IsFinite(terrain)) return Far;
-        return Math.Min(base.sample(point), terrain - point.Y);
+        // The ordinary point API stays unchanged. Cave mesh lattice workers
+        // can reuse this identical surface value along a vertical X/Z column.
+        return SampleWithSurfaceHeight(point,SurfaceHeight(new Vector2(point.X,point.Z)));
+    }
+    internal double SampleWithSurfaceHeight(Vector3 point,double terrain)
+    {
+        if (!SafePoint(point)||!double.IsFinite(terrain)) return Far;
+        return Math.Min(base.sample(point),terrain-point.Y);
     }
     public override bool has_chunk(Vector3I key)
     {

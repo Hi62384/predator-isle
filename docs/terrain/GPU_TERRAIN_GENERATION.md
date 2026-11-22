@@ -424,3 +424,53 @@ positions, compare per-pixel trail masks on Compatibility and software-Vulkan
 Forward+ and Mobile. The guard is on by default; the off path is a validation
 reference, not an alternative appearance. Passing the test shows rendered
 mask equivalence on the tested drivers; it does not prove a hardware FPS gain.
+
+## Per-family extension atlas GPU fetch pruning
+
+The shared extension atlas lookup now examines the chunk's authoritative
+active-family mask before sampling its two packed RGBA8 weight strips. A chunk
+containing extension families 0–3 only reads the first strip, a chunk
+containing families 4–7 only reads the second, and a mask with no extension
+families reads neither. Mixed-family chunks still retrieve both. Inactive
+family channels are zero in the original numerical atlas, so this is an exact
+skip with no biome control changes. Real GPU atlas parity now checks five
+sparse and mixed ownership masks with and without the badlands palette, and
+renders all eight channels as opaque outputs (including former alpha slots).
+
+## Reuse 2D surface heights across 3D cave lattice columns
+
+Native portal cave meshing now evaluates an X/Z surface-height column only
+once for each lattice column in the immutable build, rather than invoking the
+surface-height callback for every vertical voxel. A 17³ point lattice needs
+at most 17² surface queries, saving up to 4,624 redundant calls before
+normal and protected-shore probes. The cached value enters the **identical**
+portal SDF expression and generated triangles/collision data are unchanged.
+Unsafe points and disabled surface-air portals retain the prior fallback;
+pooled temporary arrays are bounded and returned even on exceptions. A native
+regression compares full surface payload bytes against the independent
+GDScript portal mesher and verifies the exact expected reuse count. This
+speeds CPU cave scalar preparation for all four cave biomes; it does not port
+cave topology, SDF evaluation or Jolt collision to GPU compute.
+
+## Compact immutable RGBA32F GPU terrain pages
+
+The 16-biome shared terrain uploader now writes the first three exact vertex
+banks (normal+height, quantized vertex color, UV+surface) and **only the
+occupied four-component material-control banks**. Each page stores a four-bit
+presence mask and an explicit band count; the vertex shader addresses a
+present control strip using its rank among active banks and returns exact zero
+for an absent one. The legacy seven-bank format still decodes with default
+mask 15. All stored material floats, signed-zero sentinels, categorical
+encodings, height and normals are unmodified.
+
+The page uses `3 + popcount(mask)` RGBA32F strips rather than always seven.
+A patch containing only its three mandatory strips uploads 3/7 as much grid
+texture data (up to 57% less texture bandwidth/memory); patches using all four
+control banks remain identical in size. The immutable texture reuse cache
+uses the compact byte count for its actual GPU upload budget. The 16-biome
+strict native tests compare every control lane against canonical products,
+including missing-bank positive zero and required signed-zero preservation.
+Real Compatibility and Vulkan renderer tests compare the compact texture with
+an independently reconstructed original seven-strip texture. These are
+transfer/vertex-fetch improvements, not numerical generation ports, and
+hardware frame-rate gains are not yet measured.

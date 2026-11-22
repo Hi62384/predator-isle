@@ -11,6 +11,18 @@ public sealed record TerrainGpuGridPage(int Rows,byte[] Bytes,Aabb Bounds)
     // A control bank containing only +0.0 is a zero-valued constant in the
     // vertex shader. Keep other banks (including -0.0) bit-exact.
     public int ControlMask{get;init;}=15;
+    // The first three bands are always normals/height, UNORM8 colors and
+    // UV/surface. Only occupied RGBA32F material banks are transferred.
+    // The legacy seven-band layout is still readable with default mask 15.
+    public int Bands{get;init;}=7;
+    public static int ControlOffset(int mask,int bank)
+    {
+        if(bank<0||bank>3)throw new ArgumentOutOfRangeException(nameof(bank));
+        if((mask & (1<<bank))==0)return -1;
+        int offset=3;
+        for(int prior=0;prior<bank;prior++)if((mask&(1<<prior))!=0)offset++;
+        return offset;
+    }
     public static TerrainGpuGridPage Create(A arrays,int rows)
     {
         int count=checked(rows*rows);var position=arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
@@ -22,8 +34,21 @@ public sealed record TerrainGpuGridPage(int Rows,byte[] Bytes,Aabb Bounds)
     {
         int count=checked(rows*rows);var position=products.Vertices;var normal=products.Normals;var color=products.Colors;var uv=products.Uv;var uv2=products.Surface;
         if(position.Length!=count||normal.Length!=count||color.Length!=count||uv.Length!=count||uv2.Length!=count)throw new ArgumentException("Grid page products have different dimensions");
-        // Write directly into the upload bytes instead of allocating and copying a second float buffer.
-        var bytes=new byte[checked(count*7*4*sizeof(float))];var values=MemoryMarshal.Cast<byte,float>(bytes.AsSpan());var bounds=new Aabb(position[0],Vector3.Zero);
+        // First inspect the four categorical banks, then allocate only the
+        // occupied strips. Never quantize floats or drop signed-zero lanes.
+        int mask=0;
+        for(int bank=0;bank<4;bank++)
+        {
+            var data=bank switch{0=>products.C0,1=>products.C1,2=>products.C2,_=>products.C3};
+            if(data.Length!=count*4)throw new ArgumentException("Grid pages require four float controls per vertex");
+            for(int i=0;i<data.Length;i++)
+                if(BitConverter.SingleToInt32Bits(data[i])!=0){mask|=1<<bank;break;}
+        }
+        int bands=3;
+        for(int bank=0;bank<4;bank++)if((mask&(1<<bank))!=0)bands++;
+        // Write directly into the final upload buffer: no second full atlas
+        // and no runtime GPU copies for empty biome-control families.
+        var bytes=new byte[checked(count*bands*4*sizeof(float))];var values=MemoryMarshal.Cast<byte,float>(bytes.AsSpan());var bounds=new Aabb(position[0],Vector3.Zero);
         for(int i=0;i<count;i++)
         {
             bounds=bounds.Expand(position[i]);Put(values,count,0,i,new Vector4(normal[i].X,normal[i].Y,normal[i].Z,position[i].Y));
@@ -31,18 +56,14 @@ public sealed record TerrainGpuGridPage(int Rows,byte[] Bytes,Aabb Bounds)
             static float Byte(float x)=>MathF.Round(Math.Clamp(x,0,1)*255)/255;
             var c=color[i];Put(values,count,1,i,new Vector4(Byte(c.R),Byte(c.G),Byte(c.B),Byte(c.A)));Put(values,count,2,i,new Vector4(uv[i].X,uv[i].Y,uv2[i].X,uv2[i].Y));
         }
-        int mask=0;
         for(int band=0;band<4;band++)
         {
+            int offset=ControlOffset(mask,band);
+            if(offset<0)continue;
             var input=band switch{0=>products.C0,1=>products.C1,2=>products.C2,_=>products.C3};
-            if(input.Length!=count*4)throw new ArgumentException("Grid pages require four float controls per vertex");
-            input.AsSpan().CopyTo(values.Slice((band+3)*count*4,count*4));
-            // Skip only bitwise-positive zero. In particular, do not
-            // canonicalize negative zero or any signed material sentinel.
-            for(int i=0;i<input.Length;i++)
-                if(BitConverter.SingleToInt32Bits(input[i])!=0){mask|=1<<band;break;}
+            input.AsSpan().CopyTo(values.Slice(offset*count*4,count*4));
         }
-        return new(rows,bytes,bounds){ControlMask=mask};
+        return new(rows,bytes,bounds){ControlMask=mask,Bands=bands};
         static void Put(Span<float> values,int count,int band,int index,Vector4 v)
         {int at=(band*count+index)*4;values[at]=v.X;values[at+1]=v.Y;values[at+2]=v.Z;values[at+3]=v.W;}
     }

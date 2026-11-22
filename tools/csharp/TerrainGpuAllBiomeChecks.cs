@@ -61,8 +61,9 @@ internal static class TerrainGpuAllBiomeChecks
                 int count=product.Topology.VertexCount,rows=product.Topology.Axis.Length;
                 var page=TerrainGpuGridPage.Create(control,rows);
                 var floats=MemoryMarshal.Cast<byte,float>(page.Bytes.AsSpan());
-                require(rows*rows==count&&page.Bytes.Length==count*7*4*sizeof(float),
-                    "GPU "+biome+" payload dimensions or byte count changed");
+                require(rows*rows==count&&page.Bands is >=3 and <=7&&
+                    page.Bytes.Length==count*page.Bands*4*sizeof(float),
+                    "GPU "+biome+" compact payload dimensions or byte count changed");
                 // Extension control bytes retain their original eight strips.
                 // Two packed weight strips must match every family at every
                 // atlas coordinate, including zero and mixed ownership.
@@ -115,30 +116,42 @@ internal static class TerrainGpuAllBiomeChecks
                         {0=>control.C0,1=>control.C1,2=>control.C2,_=>control.C3};
                     require(expected.Length==count*4,
                         "GPU "+biome+" control bank length changed");
+                    int offset=TerrainGpuGridPage.ControlOffset(page.ControlMask,band);
                     for(int i=0;i<expected.Length;i++)
                     {
                         if(BitConverter.SingleToInt32Bits(expected[i])!=0)
                             expectedMask|=1<<band;
-                        require(floats[(band+3)*count*4+i]==expected[i],
-                            "GPU "+biome+" lost material control bank "+band+" at "+i);
+                        if(offset<0)
+                            require(BitConverter.SingleToInt32Bits(expected[i])==0,
+                                "GPU "+biome+" removed nonzero packed material controls");
+                        else
+                            require(BitConverter.SingleToInt32Bits(floats[offset*count*4+i])==
+                                BitConverter.SingleToInt32Bits(expected[i]),
+                                "GPU "+biome+" changed exact material control bank "+band+" at "+i);
                     }
                 }
-                require(page.ControlMask==expectedMask,
-                    "GPU "+biome+" skipped an occupied material-control texture bank");
+                require(page.ControlMask==expectedMask &&
+                    page.Bands==3+System.Numerics.BitOperations.PopCount((uint)expectedMask),
+                    "GPU "+biome+" skipped an occupied bank or uploaded empty control strips");
                 if(biome=="grass")
                 {
                     // The universal shader must also handle an all-zero
                     // control atlas and retain the positive-zero fallback.
                     var allZero=control with{C0=new float[count*4],C1=new float[count*4],
                         C2=new float[count*4],C3=new float[count*4]};
-                    require(TerrainGpuGridPage.Create(allZero,rows).ControlMask==0,
-                        "GPU renderer failed to eliminate all-zero control-bank samples");
-                    allZero.C3[0]=-0.0f;
+                    var emptyPage=TerrainGpuGridPage.Create(allZero,rows);
+                    require(emptyPage.ControlMask==0&&emptyPage.Bands==3&&
+                        emptyPage.Bytes.Length==count*3*16,
+                        "GPU renderer failed to eliminate all-zero control-bank texture memory");
                     // Signed zero must not be optimized away as the shader's
                     // packed negative owner sentinels use the same sign bit.
                     allZero.C3[0]=BitConverter.Int32BitsToSingle(unchecked((int)0x80000000));
-                    require((TerrainGpuGridPage.Create(allZero,rows).ControlMask&8)!=0,
-                        "GPU renderer incorrectly removed an IEEE-754 signed-zero bank");
+                    var signedPage=TerrainGpuGridPage.Create(allZero,rows);
+                    var signedFloats=MemoryMarshal.Cast<byte,float>(signedPage.Bytes.AsSpan());
+                    require(signedPage.ControlMask==8&&signedPage.Bands==4&&
+                        BitConverter.SingleToInt32Bits(signedFloats[3*count*4])==
+                            unchecked((int)0x80000000),
+                        "GPU renderer incorrectly removed or rounded an IEEE-754 signed-zero bank");
                 }
                 completed++;
                 perBiome.Add(new D
@@ -146,7 +159,11 @@ internal static class TerrainGpuAllBiomeChecks
                     ["biome"]=biome,["build_ms"]=buildMs,
                     ["managed_allocated_bytes"]=bytes,
                     ["canonical_evaluations"]=builder._native_height.CanonicalEvaluations,
-                    ["vertex_count"]=count
+                    ["vertex_count"]=count,
+                    ["gpu_control_bands"]=page.Bands,
+                    ["gpu_control_mask"]=page.ControlMask,
+                    ["gpu_uploaded_bytes"]=page.Bytes.Length,
+                    ["gpu_uncompressed_bytes"]=count*7*16
                 });
                 require(ReferenceEquals(templates.Template(product.Topology),shared),
                     "GPU "+biome+" shared topology changed between repeated requests");

@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using System.Runtime.InteropServices;
 using System.Threading.Tasks;
 using D=Godot.Collections.Dictionary;
 using PredatorIsle.Terrain;
@@ -37,18 +38,35 @@ internal static class TerrainGpuGridControlRenderedChecks
             var page=TerrainGpuGridPage.Create(grid,2);
             require(page.ControlMask==expectedMask,
                 "Packed control-mask bits do not represent the exact numerical vertex products");
+            require(page.Bands==3+System.Numerics.BitOperations.PopCount((uint)expectedMask),
+                "GPU page did not compact empty material banks");
+            // Expand a separate canonical legacy page. The first viewport
+            // decodes the original seven-band atlas (mask 15), while the
+            // second decodes the new packed page (only occupied bands).
+            // Rendered output must be identical on each actual backend.
+            const int vertexCount=4;
+            var originalBytes=new byte[vertexCount*7*16];
+            page.Bytes.AsSpan(0,vertexCount*3*16).CopyTo(originalBytes);
+            var originalFloats=MemoryMarshal.Cast<byte,float>(originalBytes.AsSpan());
+            for(int bank=0;bank<4;bank++)
+                components[bank].AsSpan().CopyTo(
+                    originalFloats.Slice((bank+3)*vertexCount*4,vertexCount*4));
             var viewports=new List<SubViewport>();
             var materials=new List<ShaderMaterial>();
-            using var image=Image.CreateFromData(2,14,false,Image.Format.Rgbaf,page.Bytes);
-            using var texture=ImageTexture.CreateFromImage(image);
+            using var originalImage=Image.CreateFromData(2,14,false,Image.Format.Rgbaf,originalBytes);
+            using var compactImage=Image.CreateFromData(2,2*page.Bands,false,Image.Format.Rgbaf,page.Bytes);
+            using var originalTexture=ImageTexture.CreateFromImage(originalImage);
+            using var compactTexture=ImageTexture.CreateFromImage(compactImage);
             try
             {
-                foreach(int mask in new[]{15,page.ControlMask})
+                foreach(var selected in new[]{
+                    (Mask:15,Texture:originalTexture),
+                    (Mask:page.ControlMask,Texture:compactTexture)})
                 {
                     var material=new ShaderMaterial{Shader=shader};
-                    material.SetShaderParameter("terrain_grid_payload",texture);
+                    material.SetShaderParameter("terrain_grid_payload",selected.Texture);
                     material.SetShaderParameter("terrain_grid_rows",2);
-                    material.SetShaderParameter("terrain_grid_control_mask",mask);
+                    material.SetShaderParameter("terrain_grid_control_mask",selected.Mask);
                     var viewport=new SubViewport
                     {
                         Size=new Vector2I(output,output),

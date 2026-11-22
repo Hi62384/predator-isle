@@ -65,7 +65,7 @@ public sealed class TerrainGpuGrids
             cachedPageBytes-=stale.Bytes;
             stale.Texture.Dispose();
         }
-        using var image=Image.CreateFromData(page.Rows,page.Rows*7,false,Image.Format.Rgbaf,page.Bytes);
+        using var image=Image.CreateFromData(page.Rows,page.Rows*page.Bands,false,Image.Format.Rgbaf,page.Bytes);
         var texture=ImageTexture.CreateFromImage(image);
         PageUploads++;
         PageBytesUploaded+=page.Bytes.LongLength;

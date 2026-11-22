@@ -43,6 +43,34 @@ internal static class CaveMesherOptimizationChecks
         require(optimized.RefinedCacheHits>0,
             "Reusable cave mesher failed to reset and rebuild its per-chunk edge cache");
 
+        // A portal cave's canonical scalar is min(tunnel SDF, surface-Y).
+        // The surface is constant along each vertical lattice column. The
+        // new mesher must produce exactly the same triangles and normals as
+        // the reference after reusing that scalar at all Y coordinates.
+        using(var portal=new PortalCaveField{include_surface_air=true})
+        {
+            portal.height=Callable.From<double,double,double>((x,z)=>180);
+            portal.top_height=Callable.From<double,double,double>((x,z)=>180);
+            require(portal.append_feature(new Vector3(32,28,32),new Vector3(32,28,32),
+                new Vector2(24,32),2,0),
+                "Portal cave column fixture failed to create its chamber");
+            using var portalReference=GD.Load<GDScript>("res://scripts/caves/portal_mesher.gd").New().AsGodotObject();
+            using var portalNative=new PortalCaveMesher();
+            var originalMesh=portalReference.Call("build",portal,Vector3I.Zero,4.0).AsGodotArray();
+            var cachedMesh=portalNative.build(portal,Vector3I.Zero,4);
+            require(originalMesh.Count>0&&
+                GD.VarToBytes(originalMesh).SequenceEqual(GD.VarToBytes(cachedMesh)),
+                "Cave portal surface-column reuse changed canonical mesh vertices or normals");
+            const int axis=17;
+            require(portalNative.SurfaceColumnEvaluations==axis*axis&&
+                portalNative.SurfaceColumnReuseHits==axis*axis*(axis-1),
+                "Native portal cave recomputed surface heights for each vertical voxel");
+            portal.include_surface_air=false;
+            portalNative.build(portal,Vector3I.Zero,4);
+            require(portalNative.SurfaceColumnEvaluations==0&&
+                portalNative.SurfaceColumnReuseHits==0,
+                "Portal field without surface air incorrectly used the column fast path");
+        }
         // All cave biome fields share this surface-height memo. Filling the
         // capacity must evict the oldest column, not throw away the entire hot set.
         int probes=0;
