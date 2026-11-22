@@ -26,6 +26,19 @@ internal static class CaveSurfaceCutChecks
             var columns = new D { [Vector2I.Zero] = true, [new Vector2I(-1, -1)] = true };
             require(Equal(old.Call("ground", faces, origin, columns), current.ground(faces, origin, columns)), $"Entrance subtraction differs: {sample}/{origin}");
         }
+        // Exercise single-cell no-clip, boundary-spanning no-hit, degenerate
+        // no-hit, and fully removed triangles against the original GDScript.
+        // The optimized path must not silently emit a degenerate triangle.
+        var noHit = new Vector3[]
+        {
+            new(71,0,71),new(75,0,71),new(71,0,75),
+            new(63,0,200),new(65,0,201),new(67,0,200),
+            new(63,0,200),new(65,0,200),new(67,0,200),
+            new(10,0,10),new(12,0,11),new(11,0,13)
+        };
+        var noHitColumns = new D { [Vector2I.Zero] = true };
+        require(Equal(old.Call("ground",noHit,Vector3.Zero,noHitColumns),current.ground(noHit,Vector3.Zero,noHitColumns)),
+            "Allocation-free cave cut changed retained, boundary or degenerate geometry");
         var huge = new[] { new Vector3(-100000000000f, 0, 0), new Vector3(100000000000f, 0, 0), new Vector3(0, 1, 10) };
         var hugeColumns = new D { [Vector2I.Zero] = true };
         require(Equal(old.Call("ground", huge, Vector3.Zero, hugeColumns), current.ground(huge, Vector3.Zero, hugeColumns)), "Oversized entrance clipping bounds not rejected");

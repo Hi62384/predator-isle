@@ -255,3 +255,19 @@ These changes avoid CPU allocations and repeated numerical work across cave and
 special-liquid biome features. They do **not** move cave topology or the other
 15 surface biome numerical generators to the GPU. No hardware FPS or latency
 improvement is claimed without a controlled device-specific measurement.
+
+### Additional cave collision and liquid fast paths
+
+The surface entrance collision cutter now keeps untouched triangles in-place
+without first constructing temporary polygon lists; for boundary-spanning
+triangles it allocates clipping polygons only when an actual 64m cut column is
+encountered. Degenerate triangle handling, clipping order, and rejected-bounds
+behavior remain unchanged. The independent GDScript comparison covers 600
+randomized cave cuts and targeted no-hit, boundary and degenerate inputs.
+
+Special-liquid pool meshing now sends clipped triangle vertices straight from
+stack storage to the mesh emitter instead of materializing a per-triangle array.
+The original public array-returning API remains available for legacy users and
+is separately compared with the new allocation-free path in regression tests.
+These are all-biome CPU/graphics-preparation optimizations; numerical shader
+coverage and device-specific performance limitations remain as stated above.

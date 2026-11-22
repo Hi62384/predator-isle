@@ -72,29 +72,51 @@ public partial class CaveSurfaceCut : RefCounted
         var output = new List<Vector3>(); int removed = 0, split = 0;
         for (int i = 0; i < faces.Length; i += 3)
         {
-            var triangle = new List<Vector3> { faces[i], faces[i + 1], faces[i + 2] };
-            if (triangle.Any(p => !p.IsFinite())) return reject;
-            var center = (triangle[0] + triangle[1] + triangle[2]) / 3 + world_origin;
-            var minimum = triangle[0].Min(triangle[1]).Min(triangle[2]) + world_origin;
-            var maximum = triangle[0].Max(triangle[1]).Max(triangle[2]) + world_origin;
-            if (new[] { minimum.X, minimum.Z, maximum.X, maximum.Z }.Any(v => Math.Abs((double)v) > 2147480000.0 * 64)) return reject;
-            var key = new Vector2I((int)Math.Floor(center.X / 64.0), (int)Math.Floor(center.Z / 64.0));
-            if (minimum.X >= key.X * 64.0 && maximum.X <= (key.X + 1) * 64.0 && minimum.Z >= key.Y * 64.0 && maximum.Z <= (key.Y + 1) * 64.0)
-            { if (columns.ContainsKey(key)) removed++; else output.AddRange(triangle); continue; }
-            var first = new Vector2I((int)Math.Floor(minimum.X / 64.0), (int)Math.Floor(minimum.Z / 64.0));
-            var last = new Vector2I((int)Math.Floor(maximum.X / 64.0), (int)Math.Floor(maximum.Z / 64.0));
-            long width = (long)last.X - first.X + 1, height = (long)last.Y - first.Y + 1;
-            if (width > 4096 || height > 4096 || width * height > 4096) return reject;
-            var polygons = new List<List<Vector3>> { triangle }; bool touched = false;
-            for (int z = first.Y; z <= last.Y; z++) for (int x = first.X; x <= last.X; x++)
+            // Most source triangles are wholly inside one 64m cell; do not
+            // allocate a polygon list for triangles that are retained/removed.
+            var a=faces[i];var b=faces[i+1];var c=faces[i+2];
+            if(!a.IsFinite()||!b.IsFinite()||!c.IsFinite())return reject;
+            var center=(a+b+c)/3+world_origin;
+            var minimum=a.Min(b).Min(c)+world_origin;
+            var maximum=a.Max(b).Max(c)+world_origin;
+            const double limit=2147480000.0*64;
+            if(Math.Abs((double)minimum.X)>limit||Math.Abs((double)minimum.Z)>limit||
+                Math.Abs((double)maximum.X)>limit||Math.Abs((double)maximum.Z)>limit)return reject;
+            var key=new Vector2I((int)Math.Floor(center.X/64.0),(int)Math.Floor(center.Z/64.0));
+            if(minimum.X>=key.X*64.0&&maximum.X<=(key.X+1)*64.0&&
+                minimum.Z>=key.Y*64.0&&maximum.Z<=(key.Y+1)*64.0)
             {
-                if (!columns.ContainsKey(new Vector2I(x, z))) continue;
-                touched = true; var rect = new Rect2(new Vector2(x * 64 - world_origin.X, z * 64 - world_origin.Z), Vector2.One * 64);
-                var next = new List<List<Vector3>>(); foreach (var polygon in polygons) next.AddRange(Subtract(polygon, rect)); polygons = next;
+                if(columns.ContainsKey(key))removed++;
+                else {output.Add(a);output.Add(b);output.Add(c);}
+                continue;
             }
-            if (touched) split++;
-            foreach (var polygon in polygons) for (int j = 1; j < polygon.Count - 1; j++)
-                if ((polygon[j] - polygon[0]).Cross(polygon[j + 1] - polygon[0]).LengthSquared() > 0) { output.Add(polygon[0]); output.Add(polygon[j]); output.Add(polygon[j + 1]); }
+            var first=new Vector2I((int)Math.Floor(minimum.X/64.0),(int)Math.Floor(minimum.Z/64.0));
+            var last=new Vector2I((int)Math.Floor(maximum.X/64.0),(int)Math.Floor(maximum.Z/64.0));
+            long width=(long)last.X-first.X+1,height=(long)last.Y-first.Y+1;
+            if(width>4096||height>4096||width*height>4096)return reject;
+            // A boundary-spanning triangle may still miss every cut column.
+            // Allocate clipping polygons only after the first actual hit.
+            List<List<Vector3>>? polygons=null;
+            for(int z=first.Y;z<=last.Y;z++)for(int x=first.X;x<=last.X;x++)
+            {
+                if(!columns.ContainsKey(new Vector2I(x,z)))continue;
+                polygons??=new List<List<Vector3>>{new List<Vector3>{a,b,c}};
+                var rect=new Rect2(new Vector2(x*64-world_origin.X,z*64-world_origin.Z),Vector2.One*64);
+                var next=new List<List<Vector3>>();
+                foreach(var polygon in polygons)next.AddRange(Subtract(polygon,rect));
+                polygons=next;
+            }
+            if(polygons is null)
+            {
+                // Match the original non-cell-aligned triangle-fan path, which
+                // drops degenerate triangles even when there is no subtraction.
+                if((b-a).Cross(c-a).LengthSquared()>0){output.Add(a);output.Add(b);output.Add(c);}
+                continue;
+            }
+            split++;
+            foreach(var polygon in polygons)for(int j=1;j<polygon.Count-1;j++)
+                if((polygon[j]-polygon[0]).Cross(polygon[j+1]-polygon[0]).LengthSquared()>0)
+                {output.Add(polygon[0]);output.Add(polygon[j]);output.Add(polygon[j+1]);}
         }
         return new D { ["valid"] = true, ["faces"] = output.ToArray(), ["removed_source_triangles"] = removed, ["split_source_triangles"] = split };
     }

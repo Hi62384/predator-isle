@@ -21,13 +21,13 @@ public partial class RetainedLiquidGeometry : RefCounted
         double level=Math.Min(center+Math.Max(2,(rim-center)*.35),rim-.5);
         return new D {["retained"]=double.IsFinite(center)&&double.IsFinite(rim)&&double.IsFinite(level)&&!(level<center+.5||level<builder.Get("water_level").AsDouble()+2),["surface_y"]=level,["bed_y"]=center,["rim_y"]=rim};
     }
-    public Vector3[] clipped_polygon(GodotObject builder,Vector3 a,Vector3 b,Vector3 c,double level)
+    // The production mesher writes into stack-owned storage and never needs a
+    // temporary polygon array. Keep the public array API for legacy/GDScript
+    // callers, with precisely the same edge traversal and 12 SDF refinements.
+    internal int clip_into(GodotObject builder,Vector3 a,Vector3 b,Vector3 c,double level,Span<Vector3> clipped)
     {
-        // Two temporary heap objects per clipped triangle become especially
-        // expensive for dense pool/waterfall meshes. Keep the exact edge order,
-        // float midpoint sequence and 12 bisections, but use stack storage.
+        if(clipped.Length<6)throw new ArgumentException("A triangle can produce up to six clipped vertices.",nameof(clipped));
         Span<Vector3> polygon=stackalloc Vector3[3]{a,b,c};
-        Span<Vector3> clipped=stackalloc Vector3[6];
         int count=0;
         for(int index=0;index<3;index++)
         {
@@ -37,6 +37,11 @@ public partial class RetainedLiquidGeometry : RefCounted
             for(int iteration=0;iteration<12;iteration++) {var mid=(inside+outside)*.5f;if(Height(builder,mid.X,mid.Z)<level-.05)inside=mid;else outside=mid;}
             clipped[count++]=new Vector3(inside.X,(float)level,inside.Z);
         }
-        return clipped[..count].ToArray();
+        return count;
+    }
+    public Vector3[] clipped_polygon(GodotObject builder,Vector3 a,Vector3 b,Vector3 c,double level)
+    {
+        Span<Vector3> clipped=stackalloc Vector3[6];
+        return clipped[..clip_into(builder,a,b,c,level,clipped)].ToArray();
     }
 }

@@ -107,7 +107,11 @@ public partial class TerrainFeatureMeshes : RefCounted
         g.quad(P(x0,bottom,z0),P(x1,bottom,z0),P(x1,bottom,z1),P(x0,bottom,z1),color);g.quad(P(x0,ceiling,z1),P(x1,ceiling,z1),P(x1,ceiling,z0),P(x0,ceiling,z0),color);foreach(double z in new[]{z0,z1})interior_quad(P(x0,bottom,z),P(x1,bottom,z),P(x1,ceiling,z),P(x0,ceiling,z),color);interior_quad(P(x1,bottom,z0),P(x1,bottom,z1),P(x1,ceiling,z1),P(x1,ceiling,z0),color);
     }
     public void clipped_liquid(Vector3 a,Vector3 b,Vector3 c,double level,Color color)
-    {var clipped=_retained.clipped_polygon(builder,a,b,c,level);for(int i=1;i<clipped.Length-1;i++)g.triangle(clipped[0],clipped[i],clipped[i+1],color);}
+    {
+        Span<Vector3> clipped=stackalloc Vector3[6];
+        int count=_retained.clip_into(builder,a,b,c,level,clipped);
+        for(int i=1;i<count-1;i++)g.triangle(clipped[0],clipped[i],clipped[i+1],color);
+    }
     public bool pool(Vector2 p,double radius,Color color)
     {
         var measurement=_retained.measure(builder,p,radius);if(!measurement["retained"].AsBool())return false;double level=N(measurement,"surface_y"),step=radius/12;

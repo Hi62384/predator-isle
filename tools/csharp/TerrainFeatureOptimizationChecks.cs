@@ -58,6 +58,10 @@ internal static class TerrainFeatureOptimizationChecks
                 var actualClip=clipper.clipped_polygon(optimizedField,a,b,c,clipLevel);
                 require(expectedClip.SequenceEqual(actualClip),
                     "Stack-based liquid clipping changed reference triangle at mask "+mask+" level "+clipLevel);
+                Span<Vector3> direct=stackalloc Vector3[6];
+                int count=clipper.clip_into(optimizedField,a,b,c,clipLevel,direct);
+                require(count==expectedClip.Length&&expectedClip.SequenceEqual(direct[..count].ToArray()),
+                    "Allocation-free liquid clipping changed reference triangle at mask "+mask+" level "+clipLevel);
             }
         }
         Vector3[] ReferenceClip(Vector3 a,Vector3 b,Vector3 c,double level)
