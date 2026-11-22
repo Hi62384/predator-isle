@@ -169,9 +169,9 @@ public sealed class TerrainRingMeshGeometry
             var sample=samples[mapping[z]*row+mapping[x]];
             for(int family=0;family<8;family++)
             {
-                int slot=slots[family];if(slot<0)continue;
+                int controlSlot=slots[family];if(controlSlot<0)continue;
                 var e=sample.Extra(family);
-                int offset=(z*atlasRow*extensionStrips+slot*atlasRow+x)*4;
+                int offset=(z*atlasRow*extensionStrips+controlSlot*atlasRow+x)*4;
                 byte weight=Byte(e.X);
                 extension[offset]=weight;
                 extension[offset+1]=Byte((double)e.Z*e.X);
