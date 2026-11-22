@@ -115,7 +115,7 @@ jobs:
           fi
           LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 xvfb-run -a \
             dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-queues gpu-sampler gpu-vertex gpu-terrain
+              gpu-queues gpu-sampler gpu-vertex gpu-extension gpu-terrain
       - name: Upload diagnostic reports even after failure
         if: always()
         uses: actions/upload-artifact@v4

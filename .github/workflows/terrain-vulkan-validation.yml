@@ -85,10 +85,10 @@ jobs:
             # GPU heightmap, CPU-reference and Jolt test passed in that run.
             echo "::notice::Software Mobile: run focused GPU collision and explicit vertex-fallback checks; comprehensive 3,504-point sampler remains unverified."
             xvfb-run -a dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-vertex gpu-terrain
+              gpu-vertex gpu-extension gpu-terrain
           else
             xvfb-run -a dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-sampler gpu-vertex gpu-terrain
+              gpu-sampler gpu-vertex gpu-extension gpu-terrain
           fi
       - name: Upload semantic and renderer logs
         if: always()

@@ -32,6 +32,14 @@ public partial class MigrationChecks : Node
                 GD.Print($"C# GPU vertex-bake checks passed: {_checks}");
                 await Finish();return;
             }
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-extension-only"))
+            {
+                _mode="gpu-extension";
+                await TerrainGpuExtensionAtlasRenderedChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true,TerrainGpuExtensionAtlasRenderedChecks.Measurements);
+                GD.Print($"C# GPU extension atlas rendered parity checks passed: {_checks}");
+                await Finish();return;
+            }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-sampler-only")){_mode="gpu-sampler";await TerrainGpuSamplerChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuSamplerChecks.Measurements);GD.Print($"C# GPU terrain sampler checks passed: {_checks}");await Finish();return;}
             var selectedBiome=System.Linq.Enumerable.FirstOrDefault(OS.GetCmdlineUserArgs(),
                 arg=>arg.StartsWith("gpu-biome-",StringComparison.Ordinal)&&arg.EndsWith("-only",StringComparison.Ordinal));

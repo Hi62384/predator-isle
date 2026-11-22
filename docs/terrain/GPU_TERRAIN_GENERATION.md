@@ -292,3 +292,13 @@ sampling remain CPU-based. Packed weight strips increase atlas size by 8 RGBA8
 bytes per atlas position in return for fewer fragment samples. Device-specific
 speedup, shader-clock time, and visual equivalence are not inferred from the
 static change; hardware profiling and rendered regression tests remain necessary.
+
+### Rendered parity fixture for packed extension weights
+
+The native `gpu-extension` check uses the production atlas lookup include in a
+real GPU canvas shader, comparing 8-strip legacy against 10-strip packed and
+9-strip legacy/badlands against 11-strip packed/badlands layouts across filtered
+atlas sample locations. It tests both sets of four biome weights and rejects
+blank readbacks. Compatibility and both software-Vulkan renderer jobs exercise
+this mode. Passing verifies numerical atlas decoding on those drivers, not the
+full game's FPS or complete 3D shader parity.

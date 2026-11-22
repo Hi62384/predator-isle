@@ -1,10 +1,5 @@
 // Numeric control atlas only, 32 bytes per terrain vertex, no PBR images per tile.
-vec4 extension_texel(int id){
- ivec2 size=textureSize(extension_payload,0);float row=float(size.y);
- vec2 grid=clamp(forest_local_position.xz/chunk_size_metres,vec2(0),vec2(1))*(row-1.0);
- vec4 s=textureLod(extension_payload,vec2((float(id)*row+grid.x+.5)/float(size.x),(grid.y+.5)/row),0.0);
- return s;
-}
+#include "res://shaders/extension_atlas_lookup.gdshaderinc"
 vec3 extension_control(int id){
  vec4 s=extension_texel(id);return clamp(s.yzw/max(s.x,1.0/255.0),vec3(0),vec3(1));
 }
