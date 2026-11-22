@@ -47,6 +47,7 @@ public sealed class TerrainGpuGrids
         var texture=PageTexture(data.ProductRevision,page);
         material.SetShaderParameter("terrain_grid_payload",texture);material.SetShaderParameter("terrain_grid_rows",page.Rows);material.SetShaderParameter("terrain_grid_enabled",true);
         material.SetShaderParameter("terrain_grid_scale",data.Patch.Size/data.Topology.Denominator);
+        material.SetShaderParameter("terrain_grid_control_mask",page.ControlMask);
         carrier.SetMeta("terrain_gpu_template",Template(data.Topology));carrier.SetMeta("terrain_gpu_material",material);carrier.SetMeta("terrain_render_bounds",page.Bounds);carrier.SetMeta("terrain_cpu_payload",new TerrainCpuSurfacePayload{Data=data});
     }
     private ImageTexture PageTexture(long revision,TerrainGpuGridPage page)

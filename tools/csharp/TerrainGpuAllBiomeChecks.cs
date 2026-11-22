@@ -108,6 +108,7 @@ internal static class TerrainGpuAllBiomeChecks
                         floats[(2*count+i)*4+3]==control.Surface[i].Y,
                         "GPU "+biome+" material UV mismatch at "+i);
                 }
+                int expectedMask=0;
                 for(int band=0;band<4;band++)
                 {
                     float[] expected=band switch
@@ -115,8 +116,29 @@ internal static class TerrainGpuAllBiomeChecks
                     require(expected.Length==count*4,
                         "GPU "+biome+" control bank length changed");
                     for(int i=0;i<expected.Length;i++)
+                    {
+                        if(BitConverter.SingleToInt32Bits(expected[i])!=0)
+                            expectedMask|=1<<band;
                         require(floats[(band+3)*count*4+i]==expected[i],
                             "GPU "+biome+" lost material control bank "+band+" at "+i);
+                    }
+                }
+                require(page.ControlMask==expectedMask,
+                    "GPU "+biome+" skipped an occupied material-control texture bank");
+                if(biome=="grass")
+                {
+                    // The universal shader must also handle an all-zero
+                    // control atlas and retain the positive-zero fallback.
+                    var allZero=control with{C0=new float[count*4],C1=new float[count*4],
+                        C2=new float[count*4],C3=new float[count*4]};
+                    require(TerrainGpuGridPage.Create(allZero,rows).ControlMask==0,
+                        "GPU renderer failed to eliminate all-zero control-bank samples");
+                    allZero.C3[0]=-0.0f;
+                    // Signed zero must not be optimized away as the shader's
+                    // packed negative owner sentinels use the same sign bit.
+                    allZero.C3[0]=BitConverter.Int32BitsToSingle(unchecked((int)0x80000000));
+                    require((TerrainGpuGridPage.Create(allZero,rows).ControlMask&8)!=0,
+                        "GPU renderer incorrectly removed an IEEE-754 signed-zero bank");
                 }
                 completed++;
                 perBiome.Add(new D

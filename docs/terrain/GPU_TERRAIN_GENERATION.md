@@ -352,3 +352,40 @@ and the cache's bookkeeping remain bounded by actual resident entries, even
 under repeated invalidation. Native regression explicitly rebuilds multiple
 pages under a shared revision and checks that cache/order counts stay equal
 and no old GPU image is aliased.
+
+## Zero-control-bank GPU vertex fetch elimination
+
+The shared vertex-displaced terrain shader now skips full RGBA32F texture
+fetches for control banks containing only positive IEEE-754 zero. A per-patch
+four-bit mask is captured while packing the existing immutable GPU page and
+passed to the same shader used by **all 16 surface biome families**. Each
+bank's numerical payload remains unchanged; signed zero, geological sentinels,
+negative owner encodings, and mixed-biome controls are never discarded.
+Terrain that uses only a subset of bank families can eliminate up to four
+of the seven per-vertex RGBA32F fetches. The legacy material default enables
+all four banks, preserving compatibility. All-biome native regression verifies
+the exact byte payload and mask, including completely empty and signed-zero
+cases. These are shader fetch savings, not a port of CPU numerical terrain
+algorithms, and no device-specific GPU-time gain is asserted without profiling.
+
+## Cave GPU material evaluation fast paths
+
+Cooled volcanic rock now avoids its eight-corner 3D pore field beyond the
+existing 160m apparent-normal range and whenever weathering is disabled.
+The glass and disabled-weathering paths skip unused rock tint intermediates.
+Default rock and frozen cave shaders skip normal-map sampling when their
+normal-strength uniform is exactly zero, retaining the original material
+colour, roughness and normal result. Crust-free magma skips procedural cracks,
+plate-gap cell searches and folds because the final blend is fully molten.
+These affect cave materials on all supported renderer backends; CPU cave
+SDF/mesh topology and canonical collision are unaffected. Actual GPU timing
+improvements require real-device measurement.
+
+### Rendered GPU control-bank parity
+
+The `gpu-extension` renderer test additionally renders the shared terrain
+control-bank lookup from the same shader include as production. Eight
+combinations of empty and occupied banks compare masked versus unmasked
+RGBA32F pages, including actual rendered nonzero controls. Compatibility and
+Vulkan Forward+/Mobile execute this fixture. Passing confirms selected control
+samples on those software renderers; physical-device FPS remains unmeasured.

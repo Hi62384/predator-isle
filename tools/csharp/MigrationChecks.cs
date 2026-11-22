@@ -36,7 +36,10 @@ public partial class MigrationChecks : Node
             {
                 _mode="gpu-extension";
                 await TerrainGpuExtensionAtlasRenderedChecks.Run(this,Require);
-                MigrationEvidence.Write(_mode,_checks,true,TerrainGpuExtensionAtlasRenderedChecks.Measurements);
+                await TerrainGpuGridControlRenderedChecks.Run(this,Require);
+                var results=TerrainGpuExtensionAtlasRenderedChecks.Measurements;
+                results["grid_control_mask"]=TerrainGpuGridControlRenderedChecks.Measurements;
+                MigrationEvidence.Write(_mode,_checks,true,results);
                 GD.Print($"C# GPU extension atlas rendered parity checks passed: {_checks}");
                 await Finish();return;
             }

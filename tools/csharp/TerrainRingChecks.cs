@@ -47,7 +47,7 @@ internal static class TerrainRingChecks
         {
             var raw=Surface(new TerrainRingLayout.Patch(new Vector3I(-1,2,0),16,TerrainRingLayout.Mask.None),topology);var data=raw with{GpuPage=TerrainGpuGridPage.Create(raw.Arrays,raw.Topology.Axis.Length)};
             var grids=new TerrainGpuGrids();require(ReferenceEquals(grids.Template(data.Topology),grids.Template(data.Topology)),"Grid instances did not share the actual mesh resource");
-            using var shader=new Shader{Code="shader_type spatial;uniform bool terrain_grid_enabled=false;uniform sampler2D terrain_grid_payload;uniform int terrain_grid_rows=17;"};using var material=new ShaderMaterial{Shader=shader};
+            using var shader=new Shader{Code="shader_type spatial;uniform bool terrain_grid_enabled=false;uniform sampler2D terrain_grid_payload;uniform int terrain_grid_rows=17;uniform int terrain_grid_control_mask=15;"};using var material=new ShaderMaterial{Shader=shader};
             using var carrier=new ArrayMesh();var a=new A();a.Resize((int)Mesh.ArrayType.Max);a[(int)Mesh.ArrayType.Vertex]=new[]{data.GpuPage.Bounds.Position,data.GpuPage.Bounds.End,data.GpuPage.Bounds.Position};carrier.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,a);carrier.SurfaceSetMaterial(0,material);carrier.SetMeta("collision_data",new Godot.Collections.Dictionary{["proof"]=7});grids.AttachPayload(carrier,data);
             // An unchanged stitched product can be republished in another
             // mesh instance without another image transfer. Changing only
@@ -75,6 +75,8 @@ internal static class TerrainRingChecks
             }
             require(grids.PageUploads==6,
                 "Different numerical payload objects incorrectly reused an older GPU upload");
+            require(((ShaderMaterial)carrier.GetMeta("terrain_gpu_material").As<ShaderMaterial>()).GetShaderParameter("terrain_grid_control_mask").AsInt32()==data.GpuPage.ControlMask,
+                "The GPU grid did not receive its exact per-patch control-bank mask");
             var node=new MeshInstance3D{Mesh=carrier};TerrainGpuGrids.Stage(node);var child=node.GetNode<MeshInstance3D>("TerrainGrid");require(child.Mesh==grids.Template(data.Topology)&&((ShaderMaterial)child.MaterialOverride).GetShaderParameter("terrain_grid_enabled").AsBool(),"Shared grid payload was not installed on its render instance");
             require(node.Mesh.GetAabb().Size.IsEqualApprox(data.GpuPage.Bounds.Size),"Carrier bounds lost displaced terrain extent");
             TerrainGpuGrids.EnsureCpuSurface(node);require(node.Mesh!=carrier&&child.Mesh is null&&node.Mesh.GetMeta("collision_data").AsGodotDictionary()["proof"].AsInt32()==7,"Cave CPU fallback lost original collision or left the grid drawing");

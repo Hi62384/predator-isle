@@ -148,8 +148,13 @@ void vertex() {
   VERTEX.xz*=terrain_grid_scale;VERTEX.y=grid_ground.w;NORMAL=grid_ground.xyz;
   COLOR=terrain_grid_value(grid_index,1);
   vec4 grid_uv=terrain_grid_value(grid_index,2);UV=grid_uv.xy;UV2=grid_uv.zw;
-  grid_control0=terrain_grid_value(grid_index,3);grid_control1=terrain_grid_value(grid_index,4);
-  grid_control2=terrain_grid_value(grid_index,5);grid_control3=terrain_grid_value(grid_index,6);
+  // All sixteen biome families use this path. The producer marks a band as
+  // zero only when every IEEE-754 lane is exactly +0.0. Avoid four needless
+  // dependent texture reads for absent biome control banks.
+  grid_control0=terrain_grid_control(grid_index,0);
+  grid_control1=terrain_grid_control(grid_index,1);
+  grid_control2=terrain_grid_control(grid_index,2);
+  grid_control3=terrain_grid_control(grid_index,3);
  }
  world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
  world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);

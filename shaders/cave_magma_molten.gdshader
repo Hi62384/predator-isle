@@ -27,15 +27,19 @@ void fragment(){
 	float falling=smoothstep(.4,.85,lava_wall);
 	vec2 p=lava_position*vec2(.95,mix(.95,.32,falling))+flow*flow_time*mix(.008,.035,falling);
 	vec2 warped=p+vec2(lava_folds(p*.37),lava_folds(p*.37+vec2(14,5)))*1.6;
-	float detail=lava_folds(warped*3.5),gap=lava_plate_gap(warped);
-	float cracks=1.0-smoothstep(.022,.09+detail*.035,gap);
-	float folded=pow(lava_folds(warped*2.0+vec2(4,11)),2.0);
-	float warmth=smoothstep(.24,.76,lava_folds(warped*.73+vec2(9,4)));
-	float molten=cracks*(.3+.7*warmth)*(.68+.32*detail);
-	molten=mix(molten,clamp(molten*.45+smoothstep(.28,.7,detail)*.65,0.0,1.0),falling);
-	molten=mix(1.0,molten,clamp(lava_crust_strength,0.0,1.0));
+	float detail=lava_folds(warped*3.5);
+	float folded=0.0,molten=1.0;
+	if(lava_crust_strength>0.0){
+	 float gap=lava_plate_gap(warped);
+	 float cracks=1.0-smoothstep(.022,.09+detail*.035,gap);
+	 folded=pow(lava_folds(warped*2.0+vec2(4,11)),2.0);
+	 float warmth=smoothstep(.24,.76,lava_folds(warped*.73+vec2(9,4)));
+	 molten=cracks*(.3+.7*warmth)*(.68+.32*detail);
+	 molten=mix(molten,clamp(molten*.45+smoothstep(.28,.7,detail)*.65,0.0,1.0),falling);
+	 molten=mix(1.0,molten,clamp(lava_crust_strength,0.0,1.0));
+	}
 	vec3 hot=mix(vec3(.62,.045,.002),vec3(1.0,.32,.022),detail);
-	float grain=lava_detail_quality>0?lava_noise(warped*22.0):.5;
+	float grain=lava_detail_quality>0 && lava_crust_strength>0.0?lava_noise(warped*22.0):.5;
 	vec3 crust=mix(vec3(.038,.032,.029),vec3(.14,.105,.073),clamp(folded*1.5+grain*.18,0.0,1.0));
 	ALBEDO=mix(crust,hot*.42,molten);
 	EMISSION=hot*molten*lava_emission_strength;

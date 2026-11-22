@@ -29,26 +29,31 @@ void fragment(){
 	float joints=0.0;
 	if(family<.5)joints=pow(.5+.5*cos(rock_position.y*4.7+UV.y*6.0),24.0);
 	ALBEDO=(glass?vec3(.022,.025,.027):COLOR.rgb)*grain*(1.0-(family<.5?.16:0.0)*joints);
-	float weather=0.0,pores=0.0,fracture=0.0;
+	float weather=0.0,pores=0.0,fracture=0.0,near_detail=0.0;
 	if(!glass){
 	 weather=volcanic_grain(rock_position*2.0,7680.0);
-	 pores=volcanic_grain(rock_position*16.0,61440.0);
 	 float joint_phase=rock_position.y/.6+weather*.14;
 	 fracture=pow(.5+.5*cos(joint_phase*6.28318530718),32.0);
+	 near_detail=1.0-smoothstep(48.0,160.0,length(VERTEX));
+	 // Pore noise only affects near shading normals; never evaluate its
+	 // eight 3D noise corners for a distant rock pixel or disabled weathering.
+	 if(near_detail>0.0 && volcanic_weathering_strength>0.0)
+	  pores=volcanic_grain(rock_position*16.0,61440.0);
 	}
 	// Vertex tint is linear albedo. The old .13 grey read like pale concrete
 	// beside dark volcanic host rock; cooled basalt has a dark fresh interior
 	// with subdued iron weathering, irregular cross-joints and fine vesicles.
-	vec3 basalt_tint=mix(COLOR.rgb*.27,COLOR.rgb*vec3(.48,.35,.27),smoothstep(.55,.85,weather));
-	vec3 aged=basalt_tint*grain*(.8+weather*.35)*(1.0-(family<.5?.4:.12)*fracture);
-	if(!glass)ALBEDO=mix(ALBEDO,aged,volcanic_weathering_strength);
+	if(!glass && volcanic_weathering_strength>0.0){
+	 vec3 basalt_tint=mix(COLOR.rgb*.27,COLOR.rgb*vec3(.48,.35,.27),smoothstep(.55,.85,weather));
+	 vec3 aged=basalt_tint*grain*(.8+weather*.35)*(1.0-(family<.5?.4:.12)*fracture);
+	 ALBEDO=mix(ALBEDO,aged,volcanic_weathering_strength);
+	}
 	ROUGHNESS=glass?.24:clamp(detail.a,.65,.96);
 	SPECULAR=glass?.47:.29;
 	vec3 a=normal_xy(p.zy),b=normal_xy(p.xz),c=normal_xy(p.xy);
 	vec3 mapped=normalize(vec3(a.z*sign(n.x),a.y,a.x)*w.x+vec3(b.x,b.z*sign(n.y),b.y)*w.y+vec3(c.x,c.y,c.z*sign(n.z))*w.z);
 	NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(n,mapped,glass?.13:.38)),0.0)).xyz);
 	if(!glass){
-	 float near_detail=1.0-smoothstep(48.0,160.0,length(VERTEX));
 	 float height=(weather*.018+pores*.003-fracture*.004)*near_detail*volcanic_weathering_strength;
 	 vec3 dx=dFdx(VERTEX),dy=dFdy(VERTEX),r1=cross(dy,NORMAL),r2=cross(NORMAL,dx);float determinant=dot(dx,r1);
 	 if(abs(determinant)>.000001)NORMAL=normalize(NORMAL-clamp((r1*dFdx(height)+r2*dFdy(height))/determinant,vec3(-.3),vec3(.3)));
