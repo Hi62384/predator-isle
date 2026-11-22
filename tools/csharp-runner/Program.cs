@@ -41,12 +41,12 @@ foreach (string mode in modes)
     // Godot's Dummy audio driver rather than masking any other engine error.
     if (Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_DUMMY_AUDIO") == "1")
     { start.ArgumentList.Add("--audio-driver"); start.ArgumentList.Add("Dummy"); }
-    if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
+    if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
     else start.ArgumentList.Add("--headless");
     // Renderer equivalence checks can explicitly select either Vulkan renderer.
     // Keep the regular user workflow on its saved Compatibility renderer.
     string? testRenderer=Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_RENDER_METHOD");
-    if(mode is "gpu-sampler" or "gpu-vertex" or "gpu-terrain" or "gpu-queues" &&
+    if(mode is "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-terrain" or "gpu-queues" &&
        (testRenderer=="forward_plus"||testRenderer=="mobile"))
     {
         start.ArgumentList.Add("--rendering-method"); start.ArgumentList.Add(testRenderer);

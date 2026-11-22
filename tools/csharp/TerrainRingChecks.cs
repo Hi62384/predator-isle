@@ -49,10 +49,27 @@ internal static class TerrainRingChecks
             var grids=new TerrainGpuGrids();require(ReferenceEquals(grids.Template(data.Topology),grids.Template(data.Topology)),"Grid instances did not share the actual mesh resource");
             using var shader=new Shader{Code="shader_type spatial;uniform bool terrain_grid_enabled=false;uniform sampler2D terrain_grid_payload;uniform int terrain_grid_rows=17;"};using var material=new ShaderMaterial{Shader=shader};
             using var carrier=new ArrayMesh();var a=new A();a.Resize((int)Mesh.ArrayType.Max);a[(int)Mesh.ArrayType.Vertex]=new[]{data.GpuPage.Bounds.Position,data.GpuPage.Bounds.End,data.GpuPage.Bounds.Position};carrier.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,a);carrier.SurfaceSetMaterial(0,material);carrier.SetMeta("collision_data",new Godot.Collections.Dictionary{["proof"]=7});grids.AttachPayload(carrier,data);
+            // An unchanged stitched product can be republished in another
+            // mesh instance without another image transfer. Changing only
+            // the source revision must allocate a distinct immutable page.
+            using var sibling=new ArrayMesh();sibling.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,a);
+            sibling.SurfaceSetMaterial(0,material);grids.AttachPayload(sibling,data);
+            require(grids.PageUploads==1&&grids.PageReuseHits==1&&grids.CachedPages==1,
+                "Repeated GPU mesh publication re-uploaded identical numerical pages");
+            var firstTexture=carrier.GetMeta("terrain_gpu_material").As<ShaderMaterial>().GetShaderParameter("terrain_grid_payload").As<Texture2D>();
+            var secondTexture=sibling.GetMeta("terrain_gpu_material").As<ShaderMaterial>().GetShaderParameter("terrain_grid_payload").As<Texture2D>();
+            require(firstTexture.GetRid()==secondTexture.GetRid(),
+                "GPU payload cache failed to share the same immutable image resource");
+            grids.AttachPayload(sibling,data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision()});
+            require(grids.PageUploads==2&&grids.CachedPages==2,
+                "Changed terrain products incorrectly reused a stale GPU image");
             var node=new MeshInstance3D{Mesh=carrier};TerrainGpuGrids.Stage(node);var child=node.GetNode<MeshInstance3D>("TerrainGrid");require(child.Mesh==grids.Template(data.Topology)&&((ShaderMaterial)child.MaterialOverride).GetShaderParameter("terrain_grid_enabled").AsBool(),"Shared grid payload was not installed on its render instance");
             require(node.Mesh.GetAabb().Size.IsEqualApprox(data.GpuPage.Bounds.Size),"Carrier bounds lost displaced terrain extent");
             TerrainGpuGrids.EnsureCpuSurface(node);require(node.Mesh!=carrier&&child.Mesh is null&&node.Mesh.GetMeta("collision_data").AsGodotDictionary()["proof"].AsInt32()==7,"Cave CPU fallback lost original collision or left the grid drawing");
-            require(((ArrayMesh)node.Mesh).SurfaceGetArrays(0)[(int)Mesh.ArrayType.Vertex].AsVector3Array().SequenceEqual(data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array()),"Cave fallback changed emitted terrain positions");node.Free();grids.Clear();
+            require(((ArrayMesh)node.Mesh).SurfaceGetArrays(0)[(int)Mesh.ArrayType.Vertex].AsVector3Array().SequenceEqual(data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array()),"Cave fallback changed emitted terrain positions");
+            node.Free();grids.Clear();
+            require(grids.CachedPages==0&&grids.CachedPageBytes==0,
+                "GPU page cache retained native images after a scene shutdown");
         }
         foreach(var focus in new[]{new Vector2(1,1),new Vector2(-31,-31),new Vector2(16385,-32735)})
         foreach(var move in new[]{new Vector2(16,0),new Vector2(16,16)})

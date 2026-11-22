@@ -302,3 +302,19 @@ atlas sample locations. It tests both sets of four biome weights and rejects
 blank readbacks. Compatibility and both software-Vulkan renderer jobs exercise
 this mode. Passing verifies numerical atlas decoding on those drivers, not the
 full game's FPS or complete 3D shader parity.
+
+## Immutable GPU grid page reuse (November 22, 2026)
+
+The shared all-biome GPU grid uploader now caches immutable numerical RGBA32F
+pages by **source product revision and page object identity**. Republished
+unchanged patches reuse their uploaded image instead of creating a new texture,
+reducing transfers when streaming returns to recently generated terrain.
+Changes to geometry, materials, seams, or cave source revisions produce new
+pages; page cache misses always upload the new data. The bounded cache retains
+at most 128 pages or 16 MiB of page data, and releases its retained native
+references on eviction and scene shutdown. Active materials retain their own
+references, including during cave-cut transitions. `get_ring_progress()` now
+reports cache hit count, page count and cached bytes; the native ring regression
+checks shared resource identity, revision invalidation and shutdown cleanup.
+This is resource reuse, not additional procedural GPU generation, and device-
+specific streaming gains still require profiling.
