@@ -42,5 +42,25 @@ internal static class CaveMesherOptimizationChecks
             "Rebuilding the same cave mesh with a recycled mesher changed results");
         require(optimized.RefinedCacheHits>0,
             "Reusable cave mesher failed to reset and rebuild its per-chunk edge cache");
+
+        // All cave biome fields share this surface-height memo. Filling the
+        // capacity must evict the oldest column, not throw away the entire hot set.
+        int probes=0;
+        using var heightField=new CaveField();
+        heightField.height=Callable.From<double,double,double>((x,z)=>{probes++;return x*.25+z;});
+        for(int x=0;x<8192;x++)
+            require(heightField.ground_height(new Vector3(x,0,0))==x*.25,
+                "Cave column memo changed the authoritative sample at "+x);
+        require(probes==8192,"Cave memo re-evaluated an already seen column");
+        require(heightField.ground_height(new Vector3(8191,100,0))==8191*.25&&probes==8192,
+            "Cave memo failed to share a column across Y coordinates");
+        heightField.ground_height(new Vector3(8192,0,0));
+        require(heightField.ground_height(new Vector3(8191,100,0))==8191*.25&&probes==8193,
+            "Cave memo evicted all live columns at the capacity boundary");
+        heightField.ground_height(new Vector3(0,0,0));
+        require(probes==8194,"Cave memo did not evict the oldest column");
+        heightField.clear();
+        heightField.ground_height(new Vector3(8191,0,0));
+        require(probes==8195,"Cave memo retained values across a field clear");
     }
 }

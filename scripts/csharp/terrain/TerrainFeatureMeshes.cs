@@ -113,14 +113,17 @@ public partial class TerrainFeatureMeshes : RefCounted
         var measurement=_retained.measure(builder,p,radius);if(!measurement["retained"].AsBool())return false;double level=N(measurement,"surface_y"),step=radius/12;
         // A 24x24 quad grid has only 25x25 distinct corners. Each shared
         // point must be sampled once, not up to four times per pool.
-        var vertices=new Dictionary<Vector2I,Vector3>(625);
+        // The grid is always [-12,12]². Dense indexed storage avoids hundreds
+        // of Vector2I dictionary probes and node allocations for every pool.
+        var vertices=new Vector3[25*25];
+        var sampled=new bool[25*25];
         Vector3 Vertex(int x,int z)
         {
-            var index=new Vector2I(x,z);
-            if(vertices.TryGetValue(index,out var saved))return saved;
+            int index=(z+12)*25+x+12;
+            if(sampled[index])return vertices[index];
             var q=p+new Vector2(x,z)*(float)step;
-            var sampled=new Vector3(q.X,(float)Height(q),q.Y);
-            vertices[index]=sampled;return sampled;
+            var value=new Vector3(q.X,(float)Height(q),q.Y);
+            sampled[index]=true;vertices[index]=value;return value;
         }
         for(int z=-12;z<12;z++)for(int x=-12;x<12;x++)
         {

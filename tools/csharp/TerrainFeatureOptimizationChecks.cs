@@ -42,5 +42,41 @@ internal static class TerrainFeatureOptimizationChecks
             "Pool corner caching changed a vertex, normal, color or triangle order");
         require(optimizedField.HeightCalls<legacyField.HeightCalls,
             "Cached liquid pool performed as many height evaluations as legacy");
+
+        // An independent copy of the old clipping algorithm protects triangle
+        // winding, threshold comparisons, midpoint precision and intersection
+        // order when the hot path switches from a List to stack storage.
+        var clipper=new RetainedLiquidGeometry();
+        for(int mask=0;mask<8;mask++)
+        {
+            var a=new Vector3(-2,(mask&1)!=0?8:15,-2);
+            var b=new Vector3(3,(mask&2)!=0?8:15,1);
+            var c=new Vector3(1,(mask&4)!=0?8:15,4);
+            foreach(double level in new[]{8.0,10.05,11.0,15.0,16.0})
+            {
+                var expectedClip=ReferenceClip(a,b,c,level);
+                var actualClip=clipper.clipped_polygon(optimizedField,a,b,c,level);
+                require(expectedClip.SequenceEqual(actualClip),
+                    "Stack-based liquid clipping changed reference triangle at mask "+mask+" level "+level);
+            }
+        }
+        Vector3[] ReferenceClip(Vector3 a,Vector3 b,Vector3 c,double level)
+        {
+            var polygon=new[]{a,b,c};var clipped=new List<Vector3>(6);
+            for(int index=0;index<3;index++)
+            {
+                var p=polygon[index];var q=polygon[(index+1)%3];bool pInside=p.Y<level-.05,qInside=q.Y<level-.05;
+                if(pInside)clipped.Add(new Vector3(p.X,(float)level,p.Z));
+                if(pInside==qInside)continue;var inside=pInside?p:q;var outside=pInside?q:p;
+                for(int iteration=0;iteration<12;iteration++)
+                {
+                    var mid=(inside+outside)*.5f;
+                    if(optimizedField._get_height(mid.X,mid.Z)<level-.05)inside=mid;
+                    else outside=mid;
+                }
+                clipped.Add(new Vector3(inside.X,(float)level,inside.Z));
+            }
+            return clipped.ToArray();
+        }
     }
 }

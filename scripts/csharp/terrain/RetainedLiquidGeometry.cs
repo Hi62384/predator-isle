@@ -1,6 +1,5 @@
 using Godot;
 using System;
-using System.Collections.Generic;
 using D = Godot.Collections.Dictionary;
 
 namespace PredatorIsle.Terrain;
@@ -24,15 +23,20 @@ public partial class RetainedLiquidGeometry : RefCounted
     }
     public Vector3[] clipped_polygon(GodotObject builder,Vector3 a,Vector3 b,Vector3 c,double level)
     {
-        var polygon=new[]{a,b,c};var clipped=new List<Vector3>(6);
+        // Two temporary heap objects per clipped triangle become especially
+        // expensive for dense pool/waterfall meshes. Keep the exact edge order,
+        // float midpoint sequence and 12 bisections, but use stack storage.
+        Span<Vector3> polygon=stackalloc Vector3[3]{a,b,c};
+        Span<Vector3> clipped=stackalloc Vector3[6];
+        int count=0;
         for(int index=0;index<3;index++)
         {
             var p=polygon[index];var q=polygon[(index+1)%3];bool pInside=p.Y<level-.05,qInside=q.Y<level-.05;
-            if(pInside)clipped.Add(new Vector3(p.X,(float)level,p.Z));
+            if(pInside)clipped[count++]=new Vector3(p.X,(float)level,p.Z);
             if(pInside==qInside)continue;var inside=pInside?p:q;var outside=pInside?q:p;
             for(int iteration=0;iteration<12;iteration++) {var mid=(inside+outside)*.5f;if(Height(builder,mid.X,mid.Z)<level-.05)inside=mid;else outside=mid;}
-            clipped.Add(new Vector3(inside.X,(float)level,inside.Z));
+            clipped[count++]=new Vector3(inside.X,(float)level,inside.Z);
         }
-        return clipped.ToArray();
+        return clipped[..count].ToArray();
     }
 }

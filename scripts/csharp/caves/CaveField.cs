@@ -18,6 +18,9 @@ public partial class CaveField : RefCounted, ICaveField
     internal readonly Dictionary<Vector3I, List<int>> Bins = new(), ThermalBins = new();
     internal readonly Dictionary<string, List<Vector2>> BiomeFields = new();
     private readonly Dictionary<Vector2, double> _heightMemo = new();
+    // Retain hot X/Z columns across the capacity boundary instead of invalidating
+    // the entire cache mid-cave (normal and lattice probes revisit these columns).
+    private readonly Queue<Vector2> _heightOrder = new();
     private readonly Dictionary<string, Variant> _packed = new();
     private Callable _height;
     private Func<double,double,double>? _sampleHeight;
@@ -37,7 +40,7 @@ public partial class CaveField : RefCounted, ICaveField
     public double opening_rock_cover { get; set; }
     public long references { get; set; }
     public long thermal_references { get; set; }
-    public Callable height { get => _height; set { _height = value; _sampleHeight=CaveHeightSampler.Bind(value); _heightMemo.Clear(); } }
+    public Callable height { get => _height; set { _height = value; _sampleHeight=CaveHeightSampler.Bind(value); _heightMemo.Clear(); _heightOrder.Clear(); } }
     public A PreciseShores => precise_shores;
     public double Sample(Vector3 p) => sample(p);
     public Vector3 Normal(Vector3 p) => normal(p);
@@ -90,7 +93,7 @@ public partial class CaveField : RefCounted, ICaveField
     public void clear()
     {
         SpatialReferences = 0; precise_shores.Clear(); floor_relief.Clear(); thermal_sources.Clear(); ThermalBins.Clear(); thermal_references = 0;
-        Directions.Clear(); SpanSquared.Clear(); SpanLength.Clear(); ArchHeight.Clear(); ArchCenter.Clear(); ArchScale.Clear(); Begins.Clear(); Ends.Clear(); Dimensions.Clear(); Kinds.Clear(); Styles.Clear(); EndpointGrades.Clear(); _heightMemo.Clear(); Bins.Clear(); chunks.Clear(); references = 0;
+        Directions.Clear(); SpanSquared.Clear(); SpanLength.Clear(); ArchHeight.Clear(); ArchCenter.Clear(); ArchScale.Clear(); Begins.Clear(); Ends.Clear(); Dimensions.Clear(); Kinds.Clear(); Styles.Clear(); EndpointGrades.Clear(); _heightMemo.Clear(); _heightOrder.Clear(); Bins.Clear(); chunks.Clear(); references = 0;
         _biome_assignment = new(); BiomeFields.Clear(); _biome_locks = new(); _protected_shores.Clear(); InvalidatePacked();
     }
     public double ground_height(Vector3 p)
@@ -99,8 +102,14 @@ public partial class CaveField : RefCounted, ICaveField
         var key = new Vector2(p.X, p.Z);
         if (_heightMemo.TryGetValue(key, out double value)) return value;
         value = SampleHeight(p.X, p.Z);
-        if (_heightMemo.Count >= 8192) _heightMemo.Clear();
-        _heightMemo[key] = value; return value;
+        // FIFO eviction preserves the last 8,191 columns when a new height is
+        // requested. The old all-or-nothing Clear() caused repeated full terrain
+        // evaluations during larger cave/normal meshes in every cave biome.
+        while (_heightMemo.Count >= 8192 && _heightOrder.Count > 0)
+            _heightMemo.Remove(_heightOrder.Dequeue());
+        _heightMemo[key] = value;
+        _heightOrder.Enqueue(key);
+        return value;
     }
     public bool protected_shore(Vector3 point, double radius, double low, double high)
     {

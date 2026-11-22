@@ -236,3 +236,22 @@ The full-project audit also identified unnecessary main-thread physics work in t
 ### Exact C# and GDScript angular parity for extension biomes
 
 Quarry, volcanic, spore forest, and radiation terrain geometry use Godot's canonical Vector2 angle and rotation APIs to reproduce the source GDScript operations, including at large world coordinates. Native CI now runs the full eight-family numerical extension sampler comparison first, before spending time on the longer world/scene checks. The single-ULP height mismatches this addresses are CPU numerical correctness issues; GPU numerical baking for these families is a separate, still-unported optimization.
+
+## Cave and liquid generation hot paths (November 22, 2026)
+
+All cave biome fields now evict the oldest cached surface-height column when the
+8,192-column memo fills, rather than invalidating every cached column. This
+keeps repeated height requests from 3D lattice and normal probes warm during a
+large cave build. Clearing or rebinding the source still resets the memo.
+
+Finite pool and waterfall clipping now use stack-based temporary triangle
+storage, preserving the original 12-step height refinement and triangle order.
+The 25×25 shared-corner pool mesh uses dense indexing instead of a dictionary.
+The native regression tests compare generated pool vertices with the uncached
+reference, compare clipping against the former algorithm across crossing cases,
+and check cave height-memo rollover and invalidation.
+
+These changes avoid CPU allocations and repeated numerical work across cave and
+special-liquid biome features. They do **not** move cave topology or the other
+15 surface biome numerical generators to the GPU. No hardware FPS or latency
+improvement is claimed without a controlled device-specific measurement.
