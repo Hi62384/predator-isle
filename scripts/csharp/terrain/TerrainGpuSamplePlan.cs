@@ -17,6 +17,15 @@ internal static class TerrainGpuSamplePlan
         TerrainRingLayout.Patch patch,int resolution,bool filterDistant,CancellationToken cancellation,
         bool includeShapeRefinement=true)
     {
+        cancellation.ThrowIfCancellationRequested();
+        var regions=builder._native_regions;
+        // No grassland ownership means every planned GPU raw sample is unused.
+        if(regions.coverage.X<=0)return Array.Empty<Vector2>();
+        bool pureGrass=regions.coverage.X==1&&regions.coverage.Y==0&&
+            regions.coverage.Z==0&&regions.coverage.W==0&&
+            regions.jungle_coverage==0&&regions.mountain_coverage==0&&
+            regions.tropical_coverage==0&&regions.badlands_coverage==0&&
+            Array.TrueForAll(regions.extra_coverage,value=>value==0);
         double scale=Math.Max(builder.settings.Get("terrain_shape_scale").AsDouble(),.01);
         var positions=new List<Vector2>();
         var visited=new HashSet<(double X,double Z)>();
@@ -79,7 +88,7 @@ internal static class TerrainGpuSamplePlan
             if((double)point.X!=gx||(double)point.Y!=gz||Math.Abs(gx)>TerrainGpuSampler.MaximumCoordinate||Math.Abs(gz)>TerrainGpuSampler.MaximumCoordinate||field.HasGpuSample(point))return;
             // Ownership remains CPU authoritative. Don't spend a GPU batch on regions
             // where the grassland function cannot contribute to the final height.
-            if(builder._native_regions.weights(x,z).X<=0)return;
+            if(!pureGrass&&regions.weights(x,z).X<=0)return;
             positions.Add(point);
         }
     }

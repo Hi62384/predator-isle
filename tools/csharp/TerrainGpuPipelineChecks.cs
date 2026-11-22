@@ -77,6 +77,17 @@ internal static class TerrainGpuPipelineChecks
         using var cpu = Builder(settings);
         using var baked = Builder(settings);
         var topology = new TerrainRingTopology();
+        using (var forestOnly=GrassSettings())
+        {
+            forestOnly.Set("grass_coverage",0.0);
+            forestOnly.Set("forest_coverage",100.0);
+            using var noGrass=Builder(forestOnly);
+            var skipped=TerrainGpuSamplePlan.Create(noGrass,topology,
+                new TerrainRingLayout.Patch(new Vector3I(0,0,2),144,TerrainRingLayout.Mask.None),
+                16,true,CancellationToken.None);
+            require(skipped.Length==0,
+                "GPU planner queued grassland samples for a forest-only world");
+        }
         var geometry = new TerrainRingMeshGeometry(topology);
         var patch = new TerrainRingLayout.Patch(new Vector3I(-1, 2, 0), 16, TerrainRingLayout.Mask.None);
         // GPU planning must not bake samples for disabled middle-ring

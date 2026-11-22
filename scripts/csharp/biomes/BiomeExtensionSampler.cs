@@ -13,7 +13,10 @@ public partial class BiomeExtensionSampler : RefCounted
     protected WeakRef? Host;
     private readonly Dictionary<Vector2I,double[]> _nodes=new();
     private readonly List<Vector2I> _ring=new();private int _cursor;
-    private readonly Dictionary<Vector3I,D> _descriptors=new();
+    // A typed candidate center avoids nine Godot Variant conversions for
+    // every nearest-site query in all eight extension families.
+    private readonly record struct DescriptorEntry(D Data,Vector2 Center);
+    private readonly Dictionary<Vector3I,DescriptorEntry> _descriptors=new();
     private readonly FastNoiseLite _macro=new(),_meso=new(),_regions=new();
     private readonly Terrain.TerrainParameterSnapshot numericSettings=new();
     protected double P(string key)=>numericSettings[key];
@@ -27,17 +30,27 @@ public partial class BiomeExtensionSampler : RefCounted
         _nodes.Clear();_descriptors.Clear();_ring.Clear();_cursor=0;
     }
     public double random(long x,long z,long salt){long h=unchecked(x*374761393+z*668265263+seed_value*69069+(salt+family*301)*1274126177)&0x7fffffff;h=unchecked((h^(h>>13))*1274126177)&0x7fffffff;return (double)(h^(h>>16))/2147483647.0;}
-    public D descriptor(Vector2I cell,double span)
+    private DescriptorEntry DescriptorAt(Vector2I cell,double span)
     {
-        var key=new Vector3I(cell.X,cell.Y,(int)Math.Round(span,MidpointRounding.AwayFromZero));if(_descriptors.TryGetValue(key,out var found))return found;
+        var key=new Vector3I(cell.X,cell.Y,(int)Math.Round(span,MidpointRounding.AwayFromZero));
+        if(_descriptors.TryGetValue(key,out var found))return found;
         var p=((Vector2)cell+new Vector2((float)(.25+random(cell.X,cell.Y,1)*.5),(float)(.25+random(cell.X,cell.Y,2)*.5)))*(float)span;
         var result=new D {["id"]=FormattableString.Invariant($"{family}:{cell.X}:{cell.Y}"),["position"]=p,["radius"]=span*(.2+.18*random(cell.X,cell.Y,3)),["age"]=random(cell.X,cell.Y,4),["kind"]=Math.Min(5,(int)(random(cell.X,cell.Y,5)*6)),["angle"]=random(cell.X,cell.Y,6)*Math.Tau,["chance"]=random(cell.X,cell.Y,7)};
-        if(_descriptors.Count>=512)_descriptors.Clear();_descriptors[key]=result;return result;
+        var entry=new DescriptorEntry(result,p);
+        if(_descriptors.Count>=512)_descriptors.Clear();
+        _descriptors[key]=entry;return entry;
     }
+    public D descriptor(Vector2I cell,double span)=>DescriptorAt(cell,span).Data;
     public D nearby(Vector2 p,double span)
     {
         var cell=new Vector2I((int)Math.Floor(p.X/span),(int)Math.Floor(p.Y/span));var best=new D();double distance=double.PositiveInfinity;
-        for(int z=-1;z<=1;z++)for(int x=-1;x<=1;x++){var d=descriptor(cell+new Vector2I(x,z),span);double score=p.DistanceSquaredTo(d["position"].AsVector2());if(score<distance){distance=score;best=d;}}return best;
+        for(int z=-1;z<=1;z++)for(int x=-1;x<=1;x++)
+        {
+            var candidate=DescriptorAt(cell+new Vector2I(x,z),span);
+            double score=p.DistanceSquaredTo(candidate.Center);
+            if(score<distance){distance=score;best=candidate.Data;}
+        }
+        return best;
     }
     public Vector2 local(Vector2 p,D d)
     {

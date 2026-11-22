@@ -31,6 +31,10 @@ internal static class ExtensionSamplerChecks
                     // Every extension family uses this local coordinate
                     // rotation; require the exact engine vector operation
                     // rather than merely approximate trigonometric parity.
+                    var expectedNear=original.Call("nearby",p,1700.5).AsGodotDictionary();
+                    var actualNear=native.nearby(p,1700.5);
+                    require(GD.VarToBytes(expectedNear).SequenceEqual(GD.VarToBytes(actualNear)),
+                        "Cached nearest extension site changed: "+name);
                     var referenceLocal=original.Call("local",p,a.AsGodotDictionary()).AsVector2();
                     var nativeLocal=native.local(p,a.AsGodotDictionary());
                     require(referenceLocal==nativeLocal,
