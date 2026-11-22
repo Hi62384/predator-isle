@@ -50,7 +50,12 @@ void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 project
  if(family==0){float strata=.5+.5*sin((world_position.y+world_position.x*.015)/max(type==2?5.0:24.0,1.0));tint*=mix(.85,1.08,strata*(type==0?0.15:1.0));}
  vec4 g,r;vec3 gg,rg;float near_detail=1.0-smoothstep(1500.0,7000.0,view_distance);
  g=badlands_average(ground_id);r=badlands_average(rock_id);gg=vec3(0);rg=vec3(0);
- if(near_detail>.002){badlands_sample(ground_id,2.5,dx,dy,projection,n,fine,g,gg);badlands_sample(rock_id,8.0,dx,dy,projection,n,fine,r,rg);}
+ // Ground and exposed rock can be exactly absent. Skip triplanar texture
+ // and normal fetches for an endpoint that has zero blend contribution.
+ if(near_detail>.002){
+  if(rock<1.0)badlands_sample(ground_id,2.5,dx,dy,projection,n,fine,g,gg);
+  if(rock>0.0)badlands_sample(rock_id,8.0,dx,dy,projection,n,fine,r,rg);
+ }
  vec4 surface=mix(g,r,rock);gradient=mix(gg,rg,rock)*extension_normals[family]*near_detail;
  // Authored geological tints follow the active renderer's working space,
  // just like source_color textures. A fixed gamma darkened Compatibility twice.

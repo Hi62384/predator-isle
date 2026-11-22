@@ -271,3 +271,24 @@ The original public array-returning API remains available for legacy users and
 is separately compared with the new allocation-free path in regression tests.
 These are all-biome CPU/graphics-preparation optimizations; numerical shader
 coverage and device-specific performance limitations remain as stated above.
+
+## Extension-atlas and cave GPU shading pass (November 22, 2026)
+
+Eight extension biome ownership weights are now packed into two additional
+RGBA8 atlas strips. The native C# terrain renderer uses two filtered texture
+fetches to recover all eight weights, rather than up to eight independent
+fetches. Each original family control strip remains unchanged, and the badlands
+palette moves to strip 10 when extensions are present (still strip 0 when alone).
+The shader detects the 10/11-strip format and retains the original 8/9-strip
+legacy GDScript lookup for compatibility with reference fixtures.
+
+The common extension material shader avoids ground/rock triplanar fetches when
+that material has exactly zero blend contribution. Frozen cave shaders avoid
+snow-map reads for frost-free fragments; magma cave shaders avoid pore-noise
+octaves when the rough-flow blend is zero. These shader changes affect all
+eight extension surfaces and the applicable frozen/magma cave variants; cave
+SDF topology, authoritative physics, and non-grassland numerical terrain
+sampling remain CPU-based. Packed weight strips increase atlas size by 8 RGBA8
+bytes per atlas position in return for fewer fragment samples. Device-specific
+speedup, shader-clock time, and visual equivalence are not inferred from the
+static change; hardware profiling and rendered regression tests remain necessary.

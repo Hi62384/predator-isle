@@ -63,6 +63,28 @@ internal static class TerrainGpuAllBiomeChecks
                 var floats=MemoryMarshal.Cast<byte,float>(page.Bytes.AsSpan());
                 require(rows*rows==count&&page.Bytes.Length==count*7*4*sizeof(float),
                     "GPU "+biome+" payload dimensions or byte count changed");
+                // Extension control bytes retain their original eight strips.
+                // Two packed weight strips must match every family at every
+                // atlas coordinate, including zero and mixed ownership.
+                if(product.ExtensionMask!=0)
+                {
+                    require(product.ExtensionRows>0,"GPU "+biome+" active extension lacks atlas rows");
+                    int width=product.ExtensionData.Length/(product.ExtensionRows*4),
+                        stripCount=width/product.ExtensionRows;
+                    require(stripCount==10||stripCount==11,
+                        "GPU "+biome+" extension atlas is missing packed weights");
+                    require(product.BadlandsSlot==(stripCount==11?10:-1),
+                        "GPU "+biome+" badlands palette overlaps packed weights");
+                    for(int z=0;z<product.ExtensionRows;z++)
+                    for(int x=0;x<product.ExtensionRows;x++)
+                    for(int family=0;family<8;family++)
+                    {
+                        int original=(z*width+family*product.ExtensionRows+x)*4;
+                        int packed=(z*width+(8+family/4)*product.ExtensionRows+x)*4+family%4;
+                        require(product.ExtensionData[original]==product.ExtensionData[packed],
+                            "GPU "+biome+" extension weight encoding mismatch at "+x+","+z+"/"+family);
+                    }
+                }
                 var surface=product.AuthoritativeGround[(int)Mesh.ArrayType.Vertex].AsVector3Array();
                 require(surface.Length==count,"GPU "+biome+" mode changed authoritative near-collision grid");
                 var shared=templates.Template(product.Topology);

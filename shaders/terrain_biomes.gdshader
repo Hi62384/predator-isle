@@ -444,7 +444,17 @@ void fragment() {
   if(length(q)<radius)discard;
  }
  vec4 extension_weights_a=vec4(0),extension_weights_b=vec4(0);
- if(extension_payload_enabled){for(int i=0;i<8;i++){if((extension_active_mask & (1<<i))==0)continue;float w=extension_texel(i).x;if(i<4)extension_weights_a[i]=w;else extension_weights_b[i-4]=w;}}
+ if(extension_payload_enabled){
+  // The native 10/11-strip layout supplies eight weights in two RGBA8 fetches.
+  // The original 8/9-strip GDScript/control atlases retain their prior path.
+  ivec2 atlas_size=textureSize(extension_payload,0);
+  if(atlas_size.x>=atlas_size.y*10){
+   extension_weights_a=extension_texel(8);
+   extension_weights_b=extension_texel(9);
+  }else{
+   for(int i=0;i<8;i++){if((extension_active_mask & (1<<i))==0)continue;float w=extension_texel(i).x;if(i<4)extension_weights_a[i]=w;else extension_weights_b[i-4]=w;}
+  }
+ }
  // Derivatives must be evaluated before divergent material/projection branches.
  vec3 position_dx=dFdx(world_position),position_dy=dFdy(world_position);
  vec3 forest_dx=dFdx(forest_local_position),forest_dy=dFdy(forest_local_position);

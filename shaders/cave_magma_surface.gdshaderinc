@@ -11,7 +11,9 @@ void magma_cooled_surface(vec3 p,float amount,vec3 view_position,inout vec3 colo
  float ash=smoothstep(.63,.79,magma_field(p/96.0+vec3(3,7,2),40.0));
  float flow=magma_field(p/6.0,640.0);
  float rope=sin(6.28318530718*(p.x/12.0+p.z/24.0)+flow*5.0);
- float pores=smoothstep(.59,.77,magma_field(p*2.0,7680.0));
+ // The pore octave has no contribution where the rough-flow blend is zero.
+ float pores=0.0;
+ if(rough_flow>0.0)pores=smoothstep(.59,.77,magma_field(p*2.0,7680.0));
  float dike=(1.0-smoothstep(.22,.9,abs(sin(6.28318530718*(p.x/96.0+p.z/192.0+p.y/384.0)))*14.0))*smoothstep(.48,.7,meso);
  float sill=(1.0-smoothstep(.18,.75,abs(sin(6.28318530718*p.y/24.0))*7.0))*smoothstep(.55,.72,province);
  float host_detail=clamp(dot(color,vec3(.3,.5,.2))*1.7,.4,1.25);
