@@ -14,6 +14,19 @@ internal static class TerrainGpuGridControlRenderedChecks
 {
     internal static D Measurements {get;private set;}=new();
 
+    // Keep byref-like spans in a synchronous method: the check itself awaits
+    // GPU render frames and targets a non-preview C# language version.
+    private static byte[] ExpandCanonicalSevenBandPage(TerrainGpuGridPage page,float[][] controls)
+    {
+        int vertices=checked(page.Rows*page.Rows);
+        var bytes=new byte[checked(vertices*7*16)];
+        page.Bytes.AsSpan(0,vertices*3*16).CopyTo(bytes);
+        var floats=MemoryMarshal.Cast<byte,float>(bytes.AsSpan());
+        for(int bank=0;bank<4;bank++)
+            controls[bank].AsSpan().CopyTo(floats.Slice((bank+3)*vertices*4,vertices*4));
+        return bytes;
+    }
+
     internal static async Task Run(Node host,Action<bool,string> require)
     {
         require(DisplayServer.GetName()!="headless",
@@ -44,13 +57,7 @@ internal static class TerrainGpuGridControlRenderedChecks
             // decodes the original seven-band atlas (mask 15), while the
             // second decodes the new packed page (only occupied bands).
             // Rendered output must be identical on each actual backend.
-            const int vertexCount=4;
-            var originalBytes=new byte[vertexCount*7*16];
-            page.Bytes.AsSpan(0,vertexCount*3*16).CopyTo(originalBytes);
-            var originalFloats=MemoryMarshal.Cast<byte,float>(originalBytes.AsSpan());
-            for(int bank=0;bank<4;bank++)
-                components[bank].AsSpan().CopyTo(
-                    originalFloats.Slice((bank+3)*vertexCount*4,vertexCount*4));
+            var originalBytes=ExpandCanonicalSevenBandPage(page,components);
             var viewports=new List<SubViewport>();
             var materials=new List<ShaderMaterial>();
             using var originalImage=Image.CreateFromData(2,14,false,Image.Format.Rgbaf,originalBytes);
