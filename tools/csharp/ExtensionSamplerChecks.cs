@@ -98,6 +98,31 @@ internal static class ExtensionSamplerChecks
                 require(GD.VarToBytes(originalBuilder.Get("_last_extras")).SequenceEqual(GD.VarToBytes(currentBuilder.Get("_last_extras"))),"Extension packed material controls differ");
             }
         }
+        // The shared site cache must not invalidate 511 hot descriptors
+        // merely because one new procedural region crosses the 512 limit.
+        // Identity is checked in addition to deterministic regenerated
+        // values, so the old clear-everything implementation cannot pass.
+        using(var memo=new BiomeExtensionSampler())
+        {
+            var settings=GD.Load<Resource>("res://config/biomes/crystal_wastes_settings.tres");
+            const double span=1700.5;
+            memo.configure(settings,73921,host,5);
+            var oldest=memo.descriptor(new Vector2I(0,0),span);
+            for(int i=1;i<512;i++)memo.descriptor(new Vector2I(i,0),span);
+            var hot=memo.descriptor(new Vector2I(511,0),span);
+            var secondHot=memo.descriptor(new Vector2I(510,0),span);
+            memo.descriptor(new Vector2I(512,0),span);
+            require(memo.DescriptorCount==512&&ReferenceEquals(hot,memo.descriptor(new Vector2I(511,0),span))&&
+                ReferenceEquals(secondHot,memo.descriptor(new Vector2I(510,0),span)),
+                "Extension descriptor cache evicted the whole live working set at capacity");
+            var rebuilt=memo.descriptor(new Vector2I(0,0),span);
+            require(!ReferenceEquals(oldest,rebuilt)&&
+                GD.VarToBytes(Variant.From(oldest)).SequenceEqual(GD.VarToBytes(Variant.From(rebuilt))),
+                "Extension descriptor FIFO changed deterministic regenerated site data");
+            memo.configure(settings,73922,host,5);
+            require(memo.DescriptorCount==0,
+                "Extension descriptor cache retained previous world-seed data");
+        }
         void Equal(double a,double b,string scope)=>require(Math.Abs(a-b)<=1e-12&&(float)a==(float)b,$"{scope}: {a:R} / {b:R}");
     }
 }

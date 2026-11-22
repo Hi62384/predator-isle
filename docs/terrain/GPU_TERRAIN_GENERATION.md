@@ -389,3 +389,38 @@ combinations of empty and occupied banks compare masked versus unmasked
 RGBA32F pages, including actual rendered nonzero controls. Compatibility and
 Vulkan Forward+/Mobile execute this fixture. Passing confirms selected control
 samples on those software renderers; physical-device FPS remains unmeasured.
+
+## Conservative GPU trail-curve rejection
+
+All terrain materials using the shared curved `ground_trail` function now
+reject a candidate path edge before computing its hashes, jittered endpoints,
+Bezier tangents and nearest-curve search when the pixel is provably outside
+the original straight-segment admission radius. The conservative AABB contains
+every possible jittered endpoint and includes a numerical precision margin for
+large saved-world coordinates. Edges that could have contributed execute the
+original unmodified path code. A native randomized geometric regression checks
+that no segment accepted by the former admission test is rejected by the new
+bounding gate at multiple sizes, widths and world-coordinate magnitudes. This
+reduces GPU work in grassland, forest, savanna, swamp, mountain and tropical
+path materials without changing path topology or material-control settings.
+
+## Extension biome descriptor cache retention
+
+All eight extension numerical generators share the native site's 512-entry
+bounded descriptor cache. Instead of clearing **every** descriptor when one
+new site arrives, the cache now evicts the oldest one and retains 511 hot
+sites. World-seed reconfiguration still clears the cache and its FIFO. The
+strict native extension suite also verifies that hot objects remain resident,
+old objects are evicted, deterministic recreated descriptors are byte-identical
+and reconfiguration invalidates the cache. This is a CPU-authoritative
+optimization benefiting every extension biome, not GPU numerical generation.
+
+### Exact rendered curved-path parity on all available GPU backends
+
+The GPU `gpu-extension` test also isolates the production curved-trail shader
+and compares the conservative gate enabled and disabled in two real render
+targets. Three world-coordinate windows, including negative and distant
+positions, compare per-pixel trail masks on Compatibility and software-Vulkan
+Forward+ and Mobile. The guard is on by default; the off path is a validation
+reference, not an alternative appearance. Passing the test shows rendered
+mask equivalence on the tested drivers; it does not prove a hardware FPS gain.

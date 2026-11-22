@@ -17,6 +17,9 @@ public partial class BiomeExtensionSampler : RefCounted
     // every nearest-site query in all eight extension families.
     private readonly record struct DescriptorEntry(D Data,Vector2 Center);
     private readonly Dictionary<Vector3I,DescriptorEntry> _descriptors=new();
+    // Site descriptors are shared across all eight extension biomes. Evict
+    // one cold site at capacity, not the entire hot working set.
+    private readonly Queue<Vector3I> _descriptorOrder=new();
     private readonly FastNoiseLite _macro=new(),_meso=new(),_regions=new();
     private readonly Terrain.TerrainParameterSnapshot numericSettings=new();
     protected double P(string key)=>numericSettings[key];
@@ -27,7 +30,7 @@ public partial class BiomeExtensionSampler : RefCounted
         settings=config;numericSettings.Capture(config);seed_value=seed_id;family=family_id;Host?.Dispose();Host=GodotObject.WeakRef(host);
         var noises=new[]{_macro,_meso,_regions};var offsets=new[]{41011,41039,41077};var frequencies=new[]{1.0/2300,1.0/230,1.0/Math.Max(P("region_metres"),1000)};
         for(int i=0;i<3;i++){var n=noises[i];n.Seed=unchecked((int)(seed_id+offsets[i]+family*1009));n.Frequency=(float)frequencies[i];n.NoiseType=FastNoiseLite.NoiseTypeEnum.SimplexSmooth;n.FractalType=FastNoiseLite.FractalTypeEnum.Fbm;n.FractalOctaves=i<2?2:1;n.FractalGain=.32f;}
-        _nodes.Clear();_descriptors.Clear();_ring.Clear();_cursor=0;
+        _nodes.Clear();_descriptors.Clear();_descriptorOrder.Clear();_ring.Clear();_cursor=0;
     }
     public double random(long x,long z,long salt){long h=unchecked(x*374761393+z*668265263+seed_value*69069+(salt+family*301)*1274126177)&0x7fffffff;h=unchecked((h^(h>>13))*1274126177)&0x7fffffff;return (double)(h^(h>>16))/2147483647.0;}
     private DescriptorEntry DescriptorAt(Vector2I cell,double span)
@@ -37,8 +40,9 @@ public partial class BiomeExtensionSampler : RefCounted
         var p=((Vector2)cell+new Vector2((float)(.25+random(cell.X,cell.Y,1)*.5),(float)(.25+random(cell.X,cell.Y,2)*.5)))*(float)span;
         var result=new D {["id"]=FormattableString.Invariant($"{family}:{cell.X}:{cell.Y}"),["position"]=p,["radius"]=span*(.2+.18*random(cell.X,cell.Y,3)),["age"]=random(cell.X,cell.Y,4),["kind"]=Math.Min(5,(int)(random(cell.X,cell.Y,5)*6)),["angle"]=random(cell.X,cell.Y,6)*Math.Tau,["chance"]=random(cell.X,cell.Y,7)};
         var entry=new DescriptorEntry(result,p);
-        if(_descriptors.Count>=512)_descriptors.Clear();
-        _descriptors[key]=entry;return entry;
+        while(_descriptors.Count>=512 && _descriptorOrder.TryDequeue(out var oldest))
+            _descriptors.Remove(oldest);
+        _descriptors[key]=entry;_descriptorOrder.Enqueue(key);return entry;
     }
     public D descriptor(Vector2I cell,double span)=>DescriptorAt(cell,span).Data;
     public D nearby(Vector2 p,double span)

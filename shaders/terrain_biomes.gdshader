@@ -61,6 +61,9 @@ uniform float path_mud_mix=0.24;
 uniform float path_normal_strength=1.0;
 uniform float path_texture_metres=2.0;
 uniform float path_wander_strength=0.82;
+// Debug/validation switch: disabled only for comparing the exact old path
+// algorithm with the conservative early-rejection optimization.
+uniform bool terrain_trail_bounds=true;
 uniform float path_edge_noise_strength=0.48;
 uniform float path_edge_noise_metres=7.0;
 uniform float path_edge_softness_metres=1.4;
@@ -234,10 +237,27 @@ vec2 ground_trail(vec2 p,float size,float width,float pixel_width,float edge_fal
  vec2 result=vec2(0.0);
  for(int j=-1;j<=1;j++) for(int i=-1;i<=1;i++) {
   vec2 id=cell+vec2(float(i),float(j));
-  vec2 a=path_node(id,size);
+  // A path starts inside [.22,.78] of its cell and its next endpoint
+  // resides one cell to the right or below. Any point farther than the
+  // existing straight-line rejection radius from that endpoint AABB
+  // cannot pass the original distance test. Check this *before* hashes,
+  // trigonometry, and spline search, without changing any accepted path.
+  vec2 a=vec2(0.0);bool start_ready=false;
+  float straight_radius=size*0.65+width*4.0;
   for(int edge=0;edge<2;edge++) {
+   if(terrain_trail_bounds){
+    if(straight_radius<=0.0)continue;
+    vec2 start=(id+vec2(0.20))*size;
+    vec2 end=(id+(edge==0?vec2(1.80,0.80):vec2(0.80,1.80)))*size;
+    // Slack covers float rounding at very large saved-world origins.
+    float slack=size*0.02+max(max(abs(p.x),abs(p.y)),max(max(abs(start.x),abs(start.y)),max(abs(end.x),abs(end.y))))*0.00001;
+    float reach=straight_radius+slack;
+    if(p.x<start.x-reach || p.x>end.x+reach ||
+       p.y<start.y-reach || p.y>end.y+reach)continue;
+   }
    float seed=path_hash(id+vec2(float(edge)*57.0,37.0));
    if(seed<(edge==0 ? 0.88 : 0.32)) {
+    if(!start_ready){a=path_node(id,size);start_ready=true;}
     vec2 next_id=id+(edge==0 ? vec2(1,0) : vec2(0,1));
     vec2 b=path_node(next_id,size);
     vec2 ab=b-a;
