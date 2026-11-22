@@ -1,17 +1,28 @@
 // Universal extension RGBA8 atlas sampler shared between terrain rendering
 // and actual GPU parity checks. Strips 0..7 hold original family controls;
 // native strips 8..9 encode four family weights per texel.
+// Legacy/non-ring terrain keeps the original fixed control/weight strips.
+// Canonical ring patches can omit empty family strips.
+uniform bool extension_compact_payload=false;
+uniform int extension_compact_family_slots[8];
+uniform int extension_compact_weight_start=8;
 vec4 extension_texel(int id){
+ int slot=id;
+ if(extension_compact_payload){
+  slot=id<8?extension_compact_family_slots[id]:
+       extension_compact_weight_start+(id-8);
+  if(slot<0)return vec4(0.0);
+ }
  ivec2 size=textureSize(extension_payload,0);
  float row=float(size.y);
  vec2 grid=clamp(forest_local_position.xz/chunk_size_metres,vec2(0),vec2(1))*(row-1.0);
  return textureLod(extension_payload,
-  vec2((float(id)*row+grid.x+.5)/float(size.x),(grid.y+.5)/row),0.0);
+  vec2((float(slot)*row+grid.x+.5)/float(size.x),(grid.y+.5)/row),0.0);
 }
 void extension_weight_banks(out vec4 weights_a,out vec4 weights_b){
  weights_a=vec4(0);weights_b=vec4(0);
  ivec2 size=textureSize(extension_payload,0);
- if(size.x>=size.y*10){
+ if(extension_compact_payload || size.x>=size.y*10){
   // Chunks with no active families in a half atlas have exact zero weights
   // there. Skip that full-screen RGBA8 texture fetch; single-family chunks
   // commonly require only one of the two packed weight strips.

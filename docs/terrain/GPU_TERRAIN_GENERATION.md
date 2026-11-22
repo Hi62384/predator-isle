@@ -474,3 +474,28 @@ Real Compatibility and Vulkan renderer tests compare the compact texture with
 an independently reconstructed original seven-strip texture. These are
 transfer/vertex-fetch improvements, not numerical generation ports, and
 hardware frame-rate gains are not yet measured.
+
+## Compact family-control GPU atlas across all eight extension biomes
+
+The ring terrain worker now scans its exact quantized family ownership mask
+before allocating the RGBA8 extension atlas. Instead of transferring all eight
+family-control strips plus two packed weight strips, it retains only the
+active family-control strips in canonical family order, followed by the same
+two four-channel weight banks. The optional badlands palette remains last.
+Family slots are computed by a single shared `TerrainExtensionAtlasLayout`
+used both by worker packing and main-thread ShaderMaterial binding, with all
+256 possible eight-family masks independently checked in native CI. The shader
+can decode legacy fixed 8/9-strip GDScript payloads, the older fixed 10/11-strip
+C# payloads, and the new explicitly marked compact ring layout. Cave entrance
+surfaces inherit the correct source material bindings; canonical collision and
+all CPU biome values are unchanged.
+
+A one-extension-family chunk transfers three strips instead of ten (70% less
+extension-atlas upload/memory); a full eight-family chunk still uses ten.
+Mask 0 uploads no extension family atlas, while a badlands-palette-only patch
+still uploads exactly its palette strip. The GPU renderer validation compares
+actual sampled weights, all material-control channels and the badlands palette
+between legacy, fixed packed and compact layouts, across sparse/mixed masks on
+Compatibility, Forward+ and Mobile software backends. These are transfer and
+material fetch savings, not numerical GPU height generation. Real-device frame
+and generation timing still require separate benchmarks.

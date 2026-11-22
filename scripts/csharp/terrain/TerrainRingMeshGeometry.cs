@@ -137,18 +137,77 @@ public sealed class TerrainRingMeshGeometry
                 if(badlands){int curvatureByte=Round(Math.Clamp(curvature,-.5,.5)*254)+127;uv[i]=new Vector2(uv[i].X,(float)(Round(s.Badlands.X*255.0)+Round(s.Badlands.Z*255.0)*256+curvatureByte*65536));geology[at+3]=-(jungle?s.Jungle:0)-1;}
             }
         }
-        // GPU atlases remain uniformly sampled even where geometry has inserted third-boundary knots.
-        // Strips 0..7 retain each family's original RGBA controls. Two more
-        // RGBA8 strips encode all eight ownership weights, so the fragment
-        // shader can fetch them in two samples rather than eight.
-        const int extensionStrips=10;
-        int atlasRow=resolution+1,mask=0;bool extras=builder._extras_enabled,any=false;var extension=extras?new byte[atlasRow*atlasRow*extensionStrips*4]:Array.Empty<byte>();var palette=badlands?new byte[atlasRow*atlasRow*4]:Array.Empty<byte>();var mapping=new int[atlasRow];for(int i=0;i<atlasRow;i++)mapping[i]=axis.BinarySearch(i*3);
-        for(int z=0;z<atlasRow;z++)for(int x=0;x<atlasRow;x++)
+        // Uniform-resolution atlas points are the only points sampled by the
+        // GPU material. First discover active family strips from their exact
+        // quantized weights, so empty biome strips are never allocated/uploaded.
+        // This is shared across all eight extension biomes and mixed regions.
+        int atlasRow=resolution+1,mask=0;
+        bool extras=builder._extras_enabled;
+        var palette=badlands?new byte[atlasRow*atlasRow*4]:Array.Empty<byte>();
+        var mapping=new int[atlasRow];
+        for(int k=0;k<atlasRow;k++)mapping[k]=axis.BinarySearch(k*3);
+        if(extras)
         {
-            var s=samples[mapping[z]*row+mapping[x]];if(extras)for(int family=0;family<8;family++){var e=s.Extra(family);int offset=(z*atlasRow*extensionStrips+family*atlasRow+x)*4;extension[offset]=Byte(e.X);if(extension[offset]>0)mask|=1<<family;extension[offset+1]=Byte((double)e.Z*e.X);extension[offset+2]=Byte((double)e.Y*e.X);extension[offset+3]=Byte((double)e.W*e.X);extension[(z*atlasRow*extensionStrips+(8+family/4)*atlasRow+x)*4+family%4]=extension[offset];any|=e.X>.5/255;}
-            if(badlands){var p=s.Badlands.X>0?s.Palette:builder._badlands!.material_palette(new Vector2((float)(patch.OriginX+patch.Size*x/resolution),(float)(patch.OriginZ+patch.Size*z/resolution)));for(int channel=0;channel<4;channel++)palette[(z*atlasRow+x)*4+channel]=Byte(p[channel]);}
+            for(int z=0;z<atlasRow;z++)
+            for(int x=0;x<atlasRow;x++)
+            {
+                var sample=samples[mapping[z]*row+mapping[x]];
+                for(int family=0;family<8;family++)
+                    if(Byte(sample.Extra(family).X)>0)mask|=1<<family;
+            }
         }
-        int rows=atlasRow,slot=-1;if(!any){extension=Array.Empty<byte>();rows=0;mask=0;}if(badlands){if(extension.Length==0){extension=palette;rows=atlasRow;slot=0;}else{var combined=new byte[atlasRow*atlasRow*(extensionStrips+1)*4];for(int z=0;z<atlasRow;z++){Array.Copy(extension,z*atlasRow*extensionStrips*4,combined,z*atlasRow*(extensionStrips+1)*4,atlasRow*extensionStrips*4);Array.Copy(palette,z*atlasRow*4,combined,(z*atlasRow*(extensionStrips+1)+atlasRow*extensionStrips)*4,atlasRow*4);}extension=combined;slot=extensionStrips;}}
+        var layout=TerrainExtensionAtlasLayout.FromMask(mask);
+        var slots=layout.FamilySlots;
+        int activeFamilies=layout.FamilyCount;
+        // Packed weights preserve the four-channel half-family arrangement.
+        int extensionStrips=layout.ExtensionStrips;
+        var extension=extensionStrips>0?
+            new byte[checked(atlasRow*atlasRow*extensionStrips*4)]:Array.Empty<byte>();
+        for(int z=0;z<atlasRow;z++)
+        for(int x=0;x<atlasRow;x++)
+        {
+            var sample=samples[mapping[z]*row+mapping[x]];
+            for(int family=0;family<8;family++)
+            {
+                int slot=slots[family];if(slot<0)continue;
+                var e=sample.Extra(family);
+                int offset=(z*atlasRow*extensionStrips+slot*atlasRow+x)*4;
+                byte weight=Byte(e.X);
+                extension[offset]=weight;
+                extension[offset+1]=Byte((double)e.Z*e.X);
+                extension[offset+2]=Byte((double)e.Y*e.X);
+                extension[offset+3]=Byte((double)e.W*e.X);
+                extension[(z*atlasRow*extensionStrips+
+                    layout.PackedWeightSlot(family)*atlasRow+x)*4+family%4]=weight;
+            }
+            if(badlands)
+            {
+                var p=sample.Badlands.X>0?sample.Palette:builder._badlands!.material_palette(
+                    new Vector2((float)(patch.OriginX+patch.Size*x/resolution),
+                        (float)(patch.OriginZ+patch.Size*z/resolution)));
+                for(int channel=0;channel<4;channel++)
+                    palette[(z*atlasRow+x)*4+channel]=Byte(p[channel]);
+            }
+        }
+        int rows=extensionStrips>0?atlasRow:0,slot=-1;
+        if(badlands)
+        {
+            if(extensionStrips==0){extension=palette;rows=atlasRow;slot=0;}
+            else
+            {
+                var combined=new byte[checked(atlasRow*atlasRow*(extensionStrips+1)*4)];
+                for(int z=0;z<atlasRow;z++)
+                {
+                    Array.Copy(extension,z*atlasRow*extensionStrips*4,
+                        combined,z*atlasRow*(extensionStrips+1)*4,
+                        atlasRow*extensionStrips*4);
+                    Array.Copy(palette,z*atlasRow*4,combined,
+                        (z*atlasRow*(extensionStrips+1)+atlasRow*extensionStrips)*4,
+                        atlasRow*4);
+                }
+                extension=combined;slot=extensionStrips;
+            }
+        }
         byte[] flow=Array.Empty<byte>();int flowRows=0;if((mask&128)!=0&&builder.settings.Get("alien_infected").AsGodotObject().Get("nerve_flow_texturing").AsBool()){using var tissue=new AlienTissueCoordinates();var payload=tissue.atlas(builder._extras[7].AsGodotObject(),new Vector2((float)patch.OriginX,(float)patch.OriginZ),patch.Size,resolution);flow=payload["data"].AsByteArray();flowRows=payload["rows"].AsInt32();}
         return new Data(patch,grid,null!,extension,rows,mask,slot,flow,flowRows){HasMountain=mountain,Products=new(vertices,normals,colors,uv,surface,geology,forest,savanna,swamp)};
     }

@@ -23,21 +23,39 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         {
             const int row=9, output=64;
             bool withPalette=extra!=0;
-            var legacy=Atlas(row,withPalette,false,activeMask);
-            var packed=Atlas(row,withPalette,true,activeMask);
+            var legacy=Atlas(row,withPalette,false,activeMask,false);
+            var packed=Atlas(row,withPalette,true,activeMask,false);
+            int occupied=System.Numerics.BitOperations.PopCount((uint)activeMask);
+            // A mask-free production patch does not allocate a compact atlas;
+            // otherwise the third image exercises the real streaming layout.
+            var variants=new List<(byte[] Data,bool Compact,int PaletteSlot)>
+            {
+                (legacy,false,withPalette?8:-1),
+                (packed,false,withPalette?10:-1)
+            };
+            if(activeMask!=0)
+                variants.Add((Atlas(row,withPalette,true,activeMask,true),true,
+                    withPalette?occupied+2:-1));
+            int[] familySlots=new int[8];int slotIndex=0;
+            for(int family=0;family<8;family++)
+                familySlots[family]=(activeMask&(1<<family))!=0?slotIndex++:-1;
             var viewports=new List<SubViewport>();
             var textures=new List<ImageTexture>();
             var materials=new List<ShaderMaterial>();
             try
             {
-                foreach(var bytes in new[]{legacy,packed})
+                foreach(var variant in variants)
                 {
-                    int width=bytes.Length/(row*4);
-                    using var image=Image.CreateFromData(width,row,false,Image.Format.Rgba8,bytes);
+                    int width=variant.Data.Length/(row*4);
+                    using var image=Image.CreateFromData(width,row,false,Image.Format.Rgba8,variant.Data);
                     var texture=ImageTexture.CreateFromImage(image);
                     var material=new ShaderMaterial{Shader=shader};
                     material.SetShaderParameter("extension_payload",texture);
                     material.SetShaderParameter("extension_active_mask",activeMask);
+                    material.SetShaderParameter("extension_compact_payload",variant.Compact);
+                    material.SetShaderParameter("extension_compact_family_slots",familySlots);
+                    material.SetShaderParameter("extension_compact_weight_start",occupied);
+                    material.SetShaderParameter("test_palette_slot",variant.PaletteSlot);
                     var viewport=new SubViewport
                     {
                         Name="ExtensionAtlasParity",Size=new Vector2I(output,output),
@@ -56,40 +74,52 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
                     viewport.RenderTargetUpdateMode=SubViewport.UpdateMode.Always;
                     viewports.Add(viewport);textures.Add(texture);materials.Add(material);
                 }
-                // Allow both render targets to draw after first-use shader compilation.
                 for(int frame=0;frame<6;frame++)
                     await host.ToSignal(host.GetTree(),SceneTree.SignalName.ProcessFrame);
-                using var first=viewports[0].GetTexture().GetImage();
-                using var second=viewports[1].GetTexture().GetImage();
-                require(first is not null&&!first.IsEmpty()&&second is not null&&!second.IsEmpty(),
-                    "Extension atlas shader returned an empty render target");
-                if(first!.GetFormat()!=Image.Format.Rgba8)first.Convert(Image.Format.Rgba8);
-                if(second!.GetFormat()!=Image.Format.Rgba8)second.Convert(Image.Format.Rgba8);
-                var a=first.GetData();var b=second.GetData();
-                require(a.Length==output*output*4&&b.Length==a.Length,
-                    "Extension atlas shader produced an unexpected readback layout");
+                using var reference=viewports[0].GetTexture().GetImage();
+                require(reference is not null&&!reference.IsEmpty(),
+                    "Extension atlas shader returned an empty reference image");
+                if(reference!.GetFormat()!=Image.Format.Rgba8)
+                    reference.Convert(Image.Format.Rgba8);
+                var expectedPixels=reference.GetData();
+                require(expectedPixels.Length==output*output*4,
+                    "Extension atlas reference has an unexpected pixel layout");
                 int maximum=0,active=0,varied=0;
-                for(int i=0;i<a.Length;i++)
+                for(int i=0;i<expectedPixels.Length;i++)
                 {
-                    maximum=Math.Max(maximum,Math.Abs(a[i]-b[i]));
-                    if(i%4!=3&&a[i]>2)active++;
-                    if(i%4!=3&&a[i]>20&&a[i]<235)varied++;
+                    if(i%4!=3&&expectedPixels[i]>2)active++;
+                    if(i%4!=3&&expectedPixels[i]>20&&expectedPixels[i]<235)varied++;
                 }
-                if(activeMask==0)require(active==0,
-                    "Inactive extension atlas shader emitted nonexistent family weights");
+                for(int variantIndex=1;variantIndex<viewports.Count;variantIndex++)
+                {
+                    using var actual=viewports[variantIndex].GetTexture().GetImage();
+                    require(actual is not null&&!actual.IsEmpty(),
+                        "Extension atlas shader returned an empty compact image");
+                    if(actual!.GetFormat()!=Image.Format.Rgba8)
+                        actual.Convert(Image.Format.Rgba8);
+                    var pixels=actual.GetData();
+                    require(pixels.Length==expectedPixels.Length,
+                        "Extension atlas shader changed the pixel dimensions");
+                    for(int i=0;i<expectedPixels.Length;i++)
+                        maximum=Math.Max(maximum,Math.Abs(expectedPixels[i]-pixels[i]));
+                }
+                if(activeMask==0&&!withPalette)require(active==0,
+                    "Inactive extension atlas emitted nonexistent family controls");
                 else require(active>output&&varied>output,
-                    "Extension atlas shader did not produce varying weight channels");
+                    "Extension atlas parity did not render varying biome controls");
                 require(maximum<=1,
-                    "Packed extension atlas changes GPU-filtered weights: maximum RGBA8 error "+maximum);
+                    "Compact extension atlas changes GPU-filtered weights or material controls: RGBA8 delta "+maximum);
                 cases.Add(new D
                 {
                     ["badlands_palette"]=withPalette,
                     ["active_family_mask"]=activeMask,
                     ["legacy_atlas_strips"]=withPalette?9:8,
                     ["packed_atlas_strips"]=withPalette?11:10,
+                    ["compact_atlas_strips"]=activeMask==0?0:
+                        occupied+2+(withPalette?1:0),
                     ["pixels_checked"]=output*output,
                     ["maximum_byte_difference"]=maximum,
-                    ["nonzero_weight_channels"]=active
+                    ["nonzero_channels"]=active
                 });
             }
             finally
@@ -108,22 +138,33 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         };
     }
 
-    private static byte[] Atlas(int rows,bool palette,bool packed,int activeMask)
+    private static byte[] Atlas(int rows,bool palette,bool packed,int activeMask,bool compact)
     {
-        int strips=(packed?10:8)+(palette?1:0);
+        int occupied=System.Numerics.BitOperations.PopCount((uint)activeMask);
+        int strips=(compact?occupied+2:(packed?10:8))+(palette?1:0);
         var bytes=new byte[rows*rows*strips*4];
         for(int z=0;z<rows;z++)
         for(int x=0;x<rows;x++)
         {
+            int rank=0;
             for(int family=0;family<8;family++)
             {
-                byte weight=(activeMask&(1<<family))!=0?
+                bool present=(activeMask&(1<<family))!=0;
+                byte weight=present?
                     (byte)(8+(family*23+x*11+z*17)%230):(byte)0;
-                int at=(z*rows*strips+family*rows+x)*4;
-                bytes[at]=weight;bytes[at+1]=(byte)(weight/2);
-                bytes[at+2]=(byte)(weight/3);bytes[at+3]=(byte)(weight/4);
+                if(!compact||present)
+                {
+                    int slot=compact?rank:family;
+                    int at=(z*rows*strips+slot*rows+x)*4;
+                    bytes[at]=weight;bytes[at+1]=(byte)(weight/2);
+                    bytes[at+2]=(byte)(weight/3);bytes[at+3]=(byte)(weight/4);
+                }
                 if(packed)
-                    bytes[(z*rows*strips+(8+family/4)*rows+x)*4+family%4]=weight;
+                {
+                    int weightStrip=(compact?occupied:8)+family/4;
+                    bytes[(z*rows*strips+weightStrip*rows+x)*4+family%4]=weight;
+                }
+                if(present)rank++;
             }
             if(palette)
             {

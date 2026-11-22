@@ -30,6 +30,15 @@ public partial class ChunkTerrain
         if(bytes.Length>0)
         {
             material=(ShaderMaterial)material.Duplicate();int rows=result["extension_rows"].AsInt32();material.SetShaderParameter("extension_payload",Texture(bytes.Length/(rows*4),rows,Image.Format.Rgba8,bytes));material.SetShaderParameter("extension_payload_enabled",true);material.SetShaderParameter("extension_active_mask",result["extension_mask"]);
+            // Canonical ring products use compact RGBA8 family controls.
+            // GDScript and legacy non-ring payloads remain fixed-format.
+            if(gridData is not null&&gridData.ExtensionMask!=0)
+            {
+                var layout=TerrainExtensionAtlasLayout.FromMask(gridData.ExtensionMask);
+                material.SetShaderParameter("extension_compact_payload",true);
+                material.SetShaderParameter("extension_compact_family_slots",layout.FamilySlots);
+                material.SetShaderParameter("extension_compact_weight_start",layout.FamilyCount);
+            }
         }
         if(result["badlands_palette_slot"].AsInt32()>=0){material.SetShaderParameter("badlands_palette_slot",result["badlands_palette_slot"]);material.SetShaderParameter("badlands_palette_enabled",true);}
         bytes=result["alien_flow"].AsByteArray();

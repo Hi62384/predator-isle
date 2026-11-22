@@ -64,28 +64,43 @@ internal static class TerrainGpuAllBiomeChecks
                 require(rows*rows==count&&page.Bands is >=3 and <=7&&
                     page.Bytes.Length==count*page.Bands*4*sizeof(float),
                     "GPU "+biome+" compact payload dimensions or byte count changed");
-                // Extension control bytes retain their original eight strips.
-                // Two packed weight strips must match every family at every
-                // atlas coordinate, including zero and mixed ownership.
+                // The worker only allocates original control strips for
+                // extension families whose quantized weight is nonzero.
+                // Two RGBA8 weight banks remain at the end. Verify every
+                // original present family's weight against the packed copy,
+                // including high family IDs and mixed ownership.
                 if(product.ExtensionMask!=0)
                 {
+                    int activeCount=System.Numerics.BitOperations.PopCount((uint)product.ExtensionMask);
                     require(product.ExtensionRows>0,"GPU "+biome+" active extension lacks atlas rows");
                     int width=product.ExtensionData.Length/(product.ExtensionRows*4),
                         stripCount=width/product.ExtensionRows;
-                    require(stripCount==10||stripCount==11,
-                        "GPU "+biome+" extension atlas is missing packed weights");
-                    require(product.BadlandsSlot==(stripCount==11?10:-1),
-                        "GPU "+biome+" badlands palette overlaps packed weights");
+                    require(stripCount==activeCount+2+(product.BadlandsSlot>=0?1:0),
+                        "GPU "+biome+" uploaded unused extension control strips");
+                    require(product.BadlandsSlot==(stripCount==activeCount+3?activeCount+2:-1),
+                        "GPU "+biome+" badlands palette collided with packed controls");
                     for(int z=0;z<product.ExtensionRows;z++)
                     for(int x=0;x<product.ExtensionRows;x++)
                     for(int family=0;family<8;family++)
                     {
-                        int original=(z*width+family*product.ExtensionRows+x)*4;
-                        int packed=(z*width+(8+family/4)*product.ExtensionRows+x)*4+family%4;
-                        require(product.ExtensionData[original]==product.ExtensionData[packed],
-                            "GPU "+biome+" extension weight encoding mismatch at "+x+","+z+"/"+family);
+                        int packed=(z*width+(activeCount+family/4)*product.ExtensionRows+x)*4+family%4;
+                        if((product.ExtensionMask&(1<<family))==0)
+                            require(product.ExtensionData[packed]==0,
+                                "GPU "+biome+" absent family has a nonzero packed weight");
+                        else
+                        {
+                            int slot=System.Numerics.BitOperations.PopCount(
+                                (uint)(product.ExtensionMask&((1<<family)-1)));
+                            int original=(z*width+slot*product.ExtensionRows+x)*4;
+                            require(product.ExtensionData[original]==product.ExtensionData[packed],
+                                "GPU "+biome+" compact extension weight differs at "+x+","+z+"/"+family);
+                        }
                     }
                 }
+                else if(product.BadlandsSlot==0)
+                    require(product.ExtensionRows>0 &&
+                        product.ExtensionData.Length==product.ExtensionRows*product.ExtensionRows*4,
+                        "GPU "+biome+" palette-only atlas includes unused family strips");
                 var surface=product.AuthoritativeGround[(int)Mesh.ArrayType.Vertex].AsVector3Array();
                 require(surface.Length==count,"GPU "+biome+" mode changed authoritative near-collision grid");
                 var shared=templates.Template(product.Topology);
@@ -163,7 +178,11 @@ internal static class TerrainGpuAllBiomeChecks
                     ["gpu_control_bands"]=page.Bands,
                     ["gpu_control_mask"]=page.ControlMask,
                     ["gpu_uploaded_bytes"]=page.Bytes.Length,
-                    ["gpu_uncompressed_bytes"]=count*7*16
+                    ["gpu_uncompressed_bytes"]=count*7*16,
+                    ["extension_atlas_bytes"]=product.ExtensionData.Length,
+                    ["extension_legacy_packed_bytes"]=product.ExtensionMask==0?0:
+                        product.ExtensionRows*product.ExtensionRows*
+                            (10+(product.BadlandsSlot>=0?1:0))*4
                 });
                 require(ReferenceEquals(templates.Template(product.Topology),shared),
                     "GPU "+biome+" shared topology changed between repeated requests");

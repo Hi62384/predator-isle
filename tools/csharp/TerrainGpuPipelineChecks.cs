@@ -14,6 +14,25 @@ internal static class TerrainGpuPipelineChecks
     internal static Godot.Collections.Dictionary Measurements { get; private set; } = new();
     internal static void Run(Node host, Action<bool, string> require)
     {
+        // Worker-side compact strips and main-thread shader uniforms must
+        // share one mapping for every possible eight-family ownership mask.
+        for(int mask=0;mask<256;mask++)
+        {
+            var layout=TerrainExtensionAtlasLayout.FromMask(mask);
+            int families=System.Numerics.BitOperations.PopCount((uint)mask);
+            require(layout.Mask==mask&&layout.FamilyCount==families&&
+                layout.ExtensionStrips==(mask==0?0:families+2)&&
+                layout.PaletteSlot==(mask==0?0:families+2),
+                "Compact extension atlas dimensions changed for mask "+mask);
+            for(int family=0;family<8;family++)
+            {
+                int expected=(mask&(1<<family))==0?-1:
+                    System.Numerics.BitOperations.PopCount((uint)(mask&((1<<family)-1)));
+                require(layout.FamilySlots[family]==expected&&
+                    layout.PackedWeightSlot(family)==families+family/4,
+                    "Compact extension atlas slots diverged from the canonical family mask");
+            }
+        }
         // The optional shader must use the same numerical field implementation
         // as the fragment shader. The stage-specific encoding appears afterward.
         string fragment=Godot.FileAccess.GetFileAsString("res://shaders/grassland_gpu.gdshader");
