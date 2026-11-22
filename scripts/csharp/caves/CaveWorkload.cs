@@ -256,7 +256,7 @@ public partial class CaveWorkload : RefCounted
         if (!use_bundle(bundle)) return Failure("Invalid portal bundle");
         var extraction = owned_columns.Count == 0 ? columns : owned_columns;
         foreach (var column in extraction.Keys) if (!columns.ContainsKey(column)) return Failure("Owned column outside complete surface mask");
-        using var context = new CaveSurfaceContext(); if (!context.configure(parents,Height)) return Failure("Invalid immutable surface snapshot");
+        using var context = new CaveSurfaceContext { CompactGpuPayload = true }; if (!context.configure(parents,Height)) return Failure("Invalid immutable surface snapshot");
         field.Set("top_height",new Callable(context,"height_at")); field.Set("include_surface_air",true); field.Set("opening_rock_cover",0.0);
         // Every exit releases the snapshot callable; build() restores ordinary underground extraction settings.
         try

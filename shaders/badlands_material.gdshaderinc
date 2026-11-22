@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Existing distinct photographed sediment/rock PBR sources, no generated bitmap.
 uniform float badlands_strata_metres=84.0;
 uniform float badlands_thickness_variation=.16;
@@ -60,9 +61,21 @@ vec3 badlands_working_color(vec3 srgb){
 }
 void badlands_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,out vec4 s,out vec3 t){
  float k=field(world_uv*.09+vec2(19.3,67.1))*8.0,index=floor(k),blend=smoothstep(.1,.9,fract(k));
- vec2 a=uv+sin(vec2(3,7)*index)*19.0,b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
- s=mix(badlands_texel(id,a,dx,dy),badlands_texel(id,b,dx,dy),blend);t=vec3(0,0,1);
- if(fine>.001){t=normalize(mix(unpack_normal(badlands_normal_texel(id,a,dx,dy)),unpack_normal(badlands_normal_texel(id,b,dx,dy)),blend));t.xy/=max(t.z,.35);}
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*index)*19.0;
+  first=badlands_texel(id,a,dx,dy);
+  if(fine>.001)first_normal=unpack_normal(badlands_normal_texel(id,a,dx,dy));
+ }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=badlands_texel(id,b,dx,dy);
+  if(fine>.001)second_normal=unpack_normal(badlands_normal_texel(id,b,dx,dy));
+ }
+ s=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
 void badlands_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
  metres=max(round(metres*4.0)*.25,.25);int period=int(round(metres*4.0));

@@ -1,5 +1,6 @@
 shader_type spatial;
 render_mode diffuse_burley, specular_schlick_ggx;
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 uniform sampler2DArray palette_color : source_color, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2DArray palette_normal : hint_normal, filter_linear_mipmap_anisotropic, repeat_enable;
 uniform sampler2DArray cliff_ambient_normals : filter_linear_mipmap_anisotropic, repeat_enable;
@@ -729,7 +730,7 @@ if(.001<jungle_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec
   // Keep mip-filtered ground albedo at medium/far range. Previously an early
   // footprint cutoff replaced it with a flat color, exposing the mask grid.
   // This costs one planar color fetch, not distant normal/triplanar samples.
-  if((id==0 || id==4 || id==5) && ground_only>0.99 && debug_view!=18 && debug_view!=20) {
+  if((id==0 || id==4 || id==5) && ground_only>0.99 && debug_view!=18 && debug_view!=20 && (!terrain_material_sample_pruning || micro<1.0)) {
    vec4 ground_color=textureGrad(palette_color,vec3(world_position.x/metres,-world_position.z/metres,float(id)),vec2(position_dx.x,-position_dx.z)/metres,vec2(position_dy.x,-position_dy.z)/metres);
    surface=mix(ground_color,surface,micro);
   }

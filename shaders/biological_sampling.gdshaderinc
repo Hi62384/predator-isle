@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Shared tissue projection for terrain and attached organic shells. Callers
 // provide the same absolute position, local position and chunk origin so that
 // a structure does not restart or change the texture at its buried margin.
@@ -12,9 +13,19 @@ vec3 biological_lookup(int layer,vec2 uv,vec2 dx,vec2 dy){
 }
 vec3 biological_projected(int layer,vec2 uv,vec2 dx,vec2 dy,vec2 reference){
  float k=field(reference/(layer==0?1.7:7.0))*6.0,index=floor(k),blend=smoothstep(.15,.85,fract(k));
- int ra=layer==0?int(index)%4:0,rb=layer==0?int(index+1.0)%4:0;
- vec2 a=biological_quarter_turn(uv,ra)+sin(vec2(3,7)*index)*19.0,b=biological_quarter_turn(uv,rb)+sin(vec2(3,7)*(index+1.0))*19.0;
- return mix(biological_lookup(layer,a,biological_quarter_turn(dx,ra),biological_quarter_turn(dy,ra)),biological_lookup(layer,b,biological_quarter_turn(dx,rb),biological_quarter_turn(dy,rb)),blend);
+ // Exact endpoints omit the other scan, quarter turn and offset calculation.
+ vec3 first=vec3(0),second=vec3(0);
+ if(terrain_sample_first(blend)){
+  int ra=layer==0?int(index)%4:0;
+  vec2 a=biological_quarter_turn(uv,ra)+sin(vec2(3,7)*index)*19.0;
+  first=biological_lookup(layer,a,biological_quarter_turn(dx,ra),biological_quarter_turn(dy,ra));
+ }
+ if(terrain_sample_second(blend)){
+  int rb=layer==0?int(index+1.0)%4:0;
+  vec2 b=biological_quarter_turn(uv,rb)+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=biological_lookup(layer,b,biological_quarter_turn(dx,rb),biological_quarter_turn(dy,rb));
+ }
+ return mix(first,second,blend);
 }
 vec3 biological_sample(int layer,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n){
  // Terrain and attached shells share integer chunk origins.30m is six full

@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Texture-led CC0 AmbientCG Snow005 / Snow006 / Snow014 / Ice004.
 // Geography masks are procedural; cracks, grain and wind detail come from maps.
 uniform sampler2DArray snow_colors:source_color,filter_linear_mipmap_anisotropic,repeat_enable;
@@ -37,15 +38,21 @@ void snow_projected(int id,vec2 uv,vec2 dx,vec2 dy,float fine,out vec4 surface,o
  // medium range too. This mask selects scan samples; it creates no surface detail.
  float k=field(uv*.23+vec2(39.7,81.3))*8.0;
  float index=floor(k),blend=smoothstep(.1,.9,fract(k));
- vec2 a=uv+sin(vec2(3.0,7.0)*index)*19.0;
- vec2 b=uv+sin(vec2(3.0,7.0)*(index+1.0))*19.0;
- surface=mix(textureGrad(snow_colors,vec3(a,float(id)),dx,dy),textureGrad(snow_colors,vec3(b,float(id)),dx,dy),blend);
- t=vec3(0,0,1);
- if(fine>.001){
-  vec3 one=unpack_normal(textureGrad(snow_normals,vec3(a,float(id)),dx,dy).rg);
-  vec3 other=unpack_normal(textureGrad(snow_normals,vec3(b,float(id)),dx,dy).rg);
-  t=normalize(mix(one,other,blend));t.xy/=max(t.z,.3);
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*index)*19.0;
+  first=textureGrad(snow_colors,vec3(a,float(id)),dx,dy);
+  if(fine>.001)first_normal=unpack_normal(textureGrad(snow_normals,vec3(a,float(id)),dx,dy).rg);
  }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=textureGrad(snow_colors,vec3(b,float(id)),dx,dy);
+  if(fine>.001)second_normal=unpack_normal(textureGrad(snow_normals,vec3(b,float(id)),dx,dy).rg);
+ }
+ surface=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.3);}
 }
 void snow_sample(int id,vec3 p,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
  surface=vec4(0);gradient=vec3(0);

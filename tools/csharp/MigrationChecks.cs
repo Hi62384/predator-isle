@@ -21,8 +21,8 @@ public partial class MigrationChecks : Node
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"blob-only")){_mode="blob";BlobRuntimeChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# blob runtime checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"rings-only")){_mode="rings";TerrainRingChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# ring checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"terrain-performance-only")){_mode="terrain-performance";TerrainGenerationPerformanceChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGenerationPerformanceChecks.Measurements);GD.Print($"C# terrain generation performance checks passed: {_checks}");await Finish();return;}
-            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"sampling-only")){_mode="sampling";TerrainSamplingChecks.Run(Require);TerrainFeatureOptimizationChecks.Run(Require);TerrainTrailBoundsChecks.Run(Require);
-                var measurements=TerrainSamplingBenchmark.Run();MigrationEvidence.Write(_mode,_checks,true,measurements);GD.Print($"C# terrain sampling checks passed: {_checks}");await Finish();return;}
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"sampling-only")){_mode="sampling";TerrainSamplingChecks.Run(Require);TerrainFeatureOptimizationChecks.Run(Require);TerrainTrailBoundsChecks.Run(Require);TerrainHeightFilterChecks.Run(Require);
+                var measurements=TerrainSamplingBenchmark.Run();measurements["height_filter"]=TerrainHeightFilterChecks.Measurements;MigrationEvidence.Write(_mode,_checks,true,measurements);GD.Print($"C# terrain sampling checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"sampling-benchmark-only")){_mode="sampling-benchmark";MigrationEvidence.Write(_mode,_checks,true,TerrainSamplingBenchmark.Run());GD.Print("C# terrain sampling benchmark checks passed");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-vertex-only"))
             {
@@ -43,6 +43,29 @@ public partial class MigrationChecks : Node
                 results["trail_bounds"]=TerrainGpuTrailRenderedChecks.Measurements;
                 MigrationEvidence.Write(_mode,_checks,true,results);
                 GD.Print($"C# GPU extension atlas rendered parity checks passed: {_checks}");
+                await Finish();return;
+            }
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-materials-only"))
+            {
+                _mode="gpu-materials";
+                await TerrainGpuMaterialSamplingChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true,TerrainGpuMaterialSamplingChecks.Measurements);
+                GD.Print($"C# all-biome GPU material checks passed: {_checks}");
+                await Finish();return;
+            }
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-caves-only"))
+            {
+                _mode="gpu-caves";
+                await CaveGpuPayloadRenderedChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true,CaveGpuPayloadRenderedChecks.Measurements);
+                GD.Print($"C# GPU cave payload checks passed: {_checks}");
+                await Finish();return;
+            }
+            if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"cave-payload-only"))
+            {
+                _mode="cave-payload";CaveGpuPayloadChecks.Run(Require);
+                MigrationEvidence.Write(_mode,_checks,true,CaveGpuPayloadChecks.Measurements);
+                GD.Print($"C# compact cave payload checks passed: {_checks}");
                 await Finish();return;
             }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-sampler-only")){_mode="gpu-sampler";await TerrainGpuSamplerChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGpuSamplerChecks.Measurements);GD.Print($"C# GPU terrain sampler checks passed: {_checks}");await Finish();return;}

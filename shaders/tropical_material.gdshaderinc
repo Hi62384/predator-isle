@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Dedicated open-tropical palette. Existing CC0 PBR arrays are shared, not duplicated.
 uniform float tropical_lush=.8;
 uniform float tropical_red_soil=.65;
@@ -32,9 +33,21 @@ vec4 tropical_average(int id){
 }
 void tropical_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,out vec4 s,out vec3 t){
  float k=field(world_uv*.09+vec2(19.3,67.1))*8.0,index=floor(k),blend=smoothstep(.1,.9,fract(k));
- vec2 a=uv+sin(vec2(3,7)*index)*19.0,b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
- s=mix(tropical_texel(id,a,dx,dy),tropical_texel(id,b,dx,dy),blend);t=vec3(0,0,1);
- if(fine>.001){t=normalize(mix(unpack_normal(tropical_normal_texel(id,a,dx,dy)),unpack_normal(tropical_normal_texel(id,b,dx,dy)),blend));t.xy/=max(t.z,.35);}
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*index)*19.0;
+  first=tropical_texel(id,a,dx,dy);
+  if(fine>.001)first_normal=unpack_normal(tropical_normal_texel(id,a,dx,dy));
+ }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=tropical_texel(id,b,dx,dy);
+  if(fine>.001)second_normal=unpack_normal(tropical_normal_texel(id,b,dx,dy));
+ }
+ s=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
 void tropical_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
  metres=max(round(metres*4.0)*.25,.25);int period=int(round(metres*4.0));

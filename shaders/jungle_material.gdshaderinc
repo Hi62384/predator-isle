@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Seven shared CC0 scans. Noise selects environmental mixtures, never surface detail.
 uniform sampler2DArray jungle_colors:source_color,filter_linear_mipmap_anisotropic,repeat_enable;
 uniform sampler2DArray jungle_normals:hint_normal,filter_linear_mipmap_anisotropic,repeat_enable;
@@ -20,10 +21,21 @@ uniform float jungle_clearing=.12;
 void jungle_projected(int id,vec2 uv,vec2 dx,vec2 dy,float fine,out vec4 surface,out vec3 t){
  float k=field(uv*.19+vec2(63.7,11.3))*8.0;
  float index=floor(k),blend=smoothstep(.1,.9,fract(k));
- vec2 a=uv+sin(vec2(3,7)*index)*19.0,b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
- surface=mix(textureGrad(jungle_colors,vec3(a,float(id)),dx,dy),textureGrad(jungle_colors,vec3(b,float(id)),dx,dy),blend);
- t=vec3(0,0,1);
- if(fine>.001){t=normalize(mix(unpack_normal(textureGrad(jungle_normals,vec3(a,float(id)),dx,dy).rg),unpack_normal(textureGrad(jungle_normals,vec3(b,float(id)),dx,dy).rg),blend));t.xy/=max(t.z,.35);}
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*index)*19.0;
+  first=textureGrad(jungle_colors,vec3(a,float(id)),dx,dy);
+  if(fine>.001)first_normal=unpack_normal(textureGrad(jungle_normals,vec3(a,float(id)),dx,dy).rg);
+ }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=textureGrad(jungle_colors,vec3(b,float(id)),dx,dy);
+  if(fine>.001)second_normal=unpack_normal(textureGrad(jungle_normals,vec3(b,float(id)),dx,dy).rg);
+ }
+ surface=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
 void jungle_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
  vec3 p=world_position/max(metres,.1);dx/=max(metres,.1);dy/=max(metres,.1);
@@ -60,7 +72,7 @@ void shade_jungle(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 col
   color=mix(color,s.rgb,rock);rough=mix(rough,s.a,rock);gradient=mix(gradient,g*jungle_rock_normal,rock);
  }
  float ground_moss=smoothstep(.7,.94,wet)*jungle_moss*(1.0-mud)*(1.0-rock)*.3;
- if(ground_moss>.001){vec4 s;vec3 g;jungle_sample(6,jungle_ground_metres,dx,dy,projection,n,fine,s,g);color=mix(color,s.rgb,ground_moss);gradient=mix(gradient,g*jungle_normal_strength,ground_moss);rough=mix(rough,s.a,ground_moss);}
+ if(ground_moss>.001){vec4 s=cover;vec3 g=cover_g;if(!terrain_material_sample_pruning)jungle_sample(6,jungle_ground_metres,dx,dy,projection,n,fine,s,g);color=mix(color,s.rgb,ground_moss);gradient=mix(gradient,g*jungle_normal_strength,ground_moss);rough=mix(rough,s.a,ground_moss);}
  color*=jungle_albedo_gain*mix(1.0,.88,wet*.6)*(1.0+(macro-.5)*jungle_macro);
  rough=clamp(rough,.45,.98);gradient-=n*dot(n,gradient);
  if(debug_view==7 || diagnostic_surface==2)gradient=vec3(0);

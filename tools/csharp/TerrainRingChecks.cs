@@ -12,6 +12,7 @@ internal static class TerrainRingChecks
     internal static void Run(Action<bool,string> require)
     {
         TerrainSharedSampleChecks.Run(require);
+        TerrainRingWaterChecks.Run(require);
         // In-flight and cancelled keys must never prevent later runnable work.
         var pending=new List<int>{1,2,3,4};var wanted=new HashSet<int>{1,2,3};var busy=new HashSet<int>{1,3};
         require(TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out int dequeuedKey)&&dequeuedKey==2&&
@@ -122,12 +123,15 @@ internal static class TerrainRingChecks
             foreach(var data in source)
             {
                 var page=TerrainGpuGridPage.Create(data.Arrays,data.Topology.Axis.Length);var points=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
-                require(page.Bytes.Length==points.Length*112,"GPU page size differs from its declared layout");
+                require(page.Bytes.Length==points.Length*page.Bands*16&&
+                    page.Bands==page.BaseBands+System.Numerics.BitOperations.PopCount((uint)page.ControlMask),
+                    "GPU page size differs from its declared compact layout");
                 for(int band=0;band<4;band++)
                 {
                     var controls=data.Arrays[(int)Mesh.ArrayType.Custom0+band].AsFloat32Array();
+                    int offset=TerrainGpuGridPage.ControlOffset(page.ControlMask,band,page.HasConstantColor);
                     for(int i=0;i<Math.Min(controls.Length,12);i++)
-                        require(BitConverter.ToSingle(page.Bytes,((band+3)*points.Length*4+i)*sizeof(float))==controls[i],
+                        require((offset<0?0:BitConverter.ToSingle(page.Bytes,(offset*points.Length*4+i)*sizeof(float)))==controls[i],
                             "Direct GPU upload changed a terrain material control");
                 }
                 for(int i=0;i<points.Length;i++)

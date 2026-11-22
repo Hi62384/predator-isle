@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Four photographed CC0 sand surfaces, sampled offline and shared by all leaves.
 uniform sampler2DArray beach_colors:source_color,filter_linear_mipmap_anisotropic,repeat_enable;
 uniform sampler2DArray beach_normals:hint_normal,filter_linear_mipmap_anisotropic,repeat_enable;
@@ -22,10 +23,21 @@ float beach_wet(){
 void beach_plane(int id,vec2 uv,vec2 wp,vec2 dx,vec2 dy,float fine,out vec4 s,out vec3 t){
  float index=field(wp*.08+vec2(53,91))*8.0;
  float cell=floor(index),blend=smoothstep(.1,.9,fract(index));
- vec2 a=uv+sin(vec2(3,7)*cell)*19.0,b=uv+sin(vec2(3,7)*(cell+1.0))*19.0;
- s=mix(textureGrad(beach_colors,vec3(a,float(id)),dx,dy),textureGrad(beach_colors,vec3(b,float(id)),dx,dy),blend);
- t=vec3(0,0,1);
- if(fine>.001){t=normalize(mix(unpack_normal(textureGrad(beach_normals,vec3(a,float(id)),dx,dy).rg),unpack_normal(textureGrad(beach_normals,vec3(b,float(id)),dx,dy).rg),blend));t.xy/=max(t.z,.4);}
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*cell)*19.0;
+  first=textureGrad(beach_colors,vec3(a,float(id)),dx,dy);
+  if(fine>.001)first_normal=unpack_normal(textureGrad(beach_normals,vec3(a,float(id)),dx,dy).rg);
+ }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(cell+1.0))*19.0;
+  second=textureGrad(beach_colors,vec3(b,float(id)),dx,dy);
+  if(fine>.001)second_normal=unpack_normal(textureGrad(beach_normals,vec3(b,float(id)),dx,dy).rg);
+ }
+ s=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.4);}
 }
 void beach_sample(int id,float metres,float angle,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 s,out vec3 g){
  metres=max(round(metres*4.0)*.25,.25);

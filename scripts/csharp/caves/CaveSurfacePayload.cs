@@ -91,13 +91,22 @@ public partial class CaveSurfacePayload : RefCounted
         if (cursor != 63) throw new InvalidOperationException("Unexpected decoded terrain surface layout");
         for (int i = 0; i < 4; i++) result[cursor++] = color[i]; return result;
     }
-    public D triangle(Vector2 local, double span, int resolution)
+    internal readonly record struct Triangle(int A, int B, int C, Vector3 Weights)
     {
-        if (!local.IsFinite() || !double.IsFinite(span) || span <= 0 || resolution < 1 || local.X < 0 || local.Y < 0 || local.X > span || local.Y > span) return new();
-        var q = local / (float)span * resolution; int x = Math.Min((int)Math.Floor(q.X), resolution - 1), z = Math.Min((int)Math.Floor(q.Y), resolution - 1); double fx = (double)q.X - x, fz = (double)q.Y - z; int a = z * (resolution + 1) + x;
-        if (fx + fz <= 1) return new D { ["indices"] = new[] { a, a + 1, a + resolution + 1 }, ["weights"] = new Vector3((float)(1 - fx - fz), (float)fx, (float)fz) };
-        return new D { ["indices"] = new[] { a + 1, a + resolution + 2, a + resolution + 1 }, ["weights"] = new Vector3((float)(1 - fz), (float)(fx + fz - 1), (float)(1 - fx)) };
+        internal int Index(int corner) => corner switch { 0 => A, 1 => B, _ => C };
     }
+    internal static bool TryTriangle(Vector2 local, double span, int resolution, out Triangle result)
+    {
+        result = default;
+        if (!local.IsFinite() || !double.IsFinite(span) || span <= 0 || resolution < 1 || local.X < 0 || local.Y < 0 || local.X > span || local.Y > span) return false;
+        var q = local / (float)span * resolution; int x = Math.Min((int)Math.Floor(q.X), resolution - 1), z = Math.Min((int)Math.Floor(q.Y), resolution - 1); double fx = (double)q.X - x, fz = (double)q.Y - z; int a = z * (resolution + 1) + x;
+        result = fx + fz <= 1
+            ? new Triangle(a, a + 1, a + resolution + 1, new Vector3((float)(1 - fx - fz), (float)fx, (float)fz))
+            : new Triangle(a + 1, a + resolution + 2, a + resolution + 1, new Vector3((float)(1 - fz), (float)(fx + fz - 1), (float)(1 - fx)));
+        return true;
+    }
+    public D triangle(Vector2 local, double span, int resolution) => TryTriangle(local, span, resolution, out var result)
+        ? new D { ["indices"] = new[] { result.A, result.B, result.C }, ["weights"] = result.Weights } : new();
     public float[] interpolate(A decoded, D selection)
     {
         if (selection.Count == 0) return System.Array.Empty<float>();
@@ -115,5 +124,33 @@ public partial class CaveSurfacePayload : RefCounted
         int rows = (int)Math.Ceiling((double)values.Length / (Width * 4)), size = Width * rows * 16; if (size > MaxBytes) return new();
         var bytes = new byte[size]; MemoryMarshal.AsBytes(values.AsSpan()).CopyTo(bytes);
         return new D { ["width"] = Width, ["height"] = rows, ["bytes"] = bytes, ["vertices"] = values.Length / Stride, ["semantic_components"] = 67, ["texels_per_vertex"] = Texels };
+    }
+    /// <summary>Losslessly omit RGBA lanes that are +0 for every vertex in this entrance group.</summary>
+    internal D CompactAtlas(float[] values)
+    {
+        // Preserve the canonical per-group budget, even when a sparse payload
+        // could fit after compression. Collision/geometry limits do not change.
+        if (values.Length == 0 || values.Length % Stride != 0 || (long)values.Length * 4 > MaxBytes) return new();
+        int vertices = values.Length / Stride, mask = 0, packedTexels = 0;
+        for (int texel = 0; texel < Texels; texel++)
+        {
+            bool occupied = false;
+            for (int vertex = 0; vertex < vertices && !occupied; vertex++)
+                for (int lane = 0; lane < 4; lane++)
+                    if (BitConverter.SingleToInt32Bits(values[vertex * Stride + texel * 4 + lane]) != 0) { occupied = true; break; }
+            if (occupied) { mask |= 1 << texel; packedTexels++; }
+        }
+        int rows = Math.Max(1, (int)(((long)vertices * packedTexels + Width - 1) / Width));
+        int size = checked(Width * rows * 16); if (size > MaxBytes) return new();
+        var bytes = new byte[size]; var output = MemoryMarshal.Cast<byte, float>(bytes.AsSpan());
+        for (int vertex = 0, cursor = 0; vertex < vertices; vertex++)
+            for (int texel = 0; texel < Texels; texel++)
+                if ((mask & (1 << texel)) != 0)
+                {
+                    values.AsSpan(vertex * Stride + texel * 4, 4).CopyTo(output.Slice(cursor, 4));
+                    cursor += 4;
+                }
+        return new D { ["width"] = Width, ["height"] = rows, ["bytes"] = bytes, ["vertices"] = vertices,
+            ["semantic_components"] = 67, ["texels_per_vertex"] = packedTexels, ["texel_mask"] = mask };
     }
 }

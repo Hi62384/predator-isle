@@ -77,7 +77,7 @@ public partial class CaveSurfaceRenderer : RefCounted
     {
         string digest = Hash(original.Code) + (hive_entry ? "/hive/" + Hash(_surfaceShader.Extensions.Code) : "") + (common_projection ? "/shared_projection" : "");
         if (_shaders.TryGetValue(digest, out var cached)) return cached;
-        string code = _surfaceShader.code(original.Code, true, true, hive_entry, common_projection); if (code.Length == 0) return null;
+        string code = _surfaceShader.CompactCode(original.Code, true, true, hive_entry, common_projection); if (code.Length == 0) return null;
         var result = new Shader { Code = code }; var names = new HashSet<string>(); foreach (var uniform in result.GetShaderUniformList()) names.Add(uniform.AsGodotDictionary()["name"].AsString());
         if (!names.Contains("cave_surface_payload") || !names.Contains(hive_entry ? "cave_hive_entry_material" : "cave_entry_colors") || !names.Contains("cave_parent_origin")) return null;
         if (_shaderRing.Count >= 8) _shaders.Remove(_shaderRing.Dequeue()); _shaderRing.Enqueue(digest); _shaders[digest] = result; return result;
@@ -106,6 +106,8 @@ public partial class CaveSurfaceRenderer : RefCounted
                 else
                 { var bank = _palette.paths(style, specialize_insect); material.SetShaderParameter("cave_entry_geology", style); material.SetShaderParameter("cave_entry_colors", GD.Load<Resource>(bank["colors"].AsString())); material.SetShaderParameter("cave_entry_normals", GD.Load<Resource>(bank["normals"].AsString())); material.SetShaderParameter("cave_entry_compact_palette", bank["compact"]); }
                 var atlas = group["atlas"].AsGodotDictionary(); material.SetShaderParameter("cave_surface_payload", ImageTexture.CreateFromImage(Image.CreateFromData(atlas["width"].AsInt32(), atlas["height"].AsInt32(), false, Image.Format.Rgbaf, atlas["bytes"].AsByteArray())));
+                material.SetShaderParameter("cave_surface_texel_mask", Get(atlas, "texel_mask", (1 << CaveSurfacePayload.Texels) - 1));
+                material.SetShaderParameter("cave_surface_texels", Get(atlas, "texels_per_vertex", CaveSurfacePayload.Texels));
             }
             mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, group["arrays"].AsGodotArray()); mesh.SurfaceSetMaterial(mesh.GetSurfaceCount() - 1, material);
         }

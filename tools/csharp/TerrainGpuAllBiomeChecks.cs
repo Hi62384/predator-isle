@@ -61,7 +61,7 @@ internal static class TerrainGpuAllBiomeChecks
                 int count=product.Topology.VertexCount,rows=product.Topology.Axis.Length;
                 var page=TerrainGpuGridPage.Create(control,rows);
                 var floats=MemoryMarshal.Cast<byte,float>(page.Bytes.AsSpan());
-                require(rows*rows==count&&page.Bands is >=3 and <=7&&
+                require(rows*rows==count&&page.Bands is >=2 and <=7&&
                     page.Bytes.Length==count*page.Bands*4*sizeof(float),
                     "GPU "+biome+" compact payload dimensions or byte count changed");
                 // The worker only allocates original control strips for
@@ -118,11 +118,20 @@ internal static class TerrainGpuAllBiomeChecks
                         floats[pixel+1]==control.Normals[i].Y&&
                         floats[pixel+2]==control.Normals[i].Z,
                         "GPU "+biome+" per-vertex normal mismatch at "+i);
-                    require(floats[(2*count+i)*4]==control.Uv[i].X&&
-                        floats[(2*count+i)*4+1]==control.Uv[i].Y&&
-                        floats[(2*count+i)*4+2]==control.Surface[i].X&&
-                        floats[(2*count+i)*4+3]==control.Surface[i].Y,
+                    int uvBand=page.BaseBands-1;
+                    require(floats[(uvBand*count+i)*4]==control.Uv[i].X&&
+                        floats[(uvBand*count+i)*4+1]==control.Uv[i].Y&&
+                        floats[(uvBand*count+i)*4+2]==control.Surface[i].X&&
+                        floats[(uvBand*count+i)*4+3]==control.Surface[i].Y,
                         "GPU "+biome+" material UV mismatch at "+i);
+                    var color=control.Colors[i];
+                    for(int channel=0;channel<4;channel++)
+                    {
+                        float expected=MathF.Round(Math.Clamp(color[channel],0,1)*255)/255;
+                        float actual=page.HasConstantColor?page.ConstantColor[channel]:
+                            floats[(count+i)*4+channel];
+                        require(actual==expected,"GPU "+biome+" quantized ownership mismatch at "+i);
+                    }
                 }
                 int expectedMask=0;
                 for(int band=0;band<4;band++)
@@ -131,7 +140,7 @@ internal static class TerrainGpuAllBiomeChecks
                         {0=>control.C0,1=>control.C1,2=>control.C2,_=>control.C3};
                     require(expected.Length==count*4,
                         "GPU "+biome+" control bank length changed");
-                    int offset=TerrainGpuGridPage.ControlOffset(page.ControlMask,band);
+                    int offset=TerrainGpuGridPage.ControlOffset(page.ControlMask,band,page.HasConstantColor);
                     for(int i=0;i<expected.Length;i++)
                     {
                         if(BitConverter.SingleToInt32Bits(expected[i])!=0)
@@ -146,7 +155,7 @@ internal static class TerrainGpuAllBiomeChecks
                     }
                 }
                 require(page.ControlMask==expectedMask &&
-                    page.Bands==3+System.Numerics.BitOperations.PopCount((uint)expectedMask),
+                    page.Bands==page.BaseBands+System.Numerics.BitOperations.PopCount((uint)expectedMask),
                     "GPU "+biome+" skipped an occupied bank or uploaded empty control strips");
                 if(biome=="grass")
                 {
@@ -155,16 +164,16 @@ internal static class TerrainGpuAllBiomeChecks
                     var allZero=control with{C0=new float[count*4],C1=new float[count*4],
                         C2=new float[count*4],C3=new float[count*4]};
                     var emptyPage=TerrainGpuGridPage.Create(allZero,rows);
-                    require(emptyPage.ControlMask==0&&emptyPage.Bands==3&&
-                        emptyPage.Bytes.Length==count*3*16,
+                    require(emptyPage.ControlMask==0&&emptyPage.Bands==emptyPage.BaseBands&&
+                        emptyPage.Bytes.Length==count*emptyPage.BaseBands*16,
                         "GPU renderer failed to eliminate all-zero control-bank texture memory");
                     // Signed zero must not be optimized away as the shader's
                     // packed negative owner sentinels use the same sign bit.
                     allZero.C3[0]=BitConverter.Int32BitsToSingle(unchecked((int)0x80000000));
                     var signedPage=TerrainGpuGridPage.Create(allZero,rows);
                     var signedFloats=MemoryMarshal.Cast<byte,float>(signedPage.Bytes.AsSpan());
-                    require(signedPage.ControlMask==8&&signedPage.Bands==4&&
-                        BitConverter.SingleToInt32Bits(signedFloats[3*count*4])==
+                    require(signedPage.ControlMask==8&&signedPage.Bands==signedPage.BaseBands+1&&
+                        BitConverter.SingleToInt32Bits(signedFloats[signedPage.BaseBands*count*4])==
                             unchecked((int)0x80000000),
                         "GPU renderer incorrectly removed or rounded an IEEE-754 signed-zero bank");
                 }
@@ -177,6 +186,7 @@ internal static class TerrainGpuAllBiomeChecks
                     ["vertex_count"]=count,
                     ["gpu_control_bands"]=page.Bands,
                     ["gpu_control_mask"]=page.ControlMask,
+                    ["gpu_constant_ownership"]=page.HasConstantColor,
                     ["gpu_uploaded_bytes"]=page.Bytes.Length,
                     ["gpu_uncompressed_bytes"]=count*7*16,
                     ["extension_atlas_bytes"]=product.ExtensionData.Length,

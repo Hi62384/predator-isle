@@ -77,17 +77,32 @@ public partial class TerrainHeightField : RefCounted
     { publishedQuery = false; last_surface = surface; last_geology = geology; last_water = water; }
     public void configure(RefCounted host)
     {
-        settings = (Resource)host.Get("settings").AsGodotObject(); water_level = host.Get("water_level").AsDouble();
+        if(host is TerrainMeshBuilder builder)
+        {
+            // These are already managed runtime objects. Passing them through
+            // Godot Variant properties adds native handle swaps and temporary
+            // references during every worker reconfiguration.
+            settings=builder.settings;water_level=builder.water_level;
+            _regions=builder._native_regions;_islands=builder._native_islands;_grass=builder._native_grass;
+            _jungle=builder._jungle;_forest=builder._forest;_savanna=builder._savanna;_swamp=builder._swamp;
+            _mountain=builder._mountain;_coast=builder._coast;_tropical=builder._tropical;_badlands=builder._badlands;
+            for(int i=0;i<8;i++)_extras[i]=builder._extras[i].AsGodotObject() as BiomeExtensionSampler;
+            _extrasEnabled=builder._extras_enabled;_coastLimit=builder._coast_limit;
+        }
+        else
+        {
+            settings = (Resource)host.Get("settings").AsGodotObject(); water_level = host.Get("water_level").AsDouble();
+            _regions = (TerrainRegions)host.Get("_native_regions").AsGodotObject(); _islands = (TerrainIslands)host.Get("_native_islands").AsGodotObject(); _grass = (GrasslandField)host.Get("_native_grass").AsGodotObject();
+            _jungle = host.Get("_jungle").AsGodotObject() as JungleSampler; _forest = host.Get("_forest").AsGodotObject() as ForestSampler;
+            _savanna = host.Get("_savanna").AsGodotObject() as SavannaSampler; _swamp = host.Get("_swamp").AsGodotObject() as SwampSampler;
+            _mountain = host.Get("_mountain").AsGodotObject() as MountainSampler; _coast = host.Get("_coast").AsGodotObject() as RockyCoastSampler;
+            _tropical = host.Get("_tropical").AsGodotObject() as TropicalSampler; _badlands = host.Get("_badlands").AsGodotObject() as BadlandsSampler;
+            var extras = host.Get("_extras").AsGodotArray(); for (int i = 0; i < 8; i++) _extras[i] = extras[i].AsGodotObject() as BiomeExtensionSampler;
+            _extrasEnabled = host.Get("_extras_enabled").AsBool(); _coastLimit = host.Get("_coast_limit").AsDouble();
+        }
         _parameters.Capture(settings);
         resourceNumbers.Clear();
         _changes.Configure(settings is TerrainConfiguration native?native.terrain_changes:System.Array.Empty<Vector4>());
-        _regions = (TerrainRegions)host.Get("_native_regions").AsGodotObject(); _islands = (TerrainIslands)host.Get("_native_islands").AsGodotObject(); _grass = (GrasslandField)host.Get("_native_grass").AsGodotObject();
-        _jungle = host.Get("_jungle").AsGodotObject() as JungleSampler; _forest = host.Get("_forest").AsGodotObject() as ForestSampler;
-        _savanna = host.Get("_savanna").AsGodotObject() as SavannaSampler; _swamp = host.Get("_swamp").AsGodotObject() as SwampSampler;
-        _mountain = host.Get("_mountain").AsGodotObject() as MountainSampler; _coast = host.Get("_coast").AsGodotObject() as RockyCoastSampler;
-        _tropical = host.Get("_tropical").AsGodotObject() as TropicalSampler; _badlands = host.Get("_badlands").AsGodotObject() as BadlandsSampler;
-        var extras = host.Get("_extras").AsGodotArray(); for (int i = 0; i < 8; i++) _extras[i] = extras[i].AsGodotObject() as BiomeExtensionSampler;
-        _extrasEnabled = host.Get("_extras_enabled").AsBool(); _coastLimit = host.Get("_coast_limit").AsDouble();
         height_grid_cache.Clear();payloadOrder.Clear();normalHeights.Clear();normalOrder.Clear();savanna_gullies.Clear();normal_height_cache_capacity = 8192;publishedQuery = false;
         last_jungle = 0; last_forest = last_savanna = last_swamp = last_mountain = Neutral;
         last_water = water_level; last_coast = Vector4.Zero; last_tropical = last_badlands = Vector3.Zero;

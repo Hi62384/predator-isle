@@ -15,6 +15,22 @@ public partial class CaveSurfaceShader : RefCounted
         for (int i = 0; i < 17; i++) code.Append($" vec4 surface_p{i}=texelFetch(cave_surface_payload,ivec2((surface_base+{i})%1024,(surface_base+{i})/1024),0);\n");
         return code.ToString();
     }
+    internal static string CompactTexels()
+    {
+        var code = new StringBuilder("\n int surface_base=VERTEX_ID*cave_surface_texels;\n int surface_offset=0;\n");
+        for (int i = 0; i < CaveSurfacePayload.Texels; i++)
+            code.Append($" vec4 surface_p{i}=vec4(0.0);\n if((cave_surface_texel_mask & {1 << i})!=0){{surface_p{i}=texelFetch(cave_surface_payload,ivec2((surface_base+surface_offset)%1024,(surface_base+surface_offset)/1024),0);surface_offset++;}}\n");
+        return code.ToString();
+    }
+    internal const string CompactUniforms = "\nuniform int cave_surface_texel_mask=131071;\nuniform int cave_surface_texels=17;\n";
+    internal string CompactCode(string original, bool parentSpace, bool entryTransition, bool hiveEntry, bool commonProjection)
+    {
+        string result = code(original, parentSpace, entryTransition, hiveEntry, commonProjection);
+        if (result.Length == 0) return result;
+        return result.Replace(load_texels(), CompactTexels(), StringComparison.Ordinal)
+            .Replace("uniform sampler2D cave_surface_payload:filter_nearest,repeat_disable;",
+                "uniform sampler2D cave_surface_payload:filter_nearest,repeat_disable;" + CompactUniforms, StringComparison.Ordinal);
+    }
     public string component(int index) => $"surface_p{index / 4}[{index % 4}]";
     public string uniforms() => uniforms(false, false, false);
     public string uniforms(bool parent_space) => uniforms(parent_space, false, false);

@@ -14,6 +14,10 @@ public static class TerrainGpuSamplerChecks
     public static Godot.Collections.Dictionary Measurements {get;private set;}=new();
     public static async Task Run(Node host,Action<bool,string> require)
     {
+        // Keep the saved graph and every fixture graph natively referenced until
+        // all asynchronous requests and builders have finished. Repeated setup
+        // otherwise lets collection finalize shared cached C# resource handles.
+        using var resources=TerrainGpuPipelineChecks.FixtureResources();
         require(DisplayServer.GetName()!="headless","GPU sampler checks require a rendered Compatibility viewport.");
         var sampler=new TerrainGpuSampler{RequestTimeoutSeconds=120};host.AddChild(sampler);
         require(sampler.Available,"GPU sampler was not available.");
@@ -30,7 +34,7 @@ public static class TerrainGpuSamplerChecks
             foreach(long seed in new long[]{73921,-1789123,2147483711})
             for(int profile=0;profile<2;profile++)
             {
-                using var settings=new TerrainConfiguration();
+                var settings=resources.Retain(new TerrainConfiguration());
                 if(profile==1){settings.grass_field_spacing=2.5;settings.grass_river_frequency=2.25;settings.grass_lake_frequency=1;settings.grass_plateau_frequency=.65;settings.grass_mountain_frequency=.65;settings.grass_mountain_height=750;settings.grass_fractal_strength=18;}
 
                 using var builder=new TerrainMeshBuilder{settings=settings,world_seed=seed};builder._configure_noise();
@@ -65,7 +69,7 @@ public static class TerrainGpuSamplerChecks
             require(maxValueError<=.01,"GPU grassland heights exceeded the 0.01 m parity budget: "+maxValueError);
             require(maxControlError<=.001,"GPU grassland material controls exceeded the 0.001 parity budget: "+maxControlError);
             using var cancelled=new CancellationTokenSource();cancelled.Cancel();
-            using var cancellationSettings=new TerrainConfiguration();using var cancellationBuilder=new TerrainMeshBuilder{settings=cancellationSettings};cancellationBuilder._configure_noise();
+            var cancellationSettings=resources.Retain(new TerrainConfiguration());using var cancellationBuilder=new TerrainMeshBuilder{settings=cancellationSettings};cancellationBuilder._configure_noise();
             require(await sampler.SampleAsync(cancellationBuilder._native_grass,samples,cancelled.Token) is null,"Cancelled GPU request did not fall back.");
             var fieldForChecks=cancellationBuilder._native_grass;
             long beforeReadbacks=sampler.Readbacks;
@@ -73,7 +77,7 @@ public static class TerrainGpuSamplerChecks
                 require(await sampler.SampleAsync(fieldForChecks,[new Vector2(coordinate,0)]) is null,"Coordinates outside the validated range did not fall back.");
             require(await sampler.SampleAsync(fieldForChecks,[new Vector2(float.NaN,0)]) is null,"Non-finite coordinate did not fall back.");
             require(sampler.Readbacks==beforeReadbacks,"Unsupported coordinates dispatched graphics work.");
-            using var fractionalSettings=new TerrainConfiguration{grass_field_spacing=2.3};
+            var fractionalSettings=resources.Retain(new TerrainConfiguration{grass_field_spacing=2.3});
             using var fractionalBuilder=new TerrainMeshBuilder{settings=fractionalSettings};fractionalBuilder._configure_noise();
             require(await sampler.SampleAsync(fractionalBuilder._native_grass,[new Vector2(7.25f,13.5f)]) is null,"Inexact coarse field coordinates did not use the CPU fallback.");
             fieldForChecks.region.NoiseType=FastNoiseLite.NoiseTypeEnum.Perlin;
@@ -136,7 +140,8 @@ public static class TerrainGpuSamplerChecks
             finally{fallback.Shutdown();fallback.Free();}
             return;
         }
-        using var settings=new TerrainConfiguration();
+        using var resources=TerrainGpuPipelineChecks.FixtureResources();
+        var settings=resources.Retain(new TerrainConfiguration());
         using var builder=TerrainGpuPipelineChecks.Builder(settings);
         var positions=new Vector2[1024];
         for(int i=0;i<positions.Length;i++)

@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Mountain-specific source selection; shared scans are not duplicated in new arrays.
 uniform sampler2DArray mountain_colors:source_color,filter_linear_mipmap_anisotropic,repeat_enable;
 uniform sampler2DArray mountain_normals:hint_normal,filter_linear_mipmap_anisotropic,repeat_enable;
@@ -38,10 +39,21 @@ void mountain_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,
  // multi-million-metre saved-world starts, and no chunk-local noise resets.
  float k=field(world_uv*.09+vec2(63.7,11.3))*8.0;
  float index=floor(k),blend=smoothstep(.1,.9,fract(k));
- vec2 a=uv+sin(vec2(3,7)*index)*19.0,b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
- surface=mix(mountain_texel(id,a,dx,dy),mountain_texel(id,b,dx,dy),blend);
- t=vec3(0,0,1);
- if(fine>.001){t=normalize(mix(unpack_normal(mountain_normal_texel(id,a,dx,dy)),unpack_normal(mountain_normal_texel(id,b,dx,dy)),blend));t.xy/=max(t.z,.35);}
+ // Exact endpoints omit their unused scan and offset calculation.
+ vec4 first=vec4(0),second=vec4(0);
+ vec3 first_normal=vec3(0,0,1),second_normal=vec3(0,0,1);
+ if(terrain_sample_first(blend)){
+  vec2 a=uv+sin(vec2(3,7)*index)*19.0;
+  first=mountain_texel(id,a,dx,dy);
+  if(fine>.001)first_normal=unpack_normal(mountain_normal_texel(id,a,dx,dy));
+ }
+ if(terrain_sample_second(blend)){
+  vec2 b=uv+sin(vec2(3,7)*(index+1.0))*19.0;
+  second=mountain_texel(id,b,dx,dy);
+  if(fine>.001)second_normal=unpack_normal(mountain_normal_texel(id,b,dx,dy));
+ }
+ surface=mix(first,second,blend);t=vec3(0,0,1);
+ if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
 void mountain_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
  // Quarter-metre repeats keep the origin remainder exactly representable at

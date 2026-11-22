@@ -2,7 +2,6 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 using A = Godot.Collections.Array;
 using D = Godot.Collections.Dictionary;
 
@@ -13,6 +12,7 @@ public partial class CaveSurfaceContext : RefCounted
     public D parents { get; set; } = new();
     public Callable canonical { get; set; }
     private readonly CaveSurfacePayload _payload = new();
+    internal bool CompactGpuPayload { get; set; }
     private sealed class Parent
     {
         internal required Vector3 Origin; internal required double Span; internal required int Resolution;
@@ -49,9 +49,15 @@ public partial class CaveSurfaceContext : RefCounted
         return selected;
     }
     public D selection(string id, Vector2 point) => _parents.TryGetValue(id, out var parent) ? _payload.triangle(point - new Vector2(parent.Origin.X, parent.Origin.Z), parent.Span, parent.Resolution) : new();
+    private bool TrySelection(string id, Vector2 point, out CaveSurfacePayload.Triangle triangle)
+    {
+        triangle = default;
+        return _parents.TryGetValue(id, out var parent) && CaveSurfacePayload.TryTriangle(
+            point - new Vector2(parent.Origin.X, parent.Origin.Z), parent.Span, parent.Resolution, out triangle);
+    }
     public bool contains_triangle(string id, Vector3[] points, int first, Vector3 origin)
     {
-        for (int corner = 0; corner < 3; corner++) { var point = points[first + corner] + origin; if (selection(id, new Vector2(point.X, point.Z)).Count == 0) return false; } return true;
+        for (int corner = 0; corner < 3; corner++) { var point = points[first + corner] + origin; if (!TrySelection(id, new Vector2(point.X, point.Z), out _)) return false; } return true;
     }
     public string triangle_owner(Vector3[] points, int first, Vector3 origin, string preferred)
     {
@@ -74,17 +80,17 @@ public partial class CaveSurfaceContext : RefCounted
     public double uncached_height(Vector2 point)
     {
         string id = owner_at(point); if (id.Length == 0) return canonical.Call(point.X, point.Y).AsDouble();
-        var parent = _parents[id]; if(parent.CanonicalSurface)return canonical.Call(point.X,point.Y).AsDouble();var chosen = selection(id, point); if (chosen.Count == 0) return double.NaN;
-        var indices = chosen["indices"].AsInt32Array(); var weights = chosen["weights"].AsVector3(); double y = 0;
-        for (int corner = 0; corner < 3; corner++) y += (double)parent.Buffer.Positions[indices[corner]].Y * weights[corner]; return y + parent.Origin.Y;
+        var parent = _parents[id]; if(parent.CanonicalSurface)return canonical.Call(point.X,point.Y).AsDouble();if (!TrySelection(id, point, out var chosen)) return double.NaN;
+        var weights = chosen.Weights; double y = 0;
+        for (int corner = 0; corner < 3; corner++) y += (double)parent.Buffer.Positions[chosen.Index(corner)].Y * weights[corner]; return y + parent.Origin.Y;
     }
     public float[] controls(string id, Vector2 point)
     {
-        var chosen = selection(id, point); if (chosen.Count == 0) return System.Array.Empty<float>();
-        var parent = _parents[id]; var result = new float[CaveSurfacePayload.Stride]; var indices = chosen["indices"].AsInt32Array(); var weights = chosen["weights"].AsVector3();
+        if (!TrySelection(id, point, out var chosen)) return System.Array.Empty<float>();
+        var parent = _parents[id]; var result = new float[CaveSurfacePayload.Stride]; var weights = chosen.Weights;
         for (int corner = 0; corner < 3; corner++)
         {
-            int index = indices[corner];
+            int index = chosen.Index(corner);
             if (!parent.Decoded.TryGetValue(index, out var values))
             {
                 values = _payload.Decode(parent.Buffer, index, parent.Normalize); parent.Decoded[index] = values;
@@ -97,14 +103,23 @@ public partial class CaveSurfaceContext : RefCounted
     }
     public Vector3 normal_at(string id, Vector2 point)
     {
-        var chosen = selection(id, point); if (chosen.Count == 0 || _parents[id].Buffer.Normals.Length == 0) return Vector3.Up;
-        var normals = _parents[id].Buffer.Normals; var indices = chosen["indices"].AsInt32Array(); var weights = chosen["weights"].AsVector3(); var value = Vector3.Zero;
-        for (int corner = 0; corner < 3; corner++) value += normals[indices[corner]] * weights[corner]; return value.Normalized();
+        if (!TrySelection(id, point, out var chosen) || _parents[id].Buffer.Normals.Length == 0) return Vector3.Up;
+        var normals = _parents[id].Buffer.Normals; var weights = chosen.Weights; var value = Vector3.Zero;
+        for (int corner = 0; corner < 3; corner++) value += normals[chosen.Index(corner)] * weights[corner]; return value.Normalized();
+    }
+    // Match the former 80-character hex key bit for bit, including signed zero.
+    // A value-type key avoids allocating a string for every triangle corner.
+    private readonly record struct VertexKey(int X, int Y, int Z, int NX, int NY, int NZ, int R, int G, int B, int A)
+    {
+        internal static VertexKey Create(Vector3 p, Vector3 n, Color c) => new(
+            BitConverter.SingleToInt32Bits(p.X), BitConverter.SingleToInt32Bits(p.Y), BitConverter.SingleToInt32Bits(p.Z),
+            BitConverter.SingleToInt32Bits(n.X), BitConverter.SingleToInt32Bits(n.Y), BitConverter.SingleToInt32Bits(n.Z),
+            BitConverter.SingleToInt32Bits(c.R), BitConverter.SingleToInt32Bits(c.G), BitConverter.SingleToInt32Bits(c.B), BitConverter.SingleToInt32Bits(c.A));
     }
     private sealed class Group
     {
         internal readonly List<Vector3> Vertices = new(), Normals = new(); internal readonly List<Color> Colors = new();
-        internal readonly List<float> Payload = new(); internal readonly List<int> Indices = new(); internal readonly Dictionary<string, int> Lookup = new(StringComparer.Ordinal);
+        internal readonly List<float> Payload = new(); internal readonly List<int> Indices = new(); internal readonly Dictionary<VertexKey, int> Lookup = new();
     }
     public D surfaces(A arrays, Vector3 chunk_origin) => Surfaces(arrays, chunk_origin, false, true);
     public D surfaces_indexed(A arrays, Vector3 chunk_origin) => surfaces_indexed(arrays, chunk_origin, false);
@@ -114,7 +129,6 @@ public partial class CaveSurfaceContext : RefCounted
         if (arrays.Count == 0) return new D { ["valid"] = true, ["groups"] = new D(), ["collision_faces"] = System.Array.Empty<Vector3>() };
         var groups = new Dictionary<string, Group>(StringComparer.Ordinal); var positions = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array(); var normals = arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();
         var colors = arrays[(int)Mesh.ArrayType.Color].VariantType == Variant.Type.Nil ? null : arrays[(int)Mesh.ArrayType.Color].AsColorArray();
-        Span<float> keyBits = stackalloc float[10];
         for (int i = 0; i < positions.Length; i += 3)
         {
             var center = (positions[i] + positions[i + 1] + positions[i + 2]) / 3 + chunkOrigin; double ground = height_at(center.X, center.Z);
@@ -125,8 +139,7 @@ public partial class CaveSurfaceContext : RefCounted
                 var local = positions[i + j]; var n = normals[i + j]; var color = colors == null ? new Color(.38f, .35f, .30f, 1) : colors[i + j];
                 if (indexed)
                 {
-                    keyBits[0] = local.X; keyBits[1] = local.Y; keyBits[2] = local.Z; keyBits[3] = n.X; keyBits[4] = n.Y; keyBits[5] = n.Z; keyBits[6] = color.R; keyBits[7] = color.G; keyBits[8] = color.B; keyBits[9] = color.A;
-                    string key = Convert.ToHexString(MemoryMarshal.AsBytes(keyBits));
+                    var key = VertexKey.Create(local, n, color);
                     if (group.Lookup.TryGetValue(key, out int previous)) { group.Indices.Add(previous); continue; }
                     int index = group.Vertices.Count; group.Lookup[key] = index; group.Indices.Add(index);
                 }
@@ -149,7 +162,7 @@ public partial class CaveSurfaceContext : RefCounted
             var output = new D { ["vertices"] = vertices, ["normals"] = ns, ["colors"] = cs, ["payload"] = ps };
             if (indexed) output["indices"] = indices;
             built[(int)Mesh.ArrayType.Vertex] = vertices; built[(int)Mesh.ArrayType.Normal] = ns; built[(int)Mesh.ArrayType.Color] = cs; if (indexed) built[(int)Mesh.ArrayType.Index] = indices; output["arrays"] = built;
-            if (entry.Key != "__interior__") { var atlas = _payload.atlas(ps); if (atlas.Count == 0) return new D { ["valid"] = false, ["reason"] = "Surface material atlas exceeds declared per-group budget" }; output["atlas"] = atlas; }
+            if (entry.Key != "__interior__") { var atlas = CompactGpuPayload ? _payload.CompactAtlas(ps) : _payload.atlas(ps); if (atlas.Count == 0) return new D { ["valid"] = false, ["reason"] = "Surface material atlas exceeds declared per-group budget" }; output["atlas"] = atlas; }
             if (indexed && !retainSource) foreach (string field in new[] { "vertices", "normals", "colors", "indices", "payload" }) output.Remove(field);
             result[entry.Key] = output;
         }

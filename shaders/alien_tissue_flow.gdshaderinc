@@ -1,3 +1,4 @@
+#include "res://shaders/terrain_material_sampling.gdshaderinc"
 // Numeric RGBA32F material atlas: finite-path arc,side,alignment,local path ID.
 // IDs are only compared within this tile;never quantize or blend them as angles.
 uniform sampler2D alien_tissue_flow:filter_nearest,repeat_disable;
@@ -20,7 +21,6 @@ vec3 alien_flow_varied(vec2 uv,vec2 dx,vec2 dy){
  // No quarter-turns: longitudinal fibres keep their actual hive-path axis.
  float k=field(uv/vec2(2.7,3.9))*6.0,index=floor(k);
  float blend=smoothstep(.15,.85,fract(k));
- vec2 a=sin(vec2(3,7)*index)*19.0,b=sin(vec2(3,7)*(index+1.0))*19.0;
  // Modest continuous growth strain breaks mirror-pair motifs without random
  // rotations or independently changing the physical trunk direction. Apply
  // its analytic Jacobian to BOTH footprints, never screen-derive grouped UVs.
@@ -29,7 +29,11 @@ vec3 alien_flow_varied(vec2 uv,vec2 dx,vec2 dy){
  vec2 warped_dx=jx*dx.x+jy*dx.y,warped_dy=jx*dy.x+jy*dy.y;
  uv+=vec2(.45*sin(uv.y*.73)+.2*sin(uv.x*.37),.18*sin(uv.x*.51)+.08*sin(uv.y*.83));
  dx=warped_dx;dy=warped_dy;
- return mix(alien_flow_mirrored(uv+a,dx,dy),alien_flow_mirrored(uv+b,dx,dy),blend);
+ // Exact endpoints retain the analytic Jacobian while omitting a zero-weight scan.
+ vec3 first=vec3(0),second=vec3(0);
+ if(terrain_sample_first(blend))first=alien_flow_mirrored(uv+sin(vec2(3,7)*index)*19.0,dx,dy);
+ if(terrain_sample_second(blend))second=alien_flow_mirrored(uv+sin(vec2(3,7)*(index+1.0))*19.0,dx,dy);
+ return mix(first,second,blend);
 }
 vec3 alien_flow_color(vec3 base,vec3 n,vec3 position_dx,vec3 position_dy){
  ivec2 size=textureSize(alien_tissue_flow,0);

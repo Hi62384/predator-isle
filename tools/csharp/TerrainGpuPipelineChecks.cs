@@ -14,6 +14,7 @@ internal static class TerrainGpuPipelineChecks
     internal static Godot.Collections.Dictionary Measurements { get; private set; } = new();
     internal static void Run(Node host, Action<bool, string> require)
     {
+        using var resources = FixtureResources();
         // Worker-side compact strips and main-thread shader uniforms must
         // share one mapping for every possible eight-family ownership mask.
         for(int mask=0;mask<256;mask++)
@@ -80,11 +81,11 @@ internal static class TerrainGpuPipelineChecks
         foreach (string adapter in new[] { "llvmpipe (LLVM)", "lavapipe", "softpipe", "Google SwiftShader", "Microsoft Basic Render Driver" })
             require(!ChunkTerrain.UseGpuGeneration(2, false, "X11", adapter), "Automatic generation selected a software renderer");
 
-        using var settings = GrassSettings();
+        var settings = resources.Retain(GrassSettings());
         // The GPU's int noise seed can wrap, while the CPU's river and lake
         // planning retains the original long seed. Never share cached raw
         // samples across distinct high-bit world seeds.
-        using (var otherSettings=GrassSettings())
+        var otherSettings = resources.Retain(GrassSettings());
         using (var seedA=Builder(otherSettings))
         using (var seedB=new TerrainMeshBuilder{settings=otherSettings,world_seed=seedA.world_seed+(1L<<32)})
         {
@@ -96,7 +97,7 @@ internal static class TerrainGpuPipelineChecks
         using var cpu = Builder(settings);
         using var baked = Builder(settings);
         var topology = new TerrainRingTopology();
-        using (var forestOnly=GrassSettings())
+        var forestOnly = resources.Retain(GrassSettings());
         {
             forestOnly.Set("grass_coverage",0.0);
             forestOnly.Set("forest_coverage",100.0);
@@ -198,7 +199,8 @@ internal static class TerrainGpuPipelineChecks
     internal static async Task RunQueues(Node host, Action<bool, string> require)
     {
         require(DisplayServer.GetName() != "headless", "GPU queue checks require a rendered display");
-        using var settings = GrassSettings();
+        using var resources = FixtureResources();
+        var settings = resources.Retain(GrassSettings());
         using var builder = Builder(settings);
         var sampler = new TerrainGpuSampler { MaximumQueuedRequests = 2 };
         host.AddChild(sampler); sampler.SetProcess(false);
@@ -272,7 +274,8 @@ internal static class TerrainGpuPipelineChecks
     internal static async Task RunRendered(Node host, Action<bool, string> require)
     {
         require(DisplayServer.GetName() != "headless", "GPU terrain readback checks require a rendered display");
-        using var settings = GrassSettings();
+        using var resources = FixtureResources();
+        var settings = resources.Retain(GrassSettings());
         using var builder = Builder(settings);
         using var referenceBuilder = Builder(settings);
         var sampler = new TerrainGpuSampler { RequestTimeoutSeconds = 120 };
@@ -336,6 +339,18 @@ internal static class TerrainGpuPipelineChecks
             };
         }
         finally { node?.Free(); sampler.Shutdown(); sampler.Free(); }
+    }
+
+    internal static TerrainBenchmarkResources FixtureResources()
+    {
+        var resources = new TerrainBenchmarkResources();
+        // Builders initially load the saved configuration before a fixture assigns
+        // its own settings. Keep both complete resource graphs natively referenced
+        // until the last builder and queued worker have been disposed. Otherwise a
+        // collection between builders can finalize C# child-resource handles while
+        // ResourceLoader is reusing the saved graph.
+        resources.Retain(GD.Load<Resource>("res://config/world/terrain_settings.tres"));
+        return resources;
     }
 
     internal static TerrainConfiguration GrassSettings()

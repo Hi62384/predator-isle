@@ -19,7 +19,7 @@ string[] modes = args.Length == 0 || args.SequenceEqual(new[] { "all" }) ? new[]
 if (modes.Any(mode => !(mode.StartsWith("gpu-biome-",StringComparison.Ordinal)&&
     new[] {"grass","forest","savanna","swamp","jungle","mountain","tropical","badlands","quarry",
         "wise_mountains","volcanic","spore_forest","radiation_wasteland","crystal_wastes",
-        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "runner-race", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, collision, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
+        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "runner-race", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-materials", "gpu-caves", "cave-payload", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, collision, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
 var records = new List<object>();
 string logDirectory = Path.Combine(project, ".godot", "csharp_checks", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff")); Directory.CreateDirectory(logDirectory);
 bool passed = true;
@@ -83,12 +83,12 @@ foreach (string mode in modes)
     // Godot's Dummy audio driver rather than masking any other engine error.
     if (Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_DUMMY_AUDIO") == "1")
     { start.ArgumentList.Add("--audio-driver"); start.ArgumentList.Add("Dummy"); }
-    if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
+    if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
     else start.ArgumentList.Add("--headless");
     // Renderer equivalence checks can explicitly select either Vulkan renderer.
     // Keep the regular user workflow on its saved Compatibility renderer.
     string? testRenderer=Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_RENDER_METHOD");
-    if(mode is "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-terrain" or "gpu-queues" &&
+    if(mode is "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-terrain" or "gpu-queues" &&
        (testRenderer=="forward_plus"||testRenderer=="mobile"))
     {
         start.ArgumentList.Add("--rendering-method"); start.ArgumentList.Add(testRenderer);
@@ -97,7 +97,7 @@ foreach (string mode in modes)
     if(mode is "startup" or "lifecycle")start.ArgumentList.Add("--verbose");
     if(mode.StartsWith("startup-vulkan",StringComparison.Ordinal)){start.ArgumentList.Add("--rendering-method");start.ArgumentList.Add("forward_plus");start.ArgumentList.Add("--rendering-driver");start.ArgumentList.Add("vulkan");}
     start.ArgumentList.Add(mode == "authority" ? "res://tools/csharp/authority_runtime_check.tscn" : mode == "lifecycle" ? "res://tools/csharp/render_lifecycle_check.tscn" : mode.StartsWith("startup",StringComparison.Ordinal) ? "res://tools/csharp/startup_check.tscn" : "res://tools/csharp/migration_checks.tscn");
-    if (mode is "blob" or "rings" or "sampling" or "sampling-benchmark" or "terrain-performance" or "quarry" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-all-biomes" or "cave-biomes" or "gpu-pipeline" or "gpu-queues" or "gpu-terrain" or "collision" or "field" or "worker" or "network" or "discovery" or "samplers" or "placement" or "tissue" or "beach" or "coast" or "tropical" || mode.StartsWith("gpu-biome-",StringComparison.Ordinal)) { start.ArgumentList.Add("--"); start.ArgumentList.Add(mode + "-only"); }
+    if (mode is "blob" or "rings" or "sampling" or "sampling-benchmark" or "terrain-performance" or "quarry" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-all-biomes" or "cave-biomes" or "cave-payload" or "gpu-pipeline" or "gpu-queues" or "gpu-terrain" or "collision" or "field" or "worker" or "network" or "discovery" or "samplers" or "placement" or "tissue" or "beach" or "coast" or "tropical" || mode.StartsWith("gpu-biome-",StringComparison.Ordinal)) { start.ArgumentList.Add("--"); start.ArgumentList.Add(mode + "-only"); }
     if(mode=="startup-reference"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=cpu");start.ArgumentList.Add("terrain-generation=cpu");start.ArgumentList.Add("terrain-shared-samples=off");}
     if(mode is "startup-grid" or "startup-vulkan-grid"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=grid");}
     if(mode=="startup-path"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-path-check");}
