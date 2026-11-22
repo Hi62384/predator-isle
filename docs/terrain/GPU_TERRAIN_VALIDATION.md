@@ -106,13 +106,15 @@ The authority fixture also verified that a resident ground shape keeps its insta
 
 Authority assertion counts include readiness polling and can vary with scheduling. The compact evidence retains each check's UTC timestamp, the measured assemblies and relevant source hashes. The final build completed with zero warnings and zero errors. The complete migration suite and the full-world traversal check are not claimed to pass.
 
-## Existing reference failures
+## Historical reference failures from the earlier baseline study
 
-The original `samplers` suite has a reproducible Linux failure in the quarry FIFO reference comparison at seed `-17`, cell `(840, -840)`: `311.4959699884967` versus `311.4959714153545`. The suite requires a difference no greater than `1e-12`. That failure was reproduced before the optimization; the tolerance is unchanged. Do not describe the entire migration suite as passing while this discrepancy remains.
+These paragraphs preserve findings reported by the earlier study using baseline `50fa05b9304aae9490a23dade0f009c88ba10ae1`. They are not results from the November 22 run below, which passes the `samplers` suite and does not rerun the separate `coast` mode.
 
-The original `coast` suite also fails its strict reference comparison on this host: `66.62799627279266` versus `66.62799627279405` (approximately `1.39e-12` apart). The identical failure occurs in the isolated baseline and the candidate. This pre-existing reference discrepancy is recorded separately from the exact baseline/candidate surface and collision hashes.
+The earlier report recorded a Linux failure in the quarry FIFO reference comparison at seed `-17`, cell `(840, -840)`: `311.4959699884967` versus `311.4959714153545`, against the suite's `1e-12` tolerance. It reported reproducing that failure before the optimization. The current passing sampler results supersede that historical status for the tested revision.
 
-## Full-world rendering limitation
+The same report recorded a strict `coast` reference discrepancy: `66.62799627279266` versus `66.62799627279405` (approximately `1.39e-12` apart), and reported the identical result in its isolated baseline and candidate. This historical attribution was not independently revalidated in the November 22 work.
+
+## Historical full-world rendering limitation
 
 Both full `startup-grid` attempts used the fixture's actual 1,920×1,080 viewport and the unchanged 170-second movement deadline. Both published all 63 saved-world terrain chunks and the cave bundle, then exceeded the traversal deadline on llvmpipe. The second, warmed run reached first visible terrain and LOD0 collision at 9.801 seconds, cave discovery at 33.280 seconds, and full coverage with the cave bundle at 51.768 seconds. It recorded valid nearby physical ground for the first three movement milestones before timing out on the return.
 
@@ -173,3 +175,156 @@ claim that optimization is complete.
 ### Per-biome canonical generation profiling
 
 Every isolated 16-biome GPU visual payload verification now records its cold, one-patch canonical generation time, thread-local managed allocations, canonical terrain evaluation count and vertex count in the existing native-test evidence JSON. The measurements cover CPU heightfields, feature/structure products and collision assembly, not GPU shader runtime, frame rate, or GPU readback. This provides comparable per-biome hotspot evidence on one runner without changing generation quality or benchmark acceptance thresholds. The legacy non-ring water path also skips allocating mesh arrays for provably dry terrain and hoists beach/payload settings out of its per-vertex loop.
+
+## All-biome GPU and native regression — November 22, 2026
+
+The compact evidence is
+[`data/terrain_gpu_optimization_20261122.json`](../../data/terrain_gpu_optimization_20261122.json).
+The starting revision is `9730ca3a76543f033b4e801da19dd02fc800a50a`.
+Validation uses Godot 4.6.1 .NET, .NET 8, and Mesa llvmpipe software graphics.
+An accepted result requires a fresh passing semantic report, successful process
+exit, and no engine errors. Partial assertion totals from failed runs do not
+count as passes.
+Checks were run incrementally, with targeted subsequent regressions after
+later changes. The evidence preserves each accepted run's source hashes and
+the final changed-source hashes; it does not represent one monolithic run of
+every mode from the final revision.
+The completed record contains 70 accepted mode/renderer combinations and
+4,132,418 assertions, with no unresolved later failure for an accepted pair.
+
+### Native geometry, ownership, water, and cache checks
+
+| Check | Verified result |
+| --- | --- |
+| Sixteen isolated `gpu-biome-*` modes | All passed; 125,051 assertions across canonical products, compact grid bytes, controls, and collision. |
+| `rings` | 2,256,308 assertions, including constant ownership, dense extension-water slots for every nonempty family mask, inserted edge vertices, and pure badlands water. |
+| `sampling` | 31,737 assertions; independent height-filter reference has zero maximum double difference and the same 88,928 synthetic neighbor queries. |
+| `terrain-performance` | 1,017 assertions; final level 0/2/4 surface and authoritative-ground SHA-256 hashes equal the starting revision. |
+| `gpu-pipeline` | 4,424 assertions for plans, shared samples, products, source changes, and CPU fallback. |
+| `field`, `network`, `discovery` | 100,983, 1,024, and 125 assertions. |
+| `samplers`, `tropical`, `beach` | 1,358,580, 138,707, and 54,912 assertions. |
+| `quarry`, `placement`, `tissue`, `collision` | 3,856, 160, 20,912, and 215 assertions. |
+| `cave-biomes` | 425 assertions for registered cave regions, materials, features, renderer bindings, and the preserved frozen/crystal/magma surface references. |
+| `cave-payload`, `worker` | 1,825 and 22,908 assertions; exact expanded compact-atlas bytes, preserved typed containers, source/cut adapters, and complete portal geometry/collision. |
+
+The complete-product comparison verifies equivalence rather than CPU speed:
+graphics compilation and other tests were active during some measurements.
+Final managed allocations are 912,888, 2,890,480, and 10,022,664 bytes for
+levels 0, 2, and 4. Those are unchanged at level 0 and 72 bytes higher at each
+distant level, from the filter's delegate/context fields. Water-context
+invalidation retains the original small per-entry cache key.
+
+### Rendered grid and numerical GPU checks
+
+`gpu-extension` passes 427 assertions on Compatibility, Forward+, and Mobile.
+Its 48 grid cases compare constant/varying ownership, sparse/mixed control
+banks, and UV/surface products against independently reconstructed legacy
+pages. Maximum RGBA8 channel difference is zero on all three renderers.
+Extension-atlas and curved-trail comparisons remain in the same mode.
+
+Compatibility additionally passes `gpu-queues` (14 assertions), `gpu-vertex`
+(7), `gpu-sampler` (32), and `gpu-terrain` (1,544). The sampler checks 3,504
+points and 28,032 scalar results across three seeds and two profiles. Maximum
+value error is 0.005493164 metres, within the unchanged 0.01-metre budget;
+maximum material-control error is 0.0000259876, within 0.001. Three batched
+requests share one readback. The vertex fixture has identical vertex/fragment
+bake results and 0.000320435-metre maximum CPU height error. The accepted GPU
+terrain bake retains matching visual/collision vertices and passes the Jolt
+ray-cast integration check.
+
+An exploratory sampler run completed its six numerical cases but then failed
+in Godot's native C# resource finalizer. It is excluded. The sampler and
+pipeline fixtures now retain loaded/default and per-case resource graphs
+until their builders and asynchronous requests finish. The strict rerun exits
+successfully without engine errors; the production GPU sampler was unchanged.
+
+### Complete material and cave shader results
+
+The complete all-biome material mode passes on each renderer. Every row
+includes 46,080 projection-helper pixels and 165,888 full production shader
+pixels across albedo, geometric normals, and mapped normals. All sixteen
+owners plus coast and beach are drawn under three camera/model scenarios.
+
+| Renderer | Assertions | Maximum helper difference | Maximum full-program difference |
+| --- | ---: | ---: | ---: |
+| Compatibility | 1,140 | 0 RGBA8 levels | 0 RGBA8 levels |
+| Forward+ | 1,140 | 0 RGBA8 levels | 0 RGBA8 levels |
+| Mobile | 1,140 | 0 RGBA8 levels | 0 RGBA8 levels |
+
+The full Compatibility reference restores the original 23-varying interface.
+The original interface exceeds the tested Vulkan limit, so Forward+ and
+Mobile independently restore the old normal computation and full-precision
+coast interpolation within a 17-location reference. The production interface
+uses 16 locations. These measured fixture results do not establish universal
+bit-identical interpolation: Mobile built-in COLOR/NORMAL transport can use
+half precision, and world-normal reconstruction includes rotation roundoff.
+
+The cave matrix contains 27 successful processes: the independent compact
+fetch check and eight complete entrance scenes on each renderer.
+
+| Renderer | Fetch/adapter assertions | Full scene cases | Total cave GPU assertions |
+| --- | ---: | ---: | ---: |
+| Compatibility | 885 | 8 | 989 |
+| Forward+ | 885 | 8 | 981 |
+| Mobile | 885 | 8 | 981 |
+
+All 612 compact/full fetch cases have zero RGBA8 difference and collectively
+cover every one of the 68 control lanes. All 24 full scenes draw varied,
+visible material and respond to the no-cave-influence negative control.
+The eight Compatibility scene comparisons also have zero difference against
+the restored original varying layout. Vulkan scenes verify the packed
+production programs within the available varying limit; they do not claim
+an independent original-layout image comparison.
+
+### Focused modes and CI coverage
+
+- `gpu-materials` executes actual projection helpers with endpoint/interior
+  blends, normals enabled/disabled, varying synthetic art, and a deliberate
+  UV-offset negative control. It also renders the complete production spatial
+  shader for all sixteen owners, coast, and beach.
+- `cave-payload` checks sparse atlas reconstruction, all 68 control lanes,
+  signed zero and special float bits, unchanged group budgets, native
+  selections, source adapters, and exact geometry/collision equivalence.
+- `gpu-caves` executes production cave fetches for 204 mask/texel/channel cases.
+- `gpu-cave-scene-0` through `gpu-cave-scene-7` each draw one complete
+  ordinary/hive spatial entrance shader. Cases 0/1 are default ordinary,
+  2/3 default hive, 4/5 frozen/crystal/magma ordinary, and 6/7 the same triple
+  blend on hive entrances. Each pair uses standard then shared projection.
+  Every case retains its own 180-second/5-GiB limit, visible-output checks,
+  and no-cave-influence negative control. Compatibility compares the packed
+  shader against an independently restored original varying layout. Vulkan
+  repeats the production program to check stable rendering, compilation,
+  visibility, and cave influence; the independent `gpu-caves` payload test
+  separately compares all 68 control lanes on each renderer.
+
+Full shader references and candidates render sequentially with two llvmpipe
+threads, releasing the prior program before the next. Vulkan runs additionally
+bound Godot's compilation pool to two workers. Small CPU image buffers
+retain the reference pixels. Animation time is frozen during comparison and
+restored afterward, so beach swash and cave animation cannot create false
+differences between images. These fixture changes retain every output
+assertion and the one-RGBA8-level tolerance. Combined full-scene attempts that
+hit resource/deadline gates are excluded. The scene split bounds each shader
+case separately rather than treating a partial multi-case run as a pass.
+
+Existing Compatibility GPU checks retain their 2-GiB memory gate. The added
+complete-program reference fixtures use a separate 5-GiB compiler allowance;
+the default runner bound and gameplay acceptance checks are unchanged.
+`LP_NUM_THREADS=2` bounds Mesa independently from Godot's worker pool. CI
+creates a temporary `override.cfg` with `threading/worker_pool/max_threads=2`
+before the complete shader checks and removes it afterward. Production project
+settings are unchanged, and semantic evidence records both configured limits.
+
+The native workflow explicitly runs the new CPU and Compatibility modes;
+both Vulkan branches explicitly run the rendered material and cave checks.
+CI retains every invocation's strict runner receipt alongside semantic reports
+and engine logs, so a later invocation cannot overwrite earlier exit/memory
+evidence in the single `csharp_runner_latest.json` file.
+Software graphics validate behavior and compilation. Physical-device GPU
+time, full-world streaming performance, and FPS remain unmeasured here.
+The complete legacy suite, including the separate `general` and `coast`
+modes, and uninterrupted full-world traversal were not revalidated in this
+focused run. The unchanged general CI invocation remains a separate gate.
+Numerical GPU height generation remains limited to the existing validated
+grassland path; other surface generators and cave topology retain their
+canonical CPU implementations.

@@ -499,3 +499,114 @@ between legacy, fixed packed and compact layouts, across sparse/mixed masks on
 Compatibility, Forward+ and Mobile software backends. These are transfer and
 material fetch savings, not numerical GPU height generation. Real-device frame
 and generation timing still require separate benchmarks.
+
+## Constant ownership and material sampling across every biome
+
+The shared grid uploader now detects when the already quantized UNORM8 vertex
+ownership color is identical throughout a patch. It binds that exact value as
+one material uniform and omits its repeated RGBA32F texture strip. Mixed
+ownership patches retain the original per-vertex color strip. The shader's
+logical addressing also preserves the legacy seven-strip and compact
+three-base-strip formats, including every signed-zero and categorical control.
+
+This removes one texture fetch per vertex and 16 grid-texture bytes per vertex from
+eligible patches in **all sixteen surface biome families**. Relative to the
+previous compact layout, the 289-vertex pure-biome regression patches change
+as follows. These are exact payload sizes, not measured frame-time reductions.
+
+| Patch families | Previous compact grid | Constant-ownership grid | Additional reduction |
+| --- | ---: | ---: | ---: |
+| Grass and all eight extension families | 13,872 B | 9,248 B | 33.3% |
+| Forest, savanna, swamp, jungle, mountain, badlands | 18,496 B | 13,872 B | 25.0% |
+| Tropical | 27,744 B | 23,120 B | 16.7% |
+
+The extension families are quarry, wise mountains, volcanic, spore forest,
+radiation wasteland, crystal wastes, insect colony, and alien infected.
+Extension-atlas bytes and the small constant-color uniform are separate from
+the grid texture sizes in this table.
+
+Shared anti-repetition material projection helpers now skip the unused color
+and normal texture sample when the existing blend is exactly zero or one.
+Interior blends still sample both endpoints with the original explicit
+gradients. The same helpers cover all base and extension biomes, coast,
+beach, snow, biological material, and alien tissue projections. Grass skips
+its planar color sample only when the existing micro-detail contribution is
+exactly one; jungle reuses the cover sample already fetched for moss.
+Texture resolutions, material controls, and normal-map strengths are retained.
+The `terrain_material_sample_pruning` uniform defaults to true; false exposes
+the prior sampling behavior for differential renderer checks.
+
+### Pack interpolated controls within the renderer limit
+
+The complete terrain shader exposed a Vulkan compilation failure that the
+isolated sampling tests could not detect. Godot 4.6.1 reserves fifteen varying
+locations, leaving seventeen custom locations under the tested 32-location
+limit. The original terrain shader declared twenty-three custom varyings.
+Its production interface now uses sixteen, leaving one for cave composition.
+
+The shader packs smooth controls into unused W lanes, exports decoded coast
+controls through COLOR, and exports decoded terrain-surface values through
+UV2 after their vertex inputs have been consumed. It reads the constant model
+origin directly, uses the existing UV water value, and omits only the unused
+swamp ecology Y component from interpolation; the canonical payload retains
+that component. World and local positions keep their original calculations.
+The world normal is reconstructed from Godot's existing interpolated normal
+instead of passing a duplicate normal vector. This introduces ordinary
+floating-point rotation roundoff; Mobile can also store built-in COLOR and
+NORMAL interpolators at half precision. Validation therefore compares actual albedo,
+geometric normals, and mapped normals with an unchanged one-RGBA8-level gate
+under varying normals, camera rotations, scales, and translated origins.
+
+Composed cave entrances pack frozen texture coordinates into the three
+remaining W lanes and use one additional vec4 for the three registered
+optional-biome weights and entry depth. Redundant per-biome interpolators are
+removed only when the independent-target helper ignores their arguments.
+The original raw weights still govern the final blend. Native surface
+decoding writes packed lanes directly, and XYZ assignments preserve them.
+Compatibility compares against an independently restored original interface;
+Vulkan uses independently restored original normal and coast-control values
+as its terrain reference, which fits the available limit. CPU geometry and collision are
+unchanged by this interface adjustment.
+
+## Compact cave entrance uploads and native selections
+
+The native cave worker now stores only RGBA32F texels that contain a nonzero
+bit pattern somewhere in an entrance group. A 17-bit mask and packed stride
+let the production vertex shader reconstruct all 68 control lanes exactly.
+Negative zero and other nonzero IEEE-754 encodings remain occupied. All-zero
+groups retain a valid minimal texture, and the original uncompressed
+per-group input budget still applies. Materials without compact metadata
+continue to decode the original seventeen-texel layout.
+
+This common entrance path covers all surface owners and the default, frozen,
+crystal, magma, and hive entrance material combinations. A synthetic
+1,025-vertex group with four occupied texels uses 81,920 upload bytes instead
+of 294,912, including row padding, and four vertex texture reads instead of
+seventeen. The reductions are 72.2% in uploaded bytes and 76.5% in fetch count
+for that fixture; dense groups have smaller savings.
+
+Native barycentric selections now use a small value type instead of creating
+a Godot dictionary and index array for each query. Indexed cave vertex keys
+store the same ten float bit patterns directly instead of allocating an
+80-character hexadecimal string. Geometry, normals, indices, interpolation,
+and collision remain unchanged. Legacy dictionary APIs remain available for
+the independent GDScript reference checks.
+
+## Native configuration and compact-water correctness
+
+`TerrainHeightField.configure` reads managed `TerrainMeshBuilder` fields
+directly on the native path, avoiding sixteen `GodotObject.Get` crossings per
+configuration. Non-native callers retain the existing property-based path.
+The height filter now invalidates its bounded cache when the water context
+changes, without adding the repeated water level to every cache key. Its
+original floating-point arithmetic and neighborhood query sequence remain
+intact; even an apparently equivalent shortcut at a saturated blend can alter
+the final rendered float through cancellation.
+
+Ring water now maps extension family IDs through their compact physical atlas
+slots. The prior fixed family-index lookup could read another family or pass
+the texture boundary for sparse high-numbered families. Pure badlands water
+also recognizes its negative material-owner encoding without requiring a
+mountain in the same patch. Independent regression covers all 255 nonempty
+extension masks with and without a palette, interpolated inserted vertices,
+pure badlands, and disabled-water behavior.

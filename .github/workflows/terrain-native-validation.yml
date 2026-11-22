@@ -147,4 +147,5 @@ jobs:
           path: |
             data/csharp_check_*_latest.json
             data/csharp_runner_latest.json
+            .godot/csharp_checks/**/receipt.json
             .godot/csharp_checks/**/*.log
