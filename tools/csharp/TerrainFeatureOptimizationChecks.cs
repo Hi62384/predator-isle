@@ -52,12 +52,12 @@ internal static class TerrainFeatureOptimizationChecks
             var a=new Vector3(-2,(mask&1)!=0?8:15,-2);
             var b=new Vector3(3,(mask&2)!=0?8:15,1);
             var c=new Vector3(1,(mask&4)!=0?8:15,4);
-            foreach(double level in new[]{8.0,10.05,11.0,15.0,16.0})
+            foreach(double clipLevel in new[]{8.0,10.05,11.0,15.0,16.0})
             {
-                var expectedClip=ReferenceClip(a,b,c,level);
-                var actualClip=clipper.clipped_polygon(optimizedField,a,b,c,level);
+                var expectedClip=ReferenceClip(a,b,c,clipLevel);
+                var actualClip=clipper.clipped_polygon(optimizedField,a,b,c,clipLevel);
                 require(expectedClip.SequenceEqual(actualClip),
-                    "Stack-based liquid clipping changed reference triangle at mask "+mask+" level "+level);
+                    "Stack-based liquid clipping changed reference triangle at mask "+mask+" level "+clipLevel);
             }
         }
         Vector3[] ReferenceClip(Vector3 a,Vector3 b,Vector3 c,double level)
