@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
+using PredatorIsle.Biomes;
 using A=Godot.Collections.Array;
 using D=Godot.Collections.Dictionary;
 
@@ -15,6 +16,29 @@ public partial class TerrainFeatureMeshes : RefCounted
     public A surfaces {get;set;}=new();
     public Vector3 interior_reference {get;set;}
     private readonly RetainedLiquidGeometry _retained=new();
+    // Production terrain workers are native C# samplers. Keep exact GDScript
+    // fallbacks for reference fixtures, but avoid Variant/Callable crossings
+    // for thousands of cave feature/waterfall placement probes.
+    private static D Descriptor(GodotObject sample,Vector2I cell,double span)=>sample is BiomeExtensionSampler typed?
+        typed.descriptor(cell,span):sample.Call("descriptor",cell,span).AsGodotDictionary();
+    private static Vector2 HiveNode(GodotObject sample,Vector2I cell)=>sample is AlienInfectedSampler typed?
+        typed.hive_node(cell):sample.Call("hive_node",cell).AsVector2();
+    private static double Region(GodotObject sample,Vector2 p)=>sample is BiomeExtensionSampler typed?
+        typed.region(p):sample.Call("region",p).AsDouble();
+    private static double ExtRandom(GodotObject sample,long x,long z,long salt)=>sample is BiomeExtensionSampler typed?
+        typed.random(x,z,salt):sample.Call("random",x,z,salt).AsDouble();
+    private static Vector4 Tributary(GodotObject sample,Vector2 p)=>sample is WiseMountainsSampler typed?
+        typed.tributary(p):sample.Call("tributary",p).AsVector4();
+    private static double TropicalSpacing(GodotObject sample)=>sample is TropicalSampler typed?
+        typed._spacing():sample.Call("_spacing").AsDouble();
+    private static double TropicalRandom(GodotObject sample,long x,long z,long salt)=>sample is TropicalSampler typed?
+        typed.random(x,z,salt):sample.Call("random",x,z,salt).AsDouble();
+    private static double CascadeHeight(GodotObject sample,long segment,long lane,double chance)=>sample is TropicalSampler typed?
+        typed.cascade_height(segment,lane,chance):sample.Call("cascade_height",segment,lane,chance).AsDouble();
+    private static Vector2 CascadePoint(GodotObject sample,long segment,long lane,double t)=>sample is TropicalSampler typed?
+        typed.cascade_point(segment,lane,t):sample.Call("cascade_point",segment,lane,t).AsVector2();
+    private static double Seed(GodotObject sample)=>sample is BiomeExtensionSampler typed?
+        typed.seed_value:sample.Get("seed_value").AsDouble();
     private static double N(GodotObject resource,string name)=>resource.Get(name).AsDouble();
     private static double N(D data,string name)=>data[name].AsDouble();
     // Production rings are native C# workers. Keep the GDScript bridge for
@@ -48,7 +72,7 @@ public partial class TerrainFeatureMeshes : RefCounted
             var sampler=extras[family].AsGodotObject();if(sampler==null)continue;var config=sampler.Get("settings").AsGodotObject();if(!config.Get("caves_enabled").AsBool())continue;double span=8192*N(config,"feature_scale");var first=new Vector2I((int)Math.Floor((bounds.Position.X-320.0)/span)-1,(int)Math.Floor((bounds.Position.Y-320.0)/span)-1);var last=new Vector2I((int)Math.Ceiling((bounds.End.X+320.0)/span),(int)Math.Ceiling((bounds.End.Y+320.0)/span));
             for(int z=first.Y;z<=last.Y;z++)for(int x=first.X;x<=last.X;x++)
             {
-                var d=sampler.Call("descriptor",new Vector2I(x,z),span).AsGodotDictionary();if(N(d,"chance")>N(config,"cave_frequency"))continue;var raw=d["position"].AsVector2()/32;var p=new Vector2((float)Math.Round(raw.X,MidpointRounding.AwayFromZero),(float)Math.Round(raw.Y,MidpointRounding.AwayFromZero))*32;
+                var d=Descriptor(sampler,new Vector2I(x,z),span);if(N(d,"chance")>N(config,"cave_frequency"))continue;var raw=d["position"].AsVector2()/32;var p=new Vector2((float)Math.Round(raw.X,MidpointRounding.AwayFromZero),(float)Math.Round(raw.Y,MidpointRounding.AwayFromZero))*32;
                 if(!bounds.Grow(320).HasPoint(p))continue;Weigh(p);if(ExtraWeight(family)<.92||IslandMask(p)<.1)continue;double roof=double.PositiveInfinity,high=double.NegativeInfinity;bool dry=true;
                 for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++){var q=p+new Vector2(dx*256,dz*128);double h=Height(q);roof=Math.Min(roof,h);high=Math.Max(high,h);dry=dry&&h>Math.Max(WaterLevel,Water(q))+14;}
                 if(!dry||high-roof>170)continue;double floor=Math.Max(WaterLevel+8,roof-72);if(roof-floor<24)continue;
@@ -112,8 +136,8 @@ public partial class TerrainFeatureMeshes : RefCounted
         var sites=new A();var sampler=(builder is TerrainMeshBuilder native?native._extras:builder.Get("_extras").AsGodotArray())[family_id].AsGodotObject();if(sampler==null)return sites;var config=sampler.Get("settings").AsGodotObject();if(!config.Get("special_liquids_enabled").AsBool())return sites;double span=(family_id==2?7200:4096)*N(config,"feature_scale");var first=new Vector2I((int)Math.Floor(bounds.Position.X/span)-1,(int)Math.Floor(bounds.Position.Y/span)-1);var last=new Vector2I((int)Math.Ceiling(bounds.End.X/span),(int)Math.Ceiling(bounds.End.Y/span));
         for(int z=first.Y;z<=last.Y;z++)for(int x=first.X;x<=last.X;x++)
         {
-            var cell=new Vector2I(x,z);var d=sampler.Call("descriptor",cell,span).AsGodotDictionary();var p=family_id==2?d["position"].AsVector2():sampler.Call("hive_node",cell).AsVector2();if(!bounds.HasPoint(p)||!Owns(p))continue;if(family_id==2&&N(d,"chance")>=N(config,"active_frequency"))continue;if(family_id==2&&sampler.Call("region",p).AsDouble()>2.65)continue;if(family_id==7&&(sampler.Call("region",p).AsDouble()<2.65||sampler.Call("region",p).AsDouble()>3.4))continue;
-            Weigh(p);if(ExtraWeight(family_id)<.95||IslandMask(p)<.1)continue;sites.Add(new D{["position"]=p,["radius"]=family_id==2?N(d,"radius")*(sampler.Call("region",p).AsDouble()>1.6?.85:.38):300.0,["id"]=d["id"]});
+            var cell=new Vector2I(x,z);var d=Descriptor(sampler,cell,span);var p=family_id==2?d["position"].AsVector2():HiveNode(sampler,cell);if(!bounds.HasPoint(p)||!Owns(p))continue;if(family_id==2&&N(d,"chance")>=N(config,"active_frequency"))continue;if(family_id==2&&Region(sampler,p)>2.65)continue;if(family_id==7&&(Region(sampler,p)<2.65||Region(sampler,p)>3.4))continue;
+            Weigh(p);if(ExtraWeight(family_id)<.95||IslandMask(p)<.1)continue;sites.Add(new D{["position"]=p,["radius"]=family_id==2?N(d,"radius")*(Region(sampler,p)>1.6?.85:.38):300.0,["id"]=d["id"]});
         }
         return sites;
     }
@@ -130,8 +154,8 @@ public partial class TerrainFeatureMeshes : RefCounted
         var records=tropical_waterfalls(bounds);var sampler=(builder is TerrainMeshBuilder native?native._extras:builder.Get("_extras").AsGodotArray())[1].AsGodotObject();if(sampler==null||!sampler.Get("settings").AsGodotObject().Get("waterfalls_enabled").AsBool())return records;double spacing=4000/Math.Max(N(builder.Get("settings").AsGodotObject(),"grass_river_frequency"),.01);
         for(int ix=(int)Math.Floor(bounds.Position.X/4096.0)-1;ix<(int)Math.Ceiling(bounds.End.X/4096.0)+1;ix++)for(int lane=(int)Math.Floor(bounds.Position.Y/spacing)-1;lane<(int)Math.Ceiling(bounds.End.Y/spacing)+1;lane++)
         {
-            double x=ix*4096.0+Math.Sin(ix*1.7+N(sampler,"seed_value"))*180,outlet=RiverCenter(x,lane,spacing),side=sampler.Call("random",ix,lane,921).AsDouble()>.5?1:-1;var p=new Vector2((float)x,(float)(outlet+side*500));if(!bounds.HasPoint(p)||!Owns(p))continue;Weigh(p);if(ExtraWeight(1)<.95||IslandMask(p)<.1)continue;if(Water(p)<20||Height(p)>Water(p)-.5)continue;
-            for(int i=0;i<24;i++){double za=outlet+side*(470+i*2.5),zb=za+side*2.5,ha=sampler.Call("tributary",new Vector2((float)x,(float)za)).AsVector4().X+.12,hb=sampler.Call("tributary",new Vector2((float)x,(float)zb)).AsVector4().X+.12;g.quad(new Vector3((float)(x-10),(float)ha,(float)za),new Vector3((float)(x+10),(float)ha,(float)za),new Vector3((float)(x+10),(float)hb,(float)zb),new Vector3((float)(x-10),(float)hb,(float)zb),new Color(.65f,.78f,.81f));}
+            double x=ix*4096.0+Math.Sin(ix*1.7+Seed(sampler))*180,outlet=RiverCenter(x,lane,spacing),side=ExtRandom(sampler,ix,lane,921)>.5?1:-1;var p=new Vector2((float)x,(float)(outlet+side*500));if(!bounds.HasPoint(p)||!Owns(p))continue;Weigh(p);if(ExtraWeight(1)<.95||IslandMask(p)<.1)continue;if(Water(p)<20||Height(p)>Water(p)-.5)continue;
+            for(int i=0;i<24;i++){double za=outlet+side*(470+i*2.5),zb=za+side*2.5,ha=Tributary(sampler,new Vector2((float)x,(float)za)).X+.12,hb=Tributary(sampler,new Vector2((float)x,(float)zb)).X+.12;g.quad(new Vector3((float)(x-10),(float)ha,(float)za),new Vector3((float)(x+10),(float)ha,(float)za),new Vector3((float)(x+10),(float)hb,(float)zb),new Vector3((float)(x-10),(float)hb,(float)zb),new Color(.65f,.78f,.81f));}
             records.Add(new D{["position"]=p,["outlet"]=new Vector2((float)x,(float)outlet),["drop_metres"]=34.0,["connected_to_carrier"]=true});
         }
         return records;
@@ -139,12 +163,12 @@ public partial class TerrainFeatureMeshes : RefCounted
     public A tropical_waterfalls(Rect2 bounds)
     {
         var records=new A();var sampler=builder is TerrainMeshBuilder native?native._tropical:builder.Get("_tropical").AsGodotObject();if(sampler==null||N(sampler.Get("settings").AsGodotObject(),"waterfall_frequency")<=0||!builder.Get("settings").AsGodotObject().Get("water_enabled").AsBool())return records;
-        double spacing=sampler.Call("_spacing").AsDouble(),span=spacing*.6;var color=new Color(.65f,.78f,.81f);
+        double spacing=TropicalSpacing(sampler),span=spacing*.6;var color=new Color(.65f,.78f,.81f);
         for(int segment=(int)Math.Floor(bounds.Position.X/span)-1;segment<(int)Math.Ceiling(bounds.End.X/span)+1;segment++)for(int lane=(int)Math.Floor(bounds.Position.Y/spacing)-2;lane<(int)Math.Ceiling(bounds.End.Y/spacing)+2;lane++)
         {
-            double r=sampler.Call("random",segment,lane,131).AsDouble(),drop=sampler.Call("cascade_height",segment,lane,r).AsDouble();if(drop<=0)continue;var center=sampler.Call("cascade_point",segment,lane,.5).AsVector2();if(!bounds.HasPoint(center)||!Owns(center))continue;Weigh(center);if(TropicalWeight<.95)continue;
+            double r=TropicalRandom(sampler,segment,lane,131),drop=CascadeHeight(sampler,segment,lane,r);if(drop<=0)continue;var center=CascadePoint(sampler,segment,lane,.5);if(!bounds.HasPoint(center)||!Owns(center))continue;Weigh(center);if(TropicalWeight<.95)continue;
             var points=new Godot.Collections.Array<Vector3>();var stations=new List<Vector2>();bool valid=true;double extent=128/(span*.7),previous=double.NegativeInfinity;
-            for(int i=0;i<33;i++){double t=Lerp(.5-extent,.5+extent,i/32.0);var p=sampler.Call("cascade_point",segment,lane,t).AsVector2();double bed=Height(p),level=LastWater;if(level<bed+.12||level<WaterLevel+4||level<previous-.001){valid=false;break;}points.Add(new Vector3(p.X,(float)(level+.12),p.Y));stations.Add(p);previous=level;}
+            for(int i=0;i<33;i++){double t=Lerp(.5-extent,.5+extent,i/32.0);var p=CascadePoint(sampler,segment,lane,t);double bed=Height(p),level=LastWater;if(level<bed+.12||level<WaterLevel+4||level<previous-.001){valid=false;break;}points.Add(new Vector3(p.X,(float)(level+.12),p.Y));stations.Add(p);previous=level;}
             if(!valid||points.Count!=33)continue;double actual=(double)points[^1].Y-points[0].Y;if(actual<Math.Max(6,drop*Math.Max(N(builder.Get("settings").AsGodotObject(),"height_multiplier"),.01)*.35))continue;var sections=new List<Vector3[]>();
             for(int i=0;i<points.Count;i++){var tangent=(stations[Math.Min(i+1,32)]-stations[Math.Max(i-1,0)]).Normalized();var side=new Vector2(-tangent.Y,tangent.X)*(float)(3+r*2);var section=new List<Vector3>();foreach(var p in new[]{stations[i]-side,stations[i]+side}){double bed=Height(p),level=LastWater;if(level<bed+.05){valid=false;break;}section.Add(new Vector3(p.X,(float)(level+.12),p.Y));}if(!valid)break;sections.Add(section.ToArray());}
             if(!valid)continue;for(int i=0;i<32;i++)g.quad(sections[i][0],sections[i][1],sections[i+1][1],sections[i+1][0],color);

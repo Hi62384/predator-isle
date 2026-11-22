@@ -40,14 +40,14 @@ public partial class MigrationChecks : Node
                 string id=selectedBiome["gpu-biome-".Length..^"-only".Length];
                 _mode="gpu-biome-"+id;
                 TerrainGpuAllBiomeChecks.Run(Require,id);
-                MigrationEvidence.Write(_mode,_checks,true);
+                MigrationEvidence.Write(_mode,_checks,true,TerrainGpuAllBiomeChecks.Measurements);
                 GD.Print($"C# GPU visual payload and collision check passed for {id}: {_checks}");
                 await Finish();return;
             }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"gpu-all-biomes-only"))
             {
                 _mode="gpu-all-biomes";TerrainGpuAllBiomeChecks.Run(Require);
-                MigrationEvidence.Write(_mode,_checks,true);
+                MigrationEvidence.Write(_mode,_checks,true,TerrainGpuAllBiomeChecks.Measurements);
                 GD.Print($"C# GPU grid tests passed across all surface biomes: {_checks}");
                 await Finish();return;
             }

@@ -62,6 +62,16 @@ public partial class TerrainMeshGeometry : RefCounted
         int row = resolution + 1, count = checked(row * row); var terrain = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array(); var uv = arrays[(int)Mesh.ArrayType.TexUV].AsVector2Array();
         var controls = arrays[(int)Mesh.ArrayType.Custom3].VariantType == Variant.Type.Nil ? System.Array.Empty<float>() : arrays[(int)Mesh.ArrayType.Custom3].AsFloat32Array();
         var tropicalControls = arrays[(int)Mesh.ArrayType.Custom2].VariantType == Variant.Type.Nil ? System.Array.Empty<float>() : arrays[(int)Mesh.ArrayType.Custom2].AsFloat32Array();
+        // No terrain below its local water surface plus the maximum encoded
+        // wetland weight can contribute a wet triangle. Discard fully dry
+        // legacy tiles before constructing the seven dense mesh arrays.
+        if(terrain.Length<count||uv.Length<count)throw new ArgumentException("Invalid legacy water grid");
+        bool possiblyWet=false;
+        for(int i=0;i<count;i++)
+            if((double)terrain[i].Y<(double)uv[i].X+1.0){possiblyWet=true;break;}
+        if(!possiblyWet)return result;
+        bool beachEnabled=settings.Get("beaches_enabled").AsBool();
+        int extensionRowWidth=built_extension_data.Length>0?built_extension_data.Length/(row*4):0;
         var terrainColors = arrays[(int)Mesh.ArrayType.Color].AsColorArray(); int mountainStride = mountainControls.Length / terrain.Length;
         var vertices = new Vector3[count]; var normals = new Vector3[count]; var colors = new Color[count]; var uvs = new Vector2[count]; var classes = new Vector2[count]; var wet = new byte[count]; var marine = new byte[count];
         for (int i = 0; i < count; i++)
@@ -72,8 +82,8 @@ public partial class TerrainMeshGeometry : RefCounted
             if (mountainStride == 4 && mountainControls[i * 4 + 3] < 0) tw += ((long)uv[i].Y & 255) / 255.0;
             if (built_extension_mask != 0 && built_extension_data.Length > 0)
             {
-                double ex = 0; int width = built_extension_data.Length / (row * 4);
-                for (int family = 0; family < 8; family++) if ((built_extension_mask & (1 << family)) != 0) ex += built_extension_data[((i / row) * width + family * row + i % row) * 4] / 255.0;
+                double ex = 0;
+                for (int family = 0; family < 8; family++) if ((built_extension_mask & (1 << family)) != 0) ex += built_extension_data[((i / row) * extensionRowWidth + family * row + i % row) * 4] / 255.0;
                 tw += ex;
             }
             double sediment = controls.Length > 0 ? ((long)controls[i * 4 + 1] & 255) / 255.0 : 0;
@@ -82,7 +92,7 @@ public partial class TerrainMeshGeometry : RefCounted
             double mw = mountain && mountainControls[i * mountainStride] < 0 ? Math.Floor(mountainControls[i * mountainStride + 1] / 65536.0) / 255 : 0;
             double cw = coastal.Length > 0 && coastal[i * 4 + 2] < 0 ? (((long)(-(double)coastal[i * 4 + 2] - 1) >> 8) & 255) / 255.0 : 0;
             double coastInfluence = cw; mw *= 1 - coastInfluence; tw *= 1 - coastInfluence;
-            if (coastInfluence > .01 && uv[i].X <= water + .2) { cw = mw = weight = tw = 0; if (settings.Get("beaches_enabled").AsBool()) marine[i] = 1; }
+            if (coastInfluence > .01 && uv[i].X <= water + .2) { cw = mw = weight = tw = 0; if (beachEnabled) marine[i] = 1; }
             if (mw > 0) { sediment = L(sediment, (((long)mountainControls[i * mountainStride + 1] >> 8) & 255) / 255.0, mw); organic *= 1 - mw; }
             if (tw > 0) { sediment = L(sediment, .45, tw); organic *= 1 - tw; }
             if (cw > 0) { weight *= 1 - cw; sediment = L(sediment, (((long)coastal[i * 4 + 3] >> 16) & 255) / 255.0, cw); organic *= 1 - cw; }

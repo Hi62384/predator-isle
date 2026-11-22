@@ -169,3 +169,7 @@ latest GitHub Actions run before attributing any performance gain to them.
 
 These acceptance limits are intentionally preserved rather than weakened to
 claim that optimization is complete.
+
+### Per-biome canonical generation profiling
+
+Every isolated 16-biome GPU visual payload verification now records its cold, one-patch canonical generation time, thread-local managed allocations, canonical terrain evaluation count and vertex count in the existing native-test evidence JSON. The measurements cover CPU heightfields, feature/structure products and collision assembly, not GPU shader runtime, frame rate, or GPU readback. This provides comparable per-biome hotspot evidence on one runner without changing generation quality or benchmark acceptance thresholds. The legacy non-ring water path also skips allocating mesh arrays for provably dry terrain and hoists beach/payload settings out of its per-vertex loop.
