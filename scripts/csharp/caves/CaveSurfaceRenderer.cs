@@ -97,7 +97,9 @@ public partial class CaveSurfaceRenderer : RefCounted
                 if (!sources.ContainsKey(id)) return Reject("Original parent material unavailable"); var parent = sources[id].AsGodotDictionary(); material = (ShaderMaterial)parent["material"].As<ShaderMaterial>().Duplicate();
                 var alternate = shader(material.Shader, style == 7, common); if (alternate == null) return Reject("Surface material compilation rejected");
                 var ids = interior.GetMeta("biome_ids", new A()).AsGodotArray(); var registry = interior.HasMeta("biome_registry") ? interior.GetMeta("biome_registry").As<Resource>() : null;
-                if (ids.Count > 0) alternate = _biomes.shader(alternate, ids, registry, true);
+                // Finalize the varying interface even for default caves: their
+                // entry-depth value also occupies a shared interpolator lane.
+                alternate = _biomes.shader(alternate, ids, registry, true);
                 if (alternate == null) return Reject("Cave biome surface adapter rejected"); material.Shader = alternate;
                 material.SetShaderParameter("cave_parent_offset", origin - parent["origin"].AsVector3()); material.SetShaderParameter("cave_parent_origin", parent["origin"]);
                 if (ids.Count > 0) _biomes.bind(material, ids, registry, interior.GetMeta("biome_context", new D()).AsGodotDictionary());

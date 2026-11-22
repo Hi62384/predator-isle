@@ -51,12 +51,12 @@ void swamp_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,out
  surface=mix(first,second,blend);t=vec3(0,0,1);
  if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
-void swamp_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
+void swamp_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient,vec3 material_origin){
  // Quarter-metre repeats keep the origin remainder exactly representable at
  // the saved world's multi-million-metre integer chunk coordinates.
  metres=max(round(metres*4.0)*.25,.25);
  int quarter_period=int(round(metres*4.0));
- ivec3 q=ivec3(round(forest_origin*4.0));
+ ivec3 q=ivec3(round(material_origin*4.0));
  ivec3 period=ivec3(quarter_period);
  // GLSL signed remainder is not portable for negative operands. Divide only
  // positive magnitudes, then reflect the phase explicitly on negative axes.
@@ -74,8 +74,8 @@ void swamp_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,flo
 }
 
 
-void shade_swamp(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks){
- float relative=world_position.y-swamp_water_level-swamp_flood_stage*swamp_control.z;
+void shade_swamp(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks,vec3 material_origin,float material_water){
+ float relative=world_position.y-material_water-swamp_flood_stage*swamp_control.z;
  float wet=clamp(max(swamp_control.x,1.0-smoothstep(-.2,swamp_shore_width*2.0,relative))*swamp_wetness,0.0,1.0);
  float submerged=1.0-smoothstep(-.15,.15,relative);
  float shore=1.0-smoothstep(0.0,swamp_shore_width,abs(relative));
@@ -107,7 +107,7 @@ void shade_swamp(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 colo
   int id=ids[k];float metres=swamp_metres*(id==6?3.0:(id==5?.6:1.0));
   vec4 s=swamp_average(id);vec3 g=vec3(0);
   float detail=1.0-smoothstep(100.0,500.0,view_distance);
-  if(detail>.003){vec4 near_s;swamp_sample(id,metres,dx,dy,projection,n,fine,near_s,g);s=mix(s,near_s,detail);g*=detail;}
+  if(detail>.003){vec4 near_s;swamp_sample(id,metres,dx,dy,projection,n,fine,near_s,g,material_origin);s=mix(s,near_s,detail);g*=detail;}
   // Source textures retain structure; wetness alters their response, not a uniform gloss.
   float absorption=mix(1.0,.55,wet*(id==6?.45:1.0));
   s.rgb*=absorption*swamp_gain;
@@ -121,11 +121,11 @@ void shade_swamp(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 colo
  color*=broad;rough=clamp(rough,.16,1.0);
  masks=vec3(wet,shore,path);
 }
-vec3 swamp_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks){
- float relative=world_position.y-swamp_water_level-swamp_flood_stage*swamp_control.z;
+vec3 swamp_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks,float material_water){
+ float relative=world_position.y-material_water-swamp_flood_stage*swamp_control.z;
  if(debug_view==140)return id_color(int(round(swamp_ecology.x*14.0)));
  if(debug_view==141)return vec3(clamp(world_position.y/30.0,0.0,1.0));
- if(debug_view==142)return vec3(clamp(swamp_water_level/20.0,0.0,1.0));
+ if(debug_view==142)return vec3(clamp(material_water/20.0,0.0,1.0));
  if(debug_view==143)return vec3(clamp(relative*.2+.5,0.0,1.0));
  if(debug_view==144)return vec3(clamp(-relative/5.0,0.0,1.0));
  if(debug_view==145)return vec3(swamp_hydro.y,swamp_hydro.z,swamp_ecology.z);

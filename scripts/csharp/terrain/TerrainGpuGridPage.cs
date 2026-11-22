@@ -17,8 +17,9 @@ public sealed record TerrainGpuGridPage(int Rows,byte[] Bytes,Aabb Bounds)
     public bool HasConstantColor{get;init;}
     public Vector4 ConstantColor{get;init;}
     public int BaseBands=>HasConstantColor?2:3;
-    // The first three bands are always normals/height, UNORM8 colors and
-    // UV/surface. Only occupied RGBA32F material banks are transferred.
+    // Normals/height and UV/surface are always present. The color band is
+    // omitted only when its quantized value is constant for this whole page.
+    // Only occupied RGBA32F material-control banks are transferred.
     // The legacy seven-band layout is still readable with default mask 15.
     public int Bands{get;init;}=7;
     public static int ControlOffset(int mask,int bank,bool constantColor=false)

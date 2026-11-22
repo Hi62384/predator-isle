@@ -51,7 +51,7 @@ void fragment(){
   bool semantic=UV.x>=0.0 && UV.x<=5.0;
   vec3 n=normalize(face_normal),w=pow(abs(n),vec3(6));w/=dot(w,vec3(1));
   vec3 tissue;float rough;
-  alien_tissue_sample(semantic?UV.x:0.0,length(VERTEX),position_dx,position_dy,w,n,tissue,rough);
+  alien_tissue_sample(semantic?UV.x:0.0,length(VERTEX),position_dx,position_dy,w,n,tissue,rough,forest_origin);
   float apron=semantic?1.0-smoothstep(.4,.9,COLOR.a):0.0;
   ALBEDO=tissue*mix(.5,.55,apron);
   ROUGHNESS=mix(.6,rough,apron);

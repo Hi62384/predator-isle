@@ -14,7 +14,8 @@ internal static class FrozenSurfaceChecks
         using var loadedProvider = providerScript.Call("new").AsGodotObject();
         require(loadedProvider is FrozenCaveSurface && loadedProvider.HasMethod("source") && loadedProvider.HasMethod("bind"), "Frozen provider factory or script method registration failed");
         using var old = GD.Load<GDScript>("res://scripts/caves/frozen_surface.gd").New().AsGodotObject(); using var current = new FrozenCaveSurface();
-        string rock = GD.Load<Shader>("res://shaders/default_cave_rock.gdshader").Code; using var surfaceShader = new CaveSurfaceShader(); string entrance = surfaceShader.code(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader").Code, true, true, false, true);
+        string rock = GD.Load<Shader>("res://shaders/default_cave_rock.gdshader").Code; using var surfaceShader = new CaveSurfaceShader(); // Supply only the historical text guard; both adapters still receive the complete current shader.
+        string entrance = "// Reference shape: varying vec3 forest_local_position;\n" + surfaceShader.code(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader").Code, true, true, false, true);
         foreach (string source in new[] { rock, entrance, "shader_type spatial; void vertex(){}", rock + "\nvarying float cave_frozen_weight;" })
         foreach (int slot in new[] { -1, 0, 1, 2, 3, 4 }) foreach (bool entry in new[] { false, true })
             require(old.Call("source", source, slot, entry).AsString() == current.source(source, slot, entry), "Frozen surface source differs");

@@ -12,4 +12,4 @@ float field(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);vec4 h=fract(si
 #include "res://shaders/biological_sampling.gdshaderinc"
 #include "res://shaders/hive_tissue_material.gdshaderinc"
 void vertex(){world_position=(MODEL_MATRIX*vec4(VERTEX,1)).xyz;forest_local_position=VERTEX;forest_origin=MODEL_MATRIX[3].xyz;hive_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);POSITION=cave_project_vertex(VERTEX,MODEL_MATRIX,VIEW_MATRIX,INV_VIEW_MATRIX,PROJECTION_MATRIX,MODELVIEW_MATRIX);}
-void fragment(){vec3 base,mapped;float rough;shade_hive_tissue(hive_region,length(VERTEX),normalize(hive_normal),dFdx(forest_local_position),dFdy(forest_local_position),max(normal_strength,0.0),base,rough,mapped);ALBEDO=base;ROUGHNESS=rough;SPECULAR=.2;NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);AO=.08;AO_LIGHT_AFFECT=0.0;}
+void fragment(){vec3 base,mapped;float rough;shade_hive_tissue(hive_region,length(VERTEX),normalize(hive_normal),dFdx(forest_local_position),dFdy(forest_local_position),max(normal_strength,0.0),base,rough,mapped,forest_origin);ALBEDO=base;ROUGHNESS=rough;SPECULAR=.2;NORMAL=normalize((VIEW_MATRIX*vec4(mapped,0)).xyz);AO=.08;AO_LIGHT_AFFECT=0.0;}

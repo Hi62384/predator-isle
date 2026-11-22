@@ -61,6 +61,18 @@ public partial class MigrationChecks : Node
                 GD.Print($"C# GPU cave payload checks passed: {_checks}");
                 await Finish();return;
             }
+            var selectedCaveScene=System.Linq.Enumerable.FirstOrDefault(OS.GetCmdlineUserArgs(),
+                arg=>arg.StartsWith("gpu-cave-scene-",StringComparison.Ordinal)&&arg.EndsWith("-only",StringComparison.Ordinal));
+            if(selectedCaveScene is not null)
+            {
+                _mode=selectedCaveScene[..^"-only".Length];
+                Require(int.TryParse(selectedCaveScene["gpu-cave-scene-".Length..^"-only".Length],out int caveSceneIndex)
+                    &&caveSceneIndex is >=0 and <8,"Unknown full cave shader case");
+                var measurements=await CaveGpuMaterialSceneChecks.Run(this,Require,caveSceneIndex);
+                MigrationEvidence.Write(_mode,_checks,true,measurements);
+                GD.Print($"C# complete cave shader scene {caveSceneIndex} checks passed: {_checks}");
+                await Finish();return;
+            }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"cave-payload-only"))
             {
                 _mode="cave-payload";CaveGpuPayloadChecks.Run(Require);
@@ -90,6 +102,9 @@ public partial class MigrationChecks : Node
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"cave-biomes-only"))
             {
                 _mode="cave-biomes";
+                FrozenSurfaceChecks.Run(Require);
+                MagmaSurfaceChecks.Run(this,Require);
+                CrystalSurfaceChecks.Run(Require);
                 CaveBiomeRegionChecks.Run(Require);
                 CaveBiomeMaterialChecks.Run(this,Require);
                 CaveFeatureDispatchChecks.Run(Require);

@@ -82,7 +82,7 @@ jobs:
         timeout-minutes: 13
         run: |
           dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-            field worker tropical beach placement tissue cave-biomes
+            field worker tropical beach placement tissue cave-biomes cave-payload
       - name: Verify GPU visual payloads and collision for each biome in an isolated engine process
         timeout-minutes: 15
         run: |
@@ -110,7 +110,10 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 xvfb-run -a \
             dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- general
       - name: Verify Compatibility shaders and GPU/CPU numerical parity under Mesa
-        timeout-minutes: 12
+        timeout-minutes: 20
+        env:
+          # Bound llvmpipe threads independently of Godot's shader workers.
+          LP_NUM_THREADS: '2'
         run: |
           if ! command -v xvfb-run >/dev/null; then
             sudo apt-get update -qq
@@ -119,6 +122,21 @@ jobs:
           LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 xvfb-run -a \
             dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
               gpu-queues gpu-sampler gpu-vertex gpu-extension gpu-terrain
+          # Full original/candidate spatial programs need a separate bounded
+          # compiler allowance. The existing GPU checks retain their 2-GiB gate.
+          # Godot submits Vulkan compiler work to its worker pool. A temporary
+          # test-only override also bounds that pool on high-core-count hosts.
+          test ! -e override.cfg
+          trap 'rm -f override.cfg' EXIT
+          cat > override.cfg <<'CFG'
+          [threading]
+          worker_pool/max_threads=2
+          CFG
+          LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 PREDATOR_ISLE_TEST_MEMORY_MIB=5120 xvfb-run -a \
+            dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
+              gpu-materials gpu-caves \
+              gpu-cave-scene-0 gpu-cave-scene-1 gpu-cave-scene-2 gpu-cave-scene-3 \
+              gpu-cave-scene-4 gpu-cave-scene-5 gpu-cave-scene-6 gpu-cave-scene-7
       - name: Upload diagnostic reports even after failure
         if: always()
         uses: actions/upload-artifact@v4

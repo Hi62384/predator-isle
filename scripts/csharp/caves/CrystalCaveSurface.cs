@@ -29,7 +29,9 @@ public partial class CrystalCaveSurface : RefCounted
     public string source(string original, int slot, bool entry)
     {
         if (slot < 0 || slot > 3 || original.Contains("varying float cave_crystal_weight;", StringComparison.Ordinal)) return ""; bool rock = original.Contains("varying vec3 cave_position;", StringComparison.Ordinal);
-        if (!rock && !(entry && original.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal))) return ""; int header = original.IndexOf("render_mode ", StringComparison.Ordinal); if (header < 0) return ""; int declaration = original.IndexOf(';', header); if (declaration < 0) return "";
+        bool terrain = original.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal)
+            || original.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal);
+        if (!rock && !(entry && terrain)) return ""; int header = original.IndexOf("render_mode ", StringComparison.Ordinal); if (header < 0) return ""; int declaration = original.IndexOf(';', header); if (declaration < 0) return "";
         string code = original.Insert(declaration + 1, "\n#include \"res://shaders/cave_crystal_surface.gdshaderinc\"\nuniform float cave_crystal_mineral_strength=.65;\nvarying float cave_crystal_weight;\n"); var matches = Regex.Matches(code, @"void\s+vertex\s*\(\s*\)\s*\{"); if (matches.Count != 1) return "";
         string control = slot switch { 0 => "UV.x", 1 => "UV.y", 2 => "UV2.x", _ => "UV2.y" }; code = code.Insert(matches[0].Index + matches[0].Length, "\n cave_crystal_weight=" + control + ";\n"); int final = code.LastIndexOf('}'); if (final < 0) return "";
         string p = rock ? "cave_position" : "(forest_local_position+mod(forest_origin,vec3(3840.0)))", amount = original.Contains("float cave_biome_control(", StringComparison.Ordinal) ? "cave_biome_control(cave_crystal_weight," + slot + ")" : "clamp(cave_crystal_weight,0.0,1.0)"; if (entry) amount += "*smoothstep(1.0,10.0,cave_entry_depth)";

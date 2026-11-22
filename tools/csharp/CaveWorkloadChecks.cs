@@ -135,7 +135,11 @@ internal static class CaveWorkloadChecks
             work.configuration.Set("indexed_entry_payload",indexed); referenceWork.Get("configuration").AsGodotObject().Set("indexed_entry_payload",indexed);
             var actual=work.portal(bundle,columns,parents,new D(),true); var original=referenceWork.Call("portal",bundle,columns,parents,new D(),true);
             require(actual["valid"].AsBool(),"C# portal fixture failed: "+actual);
-            require(GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(actual)),"Complete portal worker payload differs: "+MigrationComparison.FirstDifference(original,actual));
+            // Compact textures are a lossless representation of the original
+            // 17-texel vertex layout. Reconstruct that layout independently;
+            // every byte, mesh, normal, index and physical face still compares.
+            var expanded=CaveGpuPayloadChecks.CanonicalPayload(actual,require);
+            require(GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(expanded)),"Complete portal worker payload differs: "+MigrationComparison.FirstDifference(original,expanded));
             require(managed.Get("surface_columns").AsGodotDictionary().Count==0 && managed.Get("surface_limits").AsGodotDictionary().Count==0 && managed.Get("top_height").AsCallable().Target==null,"Portal worker retained its surface snapshot");
         }
         Measurements = new D { ["site"] = site, ["cell"] = key, ["seed"] = 17, ["rows"] = rows,

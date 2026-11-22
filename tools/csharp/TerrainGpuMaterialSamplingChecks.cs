@@ -21,9 +21,9 @@ internal static class TerrainGpuMaterialSamplingChecks
     {
         require(DisplayServer.GetName()!="headless",
             "Material sampling parity requires an actual graphics device");
-        using var shader=new Shader{Code=Program()};
         using var colors=Texture(false);
         using var normals=Texture(true);
+        var shader=new Shader{Code=Program()};
         const int size=48;
         var viewports=new List<SubViewport>();
         var materials=new List<ShaderMaterial>();
@@ -112,6 +112,7 @@ internal static class TerrainGpuMaterialSamplingChecks
         {
             foreach(var viewport in viewports)viewport.Free();
             foreach(var material in materials)material.Dispose();
+            shader.Dispose();
         }
         Measurements=new D
         {
@@ -121,9 +122,11 @@ internal static class TerrainGpuMaterialSamplingChecks
             ["negative_control_different_channels"]=negativeDifferences,["materials"]=records,
             ["scope"]="Actual primary/coastal/snow projection procedures; all eight extension families use the tested badlands helper. Numerical terrain generation and full-world frame rate are separate checks."
         };
+        for(int frame=0;frame<4;frame++)await host.ToSignal(host.GetTree(),SceneTree.SignalName.ProcessFrame);
+        Measurements["production_terrain"]=await TerrainGpuMaterialSceneChecks.Run(host,colors,normals,require);
     }
 
-    private static Texture2DArray Texture(bool normal)
+    internal static Texture2DArray Texture(bool normal)
     {
         const int size=32,layers=16;
         var images=new Godot.Collections.Array<Image>();

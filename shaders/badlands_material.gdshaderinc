@@ -77,9 +77,9 @@ void badlands_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,
  s=mix(first,second,blend);t=vec3(0,0,1);
  if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
-void badlands_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
+void badlands_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient,vec3 material_origin){
  metres=max(round(metres*4.0)*.25,.25);int period=int(round(metres*4.0));
- ivec3 q=ivec3(round(forest_origin*4.0)),r=abs(q)%ivec3(period);
+ ivec3 q=ivec3(round(material_origin*4.0)),r=abs(q)%ivec3(period);
  if(q.x<0 && r.x>0)r.x=period-r.x;
  if(q.y<0 && r.y>0)r.y=period-r.y;
  if(q.z<0 && r.z>0)r.z=period-r.z;
@@ -89,7 +89,7 @@ void badlands_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,
  if(projection.y>.002){vec4 s;vec3 t;badlands_projected(id,vec2(p.x,-p.z*sign(n.y)),vec2(wp.x,-wp.z*sign(n.y)),vec2(dx.x,-dx.z*sign(n.y)),vec2(dy.x,-dy.z*sign(n.y)),fine,s,t);surface+=s*projection.y;gradient+=vec3(t.x,0,-t.y*sign(n.y))*projection.y;}
  if(projection.z>.002){vec4 s;vec3 t;badlands_projected(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,s,t);surface+=s*projection.z;gradient+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
 }
-void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks){
+void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks,vec3 material_origin,float material_water){
  float coordinate=badlands_coordinate();
  float region=badlands_control.y*15.0,phase=mod(coordinate,5.0),slope=1.0-clamp(n.y,0.0,1.0);
  float hard=badlands_hardness(phase);
@@ -160,10 +160,10 @@ void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
   int id=ids[k];bool rock=id==2;float metres=rock?badlands_rock_metres:badlands_ground_metres;
   vec4 s=badlands_average(id);vec3 g=vec3(0);
   float detail=1.0-smoothstep(rock?1500.0:160.0,rock?6500.0:850.0,view_distance);
-  if(detail>.003){vec4 near_surface;badlands_sample(id,metres,dx,dy,projection,n,fine,near_surface,g);s=mix(s,near_surface,detail);g*=detail;}
+  if(detail>.003){vec4 near_surface;badlands_sample(id,metres,dx,dy,projection,n,fine,near_surface,g,material_origin);s=mix(s,near_surface,detail);g*=detail;}
   // Do not magnify soil grains sixteen times over broad clay hills. Those
   // photograph shadows read as enormous soft boulders from a kilometre away.
-  if(id==2){float meso=1.0-smoothstep(4500.0,18000.0,view_distance);if(meso>.003){vec4 broad;vec3 ignored;badlands_sample(id,metres*8.0,dx,dy,projection,n,0.0,broad,ignored);s=mix(s,broad,meso*.16);}}
+  if(id==2){float meso=1.0-smoothstep(4500.0,18000.0,view_distance);if(meso>.003){vec4 broad;vec3 ignored;badlands_sample(id,metres*8.0,dx,dy,projection,n,0.0,broad,ignored,material_origin);s=mix(s,broad,meso*.16);}}
   float luminance=dot(s.rgb,vec3(.3,.5,.2));
   vec3 geological=band*(.55+1.0*luminance);
   float band_exposure=mix(.28,1.0,smoothstep(.015,.2,slope));
@@ -173,7 +173,7 @@ void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
   float regional_grade=badlands_regional_strength*max(clay*.95,pale*.9);
   float geological_grade=max(badlands_strata_strength*band_exposure,regional_grade)*(1.0-deposit*.5);
   s.rgb=mix(s.rgb,geological,clamp(geological_grade,0.0,1.0));
-  float moist=1.0-smoothstep(.2,2.5,abs(world_position.y-swamp_water_level));
+  float moist=1.0-smoothstep(.2,2.5,abs(world_position.y-material_water));
   s.rgb*=badlands_gain*(1.0-moist*.12);
   color+=s.rgb*amount;rough+=mix(max(s.a,.72),.6,moist*.3)*amount;
   gradient+=g*badlands_normal_strength*amount;materials+=id_color(id)*amount;
@@ -196,12 +196,12 @@ void shade_badlands(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
  color*=.88+fracture*.22;
  color*=1.0+(weather-.5)*badlands_weathering*.15;rough=clamp(rough+(silt*.05-mineral*.04)*lamination,.6,1.0);masks=vec3(exposed,deposit,hard);
 }
-vec3 badlands_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks){
+vec3 badlands_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks,vec2 material_surface){
  if(debug_view==240)return id_color(int(round(badlands_control.y*15.0)));
  if(debug_view==241)return vec3(badlands_control.x);
  if(debug_view==242)return vec3(badlands_phase()/5.0,masks.z,0);
  if(debug_view==243)return geology_control;
- if(debug_view==244)return vec3(terrain_surface.y,geology_control.y,0);
+ if(debug_view==244)return vec3(material_surface.y,geology_control.y,0);
  if(debug_view==245)return materials;
  if(debug_view==246)return mapped*.5+.5;
  return id_color(int(chunk_lod));

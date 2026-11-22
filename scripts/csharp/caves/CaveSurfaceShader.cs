@@ -56,14 +56,44 @@ public partial class CaveSurfaceShader : RefCounted
         var replacement = new StringBuilder(load_texels()); int offset = 0;
         foreach (var item in Layout)
         {
+            // The all-biome terrain shader packs these vec3 values into spare
+            // smooth W lanes to fit Vulkan's interpolator budget. Constructors
+            // used for fragment access are not assignable vertex l-values.
+            string[]? packed = item.Name switch
+            {
+                "tropical_control" when original.Contains("varying vec4 terrain_jungle_control_values;", StringComparison.Ordinal)
+                    => new[] { "terrain_jungle_control_values.w", "terrain_forest_control_values.w", "terrain_savanna_control_values.w" },
+                "mountain_shape" when original.Contains("varying vec4 terrain_savanna_geology_values;", StringComparison.Ordinal)
+                    => new[] { "terrain_savanna_geology_values.w", "terrain_savanna_water_values.w", "terrain_savanna_surface_values.w" },
+                "badlands_control" when original.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal)
+                    => new[] { "terrain_forest_values.w", "terrain_forest_local_values.w" },
+                "swamp_ecology" when original.Contains("varying vec4 terrain_swamp_control_values;", StringComparison.Ordinal)
+                    => new[] { "terrain_swamp_control_values.w", "", "terrain_swamp_hydro_values.w" },
+                _ => null
+            };
+            if (packed is not null)
+            {
+                foreach (string lane in packed)
+                {
+                    string value = component(offset++);
+                    if (lane.Length > 0) replacement.Append(' ').Append(lane).Append('=').Append(value).Append(";\n");
+                }
+                continue;
+            }
             replacement.Append(' ').Append(item.Name).Append('='); if (item.Width > 1) replacement.Append("vec").Append(item.Width).Append('(');
             for (int i = 0; i < item.Width; i++) { if (i > 0) replacement.Append(','); replacement.Append(component(offset++)); }
             replacement.Append(item.Width > 1 ? ");\n" : ";\n");
         }
         if (offset != 67) throw new InvalidOperationException("Unexpected terrain surface payload layout");
-        replacement.Append(" UV.x=swamp_water_level;forest_local_position=VERTEX").Append(parent_space ? "+cave_parent_offset" : "").Append(";forest_origin=").Append(parent_space ? "cave_parent_origin" : "MODEL_MATRIX[3].xyz").Append(";\n");
+        bool packedInterface = original.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal);
+        replacement.Append(" UV.x=swamp_water_level;forest_local_position=VERTEX").Append(parent_space ? "+cave_parent_offset" : "").Append(';');
+        if (packedInterface) replacement.Append("COLOR=terrain_coast_values;UV2=terrain_surface;");
+        else replacement.Append("forest_origin=").Append(parent_space ? "cave_parent_origin" : "MODEL_MATRIX[3].xyz").Append(';');
+        replacement.Append('\n');
         if (entry_transition) replacement.Append(" cave_entry_depth=surface_p16.w;\n");
         string result = original[..begin].Replace("void vertex() {", uniforms(parent_space, entry_transition, hive_entry) + "\nvoid vertex() {", StringComparison.Ordinal) + replacement + original[end..];
+        if (packedInterface && parent_space)
+            result = result.Replace("vec3 forest_origin=MODEL_MATRIX[3].xyz;", "vec3 forest_origin=cave_parent_origin;", StringComparison.Ordinal);
         if (hive_entry && entry_transition)
         {
             string biology = Extensions.Code;

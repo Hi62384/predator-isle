@@ -14,6 +14,7 @@ internal static class CaveGpuPayloadRenderedChecks
     internal static async Task Run(Node host, Action<bool, string> require)
     {
         require(DisplayServer.GetName() != "headless", "Cave GPU payload check requires an actual rendered display");
+        CaveGpuPayloadChecks.CheckProductionAdapters(require);
         using var payload = new CaveSurfacePayload(); using var source = new CaveSurfaceShader();
         using var legacyShader = new Shader { Code = ShaderSource(source.load_texels(), false) };
         using var packedShader = new Shader { Code = ShaderSource(CaveSurfaceShader.CompactTexels(), true) };

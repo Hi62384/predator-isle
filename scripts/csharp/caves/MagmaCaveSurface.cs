@@ -30,7 +30,9 @@ public partial class MagmaCaveSurface : RefCounted
     public string source(string original, int slot, bool entry)
     {
         if (slot < 0 || slot > 3 || original.Contains("varying float cave_magma_weight;", StringComparison.Ordinal)) return ""; bool rock = original.Contains("varying vec3 cave_position;", StringComparison.Ordinal);
-        if (!rock && !(entry && original.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal))) return "";
+        bool terrain = original.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal)
+            || original.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal);
+        if (!rock && !(entry && terrain)) return "";
         int header = original.IndexOf("render_mode ", StringComparison.Ordinal); if (header < 0) return ""; int declaration = original.IndexOf(';', header); if (declaration < 0) return "";
         string code = original.Insert(declaration + 1, "\n#include \"res://shaders/cave_magma_surface.gdshaderinc\"\nuniform float cave_magma_cooled_strength=.85;\nvarying float cave_magma_weight;\n"); var matches = Regex.Matches(code, @"void\s+vertex\s*\(\s*\)\s*\{"); if (matches.Count != 1) return "";
         string control = slot switch { 0 => "UV.x", 1 => "UV.y", 2 => "UV2.x", _ => "UV2.y" }; code = code.Insert(matches[0].Index + matches[0].Length, "\n cave_magma_weight=" + control + ";\n");

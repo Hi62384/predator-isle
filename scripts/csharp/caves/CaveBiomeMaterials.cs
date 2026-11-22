@@ -20,7 +20,7 @@ public partial class CaveBiomeMaterials : RefCounted
     public Shader? shader(Shader original, A ids, Resource? registry) => shader(original, ids, registry, false);
     public Shader? shader(Shader original, A ids, Resource? registry, bool entry)
     {
-        if (ids.Count == 0) return original;
+        if (ids.Count == 0 && !entry) return original;
         string key = Hash(original.Code) + "/" + ids + "/" + entry + "/independent_targets_v1/csharp/" + typeof(CaveBiomeBlend).Assembly.ManifestModule.ModuleVersionId;
         foreach (var id in ids)
         {
@@ -39,6 +39,7 @@ public partial class CaveBiomeMaterials : RefCounted
             if (ids.Count > 1) code = code.Insert(code.LastIndexOf('}'), _blend.accumulate(slot));
         }
         if (ids.Count > 1) code = code.Insert(code.LastIndexOf('}'), _blend.finish());
+        if (entry) { code = CaveVaryingPacking.Pack(code); if (code.Length == 0) return null; }
         var result = new Shader { Code = code }; if (_ring.Count >= 16) _shaders.Remove(_ring.Dequeue()); _ring.Enqueue(key); _shaders[key] = result; return result;
     }
     public void bind(ShaderMaterial material, A ids, Resource? registry) => bind(material, ids, registry, new D());

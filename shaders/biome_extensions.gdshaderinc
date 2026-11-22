@@ -14,7 +14,7 @@ vec3 extension_tint(int family,int type){
  if(family==6)return type==2?vec3(.58,.47,.32):(type==4?vec3(.47,.43,.36):vec3(.46,.26,.13));
  return type==2?vec3(.14,.12,.12):(type==5?vec3(.23,.21,.19):(type==1?vec3(.44,.38,.35):vec3(.24,.12,.11)));
 }
-void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 emission){
+void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 emission,vec3 material_origin){
  float region=control.x*5.0,wet=control.y,feature=control.z,slope=1.0-clamp(n.y,0.0,1.0);
  float spore_light=family==3?smoothstep(.5,.8,feature):0.0;
  if(family==3)feature=clamp(feature*2.0,0.0,1.0);
@@ -48,8 +48,8 @@ void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 project
  // Ground and exposed rock can be exactly absent. Skip triplanar texture
  // and normal fetches for an endpoint that has zero blend contribution.
  if(near_detail>.002){
-  if(rock<1.0)badlands_sample(ground_id,2.5,dx,dy,projection,n,fine,g,gg);
-  if(rock>0.0)badlands_sample(rock_id,8.0,dx,dy,projection,n,fine,r,rg);
+  if(rock<1.0)badlands_sample(ground_id,2.5,dx,dy,projection,n,fine,g,gg,material_origin);
+  if(rock>0.0)badlands_sample(rock_id,8.0,dx,dy,projection,n,fine,r,rg,material_origin);
  }
  vec4 surface=mix(g,r,rock);gradient=mix(gg,rg,rock)*extension_normals[family]*near_detail;
  // Authored geological tints follow the active renderer's working space,
@@ -60,7 +60,7 @@ void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 project
  if(outcrop_detail>.01){
   // A subdued albedo-only outcrop scale, not a photographed grain normal
   // enlarged to 96m boulders. Actual landform relief comes from the mesh.
-  vec4 broad;vec3 ignored;badlands_sample(rock_id,24.0,dx,dy,projection,n,0.0,broad,ignored);
+  vec4 broad;vec3 ignored;badlands_sample(rock_id,24.0,dx,dy,projection,n,0.0,broad,ignored,material_origin);
   color*=mix(1.0,.88+dot(broad.rgb,vec3(.3,.5,.2))*.24,outcrop_detail*.2);
  }
  color*=.75*(1.0-wet*.16);rough=mix(rough,max(.32,rough-.12),wet);
@@ -85,11 +85,11 @@ void shade_extension(int family,vec3 control,vec3 n,vec3 dx,vec3 dy,vec3 project
  }
  if(family==3 || family==7){
   vec3 bio;float tissue_rough=.87;
-  if(family==7)alien_tissue_sample(region,view_distance,dx,dy,projection,n,bio,tissue_rough);
+  if(family==7)alien_tissue_sample(region,view_distance,dx,dy,projection,n,bio,tissue_rough,material_origin);
   else{
    bio=textureLod(biological_colors,vec3(.5,.5,0.0),11.0).rgb;
    float detail=1.0-smoothstep(400.0,1800.0,view_distance);
-   if(detail>.002)bio=mix(bio,biological_sample(0,2.5,dx,dy,projection,n),detail);
+   if(detail>.002)bio=mix(bio,biological_sample(0,2.5,dx,dy,projection,n,material_origin),detail);
   }
   float colony_texture=field(world_position.xz*.032+vec2(field(world_position.xz*.007)*4.0));
   float patch=mix(.58,1.0,smoothstep(.12,.88,colony_texture));

@@ -57,12 +57,12 @@ void savanna_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,o
  surface=mix(first,second,blend);t=vec3(0,0,1);
  if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
-void savanna_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
+void savanna_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient,vec3 material_origin){
  // Quarter-metre repeats keep the origin remainder exactly representable at
  // the saved world's multi-million-metre integer chunk coordinates.
  metres=max(round(metres*4.0)*.25,.25);
  int quarter_period=int(round(metres*4.0));
- ivec3 q=ivec3(round(forest_origin*4.0));
+ ivec3 q=ivec3(round(material_origin*4.0));
  ivec3 period=ivec3(quarter_period);
  // GLSL signed remainder is not portable for negative operands. Divide only
  // positive magnitudes, then reflect the phase explicitly on negative axes.
@@ -79,7 +79,7 @@ void savanna_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,f
  if(projection.z>.002){vec4 s;vec3 t;savanna_projected(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,s,t);surface+=s*projection.z;gradient+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
 }
 
-void shade_savanna(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks){
+void shade_savanna(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks,vec3 material_origin){
  float moisture=clamp(savanna_control.x+savanna_season*.4*(1.0-savanna_surface.x*.5),0.0,1.0);
  float drain=savanna_control.y,slope=1.0-clamp(n.y,0.0,1.0);
  float rock=clamp(savanna_geology.x*savanna_bedrock*(.65+smoothstep(.04,.42,slope)),0.0,1.0);
@@ -119,10 +119,10 @@ void shade_savanna(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 co
   float metres=(id==5 || id==6)?savanna_rock_metres:savanna_ground_metres;
   if(id==8)metres=savanna_ground_metres*.5;
   vec4 s;vec3 g;float distant=smoothstep(70.0,350.0,view_distance);
-  if(distant>.999){s=savanna_average(id);g=vec3(0);}else{savanna_sample(id,metres,dx,dy,projection,n,fine,s,g);if(distant>.001)s=mix(s,savanna_average(id),distant);}
+  if(distant>.999){s=savanna_average(id);g=vec3(0);}else{savanna_sample(id,metres,dx,dy,projection,n,fine,s,g,material_origin);if(distant>.001)s=mix(s,savanna_average(id),distant);}
   if(id==5 || id==6){
    float macro_fade=1.0-smoothstep(1200.0,6500.0,view_distance);
-   if(macro_fade>.001 && savanna_rock_macro>.001){vec4 ms;vec3 mg;savanna_sample(id,savanna_rock_metres*6.0,dx,dy,projection,n,macro_fade,ms,mg);s.rgb=mix(s.rgb,ms.rgb,savanna_rock_macro*macro_fade);g+=mg*savanna_rock_macro*macro_fade;}
+   if(macro_fade>.001 && savanna_rock_macro>.001){vec4 ms;vec3 mg;savanna_sample(id,savanna_rock_metres*6.0,dx,dy,projection,n,macro_fade,ms,mg,material_origin);s.rgb=mix(s.rgb,ms.rgb,savanna_rock_macro*macro_fade);g+=mg*savanna_rock_macro*macro_fade;}
    s.rgb*=savanna_rock_gain;
   }
   color+=s.rgb*amount;rough+=s.a*amount;gradient+=g*amount*((id==5 || id==6)?savanna_rock_normal:savanna_normal_strength);

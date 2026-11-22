@@ -32,7 +32,9 @@ public partial class CaveSurfaceCut : RefCounted
         if (original == null) return null;
         string source = original.Code; const string marker = "void fragment() {";
         int first = source.IndexOf(marker, StringComparison.Ordinal);
-        if (first < 0 || source.IndexOf(marker, first + marker.Length, StringComparison.Ordinal) >= 0 || !source.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal)) return null;
+        bool terrain = source.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal)
+            || source.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal);
+        if (first < 0 || source.IndexOf(marker, first + marker.Length, StringComparison.Ordinal) >= 0 || !terrain) return null;
         string digest = Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(source))).ToLowerInvariant() + (common_projection ? "/shared_projection" : "");
         if (_shaders.TryGetValue(digest, out var cached)) return cached;
         const string uniforms = "\nuniform bool cave_cut_enabled=false;\nuniform sampler2D cave_cut_mask:filter_nearest,repeat_disable;\nuniform vec2 cave_cut_tile_offset=vec2(0);\n";

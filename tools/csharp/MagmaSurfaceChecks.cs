@@ -12,7 +12,8 @@ internal static class MagmaSurfaceChecks
     {
         using var old = GD.Load<GDScript>("res://scripts/caves/magma_surface.gd").New().AsGodotObject(); using var current = new MagmaCaveSurface();
         using var loaded = GD.Load<CSharpScript>("res://scripts/csharp/caves/MagmaCaveSurface.cs").Call("new").AsGodotObject(); require(loaded is MagmaCaveSurface, "Magma provider factory failed");
-        string rock = GD.Load<Shader>("res://shaders/default_cave_rock.gdshader").Code; using var surfaceShader = new CaveSurfaceShader(); string entrance = surfaceShader.code(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader").Code, true, true, false, true);
+        string rock = GD.Load<Shader>("res://shaders/default_cave_rock.gdshader").Code; using var surfaceShader = new CaveSurfaceShader(); // Supply only the historical text guard; both adapters still receive the complete current shader.
+        string entrance = "// Reference shape: varying vec3 forest_local_position;\n" + surfaceShader.code(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader").Code, true, true, false, true);
         foreach (string source in new[] { rock, entrance, "shader_type spatial; void vertex(){}", rock + "\nvarying float cave_magma_weight;" }) foreach (int slot in new[] { -1, 0, 1, 2, 3, 4 }) foreach (bool entry in new[] { false, true })
             require(old.Call("source", source, slot, entry).AsString() == current.source(source, slot, entry), "Magma source adapter differs");
         foreach (var material in new[] { new D(), new D { ["cooled_strength"] = double.NaN }, new D { ["lava_emission_strength"] = 9.0 }, new D { ["lava_lighting"] = 1, ["lava_detail_quality"] = 1.0 } })

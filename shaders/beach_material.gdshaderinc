@@ -39,9 +39,9 @@ void beach_plane(int id,vec2 uv,vec2 wp,vec2 dx,vec2 dy,float fine,out vec4 s,ou
  s=mix(first,second,blend);t=vec3(0,0,1);
  if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.4);}
 }
-void beach_sample(int id,float metres,float angle,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 s,out vec3 g){
+void beach_sample(int id,float metres,float angle,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 s,out vec3 g,vec3 material_origin){
  metres=max(round(metres*4.0)*.25,.25);
- int period=int(round(metres*4.0));ivec3 q=ivec3(round(forest_origin*4.0)),r=abs(q)%ivec3(period);
+ int period=int(round(metres*4.0));ivec3 q=ivec3(round(material_origin*4.0)),r=abs(q)%ivec3(period);
  if(q.x<0 && r.x>0)r.x=period-r.x;if(q.y<0 && r.y>0)r.y=period-r.y;if(q.z<0 && r.z>0)r.z=period-r.z;
  vec3 p=(forest_local_position+vec3(r)*.25)/metres,wp=world_position/metres;dx/=metres;dy/=metres;
  s=vec4(0);g=vec3(0);
@@ -57,18 +57,18 @@ void beach_sample(int id,float metres,float angle,vec3 dx,vec3 dy,vec3 projectio
  }
  if(projection.z>.002){vec4 a;vec3 t;beach_plane(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,a,t);s+=a*projection.z;g+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
 }
-void shade_beach(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 mixture){
+void shade_beach(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 mixture,vec3 material_origin){
  float wet=beach_wet(),region=beach_control.y*15.0,angle=beach_angle();
  float coarse=(1.0-smoothstep(.5,1.5,abs(region-14.0))+.4*(1.0-smoothstep(.5,1.5,abs(region-1.0))))*beach_coarse;
  int dry=coarse>.2?2:0;float ripple=beach_ripples*(1.0-wet)*(1.0-smoothstep(.12,.3,1.0-n.y));
  vec4 a=textureLod(beach_colors,vec3(.5,.5,float(dry)),8.0),b=textureLod(beach_colors,vec3(.5,.5,1),8.0);vec3 ga=vec3(0),gb=vec3(0);
  float detail=1.0-smoothstep(100.0,900.0,view_distance);
  if(detail>.001){
-  vec4 sa,sb;beach_sample(dry,beach_metres,angle,dx,dy,projection,n,fine,sa,ga);
+  vec4 sa,sb;beach_sample(dry,beach_metres,angle,dx,dy,projection,n,fine,sa,ga,material_origin);
   // Compacted wet photograph is not merely darkened dry sand.
-  beach_sample(1,1.75,angle+1.5708,dx,dy,projection,n,fine,sb,gb);
+  beach_sample(1,1.75,angle+1.5708,dx,dy,projection,n,fine,sb,gb,material_origin);
   a=mix(a,sa,detail);b=mix(b,sb,detail);ga*=detail;gb*=detail;
-  if(ripple>.005){vec4 sr;vec3 gr;beach_sample(3,3.5,angle,dx,dy,projection,n,fine,sr,gr);a=mix(a,sr,ripple*.5);ga=mix(ga,gr,ripple);}
+  if(ripple>.005){vec4 sr;vec3 gr;beach_sample(3,3.5,angle,dx,dy,projection,n,fine,sr,gr,material_origin);a=mix(a,sr,ripple*.5);ga=mix(ga,gr,ripple);}
  }
  float macro=(field(world_position.xz*.0007+vec2(13,41))-.5)*beach_macro;
  float lee=dot(n,vec3(cos(angle),0,sin(angle)));

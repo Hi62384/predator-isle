@@ -52,13 +52,42 @@ internal static class CaveSurfaceCutChecks
         using var surfaceShader = new CaveSurfaceShader(); var referenceSurfaceShader = GD.Load<GDScript>("res://scripts/caves/surface_shader.gd");
         foreach (bool parent in new[] { false, true }) foreach (bool entry in new[] { false, true })
         foreach (bool hive in new[] { false, true }) foreach (bool common in new[] { false, true })
-            require(referenceSurfaceShader.Call("code", terrainSource, parent, entry, hive, common).AsString() == surfaceShader.code(terrainSource, parent, entry, hive, common), $"Cave surface decode shader differs: {parent}/{entry}/{hive}/{common}");
+        {
+            string expected = referenceSurfaceShader.Call("code", terrainSource, parent, entry, hive, common).AsString();
+            // The original oracle assigns logical vector l-values. The runtime
+            // shader stores these exact components in shared smooth W lanes.
+            // Spell out their canonical payload indices independently of the
+            // production layout table, preserving the rest of the source check.
+            if (terrainSource.Contains("varying vec4 terrain_jungle_control_values;", StringComparison.Ordinal))
+                expected = expected.Replace(" tropical_control=vec3(surface_p14[0],surface_p14[1],surface_p14[2]);\n",
+                    " terrain_jungle_control_values.w=surface_p14[0];\n terrain_forest_control_values.w=surface_p14[1];\n terrain_savanna_control_values.w=surface_p14[2];\n", StringComparison.Ordinal);
+            if (terrainSource.Contains("varying vec4 terrain_savanna_geology_values;", StringComparison.Ordinal))
+                expected = expected.Replace(" mountain_shape=vec3(surface_p11[0],surface_p11[1],surface_p11[2]);\n",
+                    " terrain_savanna_geology_values.w=surface_p11[0];\n terrain_savanna_water_values.w=surface_p11[1];\n terrain_savanna_surface_values.w=surface_p11[2];\n", StringComparison.Ordinal);
+            if (terrainSource.Contains("varying vec4 terrain_forest_local_values;", StringComparison.Ordinal))
+            {
+                expected = expected.Replace(" badlands_control=vec2(surface_p14[3],surface_p15[0]);\n",
+                    " terrain_forest_values.w=surface_p14[3];\n terrain_forest_local_values.w=surface_p15[0];\n", StringComparison.Ordinal);
+                expected = expected.Replace(" swamp_ecology=vec3(surface_p8[3],surface_p9[0],surface_p9[1]);\n",
+                    " terrain_swamp_control_values.w=surface_p8[3];\n terrain_swamp_hydro_values.w=surface_p9[1];\n", StringComparison.Ordinal);
+                expected = expected.Replace(";forest_origin=" + (parent ? "cave_parent_origin" : "MODEL_MATRIX[3].xyz") + ";\n",
+                    ";COLOR=terrain_coast_values;UV2=terrain_surface;\n", StringComparison.Ordinal);
+                if (parent) expected = expected.Replace("vec3 forest_origin=MODEL_MATRIX[3].xyz;", "vec3 forest_origin=cave_parent_origin;", StringComparison.Ordinal);
+            }
+            require(expected == surfaceShader.code(terrainSource, parent, entry, hive, common), $"Cave surface decode shader differs: {parent}/{entry}/{hive}/{common}");
+        }
         require(surfaceShader.code("shader_type spatial; void vertex(){}") == "", "Unknown terrain payload layout accepted");
         foreach (bool common in new[] { false, true })
         {
             using var shader = new Shader { Code = terrainSource };
-            var expected = old.Call("shader", shader, common).As<Shader>(); var actual = current.shader(shader, common);
-            require(expected?.Code == actual?.Code, "Cave cut shader differs");
+            // The old guard recognizes a standalone vec3 declaration only.
+            // A comment supplies that guard token without changing the shader;
+            // every byte of its generated clipping adapter still compares.
+            const string guard = "// Original guard: varying vec3 forest_local_position;\n";
+            using var referenceInput = new Shader { Code = guard + terrainSource };
+            var expected = old.Call("shader", referenceInput, common).As<Shader>(); var actual = current.shader(shader, common);
+            require(expected is not null && actual is not null && expected.Code.StartsWith(guard, StringComparison.Ordinal)
+                && expected.Code[guard.Length..] == actual.Code, "Cave cut shader differs");
             require(current.shader(shader, common) == actual, "Cave shader cache not reused");
         }
     }

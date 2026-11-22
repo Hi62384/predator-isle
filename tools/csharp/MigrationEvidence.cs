@@ -20,6 +20,8 @@ internal static class MigrationEvidence
             }
         using var report = new D { ["passed"] = passed, ["checks"] = checks, ["mode"] = name, ["utc"] = DateTime.UtcNow.ToString("O"),
             ["display_server"] = DisplayServer.GetName(), ["source_sha256"] = guards, ["measurements"] = measurements ?? new(), ["error"] = error,
+            ["godot_worker_pool_max_threads"] = ProjectSettings.GetSetting("threading/worker_pool/max_threads", -1),
+            ["mesa_lp_num_threads"] = OS.GetEnvironment("LP_NUM_THREADS"),
             ["scope"] = "Focused C# migration assertions against preserved GDScript references and current scene bindings. Source guards include current runtime code, configuration and shaders. Not complete migration, all-world appearance, isolated performance, or uninterrupted traversal acceptance. Sandboxed engine certificate-store errors are recorded separately in engine logs." };
         using var file = Godot.FileAccess.Open($"res://data/csharp_check_{name}_latest.json", Godot.FileAccess.ModeFlags.Write);
         if (file == null) throw new IOException("Could not save migration evidence");

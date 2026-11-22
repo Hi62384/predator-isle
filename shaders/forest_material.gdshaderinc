@@ -62,12 +62,12 @@ vec4 forest_average(int id){
  int shared_id=id==2?1:(id==3?6:(id==4?2:(id==5?3:(id==6?4:5))));
  return textureLod(jungle_colors,vec3(0,0,float(shared_id)),11.0);
 }
-void forest_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
+void forest_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient,vec3 material_origin){
  // Quarter-metre repeats keep the origin remainder exactly representable at
  // the saved world's multi-million-metre integer chunk coordinates.
  metres=max(round(metres*4.0)*.25,.25);
  int quarter_period=int(round(metres*4.0));
- ivec3 q=ivec3(round(forest_origin*4.0));
+ ivec3 q=ivec3(round(material_origin*4.0));
  ivec3 period=ivec3(quarter_period);
  // GLSL signed remainder is not portable for negative operands. Divide only
  // positive magnitudes, then reflect the phase explicitly on negative axes.
@@ -83,7 +83,7 @@ void forest_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,fl
  if(projection.y>.002){vec4 s;vec3 t;forest_projected(id,vec2(p.x,-p.z*sign(n.y)),vec2(wp.x,-wp.z*sign(n.y)),vec2(dx.x,-dx.z*sign(n.y)),vec2(dy.x,-dy.z*sign(n.y)),fine,s,t);surface+=s*projection.y;gradient+=vec3(t.x,0,-t.y*sign(n.y))*projection.y;}
  if(projection.z>.002){vec4 s;vec3 t;forest_projected(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,s,t);surface+=s*projection.z;gradient+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
 }
-void shade_forest(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 material_mix,out vec3 diagnostics){
+void shade_forest(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 material_mix,out vec3 diagnostics,vec3 material_origin){
  float wet=forest_control.x,drain=forest_control.y,conifer=forest_ecology.x,clearing=forest_ecology.y;
  float slope=1.0-clamp(n.y,0.0,1.0);
  float broad=ground_field(world_position.xz/270.0+vec2(17,79));
@@ -125,7 +125,7 @@ void shade_forest(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 col
   if(id==8)metres=1.4;
   vec4 s;vec3 g;
   float distant=smoothstep(100.0,650.0,view_distance);
-  if(distant>.999){s=forest_average(id);g=vec3(0);}else{forest_sample(id,metres,dx,dy,projection,n,fine,s,g);if(distant>.001)s=mix(s,forest_average(id),distant);}
+  if(distant>.999){s=forest_average(id);g=vec3(0);}else{forest_sample(id,metres,dx,dy,projection,n,fine,s,g,material_origin);if(distant>.001)s=mix(s,forest_average(id),distant);}
   color+=s.rgb*amount;rough+=max(s.a,id==4?.5:.7)*amount;
   gradient+=g*amount*(id==6 || id==7?forest_rock_normal:forest_normal_strength);
   if(id==0)leaf+=amount;if(id==1)needle+=amount;if(id==3 || id==7)moss_selected+=amount;

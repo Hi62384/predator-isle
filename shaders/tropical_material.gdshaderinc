@@ -49,9 +49,9 @@ void tropical_projected(int id,vec2 uv,vec2 world_uv,vec2 dx,vec2 dy,float fine,
  s=mix(first,second,blend);t=vec3(0,0,1);
  if(fine>.001){t=normalize(mix(first_normal,second_normal,blend));t.xy/=max(t.z,.35);}
 }
-void tropical_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient){
+void tropical_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,float fine,out vec4 surface,out vec3 gradient,vec3 material_origin){
  metres=max(round(metres*4.0)*.25,.25);int period=int(round(metres*4.0));
- ivec3 q=ivec3(round(forest_origin*4.0)),r=abs(q)%ivec3(period);
+ ivec3 q=ivec3(round(material_origin*4.0)),r=abs(q)%ivec3(period);
  if(q.x<0 && r.x>0)r.x=period-r.x;
  if(q.y<0 && r.y>0)r.y=period-r.y;
  if(q.z<0 && r.z>0)r.z=period-r.z;
@@ -61,11 +61,11 @@ void tropical_sample(int id,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,
  if(projection.y>.002){vec4 s;vec3 t;tropical_projected(id,vec2(p.x,-p.z*sign(n.y)),vec2(wp.x,-wp.z*sign(n.y)),vec2(dx.x,-dx.z*sign(n.y)),vec2(dy.x,-dy.z*sign(n.y)),fine,s,t);surface+=s*projection.y;gradient+=vec3(t.x,0,-t.y*sign(n.y))*projection.y;}
  if(projection.z>.002){vec4 s;vec3 t;tropical_projected(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,s,t);surface+=s*projection.z;gradient+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
 }
-void shade_tropical(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks){
+void shade_tropical(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 color,out float rough,out vec3 gradient,out vec3 materials,out vec3 masks,vec3 material_origin,float material_water){
  float slope=1.0-clamp(n.y,0.0,1.0),region=tropical_control.z*15.0;
  float volcanic=1.0-smoothstep(.5,1.5,abs(region-9.0)),lime=1.0-smoothstep(.5,1.5,abs(region-10.0));
  float rocky=clamp((1.0-smoothstep(.5,1.8,abs(region-4.0)))+volcanic*.5+lime*.7,0.0,1.0);
- float relative=world_position.y-swamp_water_level;
+ float relative=world_position.y-material_water;
  float bank=1.0-smoothstep(.5,3.0,abs(relative));
  float wet=clamp(tropical_control.y*tropical_wetness+bank*.45,0.0,1.0);
  float rock=clamp((smoothstep(.055,.4,slope)*.8+geology_control.x*.8+rocky*.15-geology_control.z*.15)*tropical_rock_exposure,0.0,1.0);
@@ -96,22 +96,22 @@ void shade_tropical(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 c
   int id=ids[k];bool bedrock=id==5 || id==6;float metres=bedrock?tropical_rock_metres:tropical_ground_metres;
   vec4 s=tropical_average(id);vec3 g=vec3(0);
   float detail=1.0-smoothstep(bedrock?1200.0:150.0,bedrock?5000.0:750.0,view_distance);
-  if(detail>.003){vec4 sampled;tropical_sample(id,metres,dx,dy,projection,n,fine,sampled,g);s=mix(s,sampled,detail);g*=detail;}
-  if(bedrock){float macro=1.0-smoothstep(6000.0,18000.0,view_distance);if(macro>.003){vec4 big;vec3 ignored;tropical_sample(id,metres*12.0,dx,dy,projection,n,0.0,big,ignored);s=mix(s,big,macro*.25);}s.rgb*=mix(vec3(1.0),vec3(.6,.64,.62),volcanic*.65);s.rgb=mix(s.rgb,s.rgb*vec3(1.2,1.17,1.04),lime*.5);}
+  if(detail>.003){vec4 sampled;tropical_sample(id,metres,dx,dy,projection,n,fine,sampled,g,material_origin);s=mix(s,sampled,detail);g*=detail;}
+  if(bedrock){float macro=1.0-smoothstep(6000.0,18000.0,view_distance);if(macro>.003){vec4 big;vec3 ignored;tropical_sample(id,metres*12.0,dx,dy,projection,n,0.0,big,ignored,material_origin);s=mix(s,big,macro*.25);}s.rgb*=mix(vec3(1.0),vec3(.6,.64,.62),volcanic*.65);s.rgb=mix(s.rgb,s.rgb*vec3(1.2,1.17,1.04),lime*.5);}
   s.rgb*=tropical_gain*(1.0-wet*.14);s.a=mix(s.a,max(.48,s.a*.8),wet*.6);
   color+=s.rgb*amount;rough+=s.a*amount;gradient+=g*amount*tropical_normal_strength;materials+=id_color(id)*amount;
  }
  if(tropical_normal_strength>.001 && rock>.25 && enable_ambient_cliff_normals && fine>.001){vec3 a,b,ai,bi;float ac,bc;ambient_band(true,dx,dy,n,projection,a,ac,ai);ambient_band(false,dx,dy,n,projection,b,bc,bi);gradient+=(a*.25+b*.3)*rock*tropical_normal_strength;}
  color*=1.0+tropical_macro*(wet*.25-slope*.2+(meso-.5)*.2);rough=clamp(rough,.48,1.0);masks=vec3(rock,wet,path);
 }
-vec3 tropical_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks){
+vec3 tropical_debug(vec3 n,vec3 mapped,vec3 materials,vec3 masks,float material_water){
  if(debug_view==220)return id_color(int(round(tropical_control.z*15.0)));
  if(debug_view==221)return vec3(tropical_control.x);
  if(debug_view==222)return vec3(tropical_control.y);
  if(debug_view==223)return vec3(clamp(world_position.y/1400.0,0.0,1.0));
  if(debug_view==224)return vec3(1.0-n.y);
  if(debug_view==225)return vec3(masks.x);
- if(debug_view==226)return vec3(masks.y,clamp((swamp_water_level-world_position.y)/8.0,0.0,1.0),masks.z);
+ if(debug_view==226)return vec3(masks.y,clamp((material_water-world_position.y)/8.0,0.0,1.0),masks.z);
  if(debug_view==227)return materials;
  if(debug_view==228)return mapped*.5+.5;
  return id_color(int(chunk_lod));

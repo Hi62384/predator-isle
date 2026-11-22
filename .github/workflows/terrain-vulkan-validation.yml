@@ -7,8 +7,11 @@ on:
       - '.github/workflows/terrain-vulkan-validation.yml'
       - 'tools/csharp-runner/Program.cs'
       - 'scripts/csharp/terrain/**'
+      - 'scripts/csharp/caves/**'
+      - 'config/caves/**'
       - 'shaders/**'
       - 'tools/csharp/TerrainGpu*'
+      - 'tools/csharp/CaveGpu*'
   workflow_dispatch:
 
 concurrency:
@@ -71,24 +74,37 @@ jobs:
       - name: Confirm software Vulkan device
         run: |
           xvfb-run -a vulkaninfo --summary | head -n 100
-      - name: Run actual rendered grassland and collision comparison
-        timeout-minutes: 16
+      - name: Validate all-biome materials, cave shaders, and GPU collision
+        timeout-minutes: 24
         env:
           PREDATOR_ISLE_TEST_RENDER_METHOD: ${{ matrix.method }}
           PREDATOR_ISLE_TEST_DUMMY_AUDIO: '1'
           PREDATOR_ISLE_TEST_MEMORY_MIB: '5120'
           LIBGL_ALWAYS_SOFTWARE: '1'
+          LP_NUM_THREADS: '2'
         run: |
+          # Bound Godot's shader compiler pool as well as Mesa's worker count.
+          # This override exists only for checks; production settings are intact.
+          test ! -e override.cfg
+          trap 'rm -f override.cfg' EXIT
+          cat > override.cfg <<'CFG'
+          [threading]
+          worker_pool/max_threads=2
+          CFG
           if [ "$PREDATOR_ISLE_TEST_RENDER_METHOD" = "mobile" ]; then
             # The 3,504-point sampler fixture exceeded the software Mobile
             # driver's 120-second first-compile timeout. The focused actual
             # GPU heightmap, CPU-reference and Jolt test passed in that run.
             echo "::notice::Software Mobile: run focused GPU collision and explicit vertex-fallback checks; comprehensive 3,504-point sampler remains unverified."
             xvfb-run -a dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-vertex gpu-extension gpu-terrain
+              gpu-vertex gpu-extension gpu-materials gpu-caves gpu-terrain \
+              gpu-cave-scene-0 gpu-cave-scene-1 gpu-cave-scene-2 gpu-cave-scene-3 \
+              gpu-cave-scene-4 gpu-cave-scene-5 gpu-cave-scene-6 gpu-cave-scene-7
           else
             xvfb-run -a dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-sampler gpu-vertex gpu-extension gpu-terrain
+              gpu-sampler gpu-vertex gpu-extension gpu-materials gpu-caves gpu-terrain \
+              gpu-cave-scene-0 gpu-cave-scene-1 gpu-cave-scene-2 gpu-cave-scene-3 \
+              gpu-cave-scene-4 gpu-cave-scene-5 gpu-cave-scene-6 gpu-cave-scene-7
           fi
       - name: Upload semantic and renderer logs
         if: always()

@@ -27,12 +27,12 @@ vec3 biological_projected(int layer,vec2 uv,vec2 dx,vec2 dy,vec2 reference){
  }
  return mix(first,second,blend);
 }
-vec3 biological_sample(int layer,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n){
+vec3 biological_sample(int layer,float metres,vec3 dx,vec3 dy,vec3 projection,vec3 n,vec3 material_origin){
  // Terrain and attached shells share integer chunk origins.30m is six full
  // mirrored2.5m periods, fifteen2m repeats and twenty1.5m repeats. Reducing
  // to only one2.5m period loses odd mirror parity at parent/child boundaries.
  // Keep modulus operands nonnegative: signed GLES remainder is not portable.
- ivec3 biological_origin=ivec3(round(forest_origin)),biological_phase=abs(biological_origin)%ivec3(30);
+ ivec3 biological_origin=ivec3(round(material_origin)),biological_phase=abs(biological_origin)%ivec3(30);
  if(biological_origin.x<0 && biological_phase.x>0)biological_phase.x=30-biological_phase.x;
  if(biological_origin.y<0 && biological_phase.y>0)biological_phase.y=30-biological_phase.y;
  if(biological_origin.z<0 && biological_phase.z>0)biological_phase.z=30-biological_phase.z;
@@ -44,20 +44,20 @@ vec3 biological_sample(int layer,float metres,vec3 dx,vec3 dy,vec3 projection,ve
 }
 int alien_tissue_layer(int type){return type==2 || type==5?2:(type==3?3:1);}
 float alien_tissue_roughness(int layer){return layer==2?.82:(layer==3?.48:.62);}
-vec3 alien_tissue_color(int layer,float detail,vec3 dx,vec3 dy,vec3 projection,vec3 n){
+vec3 alien_tissue_color(int layer,float detail,vec3 dx,vec3 dy,vec3 projection,vec3 n,vec3 material_origin){
  vec3 average=textureLod(biological_colors,vec3(.5,.5,float(layer)),11.0).rgb;
  if(detail<=.002)return average;
- vec3 color=mix(average,biological_sample(layer,layer==2?2.0:1.5,dx,dy,projection,n),detail);
+ vec3 color=mix(average,biological_sample(layer,layer==2?2.0:1.5,dx,dy,projection,n,material_origin),detail);
  if(layer==1 && alien_tissue_flow_enabled)color=mix(color,alien_flow_color(color,n,dx,dy),detail);
  return color;
 }
-void alien_tissue_sample(float region,float distance_to_view,vec3 dx,vec3 dy,vec3 projection,vec3 n,out vec3 color,out float rough){
+void alien_tissue_sample(float region,float distance_to_view,vec3 dx,vec3 dy,vec3 projection,vec3 n,out vec3 color,out float rough,vec3 material_origin){
  // Same .25..75 regional interpolation as the canonical CPU landforms.
  // Rounding region here painted abrupt kilometre-long material stripes.
  int lower=int(clamp(floor(region),0.0,5.0));int a=alien_tissue_layer(lower),b=alien_tissue_layer(min(lower+1,5));
  float blend=smoothstep(.25,.75,fract(region));float detail=1.0-smoothstep(400.0,1800.0,distance_to_view);
  if(a==b || blend<=.001)blend=0.0;
  else if(blend>=.999){a=b;blend=0.0;}
- color=alien_tissue_color(a,detail,dx,dy,projection,n);rough=alien_tissue_roughness(a);
- if(blend>0.0){color=mix(color,alien_tissue_color(b,detail,dx,dy,projection,n),blend);rough=mix(rough,alien_tissue_roughness(b),blend);}
+ color=alien_tissue_color(a,detail,dx,dy,projection,n,material_origin);rough=alien_tissue_roughness(a);
+ if(blend>0.0){color=mix(color,alien_tissue_color(b,detail,dx,dy,projection,n,material_origin),blend);rough=mix(rough,alien_tissue_roughness(b),blend);}
 }
