@@ -68,11 +68,10 @@ public partial class TropicalSampler : RefCounted
     {var key=new Vector2I(unchecked((int)index),unchecked((int)lane));if(_structuralNodes.TryGetValue(key,out double found))return found;double value=Host().Call("_grass_river_center",index*2048.0,lane,_spacing()).AsDouble();_structuralNodes[key]=value;return value;}
     public double _structural_center(double x,long lane)
     {double q=x/2048;long index=(long)Math.Floor(q);return cubic(_structural_node(index-1,lane),_structural_node(index,lane),_structural_node(index+1,lane),_structural_node(index+2,lane),q-index);}
-    public double[] _raw(Vector2 p)
+    private (double Height,double Ridge,double Branches) BaseShape(Vector2 p,ReadOnlySpan<double> w,double a,double b,
+        long nearestLane,double calm,double rugged,double water)
     {
-        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double a=TerrainBiomeNoiseCache.Read(_macro,p.X,p.Y),b=TerrainBiomeNoiseCache.Read(_hills,p.X,p.Y),c=TerrainBiomeNoiseCache.Read(_weather,p.X,p.Y),spacing=_spacing();var near=Vector3.Zero;long nearestLane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);double best=double.PositiveInfinity;
-        for(int k=-1;k<=1;k++){long id=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero)+k;var candidate=_carrier(p.X,id);double d=Math.Abs((double)p.Y-candidate.X);if(d<best){best=d;near=candidate;nearestLane=id;}}
-        double channelDistance=best/Math.Sqrt(1+(double)near.Y*near.Y),distance=Math.Abs(p.Y-_structural_center(p.X,nearestLane)),calm=Math.Clamp(w[0]+w[1]+w[6]*.7+w[7]*.8+w[8]*.65,0,1),rugged=Math.Clamp(w[3]+w[4]+w[5]+w[9]+w[10]*.8+w[12]+w[13]*.6+w[15],0,1),water=water_potential(p.X),h=water+30+a*18+(b*.5+.25)*P("hill_height")*(1-calm)*(1-rugged*.3),ridge=0,branches=0;
+        double h=water+30+a*18+(b*.5+.25)*P("hill_height")*(1-calm)*(1-rugged*.3),ridge=0,branches=0;
         if(rugged>.001)
         {
             for(int k=-1;k<=0;k++)
@@ -83,6 +82,59 @@ public partial class TropicalSampler : RefCounted
             }
             double relief=P("hill_height")*(w[3]*1.1+w[4]*1.9+w[9]*2.6+w[10]*1.6+w[12]*1.8+w[13]+w[15]*1.7)+P("mountain_height")*w[5];h+=(ridge+branches*.14)*relief*P("ridge_strength");
         }
+        return (h,ridge,branches);
+    }
+    internal void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        var weights=region_weights(p);var w=new double[16];for(int i=0;i<16;i++)w[i]=weights[i];
+        double a=TerrainBiomeNoiseCache.Read(_macro,p),b=TerrainBiomeNoiseCache.Read(_hills,p),spacing=_spacing();
+        if(!double.IsFinite(spacing)||spacing<=0)return;
+        long nearestLane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);
+        double best=double.PositiveInfinity;
+        for(int k=-1;k<=1;k++)
+        {
+            long id=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero)+k;
+            var candidate=_carrier(p.X,id);double d=Math.Abs((double)p.Y-candidate.X);
+            if(d<best){best=d;nearestLane=id;}
+        }
+        double calm=Math.Clamp(w[0]+w[1]+w[6]*.7+w[7]*.8+w[8]*.65,0,1),
+            rugged=Math.Clamp(w[3]+w[4]+w[5]+w[9]+w[10]*.8+w[12]+w[13]*.6+w[15],0,1),
+            water=water_potential(p.X);
+        var bands=new Vector4[TerrainBiomeShapePlan.Bands];
+        bands[1]=TerrainBiomeShapePlan.F(a,b,calm,rugged);
+        bands[2]=TerrainBiomeShapePlan.F(water,P("hill_height"),P("ridge_strength"),
+            P("hill_height")*(w[3]*1.1+w[4]*1.9+w[9]*2.6+w[10]*1.6+w[12]*1.8+w[13]+w[15]*1.7)+P("mountain_height")*w[5]);
+        if(rugged>.001)
+        {
+            for(int k=-1;k<=0;k++)
+            {
+                long id=nearestLane+k;double across=p.Y-(_structural_center(p.X,id)+_structural_center(p.X,id+1))*.5,
+                    width=Math.Max(500,P("hill_width")*(.6+w[9]*.6+w[4]*.2-w[10]*.25));
+                if(width*(.9+b*.2)<=0)return;
+                int slot=k+1;long segment=(long)Math.Floor(p.X/4000.0);
+                bands[3+slot]=TerrainBiomeShapePlan.F(across,width,Mathf.PosMod(p.X-across*.5+b*180+id*317.0,2100),1);
+                for(int j=-1;j<=1;j++)
+                {
+                    double r=random(segment+j,id,101),x=(segment+j+.2+r*.6)*4000;
+                    bands[5+slot*3+j+1]=TerrainBiomeShapePlan.F((p.X-x)/(850+r*900),r);
+                }
+            }
+        }
+        plan.Add(this,p,-1,6,bands,()=>
+        {
+            var v=BaseShape(p,w,_macro.GetNoise2Dv(p),_hills.GetNoise2Dv(p),nearestLane,calm,rugged,water);
+            return TerrainBiomeShapePlan.F(v.Height,v.Ridge,v.Branches);
+        },TerrainBiomeShapePlan.ClassicTolerance);
+    }
+    public double[] _raw(Vector2 p)
+    {
+        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double a=TerrainBiomeNoiseCache.Read(_macro,p.X,p.Y),b=TerrainBiomeNoiseCache.Read(_hills,p.X,p.Y),c=TerrainBiomeNoiseCache.Read(_weather,p.X,p.Y),spacing=_spacing();var near=Vector3.Zero;long nearestLane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);double best=double.PositiveInfinity;
+        for(int k=-1;k<=1;k++){long id=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero)+k;var candidate=_carrier(p.X,id);double d=Math.Abs((double)p.Y-candidate.X);if(d<best){best=d;near=candidate;nearestLane=id;}}
+        double channelDistance=best/Math.Sqrt(1+(double)near.Y*near.Y),distance=Math.Abs(p.Y-_structural_center(p.X,nearestLane)),calm=Math.Clamp(w[0]+w[1]+w[6]*.7+w[7]*.8+w[8]*.65,0,1),rugged=Math.Clamp(w[3]+w[4]+w[5]+w[9]+w[10]*.8+w[12]+w[13]*.6+w[15],0,1),water=water_potential(p.X);
+        double h,ridge,branches;
+        if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked)){h=baked.Value.X;ridge=baked.Value.Y;branches=baked.Value.Z;}
+        else (h,ridge,branches)=BaseShape(p,w,a,b,nearestLane,calm,rugged,water);
         double valleyWidth=P("valley_width")*(1+w[6]*.8+w[7]*.5-w[12]*.65),valley=1-Smooth(40,valleyWidth,distance);h=Lerp(h,water+5+b*2,valley*P("valley_depth"));double erosion=(1-Smooth(.025,.19,Math.Abs(c+b*.15)))*ridge*(1-valley*.8)*rugged*P("erosion");h-=erosion*(35+P("hill_height")*.12)*P("gullies");double shelf=Smooth(-.08,.17,b+a*.3);h+=shelf*(w[11]*150+w[14]*65+w[15]*120)*(1-valley)*P("weathering");double stream=0,lake=0,channel=0;
         bool rivers=P("river_frequency")>0&&Host().Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble()>0&&random(nearestLane,0,139)<=P("river_frequency");
         if(rivers)
@@ -133,6 +185,7 @@ public partial class TropicalSampler : RefCounted
     }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_hills,p);plan.Add(_weather,p);
     }
     public double sample(double x,double z)=>sample(x,z,true);

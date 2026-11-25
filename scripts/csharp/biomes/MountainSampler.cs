@@ -89,13 +89,10 @@ public partial class MountainSampler : RefCounted
         }
         _landmarks[cell] = sites; return sites;
     }
-    private double[] Raw(Vector2 p)
+    private (double Height,double Ridge,double Secondary,double Peak,double Cirque,double Tarn) RidgeShape(
+        Vector2 p,float[] w,double b,double spacing,long lane,double glacial)
     {
-        ulong tick = profile ? Time.GetTicksUsec() : 0; var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
-        double spacing = Spacing(); long lane = (long)Math.Round(p.Y / spacing, MidpointRounding.AwayFromZero); var valleyCenter = Carrier(p.X, lane);
-        for (int k = -1; k <= 1; k += 2) { var other = Carrier(p.X, lane + k); if (Math.Abs((double)p.Y - other.X) < Math.Abs((double)p.Y - valleyCenter.X)) valleyCenter = other; }
-        double distance = Math.Abs((double)p.Y - valleyCenter.X) / Math.Sqrt(1 + (double)valleyCenter.Y * valleyCenter.Y);
-        double glacial = Math.Clamp((w[4] + w[9] * .45 + w[14] * .65) * P("glacial_influence"), 0, 1), ridge = 0, secondary = 0, peak = 0, height = 0, cirque = 0, tarn = 0, width = P("ridge_width") * P("belt_width"), gain = 0;
+        double ridge = 0, secondary = 0, peak = 0, height = 0, cirque = 0, tarn = 0, width = P("ridge_width") * P("belt_width"), gain = 0;
         ReadOnlySpan<double> heights = stackalloc double[] { 1.05, 1.55, .9, .48, 1.15, 1.05, .85, .25, .7, .7, 1.15, .85, .85, .65, 1.15, .65 }; for (int i = 0; i < 16; i++) gain += w[i] * heights[i];
         for (int k = -1; k <= 1; k++)
         {
@@ -120,6 +117,66 @@ public partial class MountainSampler : RefCounted
             double shelf = (1 - Smooth(P("cliff_width"), P("cliff_width") * 2, Math.Abs(across) - localWidth * .45)) * ((double)w[6] + w[11]) * .22; value += shelf * P("mountain_height") * P("cliff_frequency");
             height = Math.Max(height, value); ridge = Math.Max(ridge, shape); secondary = Math.Max(secondary, branches); peak = Math.Max(peak, summits * shape);
         }
+        return (height,ridge,secondary,peak,cirque,tarn);
+    }
+    internal void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        var w=region_weights(p);double b=TerrainBiomeNoiseCache.Read(_meso,p),spacing=Spacing();
+        if(!double.IsFinite(spacing)||spacing<=0)return;
+        long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);
+        double glacial=Math.Clamp((w[4]+w[9]*.45+w[14]*.65)*P("glacial_influence"),0,1);
+        double width=P("ridge_width")*P("belt_width"),span=P("peak_spacing"),gain=0,cirque=0,tarn=0;
+        if(span<=0||width<=0||P("cliff_width")<=0)return;
+        ReadOnlySpan<double> heights=stackalloc double[]{1.05,1.55,.9,.48,1.15,1.05,.85,.25,.7,.7,1.15,.85,.85,.65,1.15,.65};
+        for(int i=0;i<16;i++)gain+=w[i]*heights[i];
+        var bands=new Vector4[TerrainBiomeShapePlan.Bands];
+        bands[1]=TerrainBiomeShapePlan.F(b,spacing,gain,P("mountain_height"));
+        bands[2]=TerrainBiomeShapePlan.F(P("cliff_width"),P("ridge_sharpness"),Math.Clamp(w[3]+w[5]*.65+w[7]*.6+w[8]*.5,0,1),P("secondary_strength")*P("branching"));
+        bands[3]=TerrainBiomeShapePlan.F(span,P("cliff_frequency"),((double)w[6]+w[11])*.22);
+        for(int k=-1;k<=1;k++)
+        {
+            long id=lane+k;var lower=Carrier(p.X,id);var upper=Carrier(p.X,id+1);
+            double center=((double)lower.X+upper.X)*.5,across=p.Y-center;
+            if(Math.Abs(across)>spacing*.65)continue;
+            double localWidth=width*(1+w[3]*.85+w[1]*.35+w[8]*.5-w[14]*.4);
+            double phase=Mod(p.X-across*.4+b*160+id*331.0,span)/span;
+            int slot=k+1;
+            bands[4+slot]=TerrainBiomeShapePlan.F(across,localWidth,phase,1);
+            var sites=Sites(new Vector2I((int)Math.Floor(p.X/span),(int)id));
+            for(int i=0;i<sites.Length;i++)
+            {
+                var site=sites[i];
+                bands[7+slot*3+i]=TerrainBiomeShapePlan.F(Math.Abs(p.X-site.X)/(span*(.23+site.Random*.17)),site.Random);
+                if(glacial>.03&&site.Random<.62)
+                {
+                    double side=random((long)Math.Floor(site.X/span),id,257)<.5?-1:1;
+                    var v=new Vector2((float)((p.X-site.X)/(500+site.Random*450)),(float)((p.Y-center-side*localWidth*.8)/(650+site.Random*350)));
+                    double bowl=(1-Smooth(.35,1.15,v.Length()+Math.Sin(v.X*2.0)*.08))*glacial;
+                    cirque=Math.Max(cirque,bowl);if(site.Random<P("lake_frequency"))tarn=Math.Max(tarn,bowl);
+                }
+            }
+        }
+        plan.Add(this,p,-1,5,bands,()=>
+        {
+            var v=RidgeShape(p,w,_meso.GetNoise2Dv(p),spacing,lane,glacial);
+            return TerrainBiomeShapePlan.F(v.Height,v.Ridge,v.Secondary,v.Peak);
+        },TerrainBiomeShapePlan.ClassicTolerance,new Vector2((float)cirque,(float)tarn));
+    }
+    private double[] Raw(Vector2 p)
+    {
+        ulong tick = profile ? Time.GetTicksUsec() : 0; var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
+        double spacing = Spacing(); long lane = (long)Math.Round(p.Y / spacing, MidpointRounding.AwayFromZero); var valleyCenter = Carrier(p.X, lane);
+        for (int k = -1; k <= 1; k += 2) { var other = Carrier(p.X, lane + k); if (Math.Abs((double)p.Y - other.X) < Math.Abs((double)p.Y - valleyCenter.X)) valleyCenter = other; }
+        double distance = Math.Abs((double)p.Y - valleyCenter.X) / Math.Sqrt(1 + (double)valleyCenter.Y * valleyCenter.Y);
+        double glacial = Math.Clamp((w[4] + w[9] * .45 + w[14] * .65) * P("glacial_influence"), 0, 1);
+        double height,ridge,secondary,peak,cirque,tarn;
+        if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked))
+        {
+            var v=baked.Value;height=v.X;ridge=v.Y;secondary=v.Z;peak=v.W;
+            cirque=baked.Auxiliary.X;tarn=baked.Auxiliary.Y;
+        }
+        else (height,ridge,secondary,peak,cirque,tarn)=RidgeShape(p,w,b,spacing,lane,glacial);
         if (profile) { timings["ridge_us"] = (timings.ContainsKey("ridge_us") ? timings["ridge_us"].AsInt64() : 0) + (long)(Time.GetTicksUsec() - tick); tick = Time.GetTicksUsec(); }
         double water = water_potential(p.X), valleyWidth = P("valley_width") * (1.0 + w[15] + w[4] * .4 - w[10] * .45) * (.85 + .2 * a);
         double vshape = 1 - Smooth(valleyWidth * .2, valleyWidth * 1.45, distance), ushape = 1 - Smooth(valleyWidth * .8, valleyWidth * 1.65, distance), valley = Lerp(vshape, ushape, glacial);
@@ -174,6 +231,7 @@ public partial class MountainSampler : RefCounted
     }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
     }
     public double sample(double x, double z) => sample(x, z, true);

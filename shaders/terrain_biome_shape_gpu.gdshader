@@ -209,12 +209,72 @@ vec4 shape_15(int record){
  return vec4(h,0.0,.25+n.w*.5,n.w);
 }
 
+vec4 shape_5(int record){
+ vec4 n=D(record,1),parameters=D(record,2),extra=D(record,3);
+ float b=n.x,spacing=n.y,gain=n.z,mountain=n.w,cliff=parameters.x,span=extra.x;
+ float height=0.0,ridge=0.0,secondary=0.0,peak=0.0;
+ for(int k=0;k<3;k++){
+  vec4 lane=D(record,4+k);if(lane.w<.5)continue;
+  float across=lane.x,width=lane.y,shoulder=1.0-S(spacing*.42,spacing*.65,abs(across));
+  float asym=.7+.6*S(-500.0,500.0,across+b*250.0),d=abs(across)/max(width*asym,cliff);
+  float rounded=exp(-d*d*.75),sharp=exp(-pow(d,parameters.y)*1.5);
+  float shape=L(sharp,rounded,parameters.z)*shoulder,summits=0.0;
+  for(int j=0;j<3;j++){
+   vec4 site=D(record,7+k*3+j);
+   float prominence=exp(-pow(max(site.x,0.0),1.6))*(.55+site.y*.65);
+   summits=max(summits,prominence);
+  }
+  float core=shape*(.55+summits*.65),branch_distance=min(lane.z,1.0-lane.z)*span;
+  float q=branch_distance/max(150.0,span*.11);
+  float branches=exp(-q*q)*shoulder*(1.0-S(width*.2,spacing*.6,abs(across)));
+  branches*=parameters.w*(.3+.7*shape);
+  float value=core*mountain*gain;value+=branches*mountain*.22;
+  float shelf=(1.0-S(cliff,cliff*2.0,abs(across)-width*.45))*extra.z;
+  value+=shelf*mountain*extra.y;
+  height=max(height,value);ridge=max(ridge,shape);secondary=max(secondary,branches);peak=max(peak,summits*shape);
+ }
+ return vec4(height,ridge,secondary,peak);
+}
+vec4 shape_6(int record){
+ vec4 n=D(record,1),parameters=D(record,2);
+ float a=n.x,b=n.y,calm=n.z,rugged=n.w,water=parameters.x,hills=parameters.y;
+ float h=water+30.0+a*18.0+(b*.5+.25)*hills*(1.0-calm)*(1.0-rugged*.3),ridge=0.0,branches=0.0;
+ for(int k=0;k<2;k++){
+  vec4 lane=D(record,3+k);if(lane.w<.5)continue;
+  float across=lane.x,width=lane.y,shape=exp(-pow(abs(across)/(width*(.9+b*.2)),1.8)),summits=0.0;
+  for(int j=0;j<3;j++){
+   vec4 site=D(record,5+k*3+j);
+   summits=max(summits,exp(-site.x*site.x)*(.55+site.y*.55));
+  }
+  float phase=lane.z,q=min(phase,2100.0-phase)/220.0;
+  float branch=exp(-q*q)*shape*(1.0-S(100.0,600.0,abs(across)));
+  branches=max(branches,branch);ridge=max(ridge,shape*(.45+summits*.65));
+ }
+ if(rugged>.001)h+=(ridge+branches*.14)*parameters.w*parameters.z;
+ return vec4(h,ridge,branches,0.0);
+}
+vec4 shape_7(int record){
+ vec4 n=D(record,1),a=D(record,2),b=D(record,3);
+ float relief=n.w,primary=a.x,fine=a.y,clay=a.z,width=a.w;
+ float upland=1.0-exp(-pow(max(primary-width,0.0)/(900.0+clay*500.0+b.x*700.0),1.6));
+ float plateau=S(.35,.72,upland+n.x*.3),mass_height=relief*(.82+n.x*.3)*upland;
+ if(b.z>0.0){
+  float lobes=pow(clamp(.5+n.y*.8+n.z*.35,0.0,1.0),1.35);
+  float height=relief*(.15+.95*lobes+n.x*.08)*upland;mass_height=L(mass_height,height,b.z);
+ }
+ float h=28.0+(mass_height+relief*.25*plateau*b.y),main=1.0-S(width*.5,width*2.0,fine);
+ h=L(h,min(h,25.0+n.y*.8),main);return vec4(h,upland,plateau,main);
+}
+
 vec4 shape_at(int record){
  int kind=int(D(record,0).x);
  if(kind==1)return shape_1(record);
  if(kind==2)return shape_2(record);
  if(kind==3)return shape_3(record);
  if(kind==4)return shape_4(record);
+ if(kind==5)return shape_5(record);
+ if(kind==6)return shape_6(record);
+ if(kind==7)return shape_7(record);
  if(kind==8)return shape_8(record);
  if(kind==9)return shape_9(record);
  if(kind==10)return shape_10(record);
