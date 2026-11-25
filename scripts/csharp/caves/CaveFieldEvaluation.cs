@@ -8,6 +8,86 @@ namespace PredatorIsle.Caves;
 
 internal static class CaveFieldEvaluation
 {
+    /// <summary>Conservative sign-only evaluation for skipped GPU cubes.
+    /// The exact projection and roof/depth tests are retained. Wall noise and
+    /// style offsets have known bounded amplitudes. For the power arches
+    /// (p >= 2), max(|x|,|y|) <= Lp <= Euclidean; a generous relative margin
+    /// rejects uncertain near-surface arithmetic instead of trusting a GPU sign.
+    /// Returns null whenever these bounds cannot determine the canonical sign.</summary>
+    internal static bool? CertifySign(CaveField f,Vector3 point,double ground,double? top=null)
+    {
+        if(!CaveField.SafePoint(point))return false;
+        if(top.HasValue)
+        {
+            if(!double.IsFinite(top.Value))return false;
+            if((float)(top.Value-point.Y)<0)return true;
+        }
+        if(!f.Bins.TryGetValue(f.bin_cell(point),out var features))return false;
+        if(!double.IsFinite(ground))return false;
+        double depth=ground-point.Y;
+        if(depth>=f.maximum_depth)return false;
+        const double margin=.0001;
+        // Anything extremely close to a depth constraint takes the original
+        // scalar path (including float-cast signed-zero behavior).
+        bool closedAllowed=depth>f.minimum_roof;
+        bool openingAllowed=f.opening_rock_cover<=0||depth>f.opening_rock_cover;
+        if(!closedAllowed&&!openingAllowed)return false;
+        bool uncertain=false;
+        foreach(int feature in features)
+        {
+            int kind=f.Kinds[feature];bool opening=kind==1;
+            if(opening?!openingAllowed:!closedAllowed)continue;
+            var a=f.Begins[feature];var b=f.Ends[feature];var size=f.Dimensions[feature];
+            double floorY=a.Y,radius;
+            if(kind==2)radius=new Vector2(point.X-a.X,point.Z-a.Z).Length();
+            else
+            {
+                var ab=f.Directions[feature];var q=new Vector2(point.X-a.X,point.Z-a.Z);
+                double along=q.Dot(ab)/f.SpanSquared[feature],t=Math.Clamp(along,0,1);
+                radius=(q-ab*(float)t).Length();floorY=Lerp(a.Y,b.Y,along);
+                if(f.continuous_route_floors)
+                {
+                    if(along<0&&double.IsFinite(f.EndpointGrades[feature*2]))
+                        floorY=a.Y+along*f.SpanLength[feature]*f.EndpointGrades[feature*2];
+                    else if(along>1&&double.IsFinite(f.EndpointGrades[feature*2+1]))
+                        floorY=b.Y+(along-1)*f.SpanLength[feature]*f.EndpointGrades[feature*2+1];
+                }
+            }
+            double y=point.Y-floorY;
+            if(!double.IsFinite(y)||!double.IsFinite(radius)){uncertain=true;continue;}
+            if(y<=0)continue; // the flat floor alone guarantees rock
+            double radial=radius/size.X,vertical=(y-f.ArchCenter[feature])/f.ArchHeight[feature],
+                scale=f.ArchScale[feature];
+            if(!double.IsFinite(radial)||!double.IsFinite(vertical)||!double.IsFinite(scale)||scale<=0)
+            {uncertain=true;continue;}
+            int style=f.Styles[feature];
+            double lower,upper;
+            if(style is 1 or 2 or 3 or 5)
+            {
+                double r=Math.Abs(radial),v=Math.Abs(vertical);
+                // Loosen the mathematical norm bounds enough to cover
+                // ordinary double pow/sqrt rounding at all supported sizes.
+                double lo=Math.Max(r,v),hi=Math.Sqrt(r*r+v*v);
+                lower=(lo-1)*scale-margin*(1+lo*scale);
+                upper=(hi-1)*scale+margin*(1+hi*scale);
+            }
+            else
+            {
+                // Identical float-vector norm to the canonical evaluator.
+                double arch=(new Vector2((float)radial,(float)vertical).Length()-1.0)*scale;
+                lower=upper=arch;
+            }
+            double shift=style==7?.65:style==3?.24:style is 2 or 4?.12:0;
+            if(double.IsFinite(lower)&&lower-shift-.12>margin)continue;
+            bool floorUnknown=kind==2&&f.floor_relief.Count>0&&Math.Abs((double)point.Y-a.Y)<=5;
+            bool depthSafe=f.maximum_depth-depth>margin&&
+                (opening?f.opening_rock_cover<=0||depth-f.opening_rock_cover>margin:depth-f.minimum_roof>margin);
+            if(!floorUnknown&&depthSafe&&y>margin&&double.IsFinite(upper)&&upper+.12<-margin)return true;
+            uncertain=true;
+        }
+        return uncertain?null:false;
+    }
+
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
         double closed = Far, opening = Far, floorOffset = 0;

@@ -60,7 +60,7 @@ internal static class CaveGpuLatticeChecks
                 cases.Add(new D{["style"]=style,["gpu_samples"]=candidate.GpuLatticeSamples,
                     ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples,["gpu_topology_cubes"]=candidate.GpuTopologyCubes});
             }
-            return new D{["styles"]=cases,["gpu_scalars"]=gpu.CompletedScalars};
+            return new D{["styles"]=cases,["gpu_topology_scalars"]=gpu.CompletedScalars};
         }
         finally{gpu.Shutdown();gpu.Free();}
     }

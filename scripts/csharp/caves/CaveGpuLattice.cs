@@ -27,7 +27,7 @@ internal static class CaveGpuLattice
     }
     private static bool Bounded(Vector3 p)=>p.IsFinite()&&Math.Abs(p.X)<=8192&&Math.Abs(p.Y)<=8192&&Math.Abs(p.Z)<=8192;
     private static bool Finite(double x)=>double.IsFinite(x)&&Math.Abs(x)<=1000000;
-    private sealed record Plan(Vector4[] Inputs,int InputRows,int OutputRows,double[]? Top);
+    private sealed record Plan(Vector4[] Inputs,int InputRows,int OutputRows,double[] Ground,double[]? Top);
 
     private static Plan? Create(CaveField f,Vector3 origin,int row,float step)
     {
@@ -82,6 +82,7 @@ internal static class CaveGpuLattice
         }
         // Tiny/no-feature cells are cheaper to evaluate directly.
         if(references<4)return null;
+        double[] groundValues=new double[plane];
         double[]? top=portal?new double[plane]:null;
         int perBin=(int)(16/step);
         for(int z=0;z<row;z++)
@@ -91,6 +92,7 @@ internal static class CaveGpuLattice
             var p=origin+new Vector3(x,0,z)*step;
             double ground=active[x/perBin+(z/perBin)*BinsPerAxis]?f.ground_height(p):double.NaN;
             double surface=portal?((PortalCaveField)f).SurfaceHeight(new Vector2(p.X,p.Z)):double.NaN;
+            groundValues[at]=ground;
             if(top is not null)top[at]=surface;
             if(double.IsFinite(ground)&&!Finite(ground-origin.Y)||double.IsFinite(surface)&&!Finite(surface-origin.Y))return null;
             data[groundStart+at]=new Vector4(double.IsFinite(ground)?(float)(ground-origin.Y):0,
@@ -99,7 +101,7 @@ internal static class CaveGpuLattice
         }
         int inputRows=(data.Count+Columns-1)/Columns,outputRows=(count+Columns-1)/Columns;
         var inputs=new Vector4[inputRows*Columns];data.CopyTo(inputs);
-        return new Plan(inputs,inputRows,outputRows,top);
+        return new Plan(inputs,inputRows,outputRows,groundValues,top);
     }
 
     /// <summary>Read back GPU-generated tetrahedral cases and evaluate only
@@ -157,20 +159,39 @@ internal static class CaveGpuLattice
             }
             cases[cell]=packed;
         }
-        // Compare known canonical corners against adjacent uniform cases.
-        // This includes corners from uncertain cubes replaced by the CPU.
+        // Do not rely on GPU floating-point signs at skipped cubes. Certify
+        // every remaining lattice point using conservative CPU geometry
+        // bounds; unresolved signs evaluate the original SDF. Values of
+        // uniform cubes are unnecessary once their signs are certified.
         for(int i=0;i<count;i++)
         {
-            if(!ready[i])continue;
             int x=i%row,y=i/row%row,z=i/plane;
-            bool air=destination[i]<0;
+            bool? expected=null;
             for(int dz=-1;dz<=0;dz++)for(int dy=-1;dy<=0;dy++)for(int dx=-1;dx<=0;dx++)
             {
                 int cx=x+dx,cy=y+dy,cz=z+dz;
                 if(cx<0||cy<0||cz<0||cx>=cells||cy>=cells||cz>=cells)continue;
                 int packed=cases[cx+cells*(cy+cells*cz)];
-                if(packed==0&&air||packed==0xffffff&&!air)return null;
+                if(packed!=0&&packed!=0xffffff)continue;
+                bool air=packed==0xffffff;
+                if(expected.HasValue&&expected.Value!=air)return null;
+                expected=air;
             }
+            if(!expected.HasValue)continue;
+            bool actual;
+            if(ready[i])actual=destination[i]<0;
+            else
+            {
+                var point=origin+new Vector3(x,y,z)*step;
+                bool? certified=CaveFieldEvaluation.CertifySign(field,point,plan.Ground[x+z*row],plan.Top?[x+z*row]);
+                if(certified.HasValue)actual=certified.Value;
+                else
+                {
+                    if(!Exact(i))return null;
+                    actual=destination[i]<0;
+                }
+            }
+            if(actual!=expected.Value)return null;
         }
         if(checkedSamples==count)return null;
         exactSamples=checkedSamples;

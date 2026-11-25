@@ -93,6 +93,36 @@ internal static class CaveMesherOptimizationChecks
                 portalNative.SurfaceColumnReuseHits==0,
                 "Portal field without surface air incorrectly used the column fast path");
         }
+        // Independent adversarial checks of every sign certificate. These
+        // cover mixed route/chamber fields, floor relief, roof/depth limits,
+        // negative coordinates and all eight styles without a renderer.
+        var random=new Random(9167);
+        int certified=0,unknown=0;
+        using(var signs=new PortalCaveField{include_surface_air=true,minimum_roof=9,maximum_depth=100,opening_rock_cover=4})
+        {
+            signs.height=Callable.From<double,double,double>((x,z)=>35+x*.01);
+            signs.top_height=Callable.From<double,double,double>((x,z)=>38+z*.01);
+            for(int style=0;style<8;style++)
+            {
+                var begin=new Vector3(-15+style*4,-20+style,8);
+                require(signs.append_feature(begin,begin+new Vector3(12,3,17),new Vector2(4+style,9),style%2,style),
+                    "Certificate route fixture was rejected");
+                require(signs.append_feature(begin,begin,new Vector2(9,12),2,style),
+                    "Certificate chamber fixture was rejected");
+            }
+            signs.floor_relief["unregistered_fixture"]=1.0;
+            for(int i=0;i<12000;i++)
+            {
+                var p=new Vector3((float)(random.NextDouble()*100-50),(float)(random.NextDouble()*110-70),(float)(random.NextDouble()*100-40));
+                double top=signs.SurfaceHeight(new Vector2(p.X,p.Z)),ground=signs.ground_height(p);
+                bool? value=CaveFieldEvaluation.CertifySign(signs,p,ground,top);
+                if(!value.HasValue){unknown++;continue;}
+                certified++;
+                require(value.Value==((float)signs.sample(p)<0),"Conservative cave sign certificate disagreed with canonical SDF at "+p);
+            }
+        }
+        require(certified>1000&&unknown>0,"Cave sign certificate fixture did not exercise both direct and uncertain paths");
+
         // All cave biome fields share this surface-height memo. Filling the
         // capacity must evict the oldest column, not throw away the entire hot set.
         int probes=0;
