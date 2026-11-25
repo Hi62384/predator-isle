@@ -19,15 +19,15 @@ internal static class TerrainRingChecks
         biomeCache[1]=101;
         biomeCache[3]=21;
         require(biomeCache.Count==3&&!biomeCache.TryGetValue(0,out _)&&
-            biomeCache.TryGetValue(1,out int retained)&&retained==101&&
-            biomeCache.TryGetValue(2,out int second)&&second==14,
+            biomeCache.TryGetValue(1,out int cacheRetainedValue)&&cacheRetainedValue==101&&
+            biomeCache.TryGetValue(2,out int cacheSecondValue)&&cacheSecondValue==14,
             "Biome cache discarded the entire hot working set on rollover");
         biomeCache[4]=28;biomeCache[5]=35;
         require(biomeCache.Count==3&&!biomeCache.TryGetValue(1,out _)&&
-            biomeCache.TryGetValue(3,out int third)&&third==21,
+            biomeCache.TryGetValue(3,out int cacheThirdValue)&&cacheThirdValue==21,
             "Biome cache replacement duplicated its eviction key");
         biomeCache.Clear();biomeCache[1]=9;
-        require(biomeCache.Count==1&&biomeCache.TryGetValue(1,out int reconfigured)&&reconfigured==9,
+        require(biomeCache.Count==1&&biomeCache.TryGetValue(1,out int cacheReconfiguredValue)&&cacheReconfiguredValue==9,
             "Biome cache retained stale entries across configuration");
         TerrainRingWaterChecks.Run(require);
         // In-flight and cancelled keys must never prevent later runnable work.
