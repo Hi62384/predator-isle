@@ -182,13 +182,13 @@ public partial class BadlandsSampler : RefCounted
     }
     public double[] _raw(Vector2 p)
     {
-        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double macro=_macro.GetNoise2D(p.X,p.Y),weather=_weather.GetNoise2D(p.X,p.Y),relief=0;int dominant=0;
+        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double macro=TerrainBiomeNoiseCache.Read(_macro,p.X,p.Y),weather=TerrainBiomeNoiseCache.Read(_weather,p.X,p.Y),relief=0;int dominant=0;
         for(int i=0;i<16;i++){relief+=w[i]*Reliefs[i];if(w[i]>w[dominant])dominant=i;}relief*=P("relief");
         double calm=Math.Clamp(w[8]+w[9]*.4+w[14]*.6+w[15],0,1),clay=Math.Clamp(w[0]*.5+w[2]+w[3]+w[10]*.6,0,1),dissected=Math.Clamp(w[4]+w[5]*.65+w[6]+w[7]+w[12]*.7+w[13],0,1),eligibility=(1-Smooth(.65,.99,calm))*Lerp(1,.4,clay),spacing=_spacing(),primary=double.PositiveInfinity;
         long initial=Lane(p.Y/spacing),lane=initial;for(int j=-1;j<=1;j++){long candidate=initial+j;double d=Math.Abs(p.Y-_broad_carrier(p.X,candidate));if(d<primary){primary=d;lane=candidate;}}
         double fine=Math.Abs(p.Y-_carrier(p.X,lane));long side=p.Y<_broad_carrier(p.X,lane)?-1:1;
         double width=P("wash_width")*(1+w[9]*1.5+w[8]),upland=1-Math.Exp(-Math.Pow(Math.Max(primary-width,0)/(900+clay*500+w[8]*700),1.6)),plateau=Smooth(.35,.72,upland+macro*.3),massHeight=relief*(.82+macro*.3)*upland,rounded=w[0]+w[2]*.8+w[3]+w[10]*.65+w[11]*.55;
-        if(P("rounded_hill_strength")>0&&rounded>.000001){double broad=_weather.GetNoise2Dv(p*.45f),lobes=Math.Pow(Math.Clamp(.5+weather*.8+broad*.35,0,1),1.35),height=relief*(.15+.95*lobes+macro*.08)*upland;massHeight=Lerp(massHeight,height,Math.Clamp(rounded*P("rounded_hill_strength"),0,1));}
+        if(P("rounded_hill_strength")>0&&rounded>.000001){double broad=TerrainBiomeNoiseCache.Read(_weather,p*.45f),lobes=Math.Pow(Math.Clamp(.5+weather*.8+broad*.35,0,1),1.35),height=relief*(.15+.95*lobes+macro*.08)*upland;massHeight=Lerp(massHeight,height,Math.Clamp(rounded*P("rounded_hill_strength"),0,1));}
         double h=28+(massHeight+relief*.25*plateau*(w[7]+w[13])),main=1-Smooth(width*.5,width*2,fine);h=Lerp(h,Math.Min(h,25+weather*.8),main);
         double drainage=main,second=0,fan=0,remnant=0,depositSum=0,depositWeight=0,protection=main,nearest=double.PositiveInfinity;long index=(long)Math.Floor(p.X/P("drainage_spacing"));var segmentCell=Cell(p,256);
         Span<double> banks=stackalloc double[5],floors=stackalloc double[5];for(int order=0;order<5;order++){banks[order]=(390+relief)*(1-calm*.55)/(1+order*(.4+dissected*.18))*(order>=2?1-clay*.45:1)*(order>=2?1+dissected*.6:1);floors[order]=24.0/(1+order*.6);}
@@ -219,7 +219,7 @@ public partial class BadlandsSampler : RefCounted
             fan=Math.Max(fan,mask*P("fans")*(w[14]+w[8]*.6+w[9]*.3));
         }
         var layers=strata(p,h);double exposed=Math.Clamp((1-calm)*(.2+second*.5+w[12]*.4+w[13]*.35)+remnant,0,1),divide=(1-protection)*(1-fan)*exposed*upland*(1-remnant);
-        h+=divide*_weather.GetNoise2Dv(p*1.7f)*(3+dissected*5);h+=layers.Y*P("ledges")*5*exposed*(1-protection)*(1-remnant);
+        h+=divide*TerrainBiomeNoiseCache.Read(_weather,p*1.7f)*(3+dissected*5);h+=layers.Y*P("ledges")*5*exposed*(1-protection)*(1-remnant);
         if(P("fan_shape_strength")>0)h=Lerp(h,28+weather+(depositWeight>0?depositSum/depositWeight:0),fan*.6*(1-protection*Math.Clamp(P("fan_shape_strength"),0,1)));else h=Lerp(h,28+weather,fan*.6);
         double pool=0,water=0;
         if(w[8]>.5&&P("pool_frequency")>0){var tree=GetTree(index,lane,side);if(tree.Random<P("pool_frequency")){var q=new Vector2((float)((p.X-(double)tree.Root.X)/100),(float)((p.Y-(double)tree.Root.Z)/65));double radius=q.Length()+Math.Sin(q.X*3.0)*.08,support=1-Smooth(.7,1.5,radius);pool=(1-Smooth(.25,.9,radius))*support;water=24*support;h=Lerp(h,29-pool*9,support);}}
@@ -245,6 +245,27 @@ public partial class BadlandsSampler : RefCounted
     }
     public A _patch(Vector2I cell){var p=GetPatch(cell);var corners=new A();foreach(var corner in p.Corners)corners.Add(corner);return new(){p.Coefficients,corners};}
     public double _patch_row(double[] coefficients,long index,double t){int i=checked((int)index);return coefficients[i]+.5*t*(coefficients[i+1]+t*(coefficients[i+2]+t*coefficients[i+3]));}
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/16;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:-1;j<=(exact?0:2);j++)
+        for(int i=exact?0:-1;i<=(exact?0:2);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*16;
+            PlanGpuRawNoise(plan,p);
+        }
+        
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_weather,p);plan.Add(_weather,p*.45f);plan.Add(_weather,p*1.7f);
+    }
     public double sample(double x,double z)=>sample(x,z,true);
     public double sample(double x,double z,bool publish){if(publish){palette_state=material_palette(new Vector2((float)x,(float)z));remnant_delta=0;}return remnant_surface(new Vector2((float)x,(float)z),_base_sample(x,z,publish),publish);}
     public double _base_sample(double x,double z,bool publish)

@@ -17,6 +17,7 @@ internal sealed class BoundedBiomeCache<TKey,TValue> where TKey:notnull
         capacity=maximum;
     }
     internal int Count=>entries.Count;
+    internal bool ContainsKey(TKey key)=>entries.ContainsKey(key);
     internal bool TryGetValue(TKey key,[MaybeNullWhen(false)] out TValue value)=>entries.TryGetValue(key,out value);
     internal TValue this[TKey key]
     {

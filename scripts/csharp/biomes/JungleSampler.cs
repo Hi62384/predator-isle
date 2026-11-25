@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -73,8 +74,8 @@ public partial class JungleSampler : RefCounted
     }
     private Vector4 Raw(Vector2 p)
     {
-        var w = region_weights(p); double macro = _macro.GetNoise2D(p.X, p.Y), meso = _meso.GetNoise2D(p.X, p.Y);
-        var q = p.Rotated((float)(.43 + seed_value % 97 * .004)); double structure = _detail.GetNoise2D((float)(q.X * .75), (float)(q.Y * 1.4));
+        var w = region_weights(p); double macro = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), meso = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y);
+        var q = p.Rotated((float)(.43 + seed_value % 97 * .004)); double structure = TerrainBiomeNoiseCache.Read(_detail,(float)(q.X * .75), (float)(q.Y * 1.4));
         double input = q.Y + Math.Sin(q.X / 4700.0) * 750 + macro * 500 + 7000; double across = input % 14000; if (across < 0) across += 14000; across -= 7000;
         double ridge = Math.Exp(-Math.Pow(Math.Abs(across) / 1500, 1.45)), hills = (.5 + meso * .65) * P("hill_density");
         double mountain = P("mountain_height") * ridge * (.7 + structure * .45);
@@ -101,6 +102,29 @@ public partial class JungleSampler : RefCounted
     }
     public double hermite(double a, double b, double da, double db, double t)
     { double t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * a + (t3 - 2 * t2 + t) * da + (-2 * t3 + 3 * t2) * b + (t3 - t2) * db; }
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/64;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:0;j<=(exact?0:1);j++)
+        for(int i=exact?0:0;i<=(exact?0:1);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*64;
+            PlanGpuRawNoise(plan,p);
+            PlanGpuRawNoise(plan,p+new Vector2(16,0));
+            PlanGpuRawNoise(plan,p+new Vector2(0,16));
+        }
+        
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);var q=p.Rotated((float)(.43+seed_value%97*.004));plan.Add(_detail,new Vector2((float)(q.X*.75),(float)(q.Y*1.4)));
+    }
     public double sample(double x, double z) => sample(x, z, true);
     public double sample(double x, double z, bool publish)
     {

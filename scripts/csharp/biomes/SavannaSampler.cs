@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -109,7 +110,7 @@ public partial class SavannaSampler : RefCounted
     }
     private Vector4 Raw(Vector2 p)
     {
-        var w = region_weights(p); double a = _macro.GetNoise2D(p.X, p.Y), b = _meso.GetNoise2D(p.X, p.Y), c = _detail.GetNoise2D(p.X, p.Y);
+        var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
         var q = p.Rotated((float)(.43 + seed_value % 71 * .002));
         double input = q.X + Math.Sin(q.Y / 4300.0) * 1200 + a * 600 + 7000; double across = input % 14000; if (across < 0) across += 14000; across -= 7000;
         double belt = Math.Exp(-Math.Pow(Math.Abs(across) / 1500, 1.6)), peaks = .78 + .16 * Math.Sin(q.Y / 2200.0) + b * .22;
@@ -139,6 +140,29 @@ public partial class SavannaSampler : RefCounted
     }
     public double hermite(double a, double b, double da, double db, double t)
     { double t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * a + (t3 - 2 * t2 + t) * da + (-2 * t3 + 3 * t2) * b + (t3 - t2) * db; }
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/32;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:0;j<=(exact?0:1);j++)
+        for(int i=exact?0:0;i<=(exact?0:1);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*32;
+            PlanGpuRawNoise(plan,p);
+            PlanGpuRawNoise(plan,p+new Vector2(16,0));
+            PlanGpuRawNoise(plan,p+new Vector2(0,16));
+        }
+        plan.Add(_meso,new Vector2((float)x,(float)z));
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
+    }
     public double sample(double x, double z) => sample(x, z, true);
     public double sample(double x, double z, bool publish)
     {
@@ -156,7 +180,7 @@ public partial class SavannaSampler : RefCounted
             weights = region_weights(new Vector2((float)x, (float)z)); region = 0; for (int i = 1; i < 13; i++) if (weights[i] > weights[region]) region = i;
             wetness = wet; drainage = surface.X; rock = surface.Y; river = 0; lake = 0;
             aridity = Math.Clamp(.6 + weights[9] * .3 - weights[3] * .35 - weights[8] * .3 - weights[12] * .15 - drainage * .18, 0, 1);
-            double ridgeSoil = Smooth(.05, .3, _meso.GetNoise2D((float)x, (float)z));
+            double ridgeSoil = Smooth(.05, .3, TerrainBiomeNoiseCache.Read(_meso,(float)x, (float)z));
             laterite = Math.Clamp(weights[10] + weights[2] * .35 + weights[4] * .25 + weights[11] * .2 + weights[0] * ridgeSoil * .3, 0, 1);
             soil = Math.Clamp(.12 + laterite * .45 + weights[9] * .3 + drainage * .15 + weights[0] * ridgeSoil * .15, 0, 1);
             erosion = Math.Clamp(drainage * ((double)weights[4] + weights[6] + weights[7] + weights[10]) * .8, 0, 1);

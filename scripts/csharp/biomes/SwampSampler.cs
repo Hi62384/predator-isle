@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -62,7 +63,7 @@ public partial class SwampSampler : RefCounted
 
     private readonly record struct Pool(Vector2 Center, double Radius, double Aspect, double Angle, double Level, double Random);
     private readonly BoundedBiomeCache<Vector2I,Pool[]> _pools=new(512);
-    public double water_table(Vector2 p) => 7 + _macro.GetNoise2D(p.X, p.Y) * 4.0 + Math.Sin(p.X / 18000.0 + seed_value % 31) * .8;
+    public double water_table(Vector2 p) => 7 + TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y) * 4.0 + Math.Sin(p.X / 18000.0 + seed_value % 31) * .8;
     private Pool[] Pools(Vector2I cell)
     {
         if (_pools.TryGetValue(cell, out var cached)) return cached; var result = new List<Pool>();
@@ -77,7 +78,7 @@ public partial class SwampSampler : RefCounted
     private static double Mod(double x, double y) { double v = x % y; return v < 0 ? v + y : v; }
     private double[] Raw(Vector2 p)
     {
-        var w = region_weights(p); double a = _macro.GetNoise2D(p.X, p.Y), b = _meso.GetNoise2D(p.X, p.Y), c = _detail.GetNoise2D(p.X, p.Y), table = water_table(p);
+        var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y), table = water_table(p);
         double raised = Smooth(-.18, .22, b + a * .2), ridge = 1 - Smooth(.03, .18, Math.Abs(b + c * .15));
         double offset = w[0] * -.5 + w[1] * -.9 + w[2] * .65 + w[3] * .3 + w[4] * -.3 + w[5] * .7 + w[6] * -.6 + w[7] * .25 + w[8] * .15 + w[9] * .6 - w[10] * 1.7 - w[11] * 1.2 + w[12] * 2.5 + w[13] * -.2 + w[14] * 5.0;
         offset += (.55 - P("water_coverage")) * 4; double land = offset + (b * 2.2 + a * .6) * P("terrain_relief");
@@ -132,6 +133,27 @@ public partial class SwampSampler : RefCounted
         if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 16); _nodes[cell] = value; return value;
     }
     public double cubic(double a, double b, double c, double d, double t) => b + .5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/16;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:-1;j<=(exact?0:2);j++)
+        for(int i=exact?0:-1;i<=(exact?0:2);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*16;
+            PlanGpuRawNoise(plan,p);
+        }
+        
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
+    }
     public double sample(double x, double z) => sample(x, z, true);
     public double sample(double x, double z, bool publish)
     {

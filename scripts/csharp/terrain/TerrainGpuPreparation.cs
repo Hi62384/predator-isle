@@ -18,6 +18,15 @@ internal sealed class TerrainGpuPreparation
     {sampler=gpu;topology=sharedTopology;filterDistant=filteredDistant;automatic=automaticSelection;
         includeShapeRefinement=shapeRefinement;}
 
+    internal async Task<TerrainBiomeNoiseCache?> PrepareBiomeNoiseAsync(TerrainMeshBuilder builder,
+        TerrainRingLayout.Patch patch,int resolution,CancellationToken cancellation)
+    {
+        if(sampler.BiomeNoise is not {Available:true} noise||automatic&&patch.Size/resolution<4)return null;
+        var plan=TerrainBiomeNoisePlan.Create(builder,topology,patch,resolution,filterDistant,includeShapeRefinement,cancellation);
+        if(plan.Count<(automatic?1024:64))return null;
+        return await noise.BakeAsync(plan,cancellation).ConfigureAwait(false);
+    }
+
     internal async Task<Result> PrepareAsync(TerrainMeshBuilder builder,TerrainRingLayout.Patch patch,int resolution,CancellationToken cancellation)
     {
         if(!sampler.Available)return default;

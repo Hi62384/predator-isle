@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -90,7 +91,7 @@ public partial class MountainSampler : RefCounted
     }
     private double[] Raw(Vector2 p)
     {
-        ulong tick = profile ? Time.GetTicksUsec() : 0; var w = region_weights(p); double a = _macro.GetNoise2D(p.X, p.Y), b = _meso.GetNoise2D(p.X, p.Y), c = _detail.GetNoise2D(p.X, p.Y);
+        ulong tick = profile ? Time.GetTicksUsec() : 0; var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
         double spacing = Spacing(); long lane = (long)Math.Round(p.Y / spacing, MidpointRounding.AwayFromZero); var valleyCenter = Carrier(p.X, lane);
         for (int k = -1; k <= 1; k += 2) { var other = Carrier(p.X, lane + k); if (Math.Abs((double)p.Y - other.X) < Math.Abs((double)p.Y - valleyCenter.X)) valleyCenter = other; }
         double distance = Math.Abs((double)p.Y - valleyCenter.X) / Math.Sqrt(1 + (double)valleyCenter.Y * valleyCenter.Y);
@@ -154,6 +155,27 @@ public partial class MountainSampler : RefCounted
         if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 32); _nodes[cell] = value; return value;
     }
     public double cubic(double a, double b, double c, double d, double t) => b + .5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/32;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:-1;j<=(exact?0:2);j++)
+        for(int i=exact?0:-1;i<=(exact?0:2);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*32;
+            PlanGpuRawNoise(plan,p);
+        }
+        
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
+    }
     public double sample(double x, double z) => sample(x, z, true);
     public double sample(double x, double z, bool publish)
     {

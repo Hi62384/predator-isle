@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -67,7 +68,7 @@ public partial class ForestSampler : RefCounted
     }
     private Vector4 Raw(Vector2 p)
     {
-        var w = region_weights(p); double a = _macro.GetNoise2D(p.X, p.Y), b = _meso.GetNoise2D(p.X, p.Y), c = _detail.GetNoise2D(p.X, p.Y);
+        var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
         var q = p.Rotated((float)(-.61 + seed_value % 73 * .002));
         double input = q.X + Math.Sin(q.Y / 3900.0) * 950 + a * 480 + 6500; double across = input % 13000; if (across < 0) across += 13000; across -= 6500;
         double ridge = Math.Exp(-Math.Pow(Math.Abs(across) / Math.Max(P("valley_scale") * .5, 400), 1.65));
@@ -92,6 +93,29 @@ public partial class ForestSampler : RefCounted
     }
     public double hermite(double a, double b, double da, double db, double t)
     { double t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * a + (t3 - 2 * t2 + t) * da + (-2 * t3 + 3 * t2) * b + (t3 - t2) * db; }
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/64;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:0;j<=(exact?0:1);j++)
+        for(int i=exact?0:0;i<=(exact?0:1);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*64;
+            PlanGpuRawNoise(plan,p);
+            PlanGpuRawNoise(plan,p+new Vector2(16,0));
+            PlanGpuRawNoise(plan,p+new Vector2(0,16));
+        }
+        plan.Add(_macro,new Vector2((float)(x*1.9+2391),(float)(z*1.9-971)));
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
+    }
     public double sample(double x, double z) => sample(x, z, true);
     public double sample(double x, double z, bool publish)
     {
@@ -109,7 +133,7 @@ public partial class ForestSampler : RefCounted
             weights = region_weights(new Vector2((float)x, (float)z)); region = 0; for (int i = 1; i < 10; i++) if (weights[i] > weights[region]) region = i;
             wetness = wet; drainage = surface.X; rock = surface.Y; river = 0; lake = 0;
             conifer = Math.Clamp(weights[1] + weights[2] * .45 + weights[6] * .5, 0, 1);
-            double gap = Math.Clamp(_macro.GetNoise2D((float)(x * 1.9 + 2391), (float)(z * 1.9 - 971)) * .9 + .5, 0, 1);
+            double gap = Math.Clamp(TerrainBiomeNoiseCache.Read(_macro,(float)(x * 1.9 + 2391), (float)(z * 1.9 - 971)) * .9 + .5, 0, 1);
             clearing = Math.Clamp(weights[9] + (1 - (double)weights[9]) * Smooth(.55, .85, gap) * P("clearing_frequency") * 2, 0, 1);
         }
         return h;

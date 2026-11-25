@@ -70,7 +70,7 @@ public partial class TropicalSampler : RefCounted
     {double q=x/2048;long index=(long)Math.Floor(q);return cubic(_structural_node(index-1,lane),_structural_node(index,lane),_structural_node(index+1,lane),_structural_node(index+2,lane),q-index);}
     public double[] _raw(Vector2 p)
     {
-        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double a=_macro.GetNoise2D(p.X,p.Y),b=_hills.GetNoise2D(p.X,p.Y),c=_weather.GetNoise2D(p.X,p.Y),spacing=_spacing();var near=Vector3.Zero;long nearestLane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);double best=double.PositiveInfinity;
+        long tick=profile?(long)Time.GetTicksUsec():0;var weights=region_weights(p);Span<double> w=stackalloc double[16];for(int i=0;i<16;i++)w[i]=weights[i];double a=TerrainBiomeNoiseCache.Read(_macro,p.X,p.Y),b=TerrainBiomeNoiseCache.Read(_hills,p.X,p.Y),c=TerrainBiomeNoiseCache.Read(_weather,p.X,p.Y),spacing=_spacing();var near=Vector3.Zero;long nearestLane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);double best=double.PositiveInfinity;
         for(int k=-1;k<=1;k++){long id=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero)+k;var candidate=_carrier(p.X,id);double d=Math.Abs((double)p.Y-candidate.X);if(d<best){best=d;near=candidate;nearestLane=id;}}
         double channelDistance=best/Math.Sqrt(1+(double)near.Y*near.Y),distance=Math.Abs(p.Y-_structural_center(p.X,nearestLane)),calm=Math.Clamp(w[0]+w[1]+w[6]*.7+w[7]*.8+w[8]*.65,0,1),rugged=Math.Clamp(w[3]+w[4]+w[5]+w[9]+w[10]*.8+w[12]+w[13]*.6+w[15],0,1),water=water_potential(p.X),h=water+30+a*18+(b*.5+.25)*P("hill_height")*(1-calm)*(1-rugged*.3),ridge=0,branches=0;
         if(rugged>.001)
@@ -114,6 +114,27 @@ public partial class TropicalSampler : RefCounted
     }
     public double[] _node(Vector2I cell){if(_nodes.TryGetValue(cell,out var found))return found;var result=_raw((Vector2)cell*16);_nodes[cell]=result;return result;}
     public double cubic(double a,double b,double c,double d,double t)=>b+.5*t*(c-a+t*(2*a-5*b+4*c-d+t*(3*(b-c)+d-a)));
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/16;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:-1;j<=(exact?0:2);j++)
+        for(int i=exact?0:-1;i<=(exact?0:2);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(_nodes.ContainsKey(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*16;
+            PlanGpuRawNoise(plan,p);
+        }
+        
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_hills,p);plan.Add(_weather,p);
+    }
     public double sample(double x,double z)=>sample(x,z,true);
     public double sample(double x,double z,bool publish)
     {

@@ -30,6 +30,28 @@ internal static class TerrainGpuSamplePlan
         var positions=new List<Vector2>();
         var visited=new HashSet<(double X,double Z)>();
         var field=builder._native_grass;
+        Visit(topology,patch,resolution,filterDistant,cancellation,includeShapeRefinement,Add);
+        return positions.ToArray();
+
+        void Add(double x,double z)
+        {
+            if(positions.Count>=MaximumPoints||!visited.Add((x,z)))return;
+            double gx=x/scale,gz=z/scale;
+            var point=new Vector2((float)gx,(float)gz);
+            // Unsupported world magnitudes and non-exact coordinates keep CPU evaluation.
+            if((double)point.X!=gx||(double)point.Y!=gz||Math.Abs(gx)>TerrainGpuSampler.MaximumCoordinate||Math.Abs(gz)>TerrainGpuSampler.MaximumCoordinate||field.HasGpuSample(point))return;
+            // Ownership remains CPU authoritative. Don't spend a GPU batch on regions
+            // where the grassland function cannot contribute to the final height.
+            if(!pureGrass&&regions.weights(x,z).X<=0)return;
+            positions.Add(point);
+        }
+    }
+
+    // Shared exact-coordinate enumeration for every numerical GPU backend.
+    internal static void Visit(TerrainRingTopology topology,TerrainRingLayout.Patch patch,
+        int resolution,bool filterDistant,CancellationToken cancellation,bool includeShapeRefinement,
+        Action<double,double> visit)
+    {
         double footprint=patch.Size/resolution,derivative=Math.Max(1,footprint);
         bool filtered=filterDistant&&patch.Key.Z>=2;
         var grid=topology.Get(resolution,patch.Key.Z>0,patch.Hole);
@@ -55,7 +77,7 @@ internal static class TerrainGpuSamplePlan
             {
                 cancellation.ThrowIfCancellationRequested();
                 for(int x=0;x<groundAxis.Length;x++)
-                    Add(patch.OriginX+patch.Size*groundAxis[x]/ground.Denominator,patch.OriginZ+patch.Size*groundAxis[z]/ground.Denominator);
+                    visit(patch.OriginX+patch.Size*groundAxis[x]/ground.Denominator,patch.OriginZ+patch.Size*groundAxis[z]/ground.Denominator);
             }
         }
         // Only pre-bake shape probes if the mesh actually refines those rings.
@@ -66,30 +88,17 @@ internal static class TerrainGpuSamplePlan
             {
                 double wx=patch.OriginX+(x+.5)*step,wz=patch.OriginZ+(z+.5)*step;
                 if(!patch.Contains(wx,wz))continue;
-                Add(wx-step*.5,wz-step*.5);Add(wx+step*.5,wz-step*.5);
-                Add(wx-step*.5,wz+step*.5);Add(wx+step*.5,wz+step*.5);Add(wx,wz);
+                visit(wx-step*.5,wz-step*.5);visit(wx+step*.5,wz-step*.5);
+                visit(wx-step*.5,wz+step*.5);visit(wx+step*.5,wz+step*.5);visit(wx,wz);
             }
         }
-        return positions.ToArray();
 
         void AddFiltered(double x,double z)
         {
-            Add(x,z);
+            visit(x,z);
             if(!filtered)return;
             double offset=footprint*.5;
-            for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++)if(dx!=0||dz!=0)Add(x+dx*offset,z+dz*offset);
-        }
-        void Add(double x,double z)
-        {
-            if(positions.Count>=MaximumPoints||!visited.Add((x,z)))return;
-            double gx=x/scale,gz=z/scale;
-            var point=new Vector2((float)gx,(float)gz);
-            // Unsupported world magnitudes and non-exact coordinates keep CPU evaluation.
-            if((double)point.X!=gx||(double)point.Y!=gz||Math.Abs(gx)>TerrainGpuSampler.MaximumCoordinate||Math.Abs(gz)>TerrainGpuSampler.MaximumCoordinate||field.HasGpuSample(point))return;
-            // Ownership remains CPU authoritative. Don't spend a GPU batch on regions
-            // where the grassland function cannot contribute to the final height.
-            if(!pureGrass&&regions.weights(x,z).X<=0)return;
-            positions.Add(point);
+            for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++)if(dx!=0||dz!=0)visit(x+dx*offset,z+dz*offset);
         }
     }
 }

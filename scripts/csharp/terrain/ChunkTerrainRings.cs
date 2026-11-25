@@ -64,6 +64,9 @@ public partial class ChunkTerrain
             ["gpu_render_targets_reused"]=ringGpuSampler?.ReusedRenderTargets??0,
             ["gpu_plan_textures_reused"]=ringGpuSampler?.ReusedPlanTextures??0,
             ["gpu_vertex_bake_flights"]=ringGpuSampler?.VertexBakeFlights??0,
+            ["gpu_biome_noise_scalars"]=ringGpuSampler?.BiomeNoise?.CompletedScalars??0,
+            ["gpu_biome_noise_hits"]=ringGpuSampler?.BiomeNoise?.CacheHits??0,
+            ["gpu_biome_noise_rejected"]=ringGpuSampler?.BiomeNoise?.Rejected??0,
             ["gpu_parity_rejections"]=ringGpuSampler?.RejectedNumericalBatches??0,
             ["gpu_readback_ms"]=ringGpuSampler?.ReadbackMilliseconds??0,
             ["gpu_last_failure"]=ringGpuSampler?.LastFailure??"",
@@ -108,7 +111,11 @@ public partial class ChunkTerrain
             ringGpuSampler=new TerrainGpuSampler
             {
                 Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always,
-                PreferVertexBake=ring_settings.gpu_vertex_bake||OS.GetCmdlineUserArgs().Contains("terrain-gpu-bake=vertex")
+                PreferVertexBake=ring_settings.gpu_vertex_bake||OS.GetCmdlineUserArgs().Contains("terrain-gpu-bake=vertex"),
+                // Specialized numerical noise baking is experimental: explicit
+                // GPU generation enables it; automatic/default CPU behavior stays unchanged.
+                EnableBiomeNoise=(ring_settings.generation_backend==1||OS.GetCmdlineUserArgs().Contains("terrain-biome-noise=on"))&&
+                    !OS.GetCmdlineUserArgs().Contains("terrain-biome-noise=off")
             };AddChild(ringGpuSampler);
             ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,
                 ring_settings.generation_backend==2,ring_settings.selective_geometry_refinement);

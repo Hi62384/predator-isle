@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Terrain;
 using System;
 using System.Collections.Generic;
 using D=Godot.Collections.Dictionary;
@@ -64,9 +65,52 @@ public partial class BiomeExtensionSampler : RefCounted
         return (p-d["position"].AsVector2()).Rotated((float)-d["angle"].AsDouble());
     }
     public Vector2 segment(Vector2 p,Vector2 a,Vector2 b){var ab=b-a;double t=Math.Clamp((p-a).Dot(ab)/Math.Max(ab.LengthSquared(),.001),0,1);return new Vector2(p.DistanceTo(a+ab*(float)t),(float)t);}
-    public double noise(Vector2 p)=>_meso.GetNoise2Dv(p);
-    public double macro(Vector2 p)=>_macro.GetNoise2Dv(p);
+    public double noise(Vector2 p)=>TerrainBiomeNoiseCache.Read(_meso,p);
+    public double macro(Vector2 p)=>TerrainBiomeNoiseCache.Read(_macro,p);
     public double region(Vector2 p)=>Math.Clamp((_regions.GetNoise2Dv(p)*.8+.5)*5,0,4.99999);
+    // Plan only the raw lattice nodes the canonical interpolation can query.
+    internal void PlanGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        if(plan.Full)return;
+        var q=new Vector2((float)x,(float)z)/16;
+        var c=new Vector2I((int)Math.Floor(q.X),(int)Math.Floor(q.Y));
+        bool exact=q==(Vector2)c;
+        for(int j=exact?0:0;j<=(exact?0:1);j++)
+        for(int i=exact?0:0;i<=(exact?0:1);i++)
+        {
+            var cell=c+new Vector2I(i,j);
+            if(HasCachedNode(cell)||!plan.MarkNode(this,cell))continue;
+            var p=(Vector2)cell*16;
+            PlanGpuRawNoise(plan,p);
+        }
+        if(family==7){var point=new Vector2((float)x,(float)z);plan.Add(_macro,point*.25f);plan.Add(_macro,point*.6f);}
+    }
+    internal void PlanOverlayGpuNoise(TerrainBiomeNoisePlan plan,double x,double z)
+    {
+        var p=new Vector2((float)x,(float)z);
+        plan.Add(_macro,p*.25f);plan.Add(_macro,p*.6f);
+    }
+    private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
+    {
+        plan.Add(_macro,p);plan.Add(_meso,p);
+        // Subtype classification remains on the authoritative CPU noise;
+        // additional site-dependent probes fall back to FastNoiseLite.
+        switch(family)
+        {
+            case 0:
+                plan.Add(_macro,p*.7f+new Vector2(710,49));plan.Add(_macro,p*2);break;
+            case 1:
+                plan.Add(_macro,p+new Vector2(39,887));plan.Add(_macro,p+new Vector2(1771,13));
+                foreach(float scale in new[]{.8f,1.5f,.6f,.7f})plan.Add(_macro,p*scale);
+                foreach(float scale in new[]{.4f,.25f,.35f,2.2f,.5f,2.7f})plan.Add(_meso,p*scale);break;
+            case 2:
+                plan.Add(_meso,p*.25f);plan.Add(_meso,p*.18f);plan.Add(_meso,p*1.8f);break;
+            case 3:plan.Add(_macro,p*.7f);break;
+            case 4:plan.Add(_macro,p*.6f);break;
+            case 5:plan.Add(_macro,p*.7f);break;
+            case 7:plan.Add(_macro,p*.25f);plan.Add(_macro,p*.6f);break;
+        }
+    }
     public double sample(double x,double z)=>sample(x,z,true);
     public virtual double sample(double x,double z,bool publish)
     {

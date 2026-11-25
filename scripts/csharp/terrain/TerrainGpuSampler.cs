@@ -27,6 +27,8 @@ public partial class TerrainGpuSampler : Node
     // Experimental until actual shader parity and GPU timings have passed on
     // the active driver. Existing fragment baking is the safe default.
     public bool PreferVertexBake { get; set; }
+    internal bool EnableBiomeNoise{get;set;}
+    internal TerrainBiomeNoiseGpu? BiomeNoise{get;private set;}
     public long VertexBakeFlights { get; private set; }
     public int MaximumReadbacksPerFrame { get; set; } = 1;
     public int MaximumQueuedRequests { get; set; } = 16;
@@ -156,6 +158,7 @@ public partial class TerrainGpuSampler : Node
             if(vertexShader is null)
             {PreferVertexBake=false;LastFailure="Vertex-bake shader unavailable; fragment-bake fallback retained.";}
         }
+        if(EnableBiomeNoise){BiomeNoise=new TerrainBiomeNoiseGpu{Name="BiomeNoiseGeneration",RequestTimeoutSeconds=RequestTimeoutSeconds};AddChild(BiomeNoise);}
         RenderingServer.FramePostDraw+=OnPostDraw;
         subscribed=true;
         Volatile.Write(ref available,1);
@@ -514,6 +517,7 @@ public partial class TerrainGpuSampler : Node
     /// <summary>Main-thread shutdown; call before waiting for terrain worker disposal.</summary>
     public void Shutdown()
     {
+        if(BiomeNoise is not null&&GodotObject.IsInstanceValid(BiomeNoise))BiomeNoise.Shutdown();
         lock(lifecycle)
         {
             Volatile.Write(ref available,0);

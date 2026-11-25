@@ -188,10 +188,12 @@ public sealed class TerrainRingStream : IDisposable
                 var task=Task.Run(async ()=>
                 {
                     long evaluations=builder._native_height.CanonicalEvaluations,hits=builder._native_grass.GpuSampleHits;
+                    TerrainBiomeNoiseCache? biomeNoise=null;
                     if(gpuPreparation is not null)
                     {
                         Volatile.Write(ref progress.Stage,"GPU heightmap");ulong gpuStart=Time.GetTicksUsec();
                         var result=await gpuPreparation.PrepareAsync(builder,key.Patch,key.Resolution,token).ConfigureAwait(false);
+                        biomeNoise=await gpuPreparation.PrepareBiomeNoiseAsync(builder,key.Patch,key.Resolution,token).ConfigureAwait(false);
                         progress.GpuPreparationMilliseconds=(Time.GetTicksUsec()-gpuStart)/1000.0;
                         progress.GpuSamples=result.Samples;progress.GpuRejected=result.Rejected;progress.GpuMaximumHeightError=result.MaximumHeightError;
                         if(result.Samples>0)geometry.InvalidateHeightFilter(builder);
@@ -199,6 +201,7 @@ public sealed class TerrainRingStream : IDisposable
                     token.ThrowIfCancellationRequested();
                     // Allocation measurement begins after the await, on the same thread
                     // that performs the numerical build; thread-local counters cannot span awaits.
+                    using var biomeScope=biomeNoise?.Activate();
                     var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples);
                     progress.CanonicalEvaluations=builder._native_height.CanonicalEvaluations-evaluations;
                     progress.GpuSampleHits=builder._native_grass.GpuSampleHits-hits;progress.Finish();return data;

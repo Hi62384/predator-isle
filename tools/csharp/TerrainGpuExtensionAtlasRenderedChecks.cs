@@ -154,7 +154,8 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
             ["scope"]="Rendered shared GPU shader extension weights on legacy and packed atlases",
             ["renderer"]=RenderingServer.GetCurrentRenderingMethod(),
             ["adapter"]=RenderingServer.GetVideoAdapterName(),
-            ["cases"]=cases
+            ["cases"]=cases,
+            ["numerical_noise"]=await TerrainBiomeNoiseChecks.Run(host,require)
         };
     }
 
