@@ -126,15 +126,15 @@ automatically expand client render rings around unregistered distant entities.
 ## Settings and comparison runs
 
 `config/world/terrain_rings.tres` enables shared GPU render grids and selects
-the optimized CPU numerical generator by default. GPU numerical baking is
-available explicitly while hardware performance is being established. The
-settings resource exposes:
+Automatic numerical generation by default. Automatic calibrates complete
+worker latency by workload; explicit CPU and GPU generation remain available.
+The settings resource exposes:
 
 | `generation_backend` | Behavior |
 | --- | --- |
 | `0` — CPU | Existing numerical CPU generator with the new CPU optimizations |
-| `1` — GPU assisted | Requests GPU grassland generation when a rendered device is available; unsupported work falls back |
-| `2` — Automatic | Uses GPU-assisted generation on hardware renderers for sufficiently large plans; keeps software renderers and cheap nearby plans on CPU |
+| `1` — GPU assisted | Requests GPU landform, noise and cave topology generation when a rendered device is available; unsupported work falls back |
+| `2` — Automatic | Calibrates CPU versus GPU generation on hardware renderers for sufficiently large plans; keeps software renderers and cheap nearby plans on CPU |
 
 Automatic selection avoids a render/readback delay for nearby grids whose
 coarse field is already cheap to evaluate. It skips plans below 1,024 new sample
@@ -142,8 +142,8 @@ locations or with a visual footprint below four metres. These are conservative
 selection rules, not a claim that every supported GPU is faster for every world.
 Dedicated-server authority and headless sessions always use CPU generation.
 The software-rendered numerical checks cannot establish RTX 3060 or integrated
-GPU speed. Use the full generation timings below before choosing GPU or
-Automatic as a saved project default; readback time alone omits much of its cost.
+GPU speed. Use the full generation timings below to evaluate the automatic policy on real
+hardware; readback time alone omits much of its cost.
 
 To compare backends using a Godot 4.6.1 .NET executable, run from the project root
 and pass the project arguments after `--`:
@@ -623,13 +623,13 @@ Forest, jungle, savanna, swamp, mountain, tropical and badlands use bounded FIFO
 
 All fifteen specialized surface generators now share a sparse GPU OpenSimplex2S/FBM noise pass. Planning follows the same exact-coordinate ring enumeration as the grassland baker, selecting owned families and the canonical Hermite, cubic or linear raw lattice support. Affine noise coordinates and full signed seeds preserve the canonical float inputs. The GPU result cache is scoped to a synchronous worker build; unsupported points, coordinates, noise settings, queue limits, cancellation and failed parity sentinels use ordinary FastNoiseLite. The extension-family subtype classifier and site-specific misses are deliberately CPU-authoritative.
 
-Explicit `terrain-generation=gpu` enables the specialized pass; `terrain-biome-noise=off` disables it, and `terrain-biome-noise=on` enables it with automatic generation. The saved CPU default and ordinary automatic selection are unchanged pending hardware timings. Separate counters report completed numerical scalars, actual consumed cache hits, and parity rejections. This is a partial numerical GPU port for all 16 active surface families, not a port of all site placement, biome shaping, hydrology, or cave topology. The actual rendered atlas check now also compares every planned noise result and verifies consumption and height tolerance in all 15 specialized samplers. CPU authority is retained; strict world-wide parity and measured hardware speedups are not asserted by the experimental option.
+Explicit `terrain-generation=gpu` enables the specialized pass; `terrain-biome-noise=off` disables it, and `terrain-biome-noise=on` enables it with automatic generation. At the time of this initial noise pass, the saved CPU default was unchanged; later adaptive calibration superseded that default. Separate counters report completed numerical scalars, actual consumed cache hits, and parity rejections. This is a partial numerical GPU port for all 16 active surface families, not a port of all site placement, biome shaping, hydrology, or cave topology. The actual rendered atlas check now also compares every planned noise result and verifies consumption and height tolerance in all 15 specialized samplers. CPU authority is retained; strict world-wide parity and measured hardware speedups are not asserted by the experimental option.
 
 ## Experimental GPU cave lattice screening
 
 `terrain-cave-gpu=on` enables a bounded numerical viewport pass on rendered clients. It evaluates the ordinary, entrance, chamber, and all eight cross-section SDF styles from the same sparse CPU feature bins, with the original per-column terrain/portal heights. The floor-relief band, protected-shore bisections, every chunk border, all near-zero samples and every mixed-cube corner are recomputed by the canonical CPU field. CPU tetrahedral extraction, normals, collision, and frontier publication are unchanged. Unsupported fields, out-of-range descriptors, parity failures, tiny cells, queue timeout and headless/authority mode retain the CPU path. The rendered fixture requires actual GPU consumption plus byte-identical canonical mesh and frontier arrays for all eight styles.
 
-This is an explicit experimental screening option: sampled parity plus a conservative crossing band are not a formally proven floating-point bound at every possible coordinate. Do not enable by default or claim measured speedups until device-specific checks establish correctness and end-to-end performance. Arbitrary triangle extraction and physics remain CPU-authoritative.
+This is an explicit experimental screening option: sampled parity plus a conservative crossing band are not a formally proven floating-point bound at every possible coordinate. The later independently certified topology path supersedes this experimental screening path for automatic selection; do not infer measured hardware speedups from software-renderer checks. Arbitrary triangle extraction and physics remain CPU-authoritative.
 
 ## GPU-resident cave topology classification
 
@@ -646,3 +646,7 @@ The cave topology pass additionally checks every uniform-cube corner. Sign-only 
 ### Adaptive runtime selection
 
 The saved ring configuration now uses Automatic. The CPU baseline and occasional GPU probes measure the complete worker time, including planning, graphics queue latency, readbacks, validation and final mesh creation. Surface timing groups are separated by revision, LOD, resolution and sampled biome ownership mask; cave timing groups use lattice resolution, portal surface mode and a bounded field-complexity band. The GPU must beat the CPU estimate by at least 5% to be preferred. Small nearby tiles and software or headless renderers retain CPU generation; explicit CPU and GPU launch options remain available. Automatic selection is not a universal hardware speedup claim. Final authoritative physics, site planning, exceptional samples and mesh publication remain on their original canonical paths.
+
+### Compact biome shape input records
+
+Each specialized kernel uploads only the 4–16 RGBA32F bands it reads. A packed table supplies four exact record offsets per texel, so mixed-biome batches retain one draw and avoid padding every sample to the largest mountain record. A uniform mixture of all 15 specialized families uses 108 bands per 15 records plus the amortized offset table, instead of 240 bands before row padding. The CPU fixture checks mixed records across texture-row boundaries; rendered parity still uses the same canonical references.

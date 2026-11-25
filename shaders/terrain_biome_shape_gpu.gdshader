@@ -4,8 +4,8 @@ uniform sampler2D numeric_inputs : filter_nearest, repeat_disable;
 uniform int sample_count=0;
 uniform int sample_columns=256;
 uniform int sample_rows=2;
-const int BANDS=16;
-vec4 D(int record,int band){int index=record*BANDS+band;return texelFetch(numeric_inputs,ivec2(index%sample_columns,index/sample_columns),0);}
+vec4 read_input(int index){return texelFetch(numeric_inputs,ivec2(index%sample_columns,index/sample_columns),0);}
+vec4 D(int record,int band){return read_input(record+band);}
 float L(float a,float b,float t){return a+(b-a)*t;}
 float S(float a,float b,float x){float t=clamp((x-a)/(b-a),0.0,1.0);return t*t*(3.0-2.0*t);}
 vec4 shape_1(int record){
@@ -267,22 +267,23 @@ vec4 shape_7(int record){
 }
 
 vec4 shape_at(int record){
- int kind=int(D(record,0).x);
- if(kind==1)return shape_1(record);
- if(kind==2)return shape_2(record);
- if(kind==3)return shape_3(record);
- if(kind==4)return shape_4(record);
- if(kind==5)return shape_5(record);
- if(kind==6)return shape_6(record);
- if(kind==7)return shape_7(record);
- if(kind==8)return shape_8(record);
- if(kind==9)return shape_9(record);
- if(kind==10)return shape_10(record);
- if(kind==11)return shape_11(record);
- if(kind==12)return shape_12(record);
- if(kind==13)return shape_13(record);
- if(kind==14)return shape_14(record);
- if(kind==15)return shape_15(record);
+ int offset=int(read_input(record/4)[record%4]);
+ int kind=int(D(offset,0).x);
+ if(kind==1)return shape_1(offset);
+ if(kind==2)return shape_2(offset);
+ if(kind==3)return shape_3(offset);
+ if(kind==4)return shape_4(offset);
+ if(kind==5)return shape_5(offset);
+ if(kind==6)return shape_6(offset);
+ if(kind==7)return shape_7(offset);
+ if(kind==8)return shape_8(offset);
+ if(kind==9)return shape_9(offset);
+ if(kind==10)return shape_10(offset);
+ if(kind==11)return shape_11(offset);
+ if(kind==12)return shape_12(offset);
+ if(kind==13)return shape_13(offset);
+ if(kind==14)return shape_14(offset);
+ if(kind==15)return shape_15(offset);
  return vec4(0.0);
 }
 vec4 numeric_bytes(float v){

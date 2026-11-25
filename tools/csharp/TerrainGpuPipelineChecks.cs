@@ -31,6 +31,28 @@ internal static class TerrainGpuPipelineChecks
         using(var trial=policy.Begin(fastKey)){require(trial.UseGpu,"Missing GPU calibration");trial.Complete(5);}
         using(var faster=policy.Begin(fastKey)){require(faster.UseGpu,"Automatic policy ignored faster GPU");faster.Complete(5);}
         using(var revised=policy.Begin(fastKey with{Revision=2}))require(!revised.UseGpu,"Source revision reused old calibration");
+        // Verify dense shape input records cross texture rows without aliasing
+        // the four-offset header or reading unused trailing bands.
+        var shapes=new TerrainBiomeShapePlan();
+        for(int i=0;i<240;i++)
+        {
+            int family=i%15+1,used=TerrainBiomeShapePlan.UsedBands(family);
+            var bands=new Vector4[TerrainBiomeShapePlan.Bands];
+            for(int j=1;j<used;j++)bands[j]=new Vector4(i,j,i+j,-j);
+            shapes.Add(shapes,new Vector2(i,-i),0,family,bands,()=>Vector4.Zero,Vector4.One);
+        }
+        require(shapes.Count==240,"Mixed shape record fixture rejected valid input");
+        var packed=shapes.PackInputs(17,out int packedRows);int offset=(shapes.Count+3)/4;
+        for(int i=0;i<shapes.Count;i++)
+        {
+            var q=shapes.Queries[i];
+            require(q.Input.Length==TerrainBiomeShapePlan.UsedBands(q.Family),"Unused shape bands retained");
+            require(packed[i/4][i%4]==offset,"Compact shape offset changed");
+            for(int j=0;j<q.Input.Length;j++)require(packed[offset+j]==q.Input[j],"Packed shape record corrupted");
+            offset+=q.Input.Length;
+        }
+        require(packed.Length==17*packedRows&&packed.Length<shapes.Count*TerrainBiomeShapePlan.Bands*.6,
+            "Compact mixed-biome shape input failed to reduce transfer");
         // Worker-side compact strips and main-thread shader uniforms must
         // share one mapping for every possible eight-family ownership mask.
         for(int mask=0;mask<256;mask++)

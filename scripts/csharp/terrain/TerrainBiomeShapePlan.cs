@@ -13,6 +13,9 @@ namespace PredatorIsle.Terrain;
 internal sealed class TerrainBiomeShapePlan
 {
     internal const int Bands=16,MaximumQueries=8192;
+    // Count only bands the corresponding shader kernel actually consumes.
+    internal static int UsedBands(int family)=>family switch
+    {1 or 3 or 4=>10,2=>9,5=>16,6=>11,7 or 11 or 13 or 14=>4,8 or 10 or 12 or 15=>5,9=>6,_=>0};
     internal const string ShaderPath="res://shaders/terrain_biome_shape_gpu.gdshader";
     internal readonly record struct Key(object Owner,Vector2 Point,int Subtype);
     internal readonly record struct Result(Vector4 Value,Vector2 Auxiliary);
@@ -30,8 +33,10 @@ internal sealed class TerrainBiomeShapePlan
     internal void Add(object owner,Vector2 p,int subtype,int family,Vector4[] bands,Func<Vector4> reference,
         Vector4 tolerance,Vector2 auxiliary=default)
     {
-        if(Full||bands.Length!=Bands||!p.IsFinite()||Math.Abs(p.X)>TerrainGpuSampler.MaximumCoordinate||
+        int used=UsedBands(family);
+        if(Full||used==0||bands.Length<used||bands.Length>Bands||!p.IsFinite()||Math.Abs(p.X)>TerrainGpuSampler.MaximumCoordinate||
            Math.Abs(p.Y)>TerrainGpuSampler.MaximumCoordinate)return;
+        if(bands.Length!=used)Array.Resize(ref bands,used);
         foreach(var v in bands)if(!v.IsFinite())return;
         if(!auxiliary.IsFinite())return;
         var key=new Key(owner,p,subtype);
@@ -43,16 +48,16 @@ internal sealed class TerrainBiomeShapePlan
     internal static Vector4[] ClassicBands(Vector4 noise,Vector2 rotated,float[] weights,Vector4 auxiliary,
         params double[] parameters)
     {
-        var bands=new Vector4[Bands];bands[1]=noise;bands[6]=F(rotated.X,rotated.Y);bands[7]=auxiliary;
-        for(int i=0;i<weights.Length&&i<16;i++)bands[2+i/4][i%4]=weights[i];
         if(parameters.Length>(Bands-8)*4)throw new ArgumentException("Too many biome shape parameters");
+        var bands=new Vector4[8+(parameters.Length+3)/4];bands[1]=noise;bands[6]=F(rotated.X,rotated.Y);bands[7]=auxiliary;
+        for(int i=0;i<weights.Length&&i<16;i++)bands[2+i/4][i%4]=weights[i];
         for(int i=0;i<parameters.Length;i++)bands[8+i/4][i%4]=(float)parameters[i];
         return bands;
     }
     internal static Vector4[] ExtensionBands(params Vector4[] data)
     {
-        var bands=new Vector4[Bands];
         if(data.Length>=Bands)throw new ArgumentException("Too many extension shape inputs");
+        var bands=new Vector4[1+data.Length];
         Array.Copy(data,0,bands,1,data.Length);return bands;
     }
     internal static TerrainBiomeShapePlan Create(TerrainBiomeNoisePlan noise,TerrainBiomeNoiseCache cache,
@@ -85,14 +90,30 @@ internal sealed class TerrainBiomeShapePlan
         Math.Abs((double)value.Y-reference.Y)<=tolerance.Y&&Math.Abs((double)value.Z-reference.Z)<=tolerance.Z&&
         Math.Abs((double)value.W-reference.W)<=tolerance.W;
 
+    // Four exactly representable offsets per header texel, followed by
+    // dense variable-length records. The shader loads the offset once per
+    // result and then reads the existing family-specific band layout.
+    internal Vector4[] PackInputs(int columns,out int inputRows)
+    {
+        if(columns<1)throw new ArgumentOutOfRangeException(nameof(columns));
+        int header=(Count+3)/4,total=header;
+        foreach(var q in Queries)total=checked(total+q.Input.Length);
+        inputRows=Math.Max(1,(total+columns-1)/columns);
+        var inputs=new Vector4[checked(columns*inputRows)];int cursor=header;
+        for(int i=0;i<Count;i++)
+        {
+            inputs[i/4][i%4]=cursor;
+            Queries[i].Input.CopyTo(inputs,cursor);cursor+=Queries[i].Input.Length;
+        }
+        return inputs;
+    }
     internal async Task<int> BakeAsync(TerrainBiomeNoiseGpu gpu,TerrainBiomeNoiseCache cache,
         CancellationToken cancellation=default)
     {
         if(!gpu.Available||Count==0||cancellation.IsCancellationRequested)return 0;
         const int columns=256;
-        int rows=Math.Max(2,(Count*4+columns-1)/columns),inputRows=(Count*Bands+columns-1)/columns;
-        var inputs=new Vector4[columns*inputRows];
-        for(int i=0;i<Count;i++)Queries[i].Input.CopyTo(inputs,i*Bands);
+        int rows=Math.Max(2,(Count*4+columns-1)/columns);
+        var inputs=PackInputs(columns,out int inputRows);
         var values=await gpu.BakeRawAsync(inputs,Count*4,columns,rows,inputRows,cancellation).ConfigureAwait(false);
         if(values is null||values.Length!=Count*4||cancellation.IsCancellationRequested)return 0;
         var accepted=new Dictionary<Key,Result>();
