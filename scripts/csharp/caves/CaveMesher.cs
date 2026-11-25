@@ -39,7 +39,7 @@ internal sealed class LegacyCaveField : ICaveField
 /// <summary>Fixed-grid tetrahedra, canonical welded crossings and original sign-case winding.</summary>
 public partial class CaveMesher : RefCounted
 {
-    private static readonly int[][] Tets = { new[] { 0, 5, 1, 6 }, new[] { 0, 1, 2, 6 }, new[] { 0, 2, 3, 6 }, new[] { 0, 3, 7, 6 }, new[] { 0, 7, 4, 6 }, new[] { 0, 4, 5, 6 } };
+    private static readonly int[][] Tets = CaveGpuLattice.Tets;
     private static readonly Vector3I[] CubeCorners = { new(0,0,0), new(1,0,0), new(1,1,0), new(0,1,0), new(0,0,1), new(1,0,1), new(1,1,1), new(0,1,1) };
     private static readonly bool[] Flip = { false, false, true, false, false, true, false, false, true, false, true, true, false, false, true, false };
     private readonly List<Vector3> _vertices = new(), _normals = new();
@@ -58,6 +58,7 @@ public partial class CaveMesher : RefCounted
     internal TerrainBiomeNoiseGpu? GpuLattice{get;set;}
     internal int GpuLatticeSamples{get;private set;}
     internal int GpuLatticeExactSamples{get;private set;}
+    internal int GpuTopologyCubes{get;private set;}
     protected ICaveField? Field;
     private A _shores = new();
     public Vector3 origin { get; set; }
@@ -123,15 +124,18 @@ public partial class CaveMesher : RefCounted
         _vertices.Add(point - origin); _normals.Add(normal);
     }
 
-    private void Tetra(ReadOnlySpan<Vector3> points, ReadOnlySpan<float> values, int[] indices)
+    private void Tetra(ReadOnlySpan<Vector3> points, ReadOnlySpan<float> values, int[] indices,int mask=-1)
     {
-        int mask = 0;
-        for (int i = 0; i < 4; i++) if (values[indices[i]] < 0) mask |= 1 << i;
+        if(mask<0)
+        {
+            mask=0;
+            for (int i=0;i<4;i++)if(values[indices[i]]<0)mask|=1<<i;
+        }
         if (mask is 0 or 15) return;
         var p = points[indices[0]]; var a = points[indices[1]] - p; var b = points[indices[2]] - p; var c = points[indices[3]] - p;
         case_flip = Flip[mask] != (a.Dot(b.Cross(c)) < 0);
         Span<int> inside = stackalloc int[4], outside = stackalloc int[4]; int ni = 0, no = 0;
-        foreach (int index in indices) { if (values[index] < 0) inside[ni++] = index; else outside[no++] = index; }
+        for(int j=0;j<4;j++){int index=indices[j];if((mask&(1<<j))!=0)inside[ni++]=index;else outside[no++]=index;}
         if (ni == 1 || no == 1)
         {
             int single = ni == 1 ? inside[0] : outside[0]; var others = ni == 1 ? outside[..no] : inside[..ni];
@@ -152,7 +156,7 @@ public partial class CaveMesher : RefCounted
         _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); _refinedEdges.Clear();
         RefinedCacheHits = RefinedEvaluations = 0;
         SurfaceColumnEvaluations = SurfaceColumnReuseHits = 0;
-        GpuLatticeSamples=GpuLatticeExactSamples=0;
+        GpuLatticeSamples=GpuLatticeExactSamples=GpuTopologyCubes=0;
         boundary_values = new();
         Field = volume as ICaveField ?? new LegacyCaveField(volume); origin = (Vector3)coordinate * 64;
         _shores = Field.PreciseShores;
@@ -192,9 +196,17 @@ public partial class CaveMesher : RefCounted
         try
         {
         bool screened=false;
+        int[]? gpuCases=null;
         if(GpuLattice is {Available:true} gpu&&Field is CaveField native)
         {
-            screened=CaveGpuLattice.TryFill(gpu,native,origin,row,(float)step_metres,values,out int exactSamples);
+            int exactSamples;
+            if(gpu.TopologyAvailable)
+            {
+                gpuCases=CaveGpuLattice.TryFillTopology(gpu,native,origin,row,(float)step_metres,values,out exactSamples);
+                screened=gpuCases is not null;
+                GpuTopologyCubes=gpuCases?.Length??0;
+            }
+            else screened=CaveGpuLattice.TryFill(gpu,native,origin,row,(float)step_metres,values,out exactSamples);
             if(screened){GpuLatticeSamples=latticeCount;GpuLatticeExactSamples=exactSamples;}
         }
         if(!screened)
@@ -235,20 +247,26 @@ public partial class CaveMesher : RefCounted
         for (int y = 0; y < count; y++)
         for (int x = 0; x < count; x++)
         {
-            int start = x + row * y + plane * z; bool air = false, rock = false;
-            foreach (int offset in offsets)
+            int start=x+row*y+plane*z;
+            int cases=gpuCases is null?-1:gpuCases[x+count*(y+count*z)];
+            if(cases is 0 or 0xffffff)continue;
+            if(cases<0)
             {
-                air |= values[start + offset] < 0; rock |= values[start + offset] >= 0;
-                if (air && rock) break;
+                bool air=false,rock=false;
+                foreach(int offset in offsets)
+                {
+                    air|=values[start+offset]<0;rock|=values[start+offset]>=0;
+                    if(air&&rock)break;
+                }
+                if(!air||!rock)continue;
             }
-            if (!air || !rock) continue;
             for (int i = 0; i < 8; i++)
             {
                 var corner=CubeCorners[i];
                 cubePoints[i]=new Vector3(xs[x+corner.X],ys[y+corner.Y],zs[z+corner.Z]);
                 cubeValues[i]=values[start+offsets[i]];
             }
-            foreach (var tet in Tets) Tetra(cubePoints, cubeValues, tet);
+            for(int t=0;t<Tets.Length;t++)Tetra(cubePoints,cubeValues,Tets[t],cases<0?-1:(cases>>(t*4))&15);
         }
         if (_vertices.Count == 0) return new();
         var arrays = new A(); arrays.Resize((int)Mesh.ArrayType.Max);

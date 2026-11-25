@@ -15,11 +15,19 @@ internal static class CaveGpuLatticeChecks
 {
     internal static async Task<D> Run(Node host,Action<bool,string> require)
     {
-        var gpu=new TerrainBiomeNoiseGpu{ShaderPath=CaveGpuLattice.ShaderPath,RequestTimeoutSeconds=120};
+        var gpu=new TerrainBiomeNoiseGpu{ShaderPath=CaveGpuLattice.ShaderPath,TopologyShaderPath=CaveGpuLattice.TopologyShaderPath,RequestTimeoutSeconds=120};
         host.AddChild(gpu);
         try
         {
-            require(gpu.Available,"Cave lattice shader unavailable");
+            require(gpu.TopologyAvailable,"Cave lattice or topology shader unavailable");
+            require(CaveGpuLattice.PackCases(0)==0&&CaveGpuLattice.PackCases(255)==0xffffff,
+                "Uniform GPU topology cases changed");
+            for(int mask=0;mask<256;mask++)
+            {
+                int packed=CaveGpuLattice.PackCases(mask);
+                require((packed^CaveGpuLattice.PackCases(mask^255))==0xffffff,
+                    "Complementary tetrahedron case table changed");
+            }
             var cases=new A();
             for(int style=0;style<8;style++)
             {
@@ -40,6 +48,9 @@ internal static class CaveGpuLatticeChecks
                 double step=style==7?2:4;
                 var original=cpu.build(field,key,step);
                 var actual=await Task.Run(()=>candidate.build(field,key,step));
+                int cells=(int)(64/step);
+                require(candidate.GpuTopologyCubes==cells*cells*cells,
+                    "Cave topology GPU stage was not consumed for style "+style+": "+gpu.LastFailure);
                 require(candidate.GpuLatticeSamples>0&&candidate.GpuLatticeExactSamples<candidate.GpuLatticeSamples,
                     "Cave GPU style "+style+" fell back or did not save any field samples: "+gpu.LastFailure);
                 require(original.Count>0&&GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(actual)),
@@ -47,7 +58,7 @@ internal static class CaveGpuLatticeChecks
                 require(GD.VarToBytes(cpu.boundary_values).SequenceEqual(GD.VarToBytes(candidate.boundary_values)),
                     "Cave GPU screening changed exact chunk frontier for style "+style);
                 cases.Add(new D{["style"]=style,["gpu_samples"]=candidate.GpuLatticeSamples,
-                    ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples});
+                    ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples,["gpu_topology_cubes"]=candidate.GpuTopologyCubes});
             }
             return new D{["styles"]=cases,["gpu_scalars"]=gpu.CompletedScalars};
         }

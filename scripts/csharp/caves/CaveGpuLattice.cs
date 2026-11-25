@@ -13,6 +13,18 @@ internal static class CaveGpuLattice
     private const int Columns=256,BinsPerAxis=5,BinCount=125,Header=3;
     private const float CpuRequired=5,Guard=.25f,ParityTolerance=.025f;
     internal const string ShaderPath="res://shaders/cave_lattice_gpu.gdshader";
+    internal const string TopologyShaderPath="res://shaders/cave_topology_gpu.gdshader";
+    internal const int UncertainCase=1<<24;
+    internal static readonly int[][] Tets={new[]{0,5,1,6},new[]{0,1,2,6},new[]{0,2,3,6},
+        new[]{0,3,7,6},new[]{0,7,4,6},new[]{0,4,5,6}};
+    internal static int PackCases(int cubeMask)
+    {
+        int packed=0;
+        for(int t=0;t<Tets.Length;t++)
+        for(int j=0;j<4;j++)
+            packed|=((cubeMask>>Tets[t][j])&1)<<(t*4+j);
+        return packed;
+    }
     private static bool Bounded(Vector3 p)=>p.IsFinite()&&Math.Abs(p.X)<=8192&&Math.Abs(p.Y)<=8192&&Math.Abs(p.Z)<=8192;
     private static bool Finite(double x)=>double.IsFinite(x)&&Math.Abs(x)<=1000000;
     private sealed record Plan(Vector4[] Inputs,int InputRows,int OutputRows,double[]? Top);
@@ -88,6 +100,66 @@ internal static class CaveGpuLattice
         int inputRows=(data.Count+Columns-1)/Columns,outputRows=(count+Columns-1)/Columns;
         var inputs=new Vector4[inputRows*Columns];data.CopyTo(inputs);
         return new Plan(inputs,inputRows,outputRows,top);
+    }
+
+    /// <summary>Read back GPU-generated tetrahedral cases and evaluate only
+    /// corners that can affect geometry. Uniform interior cubes never need
+    /// their CPU SDF values, and no intermediate GPU texture is read back.</summary>
+    internal static int[]? TryFillTopology(TerrainBiomeNoiseGpu gpu,CaveField field,Vector3 origin,
+        int row,float step,float[] destination,out int exactSamples)
+    {
+        exactSamples=0;
+        if(!gpu.TopologyAvailable)return null;
+        var plan=Create(field,origin,row,step);
+        if(plan is null)return null;
+        int cells=row-1,plane=row*row,count=row*plane;
+        var raw=gpu.BakeCaveTopologyAsync(plan.Inputs,row,Columns,plan.InputRows)
+            .GetAwaiter().GetResult();
+        if(raw is null||raw.Length!=cells*cells*cells)return null;
+        var cases=new int[raw.Length];
+        var ready=new bool[count];
+        int checkedSamples=0;
+        bool Exact(int i)
+        {
+            if(ready[i])return true;
+            int x=i%row,y=i/row%row,z=i/plane;
+            var p=origin+new Vector3(x,y,z)*step;
+            float value=(float)(plan.Top is not null?
+                ((PortalCaveField)field).SampleWithSurfaceHeight(p,plan.Top[x+z*row]):field.sample(p));
+            if(!float.IsFinite(value))return false;
+            destination[i]=value;ready[i]=true;checkedSamples++;return true;
+        }
+        ReadOnlySpan<int> offsets=stackalloc int[]{0,1,1+row,row,plane,1+plane,1+row+plane,row+plane};
+        for(int z=0;z<cells;z++)
+        for(int y=0;y<cells;y++)
+        for(int x=0;x<cells;x++)
+        {
+            int cell=x+cells*(y+cells*z),start=x+row*y+plane*z;
+            float value=raw[cell];
+            if(!float.IsFinite(value)||value<0||value>UncertainCase||value!=MathF.Floor(value))return null;
+            int packed=(int)value;
+            // The CPU also independently requests every boundary cube, even if
+            // a device failed to set the shader's uncertainty marker.
+            bool boundary=x==0||y==0||z==0||x==cells-1||y==cells-1||z==cells-1;
+            bool uniform=packed is 0 or 0xffffff;
+            if(boundary||!uniform||cell%257==0)
+            {
+                int mask=0;
+                for(int i=0;i<8;i++)
+                {
+                    int at=start+offsets[i];
+                    if(!Exact(at))return null;
+                    if(destination[at]<0)mask|=1<<i;
+                }
+                int canonical=PackCases(mask);
+                if(packed!=UncertainCase&&canonical!=packed)return null;
+                packed=canonical;
+            }
+            cases[cell]=packed;
+        }
+        if(checkedSamples==count)return null;
+        exactSamples=checkedSamples;
+        return cases;
     }
 
     internal static bool TryFill(TerrainBiomeNoiseGpu gpu,CaveField field,Vector3 origin,int row,

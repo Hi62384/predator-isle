@@ -87,7 +87,7 @@ public partial class CaveStreamer : Node3D
         if(caveGpu is null&&terrain_node is ChunkTerrain terrain&&!terrain.authority_only&&
            DisplayServer.GetName()!="headless"&&OS.GetCmdlineUserArgs().Contains("terrain-cave-gpu=on"))
         {
-            caveGpu=new TerrainBiomeNoiseGpu{Name="CaveLatticeGeneration",ShaderPath=CaveGpuLattice.ShaderPath,RequestTimeoutSeconds=8};
+            caveGpu=new TerrainBiomeNoiseGpu{Name="CaveLatticeGeneration",ShaderPath=CaveGpuLattice.ShaderPath,TopologyShaderPath=CaveGpuLattice.TopologyShaderPath,RequestTimeoutSeconds=8};
             AddChild(caveGpu);
         }
         configure_biome_runtime();
