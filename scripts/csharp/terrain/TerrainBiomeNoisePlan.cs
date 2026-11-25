@@ -19,6 +19,12 @@ internal sealed class TerrainBiomeNoisePlan
     private readonly HashSet<Key> unique=new();
     private readonly HashSet<(object Owner,Vector2I Cell)> nodes=new();
     internal readonly List<Query> Queries=new();
+    private readonly HashSet<(object Owner,Vector2 Point)> rawSeen=new();
+    internal readonly List<(object Owner,Vector2 Point)> RawPoints=new();
+    internal void MarkRaw(object owner,Vector2 p)
+    {
+        if(RawPoints.Count<4096&&rawSeen.Add((owner,p)))RawPoints.Add((owner,p));
+    }
     internal int Count=>Queries.Count;
     internal bool Full=>Count>=MaximumQueries;
     internal bool MarkNode(object owner,Vector2I cell)=>!Full&&nodes.Add((owner,cell));

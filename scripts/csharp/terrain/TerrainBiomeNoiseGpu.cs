@@ -40,6 +40,8 @@ public partial class TerrainBiomeNoiseGpu:Node
     internal long CompletedScalars=>Interlocked.Read(ref completed);
     internal long CacheHits=>Interlocked.Read(ref hitCount);
     internal long Rejected=>Interlocked.Read(ref rejected);
+    internal void ReportRejection()=>Interlocked.Increment(ref rejected);
+    internal void ReportCacheHits(long hits)=>Interlocked.Add(ref hitCount,hits);
     internal string LastFailure{get;private set;}="";
 
     public override void _Ready()

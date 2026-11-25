@@ -157,6 +157,21 @@ internal static class CaveGpuLattice
             }
             cases[cell]=packed;
         }
+        // Compare known canonical corners against adjacent uniform cases.
+        // This includes corners from uncertain cubes replaced by the CPU.
+        for(int i=0;i<count;i++)
+        {
+            if(!ready[i])continue;
+            int x=i%row,y=i/row%row,z=i/plane;
+            bool air=destination[i]<0;
+            for(int dz=-1;dz<=0;dz++)for(int dy=-1;dy<=0;dy++)for(int dx=-1;dx<=0;dx++)
+            {
+                int cx=x+dx,cy=y+dy,cz=z+dz;
+                if(cx<0||cy<0||cz<0||cx>=cells||cy>=cells||cz>=cells)continue;
+                int packed=cases[cx+cells*(cy+cells*cz)];
+                if(packed==0&&air||packed==0xffffff&&!air)return null;
+            }
+        }
         if(checkedSamples==count)return null;
         exactSamples=checkedSamples;
         return cases;

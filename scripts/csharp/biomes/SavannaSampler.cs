@@ -110,6 +110,7 @@ public partial class SavannaSampler : RefCounted
     }
     private Vector4 Raw(Vector2 p)
     {
+        if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked))return baked.Value;
         var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y);
         var q = p.Rotated((float)(.43 + seed_value % 71 * .002));
         double input = q.X + Math.Sin(q.Y / 4300.0) * 1200 + a * 600 + 7000; double across = input % 14000; if (across < 0) across += 14000; across -= 7000;
@@ -159,8 +160,18 @@ public partial class SavannaSampler : RefCounted
         }
         plan.Add(_meso,new Vector2((float)x,(float)z));
     }
+    internal void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        var w=region_weights(p);var q=p.Rotated((float)(.43+seed_value%71*.002));
+        var kopje=(double)w[5]+w[2]+w[9]>.005?Kopjes(p):Vector3.Zero;var extra=TerrainBiomeShapePlan.F(kopje.X,kopje.Y,kopje.Z);
+        var bands=TerrainBiomeShapePlan.ClassicBands(TerrainBiomeShapePlan.F(TerrainBiomeNoiseCache.Read(_macro,p),TerrainBiomeNoiseCache.Read(_meso,p),TerrainBiomeNoiseCache.Read(_detail,p)),q,w,extra,
+            P("mountain_height"),P("ridge_intensity"),P("erosion_intensity"),P("drainage_strength"));
+        plan.Add(this,p,-1,2,bands,()=>Raw(p),TerrainBiomeShapePlan.ClassicTolerance);
+    }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
     }
     public double sample(double x, double z) => sample(x, z, true);

@@ -74,6 +74,7 @@ public partial class JungleSampler : RefCounted
     }
     private Vector4 Raw(Vector2 p)
     {
+        if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked))return baked.Value;
         var w = region_weights(p); double macro = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), meso = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y);
         var q = p.Rotated((float)(.43 + seed_value % 97 * .004)); double structure = TerrainBiomeNoiseCache.Read(_detail,(float)(q.X * .75), (float)(q.Y * 1.4));
         double input = q.Y + Math.Sin(q.X / 4700.0) * 750 + macro * 500 + 7000; double across = input % 14000; if (across < 0) across += 14000; across -= 7000;
@@ -121,8 +122,18 @@ public partial class JungleSampler : RefCounted
         }
         
     }
+    internal void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        var w=region_weights(p);var q=p.Rotated((float)(.43+seed_value%97*.004));
+        var extra=Vector4.Zero;
+        var bands=TerrainBiomeShapePlan.ClassicBands(TerrainBiomeShapePlan.F(TerrainBiomeNoiseCache.Read(_macro,p),TerrainBiomeNoiseCache.Read(_meso,p),TerrainBiomeNoiseCache.Read(_detail,(float)(q.X*.75),(float)(q.Y*1.4))),q,w,extra,
+            P("hill_density"),P("mountain_height"),P("ruggedness"),P("gully_frequency"),P("erosion_strength"),P("valley_depth"),P("wetness_variation"));
+        plan.Add(this,p,-1,4,bands,()=>Raw(p),TerrainBiomeShapePlan.ClassicTolerance);
+    }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_meso,p);var q=p.Rotated((float)(.43+seed_value%97*.004));plan.Add(_detail,new Vector2((float)(q.X*.75),(float)(q.Y*1.4)));
     }
     public double sample(double x, double z) => sample(x, z, true);

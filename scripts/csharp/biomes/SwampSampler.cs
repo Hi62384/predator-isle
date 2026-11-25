@@ -76,9 +76,8 @@ public partial class SwampSampler : RefCounted
         var sites = result.ToArray(); _pools[cell] = sites; return sites;
     }
     private static double Mod(double x, double y) { double v = x % y; return v < 0 ? v + y : v; }
-    private double[] Raw(Vector2 p)
+    private (double Land,double Raised) BaseShape(float[] w,double a,double b,double c)
     {
-        var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y), table = water_table(p);
         double raised = Smooth(-.18, .22, b + a * .2), ridge = 1 - Smooth(.03, .18, Math.Abs(b + c * .15));
         double offset = w[0] * -.5 + w[1] * -.9 + w[2] * .65 + w[3] * .3 + w[4] * -.3 + w[5] * .7 + w[6] * -.6 + w[7] * .25 + w[8] * .15 + w[9] * .6 - w[10] * 1.7 - w[11] * 1.2 + w[12] * 2.5 + w[13] * -.2 + w[14] * 5.0;
         offset += (.55 - P("water_coverage")) * 4; double land = offset + (b * 2.2 + a * .6) * P("terrain_relief");
@@ -86,6 +85,26 @@ public partial class SwampSampler : RefCounted
         land += ridge * P("island_height") * P("raised_frequency") * ((double)w[3] + w[6] + w[7] + w[9]);
         land += c * P("hummock_amplitude") * (w[5] + w[9] * 1.7 + w[14] * .4);
         double hollow = 1 - Smooth(.025, .15, Math.Abs(c + b * .2)); land -= hollow * P("hollow_frequency") * (w[5] * .7 + w[9] + w[8] * .4);
+        return (land,raised);
+    }
+    private Vector4 ReferenceGpuShape(Vector2 p)
+    {
+        var v=BaseShape(region_weights(p),_macro.GetNoise2Dv(p),_meso.GetNoise2Dv(p),_detail.GetNoise2Dv(p));
+        return TerrainBiomeShapePlan.F(v.Land,v.Raised);
+    }
+    internal void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        var n=TerrainBiomeShapePlan.F(TerrainBiomeNoiseCache.Read(_macro,p),TerrainBiomeNoiseCache.Read(_meso,p),TerrainBiomeNoiseCache.Read(_detail,p));
+        var bands=TerrainBiomeShapePlan.ClassicBands(n,Vector2.Zero,region_weights(p),Vector4.Zero,P("water_coverage"),P("terrain_relief"),P("island_height"),P("island_density"),P("raised_frequency"),P("hummock_amplitude"),P("hollow_frequency"));
+        plan.Add(this,p,-1,3,bands,()=>ReferenceGpuShape(p),TerrainBiomeShapePlan.ClassicTolerance);
+    }
+    private double[] Raw(Vector2 p)
+    {
+        var w = region_weights(p); double a = TerrainBiomeNoiseCache.Read(_macro,p.X, p.Y), b = TerrainBiomeNoiseCache.Read(_meso,p.X, p.Y), c = TerrainBiomeNoiseCache.Read(_detail,p.X, p.Y), table = water_table(p);
+        double land,raised;
+        if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked)){land=baked.Value.X;raised=baked.Value.Y;}
+        else (land,raised)=BaseShape(w,a,b,c);
         double channel = 0, flood = 0, levee = 0, basin = 0, deposition = 0, abandoned = 0;
         var host = _host!.GetRef().AsGodotObject(); double spacing = 4000 / Math.Max(host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(), .01);
         if (P("channel_frequency") > 0)
@@ -152,6 +171,7 @@ public partial class SwampSampler : RefCounted
     }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_meso,p);plan.Add(_detail,p);
     }
     public double sample(double x, double z) => sample(x, z, true);
