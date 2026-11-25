@@ -1,0 +1,56 @@
+using Godot;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
+using PredatorIsle.Caves;
+using PredatorIsle.Terrain;
+using A=Godot.Collections.Array;
+using D=Godot.Collections.Dictionary;
+
+namespace PredatorIsle.Checks;
+
+/// <summary>Real GPU candidate lattice and exact mesh/frontier comparisons
+/// for every cave cross-section style, including portal and floor fallback.</summary>
+internal static class CaveGpuLatticeChecks
+{
+    internal static async Task<D> Run(Node host,Action<bool,string> require)
+    {
+        var gpu=new TerrainBiomeNoiseGpu{ShaderPath=CaveGpuLattice.ShaderPath,RequestTimeoutSeconds=120};
+        host.AddChild(gpu);
+        try
+        {
+            require(gpu.Available,"Cave lattice shader unavailable");
+            var cases=new A();
+            for(int style=0;style<8;style++)
+            {
+                var key=new Vector3I(-2,-1,1);var origin=(Vector3)key*64;
+                using var field=new PortalCaveField{include_surface_air=style==7,opening_rock_cover=style==7?0:6};
+                field.height=Callable.From<double,double,double>((x,z)=>100);
+                field.top_height=Callable.From<double,double,double>((x,z)=>origin.Y+57);
+                if(style==7)field.surface_columns[new Vector2I(key.X,key.Z)]=true;
+                var center=origin+new Vector3(32,18,32);
+                require(field.append_feature(center,center,new Vector2(23,27),2,style),
+                    "Cave GPU fixture rejected its chamber");
+                require(field.append_feature(origin+new Vector3(2,12,9),origin+new Vector3(61,20,45),new Vector2(7,15),1,style),
+                    "Cave GPU fixture rejected its route");
+                if(style==5)field.floor_relief["fixture"]=1.0;
+                if(style==6)field.precise_shores.Add(new D{["center"]=center,["radius"]=24.0});
+                using var cpu=new PortalCaveMesher{capture_boundary_values=true};
+                using var candidate=new PortalCaveMesher{capture_boundary_values=true,GpuLattice=gpu};
+                double step=style==7?2:4;
+                var original=cpu.build(field,key,step);
+                var actual=await Task.Run(()=>candidate.build(field,key,step));
+                require(candidate.GpuLatticeSamples>0&&candidate.GpuLatticeExactSamples<candidate.GpuLatticeSamples,
+                    "Cave GPU style "+style+" fell back or did not save any field samples: "+gpu.LastFailure);
+                require(original.Count>0&&GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(actual)),
+                    "Cave GPU screening changed exact mesh topology, crossings or normals for style "+style);
+                require(GD.VarToBytes(cpu.boundary_values).SequenceEqual(GD.VarToBytes(candidate.boundary_values)),
+                    "Cave GPU screening changed exact chunk frontier for style "+style);
+                cases.Add(new D{["style"]=style,["gpu_samples"]=candidate.GpuLatticeSamples,
+                    ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples});
+            }
+            return new D{["styles"]=cases,["gpu_scalars"]=gpu.CompletedScalars};
+        }
+        finally{gpu.Shutdown();gpu.Free();}
+    }
+}

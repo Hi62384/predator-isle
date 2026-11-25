@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using PredatorIsle.Terrain;
 using A=Godot.Collections.Array;
 using D=Godot.Collections.Dictionary;
 
@@ -58,6 +59,7 @@ public partial class CaveStreamer : Node3D
     public bool _frontiers_dirty {get;set;}
     public string _biome_debug {get;set;}="";
     public A _biome_runtime_controllers {get;set;}=new();
+    private TerrainBiomeNoiseGpu? caveGpu;
     private readonly CaveSurfaceRenderer _renderer=new();
     private readonly CaveWaterRenderer _water=new();
     private readonly CaveMaterialPalette _palette=new();
@@ -77,7 +79,19 @@ public partial class CaveStreamer : Node3D
     private bool Teleport=>host!.Get("_teleport_pending").AsBool();
     private static Vector2I Region(Vector3 point)=>new((int)Math.Floor(point.X/1536.0),(int)Math.Floor(point.Z/1536.0));
     public void initialize(Node3D terrain_node)
-    {discoveryCache.Clear();host=terrain_node;configuration=host.Get("cave_settings").As<Resource>().DuplicateDeep(Resource.DeepDuplicateMode.All);configure_biome_runtime();}
+    {
+        discoveryCache.Clear();host=terrain_node;
+        configuration=host.Get("cave_settings").As<Resource>().DuplicateDeep(Resource.DeepDuplicateMode.All);
+        // Numerical cave screening remains explicit until hardware timings and
+        // a world-wide conservative precision bound are established.
+        if(caveGpu is null&&terrain_node is ChunkTerrain terrain&&!terrain.authority_only&&
+           DisplayServer.GetName()!="headless"&&OS.GetCmdlineUserArgs().Contains("terrain-cave-gpu=on"))
+        {
+            caveGpu=new TerrainBiomeNoiseGpu{Name="CaveLatticeGeneration",ShaderPath=CaveGpuLattice.ShaderPath,RequestTimeoutSeconds=8};
+            AddChild(caveGpu);
+        }
+        configure_biome_runtime();
+    }
     public void configure_biome_runtime()
     {
         foreach(var item in _biome_runtime_controllers)item.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();
@@ -94,7 +108,7 @@ public partial class CaveStreamer : Node3D
     public CaveWorkload? worker()
     {
         if(_idle.Count>0){var value=_idle[^1].As<CaveWorkload>();_idle.RemoveAt(_idle.Count-1);return value;}
-        var work=new CaveWorkload();if(!work.configure(host!.Get("_settings_snapshot").As<Resource>(),configuration!,host.Get("world_seed").AsInt64(),host.Get("water_level").AsDouble())){work.Dispose();return null;}return work;
+        var work=new CaveWorkload{GpuLattice=caveGpu};if(!work.configure(host!.Get("_settings_snapshot").As<Resource>(),configuration!,host.Get("world_seed").AsInt64(),host.Get("water_level").AsDouble())){work.Dispose();return null;}return work;
     }
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting)=>dispatch_allowance(terrain_free_slots,cave_jobs,terrain_waiting,4);
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting,long total_workers)
@@ -259,6 +273,7 @@ public partial class CaveStreamer : Node3D
     }
     public void shutdown()
     {
+        if(caveGpu is not null&&GodotObject.IsInstanceValid(caveGpu))caveGpu.Shutdown();
         discoveryCache.Clear();
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();foreach(var task in _jobs.Keys)WorkerThreadPool.WaitForTaskCompletion(task.AsInt64());
         if(parkedDiscoveryWorker is not null){_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}

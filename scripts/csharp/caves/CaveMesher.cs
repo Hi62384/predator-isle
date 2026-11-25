@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Buffers;
 using System.Collections.Generic;
+using PredatorIsle.Terrain;
 using A = Godot.Collections.Array;
 using D = Godot.Collections.Dictionary;
 
@@ -54,6 +55,9 @@ public partial class CaveMesher : RefCounted
     public long RefinedEvaluations { get; private set; }
     public long SurfaceColumnEvaluations { get; private set; }
     public long SurfaceColumnReuseHits { get; private set; }
+    internal TerrainBiomeNoiseGpu? GpuLattice{get;set;}
+    internal int GpuLatticeSamples{get;private set;}
+    internal int GpuLatticeExactSamples{get;private set;}
     protected ICaveField? Field;
     private A _shores = new();
     public Vector3 origin { get; set; }
@@ -148,6 +152,7 @@ public partial class CaveMesher : RefCounted
         _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); _refinedEdges.Clear();
         RefinedCacheHits = RefinedEvaluations = 0;
         SurfaceColumnEvaluations = SurfaceColumnReuseHits = 0;
+        GpuLatticeSamples=GpuLatticeExactSamples=0;
         boundary_values = new();
         Field = volume as ICaveField ?? new LegacyCaveField(volume); origin = (Vector3)coordinate * 64;
         _shores = Field.PreciseShores;
@@ -186,6 +191,13 @@ public partial class CaveMesher : RefCounted
         if(surfaceReady is not null)Array.Clear(surfaceReady,0,plane);
         try
         {
+        bool screened=false;
+        if(GpuLattice is {Available:true} gpu&&Field is CaveField native)
+        {
+            screened=CaveGpuLattice.TryFill(gpu,native,origin,row,(float)step_metres,values,out int exactSamples);
+            if(screened){GpuLatticeSamples=latticeCount;GpuLatticeExactSamples=exactSamples;}
+        }
+        if(!screened)
         for (int z = 0; z < row; z++)
         for (int y = 0; y < row; y++)
         for (int x = 0; x < row; x++)

@@ -12,7 +12,7 @@ namespace PredatorIsle.Terrain;
 /// biome. Render queue owns only immutable float inputs, never worker resources.</summary>
 public partial class TerrainBiomeNoiseGpu:Node
 {
-    private sealed record Request(Vector4[] Input,int Count,int Columns,int Rows)
+    private sealed record Request(Vector4[] Input,int Count,int Columns,int Rows,int InputRows)
     {
         internal readonly TaskCompletionSource<float[]?> Completion=new(TaskCreationOptions.RunContinuationsAsynchronously);
     }
@@ -27,6 +27,7 @@ public partial class TerrainBiomeNoiseGpu:Node
     private long drawVersion,activeVersion,completed,hitCount,rejected;
     private int available;
     private bool subscribed;
+    internal string ShaderPath{get;set;}="res://shaders/terrain_biome_noise_gpu.gdshader";
     internal bool Available=>Volatile.Read(ref available)!=0;
     internal double RequestTimeoutSeconds{get;set;}=30;
     internal long CompletedScalars=>Interlocked.Read(ref completed);
@@ -38,7 +39,7 @@ public partial class TerrainBiomeNoiseGpu:Node
     {
         ProcessMode=ProcessModeEnum.Always;
         if(DisplayServer.GetName()=="headless")return;
-        shader=GD.Load<Shader>("res://shaders/terrain_biome_noise_gpu.gdshader");
+        shader=GD.Load<Shader>(ShaderPath);
         if(shader is null)return;
         RenderingServer.FramePostDraw+=OnDraw;subscribed=true;
         Volatile.Write(ref available,1);
@@ -48,7 +49,26 @@ public partial class TerrainBiomeNoiseGpu:Node
     {
         if(!Available||plan.Count==0||cancellation.IsCancellationRequested)return null;
         int columns=Math.Min(256,Math.Max(2,plan.Count)),rows=Math.Max(2,(plan.Count+columns-1)/columns);
-        var request=new Request(plan.Inputs(columns,rows),plan.Count,columns,rows);
+        var values=await BakeRawAsync(plan.Inputs(columns,rows),plan.Count,columns,rows,rows*2,cancellation).ConfigureAwait(false);
+        if(values is null||cancellation.IsCancellationRequested)return null;
+        try
+        {
+            var cache=plan.Accept(values,hits=>Interlocked.Add(ref hitCount,hits),cancellation,out _);
+            if(cache is null)Interlocked.Increment(ref rejected);
+            return cache;
+        }
+        catch(OperationCanceledException){return null;}
+    }
+
+    // The same bounded viewport queue also serves cave numerical screening.
+    // The immutable input texture can have a different row count from the output.
+    internal async Task<float[]?> BakeRawAsync(Vector4[] inputs,int count,int columns,int rows,int inputRows,
+        CancellationToken cancellation=default)
+    {
+        if(!Available||count<1||columns<2||rows<2||inputRows<1||
+            columns>1024||rows>2048||inputRows>2048||count>columns*rows||
+            inputs.Length!=columns*inputRows||cancellation.IsCancellationRequested)return null;
+        var request=new Request(inputs,count,columns,rows,inputRows);
         lock(lifecycle)
         {
             if(!Available||pending.Count>=8)return null;
@@ -56,11 +76,7 @@ public partial class TerrainBiomeNoiseGpu:Node
         }
         try
         {
-            var values=await request.Completion.Task.WaitAsync(TimeSpan.FromSeconds(RequestTimeoutSeconds),cancellation).ConfigureAwait(false);
-            if(values is null||cancellation.IsCancellationRequested)return null;
-            var cache=plan.Accept(values,hits=>Interlocked.Add(ref hitCount,hits),cancellation,out _);
-            if(cache is null)Interlocked.Increment(ref rejected);
-            return cache;
+            return await request.Completion.Task.WaitAsync(TimeSpan.FromSeconds(RequestTimeoutSeconds),cancellation).ConfigureAwait(false);
         }
         catch(TimeoutException){return null;}
         catch(OperationCanceledException){return null;}
@@ -123,9 +139,9 @@ public partial class TerrainBiomeNoiseGpu:Node
         }
         viewport.Size=new Vector2I(request.Columns,request.Rows);
         rect!.Size=new Vector2(request.Columns,request.Rows);
-        using var input=Image.CreateFromData(request.Columns,request.Rows*2,false,Image.Format.Rgbaf,
+        using var input=Image.CreateFromData(request.Columns,request.InputRows,false,Image.Format.Rgbaf,
             MemoryMarshal.AsBytes(request.Input.AsSpan()).ToArray());
-        if(texture is not null&&texture.GetWidth()==request.Columns&&texture.GetHeight()==request.Rows*2)texture.Update(input);
+        if(texture is not null&&texture.GetWidth()==request.Columns&&texture.GetHeight()==request.InputRows)texture.Update(input);
         else
         {
             var previous=texture;

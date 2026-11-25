@@ -13,7 +13,7 @@ internal sealed class TerrainBiomeNoisePlan
     internal const float MaximumNoiseError=.000002f;
     internal readonly record struct Key(FastNoiseLite Noise,Vector2 Position);
     internal readonly record struct Query(Key Key,Vector4 Input,Vector4 Configuration);
-    private readonly record struct Spec(Vector2 Offset,float Frequency,int Seed,Vector4 Configuration);
+    private readonly record struct Spec(Vector2 Offset,float Frequency,int Seed,Vector4 Configuration,double MaximumOctaveScale);
     private readonly Dictionary<FastNoiseLite,Spec?> specs=new();
     private readonly Dictionary<FastNoiseLite,List<int>> groups=new();
     private readonly HashSet<Key> unique=new();
@@ -37,7 +37,7 @@ internal sealed class TerrainBiomeNoisePlan
         for(int i=1;i<noise.FractalOctaves;i++){sum+=amplitude;amplitude*=Math.Abs(gain);}
         if(!float.IsFinite(sum)||sum<=0)return null;
         return new Spec(new Vector2(offset.X,offset.Y),frequency,noise.Seed,
-            new Vector4(gain,lacunarity,1/sum,noise.FractalOctaves));
+            new Vector4(gain,lacunarity,1/sum,noise.FractalOctaves),Math.Pow(Math.Max(1,lacunarity),noise.FractalOctaves-1));
     }
     internal void Add(FastNoiseLite noise,Vector2 p)
     {
@@ -49,7 +49,7 @@ internal sealed class TerrainBiomeNoisePlan
         if(unique.Contains(key))return;
         float x=(p.X+s.Offset.X)*s.Frequency,z=(p.Y+s.Offset.Y)*s.Frequency;
         float skew=(x+z)*0.366025388240814208984375f;x+=skew;z+=skew;
-        double maxOctave=Math.Max(Math.Abs(x),Math.Abs(z))*Math.Pow(Math.Max(1,s.Configuration.Y),s.Configuration.W-1);
+        double maxOctave=Math.Max(Math.Abs(x),Math.Abs(z))*s.MaximumOctaveScale;
         if(!double.IsFinite(maxOctave)||maxOctave>1000000)return;
         uint seed=unchecked((uint)s.Seed);
         if(!groups.TryGetValue(noise,out var group)){group=new List<int>();groups.Add(noise,group);}

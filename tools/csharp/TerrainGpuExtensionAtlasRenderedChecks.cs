@@ -155,7 +155,8 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
             ["renderer"]=RenderingServer.GetCurrentRenderingMethod(),
             ["adapter"]=RenderingServer.GetVideoAdapterName(),
             ["cases"]=cases,
-            ["numerical_noise"]=await TerrainBiomeNoiseChecks.Run(host,require)
+            ["numerical_noise"]=await TerrainBiomeNoiseChecks.Run(host,require),
+            ["cave_lattice"]=await CaveGpuLatticeChecks.Run(host,require)
         };
     }
 

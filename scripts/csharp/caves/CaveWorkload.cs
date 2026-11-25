@@ -51,6 +51,7 @@ public partial class CaveWorkload : RefCounted
     }
     private Discovery? discovery;
     internal long DiscoveryBytes{get;private set;}
+    internal TerrainBiomeNoiseGpu? GpuLattice{get;set;}
     public bool configure(Resource terrain_settings, Resource caves, long seed_value, double water)
     {
         if (caves == null || caves.Call("validation_errors").AsGodotArray().Count > 0) return false;
@@ -216,7 +217,7 @@ public partial class CaveWorkload : RefCounted
     {
         if (field != null) { ClearSurface(); field.Set("include_surface_air", false); field.Set("opening_rock_cover", 6.0); }
         _last_frontiers = new(); _last_biome_ids = new(); _last_valid = true; if (field == null) return new();
-        using var mesher = new PortalCaveMesher { capture_boundary_values = capture_frontiers }; var arrays = mesher.build(field,key,2);
+        using var mesher = new PortalCaveMesher { capture_boundary_values = capture_frontiers, GpuLattice=this.GpuLattice }; var arrays = mesher.build(field,key,2);
         if (capture_frontiers) _last_frontiers = Frontiers.build(field,key,mesher.boundary_values);
         var bound = SurfaceBiomes.bind(decorated(arrays,key),field,key); _last_biome_ids = bound["ids"].AsGodotArray(); _last_valid = bound["valid"].AsBool();
         if (capture_frontiers) foreach (var face in _last_frontiers.Keys.ToArray()) _last_frontiers[face] = SurfaceBiomes.bind(_last_frontiers[face].AsGodotArray(),field,key,_last_biome_ids)["arrays"];
@@ -268,7 +269,7 @@ public partial class CaveWorkload : RefCounted
                 var column = item.AsVector2I(); var limits = field.Get("surface_limits").AsGodotDictionary()[column].AsVector2();
                 for (int y = (int)Math.Floor((double)limits.X/64)-1; y <= (int)Math.Floor((double)limits.Y/64); y++)
                 {
-                    var key = new Vector3I(column.X,y,column.Y); using var mesher = new PortalCaveMesher(); var arrays = decorated(mesher.build(field,key,2),key);
+                    var key = new Vector3I(column.X,y,column.Y); using var mesher = new PortalCaveMesher{GpuLattice=this.GpuLattice}; var arrays = decorated(mesher.build(field,key,2),key);
                     var groups = Enabled("indexed_entry_payload") ? context.surfaces_indexed(arrays,(Vector3)key*64) : context.surfaces(arrays,(Vector3)key*64);
                     if (!groups["valid"].AsBool()) return groups;
                     groups["key"] = key; groups["water"] = water_cell(key); var ids = field.Call("biome_ids_for_cell",key).AsGodotArray();
