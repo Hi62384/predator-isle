@@ -32,6 +32,11 @@ internal static class CaveFieldEvaluation
         bool closedAllowed=depth>f.minimum_roof;
         bool openingAllowed=f.opening_rock_cover<=0||depth>f.opening_rock_cover;
         if(!closedAllowed&&!openingAllowed)return false;
+        bool floorReliefPossible=false;
+        if(f.floor_relief.Count>0)
+            foreach(int feature in features)
+                if(f.Kinds[feature]==2&&Math.Abs((double)point.Y-f.Begins[feature].Y)<=5)
+                {floorReliefPossible=true;break;}
         bool uncertain=false;
         foreach(int feature in features)
         {
@@ -77,9 +82,9 @@ internal static class CaveFieldEvaluation
                 double arch=(new Vector2((float)radial,(float)vertical).Length()-1.0)*scale;
                 lower=upper=arch;
             }
-            double shift=style==7?.65:style==3?.24:style is 2 or 4?.12:0;
+            double shift=style==7?.65:style==3?.24:(style is 2 or 4) ? .12 : 0;
             if(double.IsFinite(lower)&&lower-shift-.12>margin)continue;
-            bool floorUnknown=kind==2&&f.floor_relief.Count>0&&Math.Abs((double)point.Y-a.Y)<=5;
+            bool floorUnknown=kind==2&&floorReliefPossible;
             bool depthSafe=f.maximum_depth-depth>margin&&
                 (opening?f.opening_rock_cover<=0||depth-f.opening_rock_cover>margin:depth-f.minimum_roof>margin);
             if(!floorUnknown&&depthSafe&&y>margin&&double.IsFinite(upper)&&upper+.12<-margin)return true;

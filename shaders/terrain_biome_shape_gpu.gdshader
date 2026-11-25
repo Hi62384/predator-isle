@@ -132,7 +132,7 @@ vec4 shape_8(int record){
 vec4 shape_9(int record){
  vec4 header=D(record,0),warp=D(record,1),n=D(record,2),b=D(record,3),c=D(record,4),d=D(record,5);
  int id=int(header.y);float width=warp.z;
- float a=abs(sin(warp.x/(width*1.5)+n.w*.5)),v=abs(sin((warp.y+warp.x*.23)/(width*1.2))),joint=min(a,v),column=S(.10,.24,joint);
+ float a=warp.x,v=warp.y,joint=min(a,v),column=S(.10,.24,joint);
  float uplift=d.x*(.5+n.y*.8+n.z*.3),h=55.0+n.x*35.0,peak=0.0;
  if(id==0)peak=column*uplift*(.88+b.x*.08)+column*b.y*12.0;
  else if(id==1)peak=pow(max(0.0,1.0-abs(b.z)),4.0)*uplift*(.6+abs(b.w));

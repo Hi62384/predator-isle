@@ -24,7 +24,9 @@ public partial class WiseMountainsSampler : BiomeExtensionSampler
         double spacing=Spacing();long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);
         double distance=Math.Abs(p.Y-Owner().Call("_grass_river_center",p.X,lane,spacing).AsDouble());
         var stream=tributary(p);
-        AddGpuShape(plan,p,id,F(warp.X,warp.Y,width,0),F(macro(p),macro(p*.8f),noise(p*.25f),noise(p*.4f)),
+        // Resolve the high-frequency geographic phase at canonical double precision.
+        double a=Math.Abs(Math.Sin(warp.X/(width*1.5)+noise(p*.4f)*.5)),b=Math.Abs(Math.Sin((warp.Y+warp.X*.23)/(width*1.2)));
+        AddGpuShape(plan,p,id,F(a,b,width,0),F(macro(p),macro(p*.8f),noise(p*.25f),noise(p*.4f)),
             F(noise(p*.35f),noise(p*2.2f),macro(p*1.5f),noise(p*.5f)),
             F(macro(p*.6f),macro(p*.7f),noise(p),noise(p*2.7f)),
             F(P("pillar_height"),distance,stream.X,stream.Y));

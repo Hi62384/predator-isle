@@ -199,14 +199,15 @@ public partial class CaveMesher : RefCounted
         int[]? gpuCases=null;
         if(GpuLattice is {Available:true} gpu&&Field is CaveField native)
         {
-            int exactSamples;
+            int exactSamples=0;
             if(gpu.TopologyAvailable)
             {
                 gpuCases=CaveGpuLattice.TryFillTopology(gpu,native,origin,row,(float)step_metres,values,out exactSamples);
                 screened=gpuCases is not null;
                 GpuTopologyCubes=gpuCases?.Length??0;
             }
-            else screened=CaveGpuLattice.TryFill(gpu,native,origin,row,(float)step_metres,values,out exactSamples);
+            else if(gpu.TopologyShaderPath is null)
+                screened=CaveGpuLattice.TryFill(gpu,native,origin,row,(float)step_metres,values,out exactSamples);
             if(screened){GpuLatticeSamples=latticeCount;GpuLatticeExactSamples=exactSamples;}
         }
         if(!screened)

@@ -106,9 +106,11 @@ internal sealed class TerrainBiomeShapePlan
             {
                 int i=group[checks==1?0:(int)((long)k*(group.Count-1)/(checks-1))];
                 var q=Queries[i];
-                if(!Matches(ValueAt(i),q.Reference(),q.Tolerance)){valid=false;break;}
+                var actual=ValueAt(i);var expected=q.Reference();
+                if(!Matches(actual,expected,q.Tolerance))
+                {gpu.ReportRejection($"family {q.Family} at {q.Key}: expected {expected}, got {actual}");valid=false;break;}
             }
-            if(!valid){gpu.ReportRejection();continue;}
+            if(!valid)continue;
             foreach(int i in group)
             {
                 var q=Queries[i];var v=ValueAt(i);
