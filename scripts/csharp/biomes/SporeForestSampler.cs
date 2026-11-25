@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 using D=Godot.Collections.Dictionary;
 
@@ -27,8 +29,19 @@ public partial class SporeForestSampler : BiomeExtensionSampler
         }
         _ecologyPoint=p;_ecology=new D {["coverage"]=(1-uncovered)*P("mycelium"),["age"]=weightedAge/Math.Max(sum,.001),["mound"]=mound,["luminous"]=luminous*P("mycelium")};return _ecology;
     }
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        var d=nearby(p,1800*P("feature_scale"));var q=local(p,d);double radius=d["radius"].AsDouble();if(radius<=0)return;
+        double distance=new Vector2(q.X,(float)((double)q.Y*.65)).Length()/radius+noise(p)*.22;
+        var field=ecology(p);double colony=field["coverage"].AsDouble();
+        AddGpuShape(plan,p,id,F(macro(p),noise(p),macro(p*.7f),distance),
+            F(Heights[id],Details[id],colony,field["mound"].AsDouble()*P("mound_height")),
+            F(field["luminous"].AsDouble(),d["chance"].AsDouble()<P("water_frequency")?1:0));
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         var d=nearby(p,1800*P("feature_scale"));var q=local(p,d);double distance=new Vector2(q.X,(float)((double)q.Y*.65)).Length()/d["radius"].AsDouble()+noise(p)*.22;var field=ecology(p);double colony=field["coverage"].AsDouble(),h=40+macro(p)*Heights[id]+noise(p)*Details[id];
         if(id==1)h+=field["mound"].AsDouble()*P("mound_height");if(id==2)h+=colony*6;if(id==3)h-=colony*22;if(id==4)h+=Math.Pow(1-Math.Abs(macro(p*.7f)),3)*120;
         double wet=Math.Clamp(.35+colony*.4+(id==3?.2:0)-(id==5?.3:0),0,1),water=0;if(id==3&&d["chance"].AsDouble()<P("water_frequency")){water=27*(1-Smooth(.65,1.2,distance));h=Lerp(h,19+noise(p),1-Smooth(.5,.8,distance));}

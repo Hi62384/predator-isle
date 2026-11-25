@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 using D=Godot.Collections.Dictionary;
 
@@ -6,8 +8,21 @@ namespace PredatorIsle.Biomes;
 public partial class VolcanicSampler : BiomeExtensionSampler
 {
     public Godot.Collections.Array NAMES {get;}=new() {"Shield volcano","Stratovolcano","Collapse caldera","Cinder fields","Hardened lava plains","Ancient rift highlands"};
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        var d=nearby(p,(id<3?7200:2600)*P("feature_scale"));var q=local(p,d);
+        double radius=d["radius"].AsDouble()*(1+noise(p*.25f)*.12);if(radius<=0)return;
+        double r=new Vector2(q.X,(float)((double)q.Y*.88)).Length()/radius,age=d["age"].AsDouble();
+        double chance=d["chance"].AsDouble(),active=P("active_frequency");
+        AddGpuShape(plan,p,id,F(macro(p),noise(p),noise(p*.18f),noise(p*1.8f)),
+            F(r,q.Angle(),age*P("weathering"),P("volcano_height")*(.65+age*.5)),
+            F(d["angle"].AsDouble(),P("lava_coverage"),d["kind"].AsInt64()%2,chance<active?1:0),
+            F(q.X,q.Y,chance<P("water_frequency")&&chance>=active?1:0));
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         double span=(id<3?7200:2600)*P("feature_scale");var d=nearby(p,span);var q=local(p,d);
         double radius=d["radius"].AsDouble()*(1+noise(p*.25f)*.12),r=new Vector2(q.X,(float)((double)q.Y*.88)).Length()/radius,angle=q.Angle(),age=d["age"].AsDouble()*P("weathering");
         double height=P("volcano_height")*(.65+d["age"].AsDouble()*.5),edifice=0,crater=0;

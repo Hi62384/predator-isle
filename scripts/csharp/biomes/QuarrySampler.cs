@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 using System.Collections.Generic;
 using D=Godot.Collections.Dictionary;
@@ -53,8 +55,22 @@ public partial class QuarrySampler : BiomeExtensionSampler
         double q=Math.Clamp(t,0,1),result=0;int count=Math.Clamp((int)Math.Round(P("pit_depth")/Math.Max(P("bench_height"),10),MidpointRounding.AwayFromZero),3,10);
         for(int i=1;i<=count;i++){double threshold=(double)i/(count+1)+.024*Math.Sin(i*2.31);result+=Smooth(threshold-.012-age*.012,threshold+.012+age*.018,q)/count;}return result;
     }
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        var d=nearby(p,3200*P("feature_scale"));var q=local(p,d);double angle=Angle(q);
+        double age=d["age"].AsDouble(),radius=d["radius"].AsDouble()*(1+.08*Math.Sin(angle*3+d["angle"].AsDouble())+.05*Math.Sin(angle*7+.4));
+        if(radius<=0)return;
+        double r=new Vector2(q.X,(float)((double)q.Y*1.25)).Length()/radius,depth=P("pit_depth")*(.55+age*.8);
+        var position=d["position"].AsVector2();double chance=d["chance"].AsDouble();
+        int count=Math.Clamp((int)Math.Round(P("pit_depth")/Math.Max(P("bench_height"),10),MidpointRounding.AwayFromZero),3,10);
+        AddGpuShape(plan,p,id,F(macro(p),noise(p),macro(p*.7f+new Vector2(710,49)),macro(p*2)),
+            F(r,age*P("weathering"),depth,Relief[id]),F(macro(position),macro(position*.7f+new Vector2(710,49)),count,chance<=P("excavation_frequency")?1:0),
+            F(chance<P("water_frequency")?1:0));
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         var d=nearby(p,3200*P("feature_scale"));var q=local(p,d);double age=d["age"].AsDouble()*P("weathering"),natural=280+macro(p)*100+Math.Pow(1-Math.Abs(macro(p*.7f+new Vector2(710,49))),3)*Relief[id]+noise(p)*6,angle=Angle(q);
         double radius=d["radius"].AsDouble()*(1+.08*Math.Sin(angle*3+d["angle"].AsDouble())+.05*Math.Sin(angle*7+.4)),r=new Vector2(q.X,(float)((double)q.Y*1.25)).Length()/radius,excavation=1-Smooth(.95,1.25,r);if(d["chance"].AsDouble()>P("excavation_frequency"))excavation=0;
         double depth=P("pit_depth")*(.55+d["age"].AsDouble()*.8);var position=d["position"].AsVector2();double roof=280+macro(position)*100+Math.Pow(1-Math.Abs(macro(position*.7f+new Vector2(710,49))),3)*60,level=Math.Max(25,roof-depth),bench=terraces((r-.18)/.85,age),floor=level+noise(p)*2+(macro(p*2)+.5)*3,cut=floor+bench*depth,h=Lerp(natural,Math.Min(natural,cut),excavation),water=0;

@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 using System.Collections.Generic;
 using A=Godot.Collections.Array;
@@ -97,8 +99,22 @@ public partial class AlienInfectedSampler : BiomeExtensionSampler
     }
     public double nerve_fibre_relief(Vector2 p)
     {if(!Fibres)return 0;bool previous=_wantFrame;_wantFrame=true;try{return FibreRelief(p,network(p));}finally{_wantFrame=previous;}}
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        bool previous=_wantFrame;_wantFrame=_wantFrame||(id==1&&Fibres);
+        try
+        {
+            var net=network(p);double fibre=id==1&&Fibres?FibreRelief(p,net):0;
+            AddGpuShape(plan,p,id,F(macro(p),noise(p),macro(p*.6f),net["influence"].AsDouble()),
+                F(net["trunk_distance"].AsDouble(),net["branch_distance"].AsDouble(),net["center_distance"].AsDouble(),net["age"].AsDouble()),
+                F(Heights[id],Details[id],P("nerve_height"),P("breach_depth")),F(fibre));
+        }
+        finally{_wantFrame=previous;}
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         bool previous=_wantFrame;_wantFrame=_wantFrame||(id==1&&Fibres);
         try
         {

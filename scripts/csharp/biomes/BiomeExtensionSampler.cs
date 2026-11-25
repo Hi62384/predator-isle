@@ -92,6 +92,7 @@ public partial class BiomeExtensionSampler : RefCounted
     }
     private void PlanGpuRawNoise(TerrainBiomeNoisePlan plan,Vector2 p)
     {
+        plan.MarkRaw(this,p);
         plan.Add(_macro,p);plan.Add(_meso,p);
         // Subtype classification remains on the authoritative CPU noise;
         // additional site-dependent probes fall back to FastNoiseLite.
@@ -125,6 +126,29 @@ public partial class BiomeExtensionSampler : RefCounted
         if(_nodes.TryGetValue(cell,out var found))return found;var p=(Vector2)cell*16;double r=region(p);int id=(int)Math.Floor(r);double f=Smooth(.25,.75,r-Math.Floor(r));var a=evaluate(p,id);var b=f>0?evaluate(p,Math.Min(id+1,5)):a;var value=new double[5];
         for(int i=0;i<5;i++)value[i]=Lerp(a[i],b[i],f);double relief=P("relief");value[0]*=relief;value[1]*=relief;value[3]=r/5;
         if(_ring.Count<8192)_ring.Add(cell);else{_nodes.Remove(_ring[_cursor]);_ring[_cursor]=cell;_cursor=(_cursor+1)%8192;}_nodes[cell]=value;return value;
+    }
+    internal void PlanGpuShape(TerrainBiomeShapePlan plan,Vector2 p)
+    {
+        if(plan.Full)return;
+        double r=region(p);int id=(int)Math.Floor(r);
+        CaptureGpuShape(plan,p,id);
+        if(Smooth(.25,.75,r-Math.Floor(r))>0&&id<5)CaptureGpuShape(plan,p,id+1);
+    }
+    internal virtual void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id){}
+    protected bool TryGpuShape(Vector2 p,int id,out double[] values)
+    {
+        if(TerrainBiomeNoiseCache.TryShape(this,p,id,out var baked))
+        {
+            var v=baked.Value;values=new double[]{v.X,v.Y,v.Z,0,v.W};return true;
+        }
+        values=System.Array.Empty<double>();return false;
+    }
+    internal void AddGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id,params Vector4[] data)
+    {
+        double relief=Math.Max(1,Math.Abs(P("relief")));
+        var tolerance=TerrainBiomeShapePlan.F(.002/relief,.002/relief,.0002,.0002);
+        plan.Add(this,p,id,(int)family+8,TerrainBiomeShapePlan.ExtensionBands(data),
+            ()=>TerrainBiomeShapePlan.ExtensionResult(evaluate(p,id)),tolerance);
     }
     public virtual double[] evaluate(Vector2 p,int id)=>new double[5];
     public virtual D describe(Vector2 p){sample(p.X,p.Y);return new D {["family"]=family,["height"]=state[0],["water_level"]=state[1],["wetness"]=state[2],["region"]=state[3]*5,["feature"]=state[4],["caves_supported"]=settings.Get("caves_enabled").AsBool()&&family is 1 or 2 or 6 or 7,["cave_placement"]="Finite dry-site portals only, not arbitrary heightfield excavation"};}

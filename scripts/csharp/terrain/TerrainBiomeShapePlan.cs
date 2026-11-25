@@ -71,6 +71,7 @@ internal sealed class TerrainBiomeShapePlan
                     case JungleSampler jungle:jungle.CaptureGpuShape(result,p);break;
                     case SavannaSampler savanna:savanna.CaptureGpuShape(result,p);break;
                     case SwampSampler swamp:swamp.CaptureGpuShape(result,p);break;
+                    case BiomeExtensionSampler extra:extra.PlanGpuShape(result,p);break;
                 }
             }
         }

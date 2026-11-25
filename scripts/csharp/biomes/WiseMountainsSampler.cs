@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 
 namespace PredatorIsle.Biomes;
@@ -14,8 +16,22 @@ public partial class WiseMountainsSampler : BiomeExtensionSampler
         double outlet=Owner().Call("_grass_river_center",x,lane,spacing).AsDouble(),side=random(index,lane,921)>.5?1:-1,t=(p.Y-outlet)*side/1000,support=(1-Smooth(14,38,lateral))*Smooth(.025,.12,t)*(1-Smooth(.94,1,t));
         return new Vector4((float)(4+8*t+34*Smooth(.488,.512,t)),(float)support,(float)t,(float)x);
     }
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        double width=P("pillar_width")*P("feature_scale");if(width<=0)return;
+        var warp=p+new Vector2((float)macro(p+new Vector2(39,887)),(float)macro(p+new Vector2(1771,13)))*(float)width*1.7f;
+        double spacing=Spacing();long lane=(long)Math.Round(p.Y/spacing,MidpointRounding.AwayFromZero);
+        double distance=Math.Abs(p.Y-Owner().Call("_grass_river_center",p.X,lane,spacing).AsDouble());
+        var stream=tributary(p);
+        AddGpuShape(plan,p,id,F(warp.X,warp.Y,width,0),F(macro(p),macro(p*.8f),noise(p*.25f),noise(p*.4f)),
+            F(noise(p*.35f),noise(p*2.2f),macro(p*1.5f),noise(p*.5f)),
+            F(macro(p*.6f),macro(p*.7f),noise(p),noise(p*2.7f)),
+            F(P("pillar_height"),distance,stream.X,stream.Y));
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         double width=P("pillar_width")*P("feature_scale");var warp=p+new Vector2((float)macro(p+new Vector2(39,887)),(float)macro(p+new Vector2(1771,13)))*(float)width*1.7f;
         double a=Math.Abs(Math.Sin(warp.X/(width*1.5)+noise(p*.4f)*.5)),b=Math.Abs(Math.Sin((warp.Y+warp.X*.23)/(width*1.2))),joint=Math.Min(a,b),column=Smooth(.10,.24,joint);
         double uplift=P("pillar_height")*(.5+macro(p*.8f)*.8+noise(p*.25f)*.3),h=55+macro(p)*35,peak=0;

@@ -1,4 +1,6 @@
 using Godot;
+using PredatorIsle.Terrain;
+using static PredatorIsle.Terrain.TerrainBiomeShapePlan;
 using System;
 using D=Godot.Collections.Dictionary;
 
@@ -23,8 +25,20 @@ public partial class RadiationWastelandSampler : BiomeExtensionSampler
         for(int branch=0;branch<3;branch++){var tip=root+new Vector2((branch-1)*650,(float)(side*(1300+branch*280)));var near=segment(p,root,tip);if(near.X<distance){distance=near.X;grade=near.Y*80.0+6;}}
         return new Vector3((float)distance,(float)grade,(float)(1-Smooth(20,200,distance)));
     }
+    internal override void CaptureGpuShape(TerrainBiomeShapePlan plan,Vector2 p,int id)
+    {
+        if(plan.Full)return;
+        var s=source_field(p);var d=s["descriptor"].AsGodotDictionary();var q=local(p,d);
+        double r=s["radius"].AsDouble()*(1+.08*Math.Sin(q.Angle()*3.0+d["angle"].AsDouble()));
+        var channel=drainage(p);
+        AddGpuShape(plan,p,id,F(macro(p),noise(p),macro(p*.6f),r),
+            F(Heights[id],Details[id],s["damage"].AsDouble(),s["deposition"].AsDouble()),
+            F(P("crater_depth"),d["age"].AsDouble(),P("drainage_strength"),d["chance"].AsDouble()<P("water_frequency")?1:0),
+            F(channel.X,channel.Y,channel.Z));
+    }
     public override double[] evaluate(Vector2 p,int id)
     {
+        if(TryGpuShape(p,id,out var baked))return baked;
         var s=source_field(p);var d=s["descriptor"].AsGodotDictionary();var q=local(p,d);double r=s["radius"].AsDouble()*(1+.08*Math.Sin(q.Angle()*3.0+d["angle"].AsDouble())),damage=s["damage"].AsDouble(),h=70+macro(p)*Heights[id]+noise(p)*Details[id];
         if(id is 1 or 2){double bowl=1-Smooth(.15,.95,r),rim=Smooth(.65,.92,r)*(1-Smooth(.94,1.2,r));h+=damage*P("crater_depth")*(-bowl+rim*.24)*(1-d["age"].AsDouble()*.25);}
         if(id==3)h+=Math.Pow(1-Math.Abs(macro(p*.6f)),4)*180;if(id==4)h+=s["deposition"].AsDouble()*8;if(id==5)h=Lerp(h,26+noise(p)*.7,1-Smooth(.45,1.4,r));
