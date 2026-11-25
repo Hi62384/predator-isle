@@ -193,11 +193,13 @@ public partial class CaveMesher : RefCounted
         var surfaceColumns = reuseSurface?ArrayPool<double>.Shared.Rent(plane):null;
         var surfaceReady = reuseSurface?ArrayPool<bool>.Shared.Rent(plane):null;
         if(surfaceReady is not null)Array.Clear(surfaceReady,0,plane);
+        using var attempt=GpuLattice is {Available:true,AdaptivePolicy:not null} adaptive&&Field is CaveField cave
+            ?adaptive.AdaptivePolicy!.Begin(new(0,row,reuseSurface?1:0,Math.Min(cave.Bins.Count/32,31))):null;
         try
         {
         bool screened=false;
         int[]? gpuCases=null;
-        if(GpuLattice is {Available:true} gpu&&Field is CaveField native)
+        if((attempt is null||attempt.UseGpu)&&GpuLattice is {Available:true} gpu&&Field is CaveField native)
         {
             int exactSamples=0;
             if(gpu.TopologyAvailable)
@@ -269,10 +271,10 @@ public partial class CaveMesher : RefCounted
             }
             for(int t=0;t<Tets.Length;t++)Tetra(cubePoints,cubeValues,Tets[t],cases<0?-1:(cases>>(t*4))&15);
         }
-        if (_vertices.Count == 0) return new();
+        if (_vertices.Count == 0){attempt?.Complete();return new();}
         var arrays = new A(); arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = vertices; arrays[(int)Mesh.ArrayType.Normal] = normals; arrays[(int)Mesh.ArrayType.Color] = colors;
-        return arrays;
+        attempt?.Complete();return arrays;
         }
         finally
         {

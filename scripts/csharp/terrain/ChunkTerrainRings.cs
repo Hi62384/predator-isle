@@ -115,9 +115,8 @@ public partial class ChunkTerrain
             {
                 Name="TerrainGpuGeneration",ProcessMode=ProcessModeEnum.Always,
                 PreferVertexBake=ring_settings.gpu_vertex_bake||OS.GetCmdlineUserArgs().Contains("terrain-gpu-bake=vertex"),
-                // Specialized numerical noise baking is experimental: explicit
-                // GPU generation enables it; automatic/default CPU behavior stays unchanged.
-                EnableBiomeNoise=(ring_settings.generation_backend==1||OS.GetCmdlineUserArgs().Contains("terrain-biome-noise=on"))&&
+                // Automatic mode measures complete CPU and GPU worker latencies.
+                EnableBiomeNoise=(ring_settings.generation_backend!=0||OS.GetCmdlineUserArgs().Contains("terrain-biome-noise=on"))&&
                     !OS.GetCmdlineUserArgs().Contains("terrain-biome-noise=off")
             };AddChild(ringGpuSampler);
             ringStream.GpuPreparation=new TerrainGpuPreparation(ringGpuSampler,topology,ring_settings.filtered_distant_heights,

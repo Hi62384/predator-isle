@@ -82,12 +82,15 @@ public partial class CaveStreamer : Node3D
     {
         discoveryCache.Clear();host=terrain_node;
         configuration=host.Get("cave_settings").As<Resource>().DuplicateDeep(Resource.DeepDuplicateMode.All);
-        // Numerical cave screening remains explicit until hardware timings and
-        // a world-wide conservative precision bound are established.
+        // Automatic mode samples full cave mesh latency; explicit GPU mode
+        // still exercises the backend on a software graphics device for tests.
+        var args=OS.GetCmdlineUserArgs();bool forced=args.Contains("terrain-cave-gpu=on");
         if(caveGpu is null&&terrain_node is ChunkTerrain terrain&&!terrain.authority_only&&
-           DisplayServer.GetName()!="headless"&&OS.GetCmdlineUserArgs().Contains("terrain-cave-gpu=on"))
+           DisplayServer.GetName()!="headless"&&!args.Contains("terrain-cave-gpu=off")&&
+           (forced||ChunkTerrain.UseGpuGeneration(terrain.ring_settings.generation_backend,false,DisplayServer.GetName(),RenderingServer.GetVideoAdapterName())))
         {
-            caveGpu=new TerrainBiomeNoiseGpu{Name="CaveLatticeGeneration",ShaderPath=CaveGpuLattice.ShaderPath,TopologyShaderPath=CaveGpuLattice.TopologyShaderPath,RequestTimeoutSeconds=8};
+            caveGpu=new TerrainBiomeNoiseGpu{Name="CaveLatticeGeneration",ShaderPath=CaveGpuLattice.ShaderPath,TopologyShaderPath=CaveGpuLattice.TopologyShaderPath,RequestTimeoutSeconds=8,
+                AdaptivePolicy=!forced&&terrain.ring_settings.generation_backend==2?new TerrainGpuAdaptivePolicy():null};
             AddChild(caveGpu);
         }
         configure_biome_runtime();

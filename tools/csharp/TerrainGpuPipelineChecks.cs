@@ -15,6 +15,22 @@ internal static class TerrainGpuPipelineChecks
     internal static void Run(Node host, Action<bool, string> require)
     {
         using var resources = FixtureResources();
+        var policy=new TerrainGpuAdaptivePolicy();
+        var policyKey=new TerrainGpuAdaptivePolicy.Key(1,2,16,128);
+        using(var baseline=policy.Begin(policyKey)){require(!baseline.UseGpu,"Automatic policy skipped CPU baseline");baseline.Complete(10);}
+        using(var cancelled=policy.Begin(policyKey))
+        {
+            require(cancelled.UseGpu,"Automatic policy never tried GPU");
+            using var concurrent=policy.Begin(policyKey);require(!concurrent.UseGpu,"Concurrent calibration started duplicate GPU probes");
+        }
+        using(var trial=policy.Begin(policyKey)){require(trial.UseGpu,"Cancelled calibration blocked GPU retry");trial.Complete(20);}
+        for(int i=0;i<24;i++)using(var slower=policy.Begin(policyKey)){require(!slower.UseGpu,"Automatic policy chose slower GPU");slower.Complete(10);}
+        using(var retry=policy.Begin(policyKey)){require(retry.UseGpu,"Automatic policy failed to re-test GPU");retry.Complete(.1);}
+        var fastKey=policyKey with{Families=256};
+        using(var baseline=policy.Begin(fastKey)){require(!baseline.UseGpu,"Different biome reused timing");baseline.Complete(20);}
+        using(var trial=policy.Begin(fastKey)){require(trial.UseGpu,"Missing GPU calibration");trial.Complete(5);}
+        using(var faster=policy.Begin(fastKey)){require(faster.UseGpu,"Automatic policy ignored faster GPU");faster.Complete(5);}
+        using(var revised=policy.Begin(fastKey with{Revision=2}))require(!revised.UseGpu,"Source revision reused old calibration");
         // Worker-side compact strips and main-thread shader uniforms must
         // share one mapping for every possible eight-family ownership mask.
         for(int mask=0;mask<256;mask++)

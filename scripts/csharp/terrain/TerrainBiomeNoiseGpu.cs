@@ -34,6 +34,7 @@ public partial class TerrainBiomeNoiseGpu:Node
     private bool subscribed;
     internal string ShaderPath{get;set;}="res://shaders/terrain_biome_noise_gpu.gdshader";
     internal string? TopologyShaderPath{get;set;}
+    internal TerrainGpuAdaptivePolicy? AdaptivePolicy{get;set;}
     internal bool TopologyAvailable=>Available&&topologyShader is not null;
     internal bool Available=>Volatile.Read(ref available)!=0;
     internal double RequestTimeoutSeconds{get;set;}=30;
