@@ -610,3 +610,11 @@ also recognizes its negative material-owner encoding without requiring a
 mountain in the same patch. Independent regression covers all 255 nonempty
 extension masks with and without a palette, interpolated inserted vertices,
 pure badlands, and disabled-water behavior.
+
+## Shared ownership and extraction optimization (November 24, 2026)
+
+Canonical compact extension atlases that contain exactly one family and an exact unit weight at every texel can skip their remaining ownership texture lookup. The uploader checks both packed RGBA8 weight banks; fractional or mixed regions and legacy payloads still use the existing filtered texture path. Family material controls and palette layout are unchanged. The rendered atlas fixture compares the constant branch with the independent legacy and packed paths for all eight extension families.
+
+All cave cross-section styles and portal meshes reconstruct lattice coordinates from three short axes instead of allocating a position for every voxel. The original scalar field, refinement, triangle ordering, normals and frontier capture remain CPU-authoritative; at 1 m spacing the omitted position array contains 3,295,500 bytes before pool rounding. Expanded reference fixtures compare every cross-section style at nonzero chunk coordinates and a two-metre frontier.
+
+Forest, jungle, savanna, swamp, mountain, tropical and badlands use bounded FIFO eviction for the numerical caches that previously cleared their full working set on overflow. Existing per-source invalidation and capacity limits remain. These are GPU shader sampling and CPU workload improvements, not a numerical GPU port of the remaining biome fields or cave topology. New CI results and device timing must be established before claiming performance measurements.

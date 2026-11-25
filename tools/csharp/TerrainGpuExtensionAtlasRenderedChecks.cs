@@ -2,6 +2,7 @@ using Godot;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
+using PredatorIsle.Terrain;
 using D=Godot.Collections.Dictionary;
 
 namespace PredatorIsle.Checks;
@@ -18,24 +19,41 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         var shader=GD.Load<Shader>("res://shaders/extension_atlas_validation.gdshader");
         require(shader is not null,"GPU extension atlas validation shader was not imported");
         var cases=new Godot.Collections.Array();
+        foreach(bool pure in new[]{false,true})
         for(int extra=0;extra<2;extra++)
-        foreach(int activeMask in new[]{0,1,128,129,255})
+        foreach(int activeMask in pure?
+            new[]{1<<(extra*4),2<<(extra*4),4<<(extra*4),8<<(extra*4)}:
+            new[]{0,1,128,129,255})
         {
             const int row=9, output=64;
             bool withPalette=extra!=0;
-            var legacy=Atlas(row,withPalette,false,activeMask,false);
-            var packed=Atlas(row,withPalette,true,activeMask,false);
+            var legacy=Atlas(row,withPalette,false,activeMask,false,pure);
+            var packed=Atlas(row,withPalette,true,activeMask,false,pure);
             int occupied=System.Numerics.BitOperations.PopCount((uint)activeMask);
             // A mask-free production patch does not allocate a compact atlas;
             // otherwise the third image exercises the real streaming layout.
-            var variants=new List<(byte[] Data,bool Compact,int PaletteSlot)>
+            var variants=new List<(byte[] Data,bool Compact,int PaletteSlot,int PureFamily)>
             {
-                (legacy,false,withPalette?8:-1),
-                (packed,false,withPalette?10:-1)
+                (legacy,false,withPalette?8:-1,-1),
+                (packed,false,withPalette?10:-1,-1)
             };
             if(activeMask!=0)
-                variants.Add((Atlas(row,withPalette,true,activeMask,true),true,
-                    withPalette?occupied+2:-1));
+            {
+                var compact=Atlas(row,withPalette,true,activeMask,true,pure);
+                var layout=TerrainExtensionAtlasLayout.FromMask(activeMask);
+                int family=layout.PureFamily(compact,row,withPalette);
+                require(family==(pure?System.Numerics.BitOperations.TrailingZeroCount((uint)activeMask):-1),
+                    "Constant extension ownership detection accepted a varying atlas or missed a pure atlas");
+                variants.Add((compact,true,withPalette?occupied+2:-1,-1));
+                if(pure)
+                {
+                    variants.Add((compact,true,withPalette?occupied+2:-1,family));
+                    var changed=(byte[])compact.Clone();
+                    changed[(layout.PackedWeightSlot(family)*row)*4+family%4]=254;
+                    require(layout.PureFamily(changed,row,withPalette)==-1,
+                        "One fractional extension weight must disable constant ownership");
+                }
+            }
             int[] familySlots=new int[8];int slotIndex=0;
             for(int family=0;family<8;family++)
                 familySlots[family]=(activeMask&(1<<family))!=0?slotIndex++:-1;
@@ -55,6 +73,7 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
                     material.SetShaderParameter("extension_compact_payload",variant.Compact);
                     material.SetShaderParameter("extension_compact_family_slots",familySlots);
                     material.SetShaderParameter("extension_compact_weight_start",occupied);
+                    material.SetShaderParameter("extension_pure_family",variant.PureFamily);
                     material.SetShaderParameter("test_palette_slot",variant.PaletteSlot);
                     var viewport=new SubViewport
                     {
@@ -113,6 +132,7 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
                 {
                     ["badlands_palette"]=withPalette,
                     ["active_family_mask"]=activeMask,
+                    ["constant_ownership"]=pure,
                     ["legacy_atlas_strips"]=withPalette?9:8,
                     ["packed_atlas_strips"]=withPalette?11:10,
                     ["compact_atlas_strips"]=activeMask==0?0:
@@ -138,7 +158,7 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
         };
     }
 
-    private static byte[] Atlas(int rows,bool palette,bool packed,int activeMask,bool compact)
+    private static byte[] Atlas(int rows,bool palette,bool packed,int activeMask,bool compact,bool pure)
     {
         int occupied=System.Numerics.BitOperations.PopCount((uint)activeMask);
         int strips=(compact?occupied+2:(packed?10:8))+(palette?1:0);
@@ -151,12 +171,12 @@ internal static class TerrainGpuExtensionAtlasRenderedChecks
             {
                 bool present=(activeMask&(1<<family))!=0;
                 byte weight=present?
-                    (byte)(8+(family*23+x*11+z*17)%230):(byte)0;
+                    (pure?(byte)255:(byte)(8+(family*23+x*11+z*17)%230)):(byte)0;
                 if(!compact||present)
                 {
                     int slot=compact?rank:family;
                     int at=(z*rows*strips+slot*rows+x)*4;
-                    bytes[at]=weight;bytes[at+1]=(byte)(weight/2);
+                    bytes[at]=weight;bytes[at+1]=pure&&present?(byte)(16+x*19+z*5):(byte)(weight/2);
                     bytes[at+2]=(byte)(weight/3);bytes[at+3]=(byte)(weight/4);
                 }
                 if(packed)

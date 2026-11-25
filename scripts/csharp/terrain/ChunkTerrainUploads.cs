@@ -38,6 +38,7 @@ public partial class ChunkTerrain
                 material.SetShaderParameter("extension_compact_payload",true);
                 material.SetShaderParameter("extension_compact_family_slots",layout.FamilySlots);
                 material.SetShaderParameter("extension_compact_weight_start",layout.FamilyCount);
+                material.SetShaderParameter("extension_pure_family",layout.PureFamily(bytes,rows,gridData.BadlandsSlot>=0));
             }
         }
         if(result["badlands_palette_slot"].AsInt32()>=0){material.SetShaderParameter("badlands_palette_slot",result["badlands_palette_slot"]);material.SetShaderParameter("badlands_palette_enabled",true);}

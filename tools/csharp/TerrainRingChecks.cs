@@ -12,6 +12,23 @@ internal static class TerrainRingChecks
     internal static void Run(Action<bool,string> require)
     {
         TerrainSharedSampleChecks.Run(require);
+        // Shared biome caches keep hot entries across rollover and reset on
+        // reconfiguration; replacing a key must not enqueue duplicate keys.
+        var biomeCache=new PredatorIsle.Biomes.BoundedBiomeCache<int,int>(3);
+        for(int i=0;i<3;i++)biomeCache[i]=i*7;
+        biomeCache[1]=101;
+        biomeCache[3]=21;
+        require(biomeCache.Count==3&&!biomeCache.TryGetValue(0,out _)&&
+            biomeCache.TryGetValue(1,out int retained)&&retained==101&&
+            biomeCache.TryGetValue(2,out int second)&&second==14,
+            "Biome cache discarded the entire hot working set on rollover");
+        biomeCache[4]=28;biomeCache[5]=35;
+        require(biomeCache.Count==3&&!biomeCache.TryGetValue(1,out _)&&
+            biomeCache.TryGetValue(3,out int third)&&third==21,
+            "Biome cache replacement duplicated its eviction key");
+        biomeCache.Clear();biomeCache[1]=9;
+        require(biomeCache.Count==1&&biomeCache.TryGetValue(1,out int reconfigured)&&reconfigured==9,
+            "Biome cache retained stale entries across configuration");
         TerrainRingWaterChecks.Run(require);
         // In-flight and cancelled keys must never prevent later runnable work.
         var pending=new List<int>{1,2,3,4};var wanted=new HashSet<int>{1,2,3};var busy=new HashSet<int>{1,3};

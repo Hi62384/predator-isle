@@ -18,10 +18,11 @@ public partial class TropicalSampler : RefCounted
     public FastNoiseLite _macro {get;}=new();
     public FastNoiseLite _hills {get;}=new();
     public FastNoiseLite _weather {get;}=new();
-    private readonly Dictionary<Vector2I,double[]> _nodes=new();
-    private readonly Dictionary<Vector2I,float[]> _regions=new();
-    private readonly Dictionary<Vector2I,Vector3> _carriers=new();
-    private readonly Dictionary<Vector2I,double> _structuralNodes=new(),_cascadeCache=new();
+    private readonly BoundedBiomeCache<Vector2I,double[]> _nodes=new(16384);
+    private readonly BoundedBiomeCache<Vector2I,float[]> _regions=new(2048);
+    private readonly BoundedBiomeCache<Vector2I,Vector3> _carriers=new(2048);
+    private readonly BoundedBiomeCache<Vector2I,double> _structuralNodes=new(2048);
+    private readonly BoundedBiomeCache<Vector2I,double> _cascadeCache=new(512);
     public double[] state {get;set;}=System.Array.Empty<double>();
     public bool profile {get;set;}
     public D timings {get;set;}=new();
@@ -46,7 +47,7 @@ public partial class TropicalSampler : RefCounted
             if(mass>0)for(int i=0;i<16;i++){roll-=Math.Max(occurrence[i],0);if(roll<=0){id=i;break;}}
             if(id is 0 or 13 or 14){var host=Host();double coastDistance=Math.Abs(host.Call("_island_mask",site.X,site.Y).AsDouble()*host.Get("settings").AsGodotObject().Get("island_size").AsDouble()*.5);if(coastDistance>6000)id=id==0?1:id==13?4:11;}double d=p.DistanceTo(site);closest=Math.Min(closest,d);sites.Add((d,id));
         }
-        var result=new float[16];double total=0;foreach(var site in sites){double amount=1-Smooth(0,span*.18,site.Distance-closest);result[site.Kind]=(float)(result[site.Kind]+amount);total+=amount;}for(int i=0;i<16;i++)result[i]=(float)(result[i]/Math.Max(total,.001));if(_regions.Count>=2048)_regions.Clear();_regions[cell]=result;return result;
+        var result=new float[16];double total=0;foreach(var site in sites){double amount=1-Smooth(0,span*.18,site.Distance-closest);result[site.Kind]=(float)(result[site.Kind]+amount);total+=amount;}for(int i=0;i<16;i++)result[i]=(float)(result[i]/Math.Max(total,.001));_regions[cell]=result;return result;
     }
     public float[] region_weights(Vector2 p)
     {
@@ -54,17 +55,17 @@ public partial class TropicalSampler : RefCounted
     }
     public double _spacing()=>4000/Math.Max(Host().Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),.01);
     public Vector3 _carrier(double x,long lane)
-    {var key=new Vector2I(unchecked((int)x),unchecked((int)lane));bool exact=x==Math.Floor(x)&&Math.Abs(x)<2000000000;if(exact&&_carriers.TryGetValue(key,out var found))return found;var result=Host().Call("_river_column",x,lane,_spacing()).AsVector3();if(exact){if(_carriers.Count>=2048)_carriers.Clear();_carriers[key]=result;}return result;}
+    {var key=new Vector2I(unchecked((int)x),unchecked((int)lane));bool exact=x==Math.Floor(x)&&Math.Abs(x)<2000000000;if(exact&&_carriers.TryGetValue(key,out var found))return found;var result=Host().Call("_river_column",x,lane,_spacing()).AsVector3();if(exact){_carriers[key]=result;}return result;}
     public double water_potential(double x){double t=Mathf.PosMod(x+(seed_value%31)*139.0,18000)/18000;return 22+110*Math.Pow(Math.Sin(t*Math.PI),2);}
     public double cascade_height(long segment,long lane,double r)
     {
-        if(P("waterfall_frequency")<=0||P("stream_frequency")<=0||P("river_frequency")<=0||r>P("waterfall_frequency")*P("stream_frequency")||random(lane,0,139)>P("river_frequency"))return 0;var key=new Vector2I(unchecked((int)segment),unchecked((int)lane));if(_cascadeCache.TryGetValue(key,out double found))return found;var center=cascade_point(segment,lane,.5);var w=region_weights(center);double rocky=(double)w[3]+w[4]+w[5]+w[9]+w[10]+w[12]+w[15],drop=0;if(rocky>.45&&Host().Call("_island_mask",center.X,center.Y).AsDouble()>.1)drop=P("waterfall_drop")*(.75+random(segment,lane,173)*.5);if(_cascadeCache.Count>=512)_cascadeCache.Clear();_cascadeCache[key]=drop;return drop;
+        if(P("waterfall_frequency")<=0||P("stream_frequency")<=0||P("river_frequency")<=0||r>P("waterfall_frequency")*P("stream_frequency")||random(lane,0,139)>P("river_frequency"))return 0;var key=new Vector2I(unchecked((int)segment),unchecked((int)lane));if(_cascadeCache.TryGetValue(key,out double found))return found;var center=cascade_point(segment,lane,.5);var w=region_weights(center);double rocky=(double)w[3]+w[4]+w[5]+w[9]+w[10]+w[12]+w[15],drop=0;if(rocky>.45&&Host().Call("_island_mask",center.X,center.Y).AsDouble()>.1)drop=P("waterfall_drop")*(.75+random(segment,lane,173)*.5);_cascadeCache[key]=drop;return drop;
     }
     public Vector2 cascade_point(long segment,long lane,double t)
     {double spacing=_spacing(),span=spacing*.6,r=random(segment,lane,131),x=(segment+.15+r*.3)*span+t*span*.7,side=random(segment,lane,137)<.5?-1:1;return new Vector2((float)x,(float)(_carrier(x,lane).X+side*spacing*.22*t*t));}
     public double cascade_rise(double t){double half=64/(_spacing()*.6*.7);return Smooth(.5-half,.5+half,t);}
     public double _structural_node(long index,long lane)
-    {var key=new Vector2I(unchecked((int)index),unchecked((int)lane));if(_structuralNodes.TryGetValue(key,out double found))return found;double value=Host().Call("_grass_river_center",index*2048.0,lane,_spacing()).AsDouble();if(_structuralNodes.Count>=2048)_structuralNodes.Clear();_structuralNodes[key]=value;return value;}
+    {var key=new Vector2I(unchecked((int)index),unchecked((int)lane));if(_structuralNodes.TryGetValue(key,out double found))return found;double value=Host().Call("_grass_river_center",index*2048.0,lane,_spacing()).AsDouble();_structuralNodes[key]=value;return value;}
     public double _structural_center(double x,long lane)
     {double q=x/2048;long index=(long)Math.Floor(q);return cubic(_structural_node(index-1,lane),_structural_node(index,lane),_structural_node(index+1,lane),_structural_node(index+2,lane),q-index);}
     public double[] _raw(Vector2 p)
@@ -111,7 +112,7 @@ public partial class TropicalSampler : RefCounted
         double wet=Math.Clamp(.25+valley*.45+Math.Max(channel,stream)*.3+lake*.4+w[7]*.2+w[6]*.1-ridge*.1,0,1),rock=Math.Clamp(rugged*.3+ridge*.4+erosion*.4+(w[4]+w[10]+w[15])*.2-valley*.3,0,1),red=Math.Clamp(w[9]+w[3]*.6+w[15]*.5+erosion*.4,0,1);int dominant=0;for(int i=1;i<16;i++)if(w[i]>w[dominant])dominant=i;if(profile)timings["raw_us"]=(timings.ContainsKey("raw_us")?timings["raw_us"].AsInt64():0)+(long)Time.GetTicksUsec()-tick;
         return new[]{h,water,wet,(double)dominant/15,rock,erosion,valley,Math.Clamp(ridge,0,1),Math.Max(channel,stream),lake,red,1-rock,stream,channel,shelf,branches};
     }
-    public double[] _node(Vector2I cell){if(_nodes.TryGetValue(cell,out var found))return found;var result=_raw((Vector2)cell*16);if(_nodes.Count>=16384)_nodes.Clear();_nodes[cell]=result;return result;}
+    public double[] _node(Vector2I cell){if(_nodes.TryGetValue(cell,out var found))return found;var result=_raw((Vector2)cell*16);_nodes[cell]=result;return result;}
     public double cubic(double a,double b,double c,double d,double t)=>b+.5*t*(c-a+t*(2*a-5*b+4*c-d+t*(3*(b-c)+d-a)));
     public double sample(double x,double z)=>sample(x,z,true);
     public double sample(double x,double z,bool publish)

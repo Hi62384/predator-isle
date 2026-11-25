@@ -6,6 +6,8 @@
 uniform bool extension_compact_payload=false;
 uniform int extension_compact_family_slots[8];
 uniform int extension_compact_weight_start=8;
+// Only set after the native uploader verifies every quantized ownership texel.
+uniform int extension_pure_family=-1;
 vec4 extension_texel(int id){
  int slot=id;
  if(extension_compact_payload){
@@ -21,6 +23,11 @@ vec4 extension_texel(int id){
 }
 void extension_weight_banks(out vec4 weights_a,out vec4 weights_b){
  weights_a=vec4(0);weights_b=vec4(0);
+ if(extension_compact_payload && extension_pure_family>=0 && extension_pure_family<8){
+  if(extension_pure_family<4)weights_a[extension_pure_family]=1.0;
+  else weights_b[extension_pure_family-4]=1.0;
+  return;
+ }
  ivec2 size=textureSize(extension_payload,0);
  if(extension_compact_payload || size.x>=size.y*10){
   // Chunks with no active families in a half atlas have exact zero weights

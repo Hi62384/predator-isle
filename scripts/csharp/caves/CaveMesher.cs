@@ -39,6 +39,7 @@ internal sealed class LegacyCaveField : ICaveField
 public partial class CaveMesher : RefCounted
 {
     private static readonly int[][] Tets = { new[] { 0, 5, 1, 6 }, new[] { 0, 1, 2, 6 }, new[] { 0, 2, 3, 6 }, new[] { 0, 3, 7, 6 }, new[] { 0, 7, 4, 6 }, new[] { 0, 4, 5, 6 } };
+    private static readonly Vector3I[] CubeCorners = { new(0,0,0), new(1,0,0), new(1,1,0), new(0,1,0), new(0,0,1), new(1,0,1), new(1,1,1), new(0,1,1) };
     private static readonly bool[] Flip = { false, false, true, false, false, true, false, false, true, false, true, true, false, false, true, false };
     private readonly List<Vector3> _vertices = new(), _normals = new();
     private readonly Dictionary<Vector3, Vector3> _normalCache = new();
@@ -162,12 +163,17 @@ public partial class CaveMesher : RefCounted
         }
         if ((step_metres != 1 && step_metres != 2 && step_metres != 4) || !Field.HasChunk(coordinate)) return new();
         int count = (int)Math.Round(64 / step_metres), row = count + 1, plane = row * row;
-        // Reuse two large lattice buffers across all cave biomes. They contain
-        // only temporary values: emitted mesh vertices and frontier arrays copy
-        // their data before the buffers return to the pool. Every indexed value
-        // is populated before being read, including repeated cave builds.
+        // The regular lattice needs only its scalar field and three coordinate axes.
+        // Reconstruct corners for occupied cubes instead of storing a Vector3 for
+        // every voxel (3,295,500 unnecessary bytes at the one-metre resolution).
+        // Compute each axis using the exact original float vector arithmetic.
         int latticeCount = checked(row * plane);
-        var points = ArrayPool<Vector3>.Shared.Rent(latticeCount);
+        Span<float> xs=stackalloc float[row],ys=stackalloc float[row],zs=stackalloc float[row];
+        for(int i=0;i<row;i++)
+        {
+            var p=origin+new Vector3(i,i,i)*(float)step_metres;
+            xs[i]=p.X;ys[i]=p.Y;zs[i]=p.Z;
+        }
         var values = ArrayPool<float>.Shared.Rent(latticeCount);
         // A portal's surface term depends only on X/Z. Sampling it again
         // for every Y voxel traverses terrain height caches needlessly.
@@ -185,8 +191,7 @@ public partial class CaveMesher : RefCounted
         for (int x = 0; x < row; x++)
         {
             int index = x + row * y + plane * z;
-            var point = origin + new Vector3(x, y, z) * (float)step_metres;
-            points[index] = point;
+            var point = new Vector3(xs[x],ys[y],zs[z]);
             if(!reuseSurface){values[index]=(float)Field.Sample(point);continue;}
             if(!CaveField.SafePoint(point)){values[index]=(float)CaveField.Far;continue;}
             int column=x+row*z;
@@ -212,7 +217,7 @@ public partial class CaveMesher : RefCounted
                 }
                 boundary_values.Add(faceValues);
             }
-        int[] offsets = { 0, 1, 1 + row, row, plane, 1 + plane, 1 + row + plane, row + plane };
+        ReadOnlySpan<int> offsets = stackalloc int[] { 0, 1, 1 + row, row, plane, 1 + plane, 1 + row + plane, row + plane };
         Span<Vector3> cubePoints = stackalloc Vector3[8]; Span<float> cubeValues = stackalloc float[8];
         for (int z = 0; z < count; z++)
         for (int y = 0; y < count; y++)
@@ -225,7 +230,12 @@ public partial class CaveMesher : RefCounted
                 if (air && rock) break;
             }
             if (!air || !rock) continue;
-            for (int i = 0; i < 8; i++) { cubePoints[i] = points[start + offsets[i]]; cubeValues[i] = values[start + offsets[i]]; }
+            for (int i = 0; i < 8; i++)
+            {
+                var corner=CubeCorners[i];
+                cubePoints[i]=new Vector3(xs[x+corner.X],ys[y+corner.Y],zs[z+corner.Z]);
+                cubeValues[i]=values[start+offsets[i]];
+            }
             foreach (var tet in Tets) Tetra(cubePoints, cubeValues, tet);
         }
         if (_vertices.Count == 0) return new();
@@ -235,7 +245,6 @@ public partial class CaveMesher : RefCounted
         }
         finally
         {
-            ArrayPool<Vector3>.Shared.Return(points,clearArray:false);
             ArrayPool<float>.Shared.Return(values,clearArray:false);
             if(surfaceColumns is not null)ArrayPool<double>.Shared.Return(surfaceColumns,clearArray:false);
             if(surfaceReady is not null)ArrayPool<bool>.Shared.Return(surfaceReady,clearArray:false);

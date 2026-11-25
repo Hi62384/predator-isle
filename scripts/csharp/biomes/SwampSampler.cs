@@ -10,8 +10,8 @@ public partial class SwampSampler : RefCounted
     public Resource settings { get; set; } = null!;
     public long seed_value { get; set; }
     private readonly FastNoiseLite _macro = new(), _meso = new(), _detail = new();
-    private readonly Dictionary<Vector2I, double[]> _nodes = new();
-    private readonly Dictionary<Vector2I, float[]> _regions = new();
+    private readonly BoundedBiomeCache<Vector2I,double[]> _nodes=new(16384);
+    private readonly BoundedBiomeCache<Vector2I,float[]> _regions=new(2048);
     private readonly Dictionary<string, double> _parameters = new();
     public float[] weights { get; set; } = System.Array.Empty<float>();
     public double[] state { get; set; } = System.Array.Empty<double>();
@@ -49,7 +49,7 @@ public partial class SwampSampler : RefCounted
         var result = new float[15]; double total = 0;
         for (int i = 0; i < 9; i++) { double amount = 1 - Smooth(0, span * .17, distances[i] - closest); result[ids[i]] = (float)(result[ids[i]] + amount); total += amount; }
         for (int i = 0; i < 15; i++) result[i] = (float)(result[i] / Math.Max(total, .001));
-        if (_regions.Count >= 2048) _regions.Clear(); _regions[cell] = result; return result;
+        _regions[cell] = result; return result;
     }
     public float[] region_weights(Vector2 p)
     {
@@ -61,7 +61,7 @@ public partial class SwampSampler : RefCounted
     }
 
     private readonly record struct Pool(Vector2 Center, double Radius, double Aspect, double Angle, double Level, double Random);
-    private readonly Dictionary<Vector2I, Pool[]> _pools = new();
+    private readonly BoundedBiomeCache<Vector2I,Pool[]> _pools=new(512);
     public double water_table(Vector2 p) => 7 + _macro.GetNoise2D(p.X, p.Y) * 4.0 + Math.Sin(p.X / 18000.0 + seed_value % 31) * .8;
     private Pool[] Pools(Vector2I cell)
     {
@@ -72,7 +72,7 @@ public partial class SwampSampler : RefCounted
             var center = ((Vector2)q + new Vector2((float)(.25 + random(q.X, q.Y, 213) * .5), (float)(.25 + random(q.X, q.Y, 217) * .5))) * 1800;
             result.Add(new Pool(center, 170 + r * 420, .5 + random(q.X, q.Y, 219) * .55, random(q.X, q.Y, 223) * Math.Tau, water_table(center) + .7 + r * 2.5, r));
         }
-        if (_pools.Count >= 512) _pools.Clear(); var sites = result.ToArray(); _pools[cell] = sites; return sites;
+        var sites = result.ToArray(); _pools[cell] = sites; return sites;
     }
     private static double Mod(double x, double y) { double v = x % y; return v < 0 ? v + y : v; }
     private double[] Raw(Vector2 p)
@@ -129,7 +129,7 @@ public partial class SwampSampler : RefCounted
     }
     private double[] Node(Vector2I cell)
     {
-        if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 16); if (_nodes.Count >= 16384) _nodes.Clear(); _nodes[cell] = value; return value;
+        if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 16); _nodes[cell] = value; return value;
     }
     public double cubic(double a, double b, double c, double d, double t) => b + .5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
     public double sample(double x, double z) => sample(x, z, true);

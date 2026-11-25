@@ -10,8 +10,8 @@ public partial class MountainSampler : RefCounted
     public Resource settings { get; set; } = null!;
     public long seed_value { get; set; }
     private readonly FastNoiseLite _macro = new(), _meso = new(), _detail = new();
-    private readonly Dictionary<Vector2I, double[]> _nodes = new();
-    private readonly Dictionary<Vector2I, float[]> _regions = new();
+    private readonly BoundedBiomeCache<Vector2I,double[]> _nodes=new(16384);
+    private readonly BoundedBiomeCache<Vector2I,float[]> _regions=new(2048);
     private readonly Dictionary<string, double> _parameters = new();
     public float[] weights { get; set; } = System.Array.Empty<float>();
     public double[] state { get; set; } = System.Array.Empty<double>();
@@ -49,7 +49,7 @@ public partial class MountainSampler : RefCounted
         var result = new float[16]; double total = 0;
         for (int i = 0; i < 9; i++) { double amount = 1 - Smooth(0, span * .17, distances[i] - closest); result[ids[i]] = (float)(result[ids[i]] + amount); total += amount; }
         for (int i = 0; i < 16; i++) result[i] = (float)(result[i] / Math.Max(total, .001));
-        if (_regions.Count >= 2048) _regions.Clear(); _regions[cell] = result; return result;
+        _regions[cell] = result; return result;
     }
     public float[] region_weights(Vector2 p)
     {
@@ -63,9 +63,9 @@ public partial class MountainSampler : RefCounted
 
     public bool profile { get; set; }
     public Godot.Collections.Dictionary timings { get; set; } = new();
-    private readonly Dictionary<Vector2I, Vector3> _carriers = new();
+    private readonly BoundedBiomeCache<Vector2I,Vector3> _carriers=new(2048);
     private readonly record struct Summit(double X, double Center, double Random, double Lane);
-    private readonly Dictionary<Vector2I, Summit[]> _landmarks = new();
+    private readonly BoundedBiomeCache<Vector2I,Summit[]> _landmarks=new(1024);
     private double Spacing() => 4000 / Math.Max(_host!.GetRef().AsGodotObject().Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(), .1) * P("ridge_scale");
     private static double Mod(double x, double y) { double v = x % y; return v < 0 ? v + y : v; }
     private Vector3 Carrier(double x, long lane)
@@ -75,7 +75,7 @@ public partial class MountainSampler : RefCounted
         var host = _host!.GetRef().AsGodotObject(); double scale = P("ridge_scale"), baseSpacing = Spacing() / scale;
         double center = host.Call("_grass_river_center", x / scale, lane, baseSpacing).AsDouble() * scale;
         double slope = (host.Call("_grass_river_center", (x + 32) / scale, lane, baseSpacing).AsDouble() - host.Call("_grass_river_center", (x - 32) / scale, lane, baseSpacing).AsDouble()) * scale / 64;
-        var result = new Vector3((float)center, (float)slope, 0); if (exact) { if (_carriers.Count >= 2048) _carriers.Clear(); _carriers[key] = result; } return result;
+        var result = new Vector3((float)center, (float)slope, 0); if (exact) { _carriers[key] = result; } return result;
     }
     public double water_potential(double x) => 120 + 260 * Math.Pow(Math.Sin(Mod(x + seed_value % 31 * 139.0, 18000) / 18000 * Math.PI), 2);
     private Summit[] Sites(Vector2I cell)
@@ -86,7 +86,7 @@ public partial class MountainSampler : RefCounted
             var q = cell + new Vector2I(i, 0); double r = random(q.X, q.Y, 251), x = Math.Round((q.X + .25 + random(q.X, q.Y, 253) * .5) * P("peak_spacing") / 32, MidpointRounding.AwayFromZero) * 32;
             var lo = Carrier(x, q.Y); var hi = Carrier(x, q.Y + 1); sites[i + 1] = new Summit(x, ((double)lo.X + hi.X) * .5, r, q.Y);
         }
-        if (_landmarks.Count >= 1024) _landmarks.Clear(); _landmarks[cell] = sites; return sites;
+        _landmarks[cell] = sites; return sites;
     }
     private double[] Raw(Vector2 p)
     {
@@ -151,7 +151,7 @@ public partial class MountainSampler : RefCounted
     }
     private double[] Node(Vector2I cell)
     {
-        if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 32); if (_nodes.Count >= 16384) _nodes.Clear(); _nodes[cell] = value; return value;
+        if (_nodes.TryGetValue(cell, out var cached)) return cached; var value = Raw((Vector2)cell * 32); _nodes[cell] = value; return value;
     }
     public double cubic(double a, double b, double c, double d, double t) => b + .5 * t * (c - a + t * (2 * a - 5 * b + 4 * c - d + t * (3 * (b - c) + d - a)));
     public double sample(double x, double z) => sample(x, z, true);

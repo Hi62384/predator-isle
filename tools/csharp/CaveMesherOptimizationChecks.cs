@@ -43,6 +43,28 @@ internal static class CaveMesherOptimizationChecks
         require(optimized.RefinedCacheHits>0,
             "Reusable cave mesher failed to reset and rebuild its per-chunk edge cache");
 
+        // Check the regular-lattice reconstruction at nonzero, negative chunk
+        // coordinates for all canonical cross-section styles. The two-metre
+        // case also compares every captured frontier scalar.
+        var chunk=new Vector3I(-3,-1,2);
+        for(int style=0;style<8;style++)
+        {
+            using var styled=new CaveField();
+            styled.height=Callable.From<double,double,double>((x,z)=>200);
+            var center=(Vector3)chunk*64+new Vector3(32,22,32);
+            require(styled.append_feature(center,center,new Vector2(23,32),2,style),
+                "Cave cross-section fixture failed to create its chamber");
+            double step=style==7?2:4;
+            optimized.capture_boundary_values=true;
+            reference.Set("capture_boundary_values",true);
+            var original=reference.Call("build",styled,chunk,step).AsGodotArray();
+            var candidate=optimized.build(styled,chunk,step);
+            require(original.Count>0&&GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(candidate)),
+                "Reconstructed cave lattice changed style "+style+" geometry");
+            require(GD.VarToBytes(reference.Get("boundary_values")).SequenceEqual(GD.VarToBytes(optimized.boundary_values)),
+                "Reconstructed cave lattice changed frontier scalars for style "+style);
+        }
+
         // A portal cave's canonical scalar is min(tunnel SDF, surface-Y).
         // The surface is constant along each vertical lattice column. The
         // new mesher must produce exactly the same triangles and normals as

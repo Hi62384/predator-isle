@@ -35,9 +35,9 @@ public partial class BadlandsSampler : RefCounted
     private sealed record Edge(Vector3 A,Vector3 B,int Order);
     private sealed record Tree(D Data,Vector3 Root,double Random,Vector4 Support,Vector4[] Bounds,Vector4[] Vectors,Vector4[] Metrics,Dictionary<Vector2I,int[]> Cells,double GradeScale);
     private readonly Dictionary<Vector2I,Patch> _patches=new();
-    private readonly Dictionary<Vector2I,float[]> _regions=new();
-    private readonly Dictionary<Vector3I,Tree> _trees=new();
-    private readonly Dictionary<Vector2I,double> _carriers=new();
+    private readonly BoundedBiomeCache<Vector2I,float[]> _regions=new(2048);
+    private readonly BoundedBiomeCache<Vector3I,Tree> _trees=new(512);
+    private readonly BoundedBiomeCache<Vector2I,double> _carriers=new(2048);
     private readonly BadlandsFanGeometry _fan=new();
     private GodotObject Host()=>_host!.GetRef().AsGodotObject();
     private readonly TerrainParameterSnapshot _parameters=new();
@@ -68,7 +68,7 @@ public partial class BadlandsSampler : RefCounted
             double distance=p.DistanceTo(site);closest=Math.Min(closest,distance);sites.Add((distance,id));
         }
         var weights=new float[16];double total=0;foreach(var site in sites){double amount=1-Smooth(0,span*.2,site.Distance-closest);weights[site.Kind]=(float)(weights[site.Kind]+amount);total+=amount;}for(int i=0;i<16;i++)weights[i]=(float)(weights[i]/Math.Max(total,.00001));
-        if(_regions.Count>=2048)_regions.Clear();_regions[cell]=weights;return weights;
+        _regions[cell]=weights;return weights;
     }
     public float[] region_weights(Vector2 p)
     {
@@ -80,7 +80,7 @@ public partial class BadlandsSampler : RefCounted
     public double _spacing()=>4000/Math.Max(Host().Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),.01);
     public double _carrier(double x,long lane)=>Host().Call("_grass_river_center",x,lane,_spacing()).AsDouble();
     public double _carrier_node(long index,long lane)
-    {var key=new Vector2I(unchecked((int)index),unchecked((int)lane));if(_carriers.TryGetValue(key,out double found))return found;double value=_carrier(index*1024.0,lane);if(_carriers.Count>=2048)_carriers.Clear();_carriers[key]=value;return value;}
+    {var key=new Vector2I(unchecked((int)index),unchecked((int)lane));if(_carriers.TryGetValue(key,out double found))return found;double value=_carrier(index*1024.0,lane);_carriers[key]=value;return value;}
     public double _broad_carrier(double x,long lane){double q=x/1024;long i=(long)Math.Floor(q);return cubic(_carrier_node(i-1,lane),_carrier_node(i,lane),_carrier_node(i+1,lane),_carrier_node(i+2,lane),q-i);}
     public D _tree(long index,long lane,long side)=>GetTree(index,lane,side).Data;
     private Tree GetTree(long index,long lane,long side)
@@ -135,7 +135,7 @@ public partial class BadlandsSampler : RefCounted
         var rootWeights=region_weights(new Vector2(root.X,root.Z));double rootRelief=0;for(int i=0;i<16;i++)rootRelief+=rootWeights[i]*Reliefs[i];double grade=Math.Clamp(rootRelief*P("relief")/300,.12,1.6);
         var payloadEnds=new A();foreach(var end in ends)payloadEnds.Add(end);
         var data=new D{["root"]=root,["edges"]=payloadEdges,["ends"]=payloadEnds,["random"]=r,["extent"]=extent,["edge_bounds"]=bounds,["edge_vectors"]=vectors,["edge_metrics"]=metrics,["segment_cells"]=payloadCells,["grade_scale"]=grade};data[new StringName("support_bounds")]=support;
-        var result=new Tree(data,root,r,support,bounds,vectors,metrics,cells,grade);if(_trees.Count>=512)_trees.Clear();_trees[key]=result;return result;
+        var result=new Tree(data,root,r,support,bounds,vectors,metrics,cells,grade);_trees[key]=result;return result;
     }
     public double geological_coordinate(Vector2 p,double height)
     {double beds=height+settings.Get("strata_dip").AsVector2().Dot(p)+(24*Math.Sin(p.X/5300.0+Math.Sin(p.Y/7100.0))+17*Math.Sin(p.Y/3900.0))*P("fold_strength"),unit=P("strata_metres")*.35;return beds/unit+P("thickness_variation")*Math.Sin(beds/(unit*1.7)+p.X/11000.0);}

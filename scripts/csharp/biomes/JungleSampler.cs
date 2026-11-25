@@ -13,8 +13,8 @@ public partial class JungleSampler : RefCounted
     public FastNoiseLite _macro { get; } = new();
     public Godot.Collections.Array<string> NAMES { get; } = new(new[] { "Lowland rainforest", "Rolling jungle", "Rugged jungle hills", "Jungle foothills", "Jungle mountains", "River rainforest", "Floodplain jungle", "Rocky jungle", "Tropical karst", "Jungle plateau", "Jungle gorge", "Humid basin", "Upland rainforest" });
     private readonly FastNoiseLite _meso = new(), _detail = new();
-    private readonly Dictionary<Vector2I, (Vector4 Height, Vector2 Surface)> _nodes = new();
-    private readonly Dictionary<Vector2I, float[]> _regions = new();
+    private readonly BoundedBiomeCache<Vector2I,(Vector4 Height, Vector2 Surface)> _nodes=new(16384);
+    private readonly BoundedBiomeCache<Vector2I,float[]> _regions=new(2048);
     private readonly Dictionary<string, double> _parameters = new();
     public float[] weights { get; set; } = System.Array.Empty<float>();
     public double wetness { get; set; }
@@ -61,7 +61,7 @@ public partial class JungleSampler : RefCounted
         var result = new float[13];
         for (int i = 0; i < 9; i++) { double amount = 1 - Smooth(0, span * .20, distances[i] - closest); result[ids[i]] = (float)(result[ids[i]] + amount); totalWeight += amount; }
         for (int i = 0; i < 13; i++) result[i] = (float)(result[i] / Math.Max(totalWeight, .001));
-        if (_regions.Count >= 2048) _regions.Clear(); _regions[cell] = result; return result;
+        _regions[cell] = result; return result;
     }
     public float[] region_weights(Vector2 p)
     {
@@ -97,7 +97,7 @@ public partial class JungleSampler : RefCounted
         if (_nodes.TryGetValue(cell, out var cached)) return cached;
         var p = (Vector2)cell * 64; var a = Raw(p);
         var result = (new Vector4(a.X, (Raw(p + new Vector2(16, 0)).X - a.X) / 16, (Raw(p + new Vector2(0, 16)).X - a.X) / 16, a.Y), new Vector2(a.Z, a.W));
-        if (_nodes.Count >= 16384) _nodes.Clear(); _nodes[cell] = result; return result;
+        _nodes[cell] = result; return result;
     }
     public double hermite(double a, double b, double da, double db, double t)
     { double t2 = t * t, t3 = t2 * t; return (2 * t3 - 3 * t2 + 1) * a + (t3 - 2 * t2 + t) * da + (-2 * t3 + 3 * t2) * b + (t3 - t2) * db; }
