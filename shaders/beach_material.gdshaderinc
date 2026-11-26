@@ -49,10 +49,18 @@ void beach_sample(int id,float metres,float angle,vec3 dx,vec3 dy,vec3 projectio
  if(projection.y>.002){
   float orientation=id==3?beach_wind:0.0;
   mat2 rotation=mat2(vec2(cos(orientation),sin(orientation)),vec2(-sin(orientation),cos(orientation)));
-  // Rotated metre-scale ripple overlay uses continuous world UV, not a rotated
-  // modulo origin (which would create a seam at every wrapped chunk origin).
-  vec2 uv=id==3?vec2(wp.x,-wp.z*sign(n.y)):vec2(p.x,-p.z*sign(n.y));
-  vec4 a;vec3 t;beach_plane(id,rotation*uv,rotation*vec2(wp.x,-wp.z*sign(n.y)),rotation*vec2(dx.x,-dx.z*sign(n.y)),rotation*vec2(dy.x,-dy.z*sign(n.y)),fine,a,t);
+  vec2 uv=vec2(p.x,-p.z*sign(n.y));
+  if(id==3){
+   // Rotate small local coordinates. Accumulate the tile origin modulo one
+   // texture repeat so distant world coordinates retain sub-texel precision.
+   vec2 origin=material_origin.xz*vec2(1.0,-sign(n.y));
+   vec2 block=floor(origin/4096.0);
+   vec2 phase=fract(block.x*fract(rotation[0]*4096.0/metres)
+                   +block.y*fract(rotation[1]*4096.0/metres));
+   phase=fract(phase+rotation*mod(origin,4096.0)/metres);
+   uv=rotation*(forest_local_position.xz*vec2(1.0,-sign(n.y))/metres)+phase;
+  }
+  vec4 a;vec3 t;beach_plane(id,uv,rotation*vec2(wp.x,-wp.z*sign(n.y)),rotation*vec2(dx.x,-dx.z*sign(n.y)),rotation*vec2(dy.x,-dy.z*sign(n.y)),fine,a,t);
   vec2 unrotated=transpose(rotation)*t.xy;s+=a*projection.y;g+=vec3(unrotated.x,0,-unrotated.y*sign(n.y))*projection.y;
  }
  if(projection.z>.002){vec4 a;vec3 t;beach_plane(id,vec2(p.x,p.y*sign(n.z)),vec2(wp.x,wp.y*sign(n.z)),vec2(dx.x,dx.y*sign(n.z)),vec2(dy.x,dy.y*sign(n.z)),fine,a,t);s+=a*projection.z;g+=vec3(t.x,t.y*sign(n.z),0)*projection.z;}
@@ -68,6 +76,7 @@ void shade_beach(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 colo
   // Compacted wet photograph is not merely darkened dry sand.
   beach_sample(1,1.75,angle+1.5708,dx,dy,projection,n,fine,sb,gb,material_origin);
   a=mix(a,sa,detail);b=mix(b,sb,detail);ga*=detail;gb*=detail;
+  ripple*=detail*(1.0-smoothstep(.1,.5,max(length(dx.xz),length(dy.xz))/3.5));
   if(ripple>.005){vec4 sr;vec3 gr;beach_sample(3,3.5,angle,dx,dy,projection,n,fine,sr,gr,material_origin);a=mix(a,sr,ripple*.5);ga=mix(ga,gr,ripple);}
  }
  float macro=(field(world_position.xz*.0007+vec2(13,41))-.5)*beach_macro;

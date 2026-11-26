@@ -23,12 +23,13 @@ public static class TerrainRingTransitions
     {
         public TerrainRingMeshGeometry.Data Data;
         public readonly Vector3[] Vertices,Normals;
+        public readonly Color[] Colors;
         public Working(TerrainRingMeshGeometry.Data data,bool mutable=true)
         {
-            if(data.Products is TerrainVertexProducts products){Vertices=mutable?(Vector3[])products.Vertices.Clone():products.Vertices;Normals=mutable?(Vector3[])products.Normals.Clone():products.Normals;Data=mutable?data with{Products=products with{Vertices=Vertices,Normals=Normals},Arrays=null!}:data;}
-            else{Data=mutable?data with{Arrays=data.Arrays.Duplicate()}:data;Vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();Normals=data.Arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();}
+            if(data.Products is TerrainVertexProducts products){Vertices=mutable?(Vector3[])products.Vertices.Clone():products.Vertices;Normals=mutable?(Vector3[])products.Normals.Clone():products.Normals;Colors=mutable?(Color[])products.Colors.Clone():products.Colors;Data=mutable?data with{Products=products with{Vertices=Vertices,Normals=Normals,Colors=Colors},Arrays=null!}:data;}
+            else{Data=mutable?data with{Arrays=data.Arrays.Duplicate()}:data;Vertices=data.Arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();Normals=data.Arrays[(int)Mesh.ArrayType.Normal].AsVector3Array();Colors=data.Arrays[(int)Mesh.ArrayType.Color].AsColorArray();if(Colors.Length!=Vertices.Length)Colors=new Color[Vertices.Length];}
         }
-        public void Publish(){if(Data.Products is not null)return;Data.Arrays[(int)Mesh.ArrayType.Vertex]=Vertices;Data.Arrays[(int)Mesh.ArrayType.Normal]=Normals;}
+        public void Publish(){if(Data.Products is not null)return;Data.Arrays[(int)Mesh.ArrayType.Vertex]=Vertices;Data.Arrays[(int)Mesh.ArrayType.Normal]=Normals;Data.Arrays[(int)Mesh.ArrayType.Color]=Colors;}
     }
     public static Result Stitch(TerrainRingLayout.Plan plan,IEnumerable<TerrainRingMeshGeometry.Data> source,Func<bool>? cancelled=null,Cache? cache=null,bool gpuPages=false)
     {
@@ -54,7 +55,7 @@ public static class TerrainRingTransitions
             if(cache is not null&&cache.Entries.TryGetValue(key,out var saved))
             {cache.Hits++;next[key]=saved;final[patch.Key]=saved.Data;stitched+=saved.Count;maxAdjustment=Math.Max(maxAdjustment,saved.Adjustment);continue;}
             if(cache is not null)cache.Misses++;
-            var resolved=new Dictionary<int,(float Height,Vector3 Normal)>();Working? mesh=null;double adjustment=0;
+            var resolved=new Dictionary<int,(float Height,Vector3 Normal,Color Weights)>();Working? mesh=null;double adjustment=0;
             if(visits.Count>0)
             {
                 mesh=new Working(original);
@@ -63,9 +64,9 @@ public static class TerrainRingTransitions
                     var vertex=mesh.Vertices[visit.Index];var owner=visit.Owner;
                     if(!meshes.TryGetValue(owner.Key,out var coarse))meshes[owner.Key]=coarse=new Working(final[owner.Key],false);
                     var value=SampleEdge(coarse,patch.OriginX+vertex.X,patch.OriginZ+vertex.Z);
-                    if(resolved.TryGetValue(visit.Index,out var prior)&&Math.Abs((double)prior.Height-value.Height)>1e-4)throw new InvalidOperationException("Coarse ring corner heights disagree; the cut must remain hidden.");resolved[visit.Index]=value;
+                    if(resolved.TryGetValue(visit.Index,out var prior)&&Math.Abs((double)prior.Height-value.Height)>1e-4)throw new InvalidOperationException("Coarse ring corner heights disagree; the cut must remain hidden.");resolved.TryAdd(visit.Index,value);
                 }
-                foreach(var pair in resolved){int i=pair.Key;adjustment=Math.Max(adjustment,Math.Abs((double)mesh.Vertices[i].Y-pair.Value.Height));var position=mesh.Vertices[i];position.Y=pair.Value.Height;mesh.Vertices[i]=position;mesh.Normals[i]=pair.Value.Normal;}mesh.Publish();
+                foreach(var pair in resolved){int i=pair.Key;adjustment=Math.Max(adjustment,Math.Abs((double)mesh.Vertices[i].Y-pair.Value.Height));var position=mesh.Vertices[i];position.Y=pair.Value.Height;mesh.Vertices[i]=position;mesh.Normals[i]=pair.Value.Normal;mesh.Colors[i]=pair.Value.Weights;}mesh.Publish();
             }
             var data=mesh is null?original:mesh.Data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision()};
             data=data with{GeometryFingerprint=data.ProductRevision.ToString(System.Globalization.CultureInfo.InvariantCulture)};
@@ -105,14 +106,15 @@ public static class TerrainRingTransitions
         {
             if(cancelled?.Invoke()==true)throw new OperationCanceledException();
             var original=originals[patch.Key];var source=views[patch.Key];
-            var updates=new List<(int Index,float Height,Vector3 Normal)>();var dependencies=new HashSet<long>();
+            var updates=new List<(int Index,float Height,Vector3 Normal,Color Weights)>();var dependencies=new HashSet<long>();
             double maximum=0;
             foreach(int index in BoundaryIndices(original.Topology.Axis.Length))
             {
                 var owner=owners[WorldKey(original,index)];if(owner.Patch==patch.Key)continue;
                 var winner=views[owner.Patch];float height=winner.Vertices[owner.Index].Y;var normal=winner.Normals[owner.Index];
-                if(source.Vertices[index].Y==height&&source.Normals[index]==normal)continue;
-                updates.Add((index,height,normal));dependencies.Add(winner.Data.ProductRevision);
+                var weights=winner.Colors[owner.Index];
+                if(source.Vertices[index].Y==height&&source.Normals[index]==normal&&source.Colors[index]==weights)continue;
+                updates.Add((index,height,normal,weights));dependencies.Add(winner.Data.ProductRevision);
                 maximum=Math.Max(maximum,Math.Abs((double)source.Vertices[index].Y-height));
             }
             if(updates.Count==0)continue;
@@ -124,7 +126,7 @@ public static class TerrainRingTransitions
             var changed=new Working(original);
             foreach(var update in updates)
             {
-                var position=changed.Vertices[update.Index];position.Y=update.Height;changed.Vertices[update.Index]=position;changed.Normals[update.Index]=update.Normal;
+                var position=changed.Vertices[update.Index];position.Y=update.Height;changed.Vertices[update.Index]=position;changed.Normals[update.Index]=update.Normal;changed.Colors[update.Index]=update.Weights;
             }
             changed.Publish();var normalized=changed.Data with{ProductRevision=TerrainRingMeshGeometry.Data.NewRevision(),GpuPage=null};
             originals[patch.Key]=normalized;next[key]=(normalized,updates.Count,maximum);count+=updates.Count;adjustment=Math.Max(adjustment,maximum);
@@ -142,10 +144,10 @@ public static class TerrainRingTransitions
         for(int i=0;i<row;i++){yield return i;yield return (row-1)*row+i;}
         for(int i=1;i<row-1;i++){yield return i*row;yield return i*row+row-1;}
     }
-    private static (float Height,Vector3 Normal) SampleEdge(Working mesh,double worldX,double worldZ)
+    private static (float Height,Vector3 Normal,Color Weights) SampleEdge(Working mesh,double worldX,double worldZ)
     {
         var patch=mesh.Data.Patch;var grid=mesh.Data.Topology;double ux=(worldX-patch.OriginX)/patch.Size*grid.Denominator,uz=(worldZ-patch.OriginZ)/patch.Size*grid.Denominator;var axis=grid.Axis.Span;int x=Segment(axis,ux),z=Segment(axis,uz),row=axis.Length;double tx=Math.Clamp((ux-axis[x])/(axis[x+1]-axis[x]),0,1),tz=Math.Clamp((uz-axis[z])/(axis[z+1]-axis[z]),0,1);
-        if(tx>1e-8&&tx<1-1e-8&&tz>1e-8&&tz<1-1e-8)throw new InvalidOperationException("A ring edge must lie on a coarse grid line.");int a=z*row+x,b=a+1,c=a+row,d=c+1;double h0=mesh.Vertices[a].Y+((double)mesh.Vertices[b].Y-mesh.Vertices[a].Y)*tx,h1=mesh.Vertices[c].Y+((double)mesh.Vertices[d].Y-mesh.Vertices[c].Y)*tx;var normal=mesh.Normals[a].Lerp(mesh.Normals[b],(float)tx).Lerp(mesh.Normals[c].Lerp(mesh.Normals[d],(float)tx),(float)tz).Normalized();return ((float)(h0+(h1-h0)*tz),normal);
+        if(tx>1e-8&&tx<1-1e-8&&tz>1e-8&&tz<1-1e-8)throw new InvalidOperationException("A ring edge must lie on a coarse grid line.");int a=z*row+x,b=a+1,c=a+row,d=c+1;double h0=mesh.Vertices[a].Y+((double)mesh.Vertices[b].Y-mesh.Vertices[a].Y)*tx,h1=mesh.Vertices[c].Y+((double)mesh.Vertices[d].Y-mesh.Vertices[c].Y)*tx;var normal=mesh.Normals[a].Lerp(mesh.Normals[b],(float)tx).Lerp(mesh.Normals[c].Lerp(mesh.Normals[d],(float)tx),(float)tz).Normalized();var weights=mesh.Colors[a].Lerp(mesh.Colors[b],(float)tx).Lerp(mesh.Colors[c].Lerp(mesh.Colors[d],(float)tx),(float)tz);return ((float)(h0+(h1-h0)*tz),normal,weights);
     }
     private static int Segment(ReadOnlySpan<int> axis,double coordinate)
     {

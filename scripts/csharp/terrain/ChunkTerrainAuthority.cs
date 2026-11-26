@@ -100,12 +100,12 @@ public partial class ChunkTerrain
         var keys=new HashSet<Vector2I>();int radius=Math.Clamp(authority_radius_metres,32,128);
         foreach(var actor in authorityActors.Values)Add(new Rect2(new Vector2(actor.GlobalPosition.X,actor.GlobalPosition.Z)-Vector2.One*radius,Vector2.One*radius*2));
         foreach(var region in detail)Add(region);
-        var patches=keys.OrderBy(k=>k.Y).ThenBy(k=>k.X).Select(k=>new TerrainRingLayout.Patch(new Vector3I(k.X,k.Y,0),16,TerrainRingLayout.Mask.None)).ToArray();var bounds=patches.Length>0?patches[0].Bounds:new Rect2(focus,Vector2.Zero);foreach(var patch in patches.Skip(1))bounds=bounds.Merge(patch.Bounds);
-        return new TerrainRingLayout.Plan(patches,bounds,focus,16,0){CollisionInterests=authorityActors.Values.Select(actor=>new Vector2(actor.GlobalPosition.X,actor.GlobalPosition.Z)).ToArray()};
+        var patches=keys.OrderBy(k=>k.Y).ThenBy(k=>k.X).Select(k=>new TerrainRingLayout.Patch(new Vector3I(k.X,k.Y,0),chunk_size,TerrainRingLayout.Mask.None)).ToArray();var bounds=patches.Length>0?patches[0].Bounds:new Rect2(focus,Vector2.Zero);foreach(var patch in patches.Skip(1))bounds=bounds.Merge(patch.Bounds);
+        return new TerrainRingLayout.Plan(patches,bounds,focus,chunk_size,0){CollisionInterests=authorityActors.Values.Select(actor=>new Vector2(actor.GlobalPosition.X,actor.GlobalPosition.Z)).ToArray()};
         void Add(Rect2 bounds)
         {
             if(!bounds.Position.IsFinite()||!bounds.End.IsFinite())throw new ArgumentException("Nonfinite authoritative terrain interest.");
-            int x0=checked((int)Math.Floor(bounds.Position.X/16)),z0=checked((int)Math.Floor(bounds.Position.Y/16)),x1=checked((int)Math.Ceiling(bounds.End.X/16)),z1=checked((int)Math.Ceiling(bounds.End.Y/16));
+            int x0=checked((int)Math.Floor(bounds.Position.X/chunk_size)),z0=checked((int)Math.Floor(bounds.Position.Y/chunk_size)),x1=checked((int)Math.Ceiling(bounds.End.X/chunk_size)),z1=checked((int)Math.Ceiling(bounds.End.Y/chunk_size));
             for(int z=z0;z<z1;z++)for(int x=x0;x<x1;x++){keys.Add(new Vector2I(x,z));if(keys.Count>4096)throw new InvalidOperationException("Authoritative terrain interest exceeds the 4096-patch limit; existing collision retained.");}
         }
     }

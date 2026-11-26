@@ -74,6 +74,25 @@ internal static class TerrainRingWaterChecks
                     "Compact extension water sampled the wrong family or palette at mask "+mask);
             }
         }
+        // One marine corner must not punch a triangular hole in a wet shoreline.
+        var shore=products with{C3=new float[count*4],C1=new float[count*4]};
+        for(int i=0;i<count;i++)shore.C3[i*4]=255*65536;
+        int marineCorner=grid.Indices.Span[0];
+        shore.C1[marineCorner*4+2]=-(255*256+1);
+        var coastalTile=new TerrainRingMeshGeometry.Data(patch,grid,null!,Array.Empty<byte>(),0,0,-1,Array.Empty<byte>(),0){Products=shore};
+        var shoreline=TerrainRingWater.Build(coastalTile,2,true,true);
+        require(shoreline[(int)Mesh.ArrayType.Index].AsInt32Array().SequenceEqual(grid.Indices.ToArray()),
+            "A marine corner removed the wet portion of an adjacent triangle");
+        require(shoreline[(int)Mesh.ArrayType.Color].AsColorArray()[marineCorner].B==0,
+            "Local swamp water still owns the marine corner");
+        var mixed=shore with{Vertices=(Vector3[])vertices.Clone(),C1=new float[count*4],C3=new float[count*4]};
+        foreach(int i in Enumerable.Range(0,count))mixed.Vertices[i].Y=uv[i].X+2;
+        int dryOwner=grid.Indices.Span[1];
+        mixed.C3[dryOwner*4]=255*65536;
+        mixed.Vertices[marineCorner].Y=uv[marineCorner].X-6;
+        var crossing=TerrainRingWater.Build(coastalTile with{Products=mixed},0,false,true);
+        require(crossing.Count>0 && crossing[(int)Mesh.ArrayType.Index].AsInt32Array().Take(3).SequenceEqual(grid.Indices.ToArray().Take(3)),
+            "Shoreline clipped a mixed triangle with underwater ground and biome ownership at different corners");
         // Badlands ownership is encoded independently of mountain ownership.
         // A pure badlands pond must not disappear merely because no mountain
         // vertices occur in the same patch.

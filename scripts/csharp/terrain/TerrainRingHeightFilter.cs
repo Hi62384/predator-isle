@@ -45,7 +45,7 @@ public sealed class TerrainRingHeightFilter
                 low=Math.Min(low,height);high=Math.Max(high,height);
                 otherLow=Math.Min(otherLow,height);otherHigh=Math.Max(otherHigh,height);
             }
-            double retention=1-Smooth(footprint*.75,footprint*1.5,Math.Abs(center-waterLevel));retention=Math.Max(retention,Smooth(footprint*1.5,footprint*2.5,high-low));retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,center-otherHigh));retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,otherLow-center));retention=Math.Max(retention,Smooth(0,footprint*.1,Math.Max(0,Math.Min(waterLevel-low,high-waterLevel))));double filtered=sum/16;result=filtered+(center-filtered)*retention;
+            double retention=1-Smooth(footprint*.75,footprint*1.5,Math.Abs(center-waterLevel));retention=Math.Max(retention,Smooth(footprint*1.5,footprint*2.5,high-low));retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,center-otherHigh));retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,otherLow-center));retention=Math.Max(retention,Smooth(0,footprint*.1,Math.Max(0,Math.Min(waterLevel-low,high-waterLevel))));retention*=1-Smooth(9,54,footprint)*Smooth(footprint*.75,footprint*1.5,low-waterLevel);double filtered=sum/16;result=filtered+(center-filtered)*retention;
         return Store(key,result);
     }
     private double Store(Key key,double value){while(values.Count>=Capacity&&order.TryDequeue(out var oldest))values.Remove(oldest);values[key]=value;order.Enqueue(key);return value;}

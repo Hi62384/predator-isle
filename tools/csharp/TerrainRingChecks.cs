@@ -33,9 +33,9 @@ internal static class TerrainRingChecks
         // In-flight and cancelled keys must never prevent later runnable work.
         var pending=new List<int>{1,2,3,4};var wanted=new HashSet<int>{1,2,3};var busy=new HashSet<int>{1,3};
         require(TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out int dequeuedKey)&&dequeuedKey==2&&
-                pending.SequenceEqual(new[]{3,4,1}),"A busy terrain job starved runnable patches behind it");
+                pending.SequenceEqual(new[]{1,3,4}),"A busy terrain job starved runnable patches behind it");
         require(!TerrainRingStream.TryDequeueAvailable(pending,wanted.Contains,busy.Contains,out _)&&
-                pending.SequenceEqual(new[]{3,1}),"A fully blocked terrain queue did not terminate safely");
+                pending.SequenceEqual(new[]{1,3}),"A fully blocked terrain queue did not terminate safely");
         foreach(var point in new[]{new Vector2(-.001f,-16.01f),new Vector2(2,3),new Vector2(16384,-32768)})
         foreach(var velocity in new[]{Vector2.Zero,new Vector2(25,0),new Vector2(-100,80)})
         {
@@ -126,6 +126,25 @@ internal static class TerrainRingChecks
         var children=Enumerable.Range(0,9).Select(i=>new TerrainRingLayout.Patch(new Vector3I(i%3,i/3,0),16,TerrainRingLayout.Mask.None)).ToArray();
         require(TerrainLocalPublication.Select(new[]{parent},children,children.Skip(1).ToHashSet()) is null,"Eight ready children exposed the ninth child's hole");
         require(TerrainLocalPublication.Select(new[]{parent},children,children.ToHashSet())?.Length==9,"A complete nine-child closure waited for unrelated data");
+        var distant = children.Select(p => p with { Key = p.Key + new Vector3I(3072, 3072, 0) }).ToArray();
+        var edgeTargets=new[]{children[0],distant[0]};
+        var edgeSwap=TerrainLocalPublication.Select(new[]{parent},edgeTargets,new[]{children[0]}.ToHashSet(),additionBudget:1);
+        require(edgeSwap is not null && edgeSwap.SequenceEqual(new[]{children[0]}),"A ready edge replacement waited for unrelated terrain outside its footprint");
+        var flightPlan = layout.Select(new Vector2(49160, 49160));
+        var publishedPlan = layout.Select(Vector2.Zero);
+        require(flightPlan.Patches.Where(p=>p.Key.Z<5).All(p=>TerrainRingStream.PriorityTier(p,flightPlan,publishedPlan)==0),
+            "All five inner levels must precede distant terrain");
+        var outer=publishedPlan.Patches.First(p=>p.Key.Z==5);
+        var missing=outer with {Key=outer.Key+new Vector3I(10000,0,0)};
+        require(TerrainRingStream.PriorityTier(missing,flightPlan,publishedPlan)==1 &&
+                TerrainRingStream.PriorityTier(outer,flightPlan,publishedPlan)==2,
+            "Uncovered outer ground must precede replacement detail");
+        var incoming = TerrainLocalPublication.Select(new[]{parent}, distant, distant.Take(3).ToHashSet());
+        require(incoming is not null && incoming.Contains(parent) && incoming.Length == 4,
+            "A distant move waited for the full destination cut despite having independent nearby patches ready");
+        var sparse=TerrainLocalPublication.Select(new[]{parent},distant,distant.Skip(1).Take(2).ToHashSet());
+        require(sparse is not null && sparse.Contains(parent) && sparse.Contains(distant[1]) && sparse.Contains(distant[2]),
+            "An unrelated missing chunk blocked ready terrain");
         foreach(var focus in new[]{Vector2.Zero,new Vector2(-.01f,-.01f),new Vector2(15.99f,47.99f),new Vector2(16,48),new Vector2(-49,-145),new Vector2(16384,-32768)})
         {
             var plan=layout.Select(focus);Check(plan);

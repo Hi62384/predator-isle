@@ -18,6 +18,77 @@ public partial class MigrationChecks : Node
     {
         try
         {
+            if(Array.IndexOf(OS.GetCmdlineUserArgs(),"airborne-entrance")>=0)
+            {
+                using var stream=new CaveStreamer{configuration=GD.Load<Resource>("res://config/caves/cave_settings.tres")};
+                var mouth=new Vector3(380,9,935);
+                var entrance=new GDictionary{["point"]=mouth};
+                Require(stream.entrance_needed(entrance,mouth+Vector3.Up*1500),"Flight altitude blocked surface entrance");
+                Require(!stream.entrance_needed(entrance,mouth+Vector3.Right*1000),"Distant mouth requested");
+                await Finish();return;
+            }
+            if(Array.IndexOf(OS.GetCmdlineUserArgs(),"live-underground")>=0)
+            {
+                var world=GD.Load<PackedScene>("res://scenes/main.tscn").Instantiate();
+                AddChild(world);
+                var terrain=world.GetNode<ChunkTerrain>("Terrain");
+                var caveCamera=world.GetNode<Node3D>("FreeCamera");
+                var caves=terrain.GetNode<CaveStreamer>("CaveStreaming");
+                var key=new Vector3I(8,-1,9);
+                caveCamera.GlobalPosition=(Vector3)key*64+Vector3.One*32;
+                ulong start=Time.GetTicksMsec();
+                while(Time.GetTicksMsec()-start<120000)
+                {
+                    await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+                    if(caves._cells.TryGetValue(key,out var value)&&value.AsGodotObject() is MeshInstance3D node&&node.Mesh!=null&&node.IsVisibleInTree())
+                    {
+                        GD.Print($"Live underground cell {key} visible after {Time.GetTicksMsec()-start} ms");
+                        await Finish();return;
+                    }
+                }
+                throw new Exception("Underground cell timed out: "+caves.debug_text()+" "+caves.discovery_progress+" "+caves.last_error);
+            }
+            if(Array.IndexOf(OS.GetCmdlineUserArgs(),"world-cave-mouths")>=0)
+            {
+                using var work=new PredatorIsle.Caves.CaveWorkload();
+                Require(work.configure(GD.Load<Resource>("res://config/world/terrain_settings.tres"),
+                    GD.Load<Resource>("res://config/caves/cave_settings.tres"),73921,0),"Game cave configuration rejected");
+                var position=Vector2I.Zero;
+                var region=work.network.region(position);
+                Require(region["valid"].AsBool(),"No generated cave network in the origin region");
+                var bundle=new Godot.Collections.Dictionary{["cell"]=position,["regions"]=new Godot.Collections.Array{region},["connections"]=new Godot.Collections.Array()};
+                Require(work.use_bundle(bundle),"Generated network did not compile");
+                int mouths=0;bool underground=false;
+                foreach(var item in region["edges"].AsGodotArray())
+                {
+                    var edge=item.AsGodotDictionary();
+                    if(!edge["entrance"].AsBool())continue;
+                    var points=edge["points"].AsVector3Array();
+                    var entry=new Godot.Collections.Dictionary{["point"]=points[0],["access"]=edge};
+                    if(work.exposed_columns(entry).Count==0)continue;
+                    mouths++;
+                    var inside=points[^1]+Vector3.Up*2;
+                    var key=(Vector3I)(inside/64).Floor();
+                    var mesh=work.build_cell(key);
+                    underground|=mesh["valid"].AsBool() && mesh["arrays"].AsGodotArray().Count>0;
+                    GD.Print($"Game terrain entrance {points[0]}, underground cell {key}");
+                    if(underground && mouths>=2)break;
+                }
+                Require(mouths>=2 && underground,"Expected multiple exposed entrances and underground geometry");
+                await Finish();return;
+            }
+            if(Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-mouths-only")>=0)
+            {
+                using var network=new PredatorIsle.Caves.CaveNetwork{EntrancesPerRegion=3,OceanLevel=0,activity=1};
+                var flat=Callable.From<double,double,double>((x,z)=>100);
+                var dry=Callable.From<double,double,double>((x,z)=>-1000);
+                network.configure(flat,dry,17);
+                var region=network.region(Vector2I.Zero);
+                Require(region["entrances"].AsGodotArray().Count==3,"Expected three dry entrances on the flat fixture");
+                network.configure(Callable.From<double,double,double>((x,z)=>-2),dry,17);
+                Require(!network.region(Vector2I.Zero)["valid"].AsBool(),"An entrance was admitted below the global ocean");
+                GD.Print("Three dry entrances generated; submerged terrain rejected.");await Finish();return;
+            }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"blob-only")){_mode="blob";BlobRuntimeChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# blob runtime checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"rings-only")){_mode="rings";TerrainRingChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# ring checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"terrain-performance-only")){_mode="terrain-performance";TerrainGenerationPerformanceChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true,TerrainGenerationPerformanceChecks.Measurements);GD.Print($"C# terrain generation performance checks passed: {_checks}");await Finish();return;}

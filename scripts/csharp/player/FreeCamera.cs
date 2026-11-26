@@ -11,6 +11,9 @@ public partial class FreeCamera : Camera3D
     [Export] public Node? terrain { get; set; }
     [Export] public Label? debug_label { get; set; }
     [Export] public bool debug_overlay_visible { get; set; }
+    private Label? frameRateLabel;
+    private Label? speedLabel,biomeLabel;
+    private double speedDisplayRemaining;
     private double _pitch = -25;
     private double _debugRefresh;
     private PlayerScaleMarker _marker = null!;
@@ -19,6 +22,9 @@ public partial class FreeCamera : Camera3D
 
     public override void _Ready()
     {
+        biomeLabel=GetNodeOrNull<Label>("../Interface/Biome");
+        frameRateLabel=GetNodeOrNull<Label>("../Interface/FrameRate");
+        speedLabel=GetNodeOrNull<Label>("../Interface/FlightSpeed");
         CreateInputActions(); _set_debug_overlay_visible(debug_overlay_visible);
         Input.MouseMode = Input.MouseModeEnum.Captured;
         foreach (string name in new[] { "_badlands_feature_active", "badlands_preview", "start_in_badlands", "_tropical_feature_active", "tropical_preview", "start_in_tropical", "_coast_feature_active", "start_in_coast", "_mountain_feature_active", "start_in_mountain", "_jungle_feature_active", "_forest_feature_active", "_savanna_feature_active", "_swamp_feature_active", "start_in_swamp", "start_in_jungle", "start_in_forest", "start_in_savanna" })
@@ -65,8 +71,8 @@ public partial class FreeCamera : Camera3D
         if (input is InputEventMouseButton mouse)
         {
             if (mouse.ButtonIndex == MouseButton.Left && mouse.Pressed) Input.MouseMode = Input.MouseModeEnum.Captured;
-            else if (mouse.Pressed && mouse.ButtonIndex == MouseButton.WheelUp) move_speed = System.Math.Min(move_speed * 1.2, 500);
-            else if (mouse.Pressed && mouse.ButtonIndex == MouseButton.WheelDown) move_speed = System.Math.Max(move_speed / 1.2, 1);
+            else if (mouse.Pressed && mouse.ButtonIndex == MouseButton.WheelUp) SetFlightSpeed(move_speed * 1.2);
+            else if (mouse.Pressed && mouse.ButtonIndex == MouseButton.WheelDown) SetFlightSpeed(move_speed / 1.2);
         }
         else if (input.IsActionPressed("toggle_fullscreen")) ToggleFullscreen();
         else if (input.IsActionPressed("scale_toggle")) { if (_marker.Visible) _marker.Hide(); else if (terrain != null) _marker.place(this, terrain); }
@@ -106,16 +112,32 @@ public partial class FreeCamera : Camera3D
         else if (input.IsActionPressed("terrain_debug") && terrain != null) terrain.Call("cycle_debug_view");
     }
 
+    private void SetFlightSpeed(double value)
+    {
+        move_speed = System.Math.Clamp(value, 1, 500);
+        if (speedLabel is null) return;
+        speedDisplayRemaining = 1.5;
+        speedLabel.Show();
+    }
+
     public override void _Process(double delta)
     {
         var axes = Input.GetVector("freecam_left", "freecam_right", "freecam_forward", "freecam_back");
         var direction = Basis * new Vector3(axes.X, 0, axes.Y) + Vector3.Up * Input.GetAxis("freecam_down", "freecam_up");
         if (direction.LengthSquared() > 0) direction = direction.Normalized();
         double speed = move_speed * (Input.IsActionPressed("freecam_sprint") ? sprint_multiplier : 1);
+        if (speedLabel is not null && speedDisplayRemaining > 0)
+        {
+            speedLabel.Text = $"Flight speed  {speed:0.#} m/s";
+            speedDisplayRemaining -= delta;
+            if (speedDisplayRemaining <= 0) speedLabel.Hide();
+        }
         GlobalPosition += direction * (float)(speed * delta);
         _debugRefresh -= delta;
         if (_debugRefresh > 0) return;
         _debugRefresh = .2;
+        if(biomeLabel is not null && terrain is not null)biomeLabel.Text=terrain.Call("get_location_biome",GlobalPosition).AsString();
+        if(frameRateLabel is not null)frameRateLabel.Text=$"{Engine.GetFramesPerSecond():0} FPS";
         if (terrain != null) Near = (float)System.Math.Clamp((GlobalPosition.Y - terrain.Call("get_height_at", GlobalPosition).AsDouble()) * .01, .1, 10);
         if (debug_label != null && debug_label.IsVisibleInTree()) UpdateDebugLabel(speed);
     }

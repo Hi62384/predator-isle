@@ -10,6 +10,30 @@ public partial class ChunkTerrain
 {
     private static ImageTexture Texture(int width,int height,Image.Format format,byte[] bytes)
     {using var image=Image.CreateFromData(width,height,false,format,bytes);return ImageTexture.CreateFromImage(image);}
+    private ArrayMesh CreateWaterMesh(A arrays,int level,bool preview)
+    {
+        var mesh=new ArrayMesh();
+        var flags=(Mesh.ArrayFormat)0;
+        if(nested_rings && !authority_only)
+        {
+            arrays=arrays.Duplicate();
+            var levels=new float[arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().Length];
+            // Negative values distinguish temporary middle-ring draws.
+            Array.Fill(levels,preview && level>0 ? -level : level);
+            arrays[(int)Mesh.ArrayType.Custom0]=levels;
+            flags=(Mesh.ArrayFormat)((ulong)Mesh.ArrayCustomFormat.RFloat<<(int)Mesh.ArrayFormat.FormatCustom0Shift);
+        }
+        mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,arrays,flags:flags);
+        mesh.SurfaceSetMaterial(0,_swamp_water_material);
+        return mesh;
+    }
+    private void AddFlightWater(MeshInstance3D parent,TerrainRingMeshGeometry.Data data)
+    {
+        var arrays=data.LocalWater;
+        if(arrays.Count==0)return;
+        parent.AddChild(new MeshInstance3D{Mesh=CreateWaterMesh(arrays,data.Patch.Key.Z,true),
+            CastShadow=GeometryInstance3D.ShadowCastingSetting.Off});
+    }
     private ArrayMesh Upload(D result,Vector3I key,out ulong surfaceEnd,TerrainRingMeshGeometry.Data? gridData=null)
     {
         var arrays=result["arrays"].AsGodotArray();var mesh=new ArrayMesh();int vertices=gridData?.GpuPage is not null?gridData.Topology.VertexCount:arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array().Length;
@@ -75,7 +99,7 @@ public partial class ChunkTerrain
             }
             if(structureMesh.GetSurfaceCount()>0)mesh.SetMeta("extension_structures",structureMesh);else structureMesh.Dispose();
         }
-        var localWater=result["swamp_water"].AsGodotArray();if(localWater.Count>0){var waterMesh=new ArrayMesh();waterMesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles,localWater);waterMesh.SurfaceSetMaterial(0,_swamp_water_material);mesh.SetMeta("swamp_water_mesh",waterMesh);}
+        var localWater=result["swamp_water"].AsGodotArray();if(localWater.Count>0){var waterMesh=CreateWaterMesh(localWater,key.Z,false);mesh.SetMeta("swamp_water_mesh",waterMesh);}
         return mesh;
     }
     public void _collect_jobs()

@@ -1,0 +1,38 @@
+{
+  "scope": "Startup crash mitigation and local validation; intermittent original crash not reproduced deterministically. Timings include runtime startup, not editor import or C# build.",
+  "reported_crash": {
+    "assertion": "FATAL script.is_null() in tie_user_managed_to_unmanaged",
+    "site": "TerrainRingMeshGeometry.Build: TerrainFeatureMeshes construction on terrain worker",
+    "inference": "Concurrent first-use C# helper script registration/lifetime; native null script binding is confirmed by the user log."
+  },
+  "changes": [
+    "Load seven helper CSharpScript resources on main thread before dispatch",
+    "Retain script resources for process lifetime through GC",
+    "Reject off-main-thread registration",
+    "Show shader preparation/loading stages and log preparation time"
+  ],
+  "build": {
+    "errors": 0,
+    "warnings": 0
+  },
+  "worker_stress": {
+    "concurrent_helper_constructions": 1024,
+    "gc_waves": 4,
+    "main_thread_guard_passed": true,
+    "log": ".godot/terrain_worker_startup_check.log"
+  },
+  "normal_permission_run": {
+    "first_visible_seconds": 18.4140445,
+    "first_collision_seconds": 18.4140445,
+    "full_coverage_and_caves_seconds": 44.1483868,
+    "startup_and_movement_passed": true,
+    "log": ".godot/startup_normal_permissions.log",
+    "shader_preparation_seconds": 15.89,
+    "shader_cache_write_errors": 0
+  },
+  "limitations": [
+    "Observed startup remains tens of seconds; no claim of an instant launch",
+    "Exact three-minute original breakdown unavailable because old startup stages were not logged",
+    "Successful reruns do not prove elimination of every intermittent crash"
+  ]
+}

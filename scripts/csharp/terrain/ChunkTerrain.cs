@@ -287,7 +287,20 @@ public partial class ChunkTerrain : Node3D
         { foreach (var m in _material_variants()) Obj<ShaderMaterial>(m).SetShaderParameter("debug_view", mode); foreach (var m in _structure_material_variants()) Obj<ShaderMaterial>(m).SetShaderParameter("debug_view", mode); _last_material_debug = mode; }
         if(authority_only){foreach(var id in authorityActors.Where(pair=>!Valid(pair.Value)||!pair.Value.IsInsideTree()||!pair.Value.GlobalPosition.IsFinite()).Select(pair=>pair.Key).ToArray())unregister_collision_actor(id);if(authorityActors.Count==0)return;}
         if (!Valid(target)) { target = GetViewport().GetCamera3D(); if (target is null) return; }
-        var point = target!.GlobalPosition;if(nested_rings){TickRings(delta,point);return;} var next = world_to_chunk(point); var cell = (point / 256f).Floor();
+        var point = target!.GlobalPosition;
+        var focus = _teleport_pending ? _teleport_destination : point;
+        if (!authority_only && _cave_streamer is not null && _cave_streamer.underground_interest(focus))
+        {
+            _cave_streamer.tick(focus, point, worker_count, false);
+            if (_teleport_pending && _cave_streamer.position_ready(focus))
+            {
+                target.GlobalPosition = focus;
+                _teleport_pending = false;
+                _update_water_position();
+            }
+            return;
+        }
+        UpdateCaveOceanMask();if(nested_rings){TickRings(delta,point);return;} var next = world_to_chunk(point); var cell = (point / 256f).Floor();
         if (cell != _last_structure_collision_cell) { _last_structure_collision_cell = cell; foreach (var node in _active_chunks.Values) _update_near_collision(Obj<MeshInstance3D>(node), false, true); }
         double moved = new Vector2(target.Position.X, target.Position.Z).DistanceTo(_last_plan_position);
         if (!_teleport_pending && (next != _target_chunk || moved > chunk_size * .5) && (committed_revision == partition_revision || moved > chunk_size * (1 << maximum_lod) * .5 || (moved > chunk_size * 2 && (long)Time.GetTicksUsec() - _last_plan_usec > 1000000))) _refresh_visible_chunks();
@@ -326,6 +339,15 @@ public partial class ChunkTerrain : Node3D
         if(_sampler._tropical_weight>Math.Max(Math.Max(w[strongest],_sampler._jungle_weight),_sampler._mountain_weight))return 6;
         if(_sampler._mountain_weight>Math.Max(w[strongest],_sampler._jungle_weight))return 5;
         return _sampler._jungle_weight>w[strongest]?4:strongest;
+    }
+    public string get_location_biome(Vector3 point)
+    {
+        if(_cave_streamer is not null && point.Y<get_height_at(point))
+        {
+            var cave=_cave_streamer.CaveNameAt(point);
+            if(cave.Length>0)return cave;
+        }
+        return get_biome_name_at(point);
     }
     public string get_biome_name_at(Vector3 p)
     {

@@ -5,8 +5,8 @@ uniform sampler2DArray jungle_normals:hint_normal,filter_linear_mipmap_anisotrop
 uniform float jungle_organic=.65;
 uniform float jungle_albedo_gain=.9;
 // Explicit linear RGB; Inspector tint is converted once on binding.
-uniform vec3 jungle_green_tint=vec3(.03955,.27384,.00657);
-uniform float jungle_green_coverage=.96;
+uniform vec3 jungle_green_tint=vec3(.04696,.09463,.02721);
+uniform float jungle_green_coverage=.60;
 uniform float jungle_litter=.75;
 uniform float jungle_mud=.55;
 uniform float jungle_moss=.65;
@@ -74,7 +74,7 @@ void shade_jungle(vec3 n,vec3 dx,vec3 dy,vec3 projection,float fine,out vec3 col
  float ground_moss=smoothstep(.7,.94,wet)*jungle_moss*(1.0-mud)*(1.0-rock)*.3;
  if(ground_moss>.001){vec4 s=cover;vec3 g=cover_g;if(!terrain_material_sample_pruning)jungle_sample(6,jungle_ground_metres,dx,dy,projection,n,fine,s,g);color=mix(color,s.rgb,ground_moss);gradient=mix(gradient,g*jungle_normal_strength,ground_moss);rough=mix(rough,s.a,ground_moss);}
  color*=jungle_albedo_gain*mix(1.0,.88,wet*.6)*(1.0+(macro-.5)*jungle_macro);
- rough=clamp(rough,.45,.98);gradient-=n*dot(n,gradient);
+ rough=clamp(rough,mix(.74,.54,mud),.98);gradient-=n*dot(n,gradient);
  if(debug_view==7 || diagnostic_surface==2)gradient=vec3(0);
  weights=vec3((1.0-rock)*(1.0-mud),mud,rock);
 }

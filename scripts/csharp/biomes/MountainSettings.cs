@@ -26,9 +26,9 @@ public partial class MountainSettings : Resource
     [Export(PropertyHint.Range,".5,3,.1")]
     public double ridge_scale { get; set; } = 1.8;
     [Export(PropertyHint.Range,"400,2400,50")]
-    public double ridge_width { get; set; } = 1250;
+    public double ridge_width { get; set; } = 1550;
     [Export(PropertyHint.Range,".5,2,.05")]
-    public double ridge_sharpness { get; set; } = 1.1;
+    public double ridge_sharpness { get; set; } = 1.85;
     [Export(PropertyHint.Range,"0,1,.05")]
     public double secondary_strength { get; set; } = .65;
     [Export(PropertyHint.Range,"0,1,.05")]

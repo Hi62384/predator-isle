@@ -217,7 +217,7 @@ internal static class TerrainGpuMaterialSceneChecks
     // only the old normal varying, exactly filling the remaining 17 locations.
     internal static string OriginalVaryings(string source)
     {
-        source=source.Replace("#define view_distance terrain_world_values.w","varying vec3 world_normal;\n#define view_distance terrain_world_values.w",StringComparison.Ordinal);
+        source=source.Replace("varying float view_distance;","varying vec3 world_normal;\nvarying float view_distance;",StringComparison.Ordinal);
         source=source.Replace("varying vec4 terrain_forest_local_values;\n#define forest_local_position terrain_forest_local_values.xyz",
             "varying vec3 forest_local_position;\nvarying flat vec3 forest_origin;",StringComparison.Ordinal);
         foreach(string name in new[]{"swamp_control","swamp_hydro"})
@@ -268,7 +268,7 @@ internal static class TerrainGpuMaterialSceneChecks
 
     private static string OriginalNormal(string source)
     {
-        source=source.Replace("#define view_distance terrain_world_values.w","varying vec3 world_normal;\n#define view_distance terrain_world_values.w",StringComparison.Ordinal);
+        source=source.Replace("varying float view_distance;","varying vec3 world_normal;\nvarying float view_distance;",StringComparison.Ordinal);
         source=source.Replace(" world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;",
             " world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;\n world_normal=normalize(MODEL_NORMAL_MATRIX*NORMAL);",StringComparison.Ordinal);
         return source.Replace(" vec3 n=normalize((INV_VIEW_MATRIX*vec4(NORMAL,0.0)).xyz);\n if(!FRONT_FACING)n=-n; // Undo the engine's two-sided normal flip, matching the original world-space varying.",

@@ -59,6 +59,8 @@ public partial class CaveWorkload : RefCounted
         builder = new TerrainMeshBuilder(); builder.Set("settings", terrain_settings.DuplicateDeep(Resource.DeepDuplicateMode.All));
         builder.Set("world_seed", seed_value); builder.Set("water_level", water); builder.Call("_configure_noise");
         network = new CaveNetwork(); network.configure(Height, new Callable(builder, "get_water_surface_height"), seed_value, Number("maximum_depth_metres"));
+        network.EntrancesPerRegion=Math.Clamp((int)Number("entrances_per_region"),1,8);
+        network.OceanLevel=water;
         network.activity = Number("regional_activity"); network.half_width = Number("main_route_width_metres") * .5; network.headroom = Number("main_route_height_metres");
         network.minimum_roof = Number("minimum_rock_cover_metres"); network.maximum_grade = Number("maximum_route_grade");
         network.chamber_variety = Enabled("chamber_variety"); network.geological_morphology = Enabled("geological_morphology"); network.seepage_density = Number("seepage_density");
@@ -84,7 +86,7 @@ public partial class CaveWorkload : RefCounted
         for (int z = cell.Y - halo; z <= cell.Y + halo; z++) for (int x = cell.X - halo; x <= cell.X + halo; x++)
         {
             var data = network.region(new(x,z)); regions.Add(data);
-            if (data["valid"].AsBool()) entrances.Add(new D { ["region"] = data["id"], ["point"] = data["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"], ["access"] = data["edges"].AsGodotArray()[0] });
+            AppendEntrances(data,entrances);
         }
         for (int z = cell.Y - halo; z <= cell.Y + halo; z++) for (int x = cell.X - halo; x <= cell.X + halo; x++)
             foreach (var offset in new[] { Vector2I.Right, Vector2I.Down })
@@ -124,10 +126,7 @@ public partial class CaveWorkload : RefCounted
             {
                 var region=network.region(cursor.At(cursor.RegionIndex++));
                 cursor.Regions.Add(region);
-                if(region["valid"].AsBool())
-                    cursor.Entrances.Add(new D{["region"]=region["id"],
-                        ["point"]=region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"],
-                        ["access"]=region["edges"].AsGodotArray()[0]});
+                AppendEntrances(region,cursor.Entrances);
                 continue;
             }
             if(cursor.ConnectionIndex<total)
@@ -181,6 +180,16 @@ public partial class CaveWorkload : RefCounted
         var assignment = Registry.Get("enabled").AsBool() ? Regions.combine(regions, connections, Registry.Get("fallback_biome_id").AsString()) : new D();
         if (!Get(assignment, "valid", true).AsBool() || !field.Call("compile", regions, Height, connections, assignment).AsBool()) return false;
         _regions = regions; bundle_key = bundle["cell"].AsVector2I(); _water_cache.Clear(); return true;
+    }
+    private static void AppendEntrances(D region,A output)
+    {
+        if(!region["valid"].AsBool())return;
+        foreach(var value in region["edges"].AsGodotArray())
+        {
+            var edge=value.AsGodotDictionary();
+            if(!edge["entrance"].AsBool())continue;
+            output.Add(new D{["region"]=region["id"],["point"]=edge["points"].AsVector3Array()[0],["access"]=edge});
+        }
     }
     public D exposed_columns(D entrance)
     {

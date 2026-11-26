@@ -142,8 +142,9 @@ public partial class ChunkTerrain
             if(i>0)m.SetShaderParameter("normal_strength",R(TerrainBiomeCatalog.ExtensionKeys[i+5]).Get("normal_strength"));_extension_materials.Add(m);
         }
         if(nested_rings){double quality=ring_settings.shader_detail_quality==0?.7:ring_settings.shader_detail_quality==1?1:ring_settings.shader_detail_quality==2?1.5:2;_terrain_material.SetShaderParameter("detail_distance",Math.Max(32,P("detail_distance")*quality));_terrain_material.SetShaderParameter("terrain_shader_quality",ring_settings.shader_detail_quality);}
+        _swamp_water_material?.SetShaderParameter("ocean_level",water_level);
         _terrain_material.SetShaderParameter("chunk_size_metres",chunk_size);_lod_materials[0]=_terrain_material;
-        for(int level=1;level<=maximum_lod;level++){var m=(ShaderMaterial)_terrain_material.Duplicate();m.SetShaderParameter("chunk_lod",(double)level);m.SetShaderParameter("chunk_size_metres",TileSpan(level));_lod_materials[level]=m;}
+        for(int level=1;level<=maximum_lod;level++){var m=(ShaderMaterial)_terrain_material.Duplicate();m.SetShaderParameter("chunk_lod",(double)level);m.SetShaderParameter("chunk_size_metres",TileSpan(level));if(nested_rings&&!authority_only){InitializeFlightMask();m.SetShaderParameter("flight_cell_size",chunk_size);m.SetShaderParameter("flight_coverage",flightTexture!);m.SetShaderParameter("middle_coverage",middleTexture!);}_lod_materials[level]=m;}
     }
     public void _apply_material_settings()
     {

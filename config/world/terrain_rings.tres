@@ -6,7 +6,7 @@
 script = ExtResource("1")
 gpu_render_grids = true
 generation_backend = 2
-base_patch_metres = 16.0
+base_patch_metres = 32.0
 outer_rings = 6
 profile = 1
 nearby_vertex_metres = 1.0

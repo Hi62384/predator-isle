@@ -1,3 +1,4 @@
+using System.Linq;
 using Godot;
 using System;
 using System.Collections.Generic;
@@ -12,6 +13,8 @@ public partial class CaveNetwork : RefCounted
     public GodotObject Solver { get; set; } = new RouteSolver();
     private readonly CaveChamberProfiles Profiles = new();
     private readonly CaveSeepageBasins Basins = new();
+    internal double OceanLevel {get;set;}=double.NegativeInfinity;
+    internal int EntrancesPerRegion {get;set;}=1;
     public double REGION_METRES => 1536; public int MAX_REGIONS => 32;
     private Callable _height,_water;
     private Func<double,double,double>? _sampleHeight,_sampleWater;
@@ -105,19 +108,21 @@ public partial class CaveNetwork : RefCounted
         var center = ((Vector2)cell + new Vector2((float)(.4 + .2 * random(cell, 1)), (float)(.4 + .2 * random(cell, 2)))) * 1536; double angle = random(cell, 3) * Math.Tau; var nodes = new A(); var edges = new A(); var entrances = new A();
         var first = node_floor(center + new Vector2(-120, -120).Rotated((float)angle), Math.Min(50, max_depth * .2)); if (first.Count == 0) return empty;
         first[NodeIdKey] = FormattableString.Invariant($"{cell.X}:{cell.Y}:0:0"); first["level"] = 0;
-        for (int attempt = 0; attempt < 24; attempt++)
+        for (int attempt = 0; attempt < 24 * EntrancesPerRegion; attempt++)
         {
             double yaw = angle + Math.Tau * random(cell, 40 + attempt); var p = center + new Vector2((float)Math.Cos(yaw), (float)Math.Sin(yaw)) * (float)(360 + random(cell, 80 + attempt) * 220);
+            if (nodes.Any(v=>v.AsGodotDictionary()["level"].AsInt32()==-1 && Xz(v.AsGodotDictionary()["point"].AsVector3()).DistanceSquaredTo(p)<120*120))continue;
             if (!CaveHeightSampler.TrySamplePair(height, water, p.X, p.Y, out double terrain, out double wet))
             { terrain = Height(p.X, p.Y); wet = Water(p.X, p.Y); }
-            if (!double.IsFinite(terrain) || !double.IsFinite(wet) || terrain <= wet + 12) continue;
+            if (!double.IsFinite(terrain) || !double.IsFinite(wet) || terrain <= Math.Max(wet,OceanLevel) + 3) continue;
             double low = terrain, high = terrain;
             foreach (var offset in new[] { new Vector2(8, 0), new Vector2(-8, 0), new Vector2(0, 8), new Vector2(0, -8) }) { double h = Height((double)p.X + offset.X, (double)p.Y + offset.Y); low = Math.Min(low, h); high = Math.Max(high, h); }
-            if (high - low > 3) continue;
-            var entry = new D { ["id"] = FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance"), ["point"] = new Vector3(p.X, (float)(low - .1), p.Y), ["level"] = -1 }; var q = Xz(first["point"].AsVector3()); var delta = q - p; var middle = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * .12f;
+            if (low <= Math.Max(wet,OceanLevel)+2 || high - low > headroom*.85) continue;
+            var entry = new D { ["id"] = FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance"), ["point"] = new Vector3(p.X, (float)(low - Math.Min(headroom*.25,1.5)), p.Y), ["level"] = -1 }; if(entrances.Count>0)entry["id"]=FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance:{entrances.Count}"); var q = Xz(first["point"].AsVector3()); var delta = q - p; var middle = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * .12f;
             var access=route(entry,first,new[]{p,middle,q},true);if(access.Count==0)continue;
             if(access_admission.Target is CaveInsectEntryGuard guard&&access_admission.Method==nameof(CaveInsectEntryGuard.clear_access)){if(!guard.clear_access(access))continue;}else if(Valid(access_admission)&&!access_admission.Call(access).AsBool())continue;
-            nodes.Add(entry); nodes.Add(first); edges.Add(access); entrances.Add(entry["id"]); break;
+            nodes.Add(entry); if(entrances.Count==0)nodes.Add(first); edges.Add(access); entrances.Add(entry["id"]);
+            if(entrances.Count>=EntrancesPerRegion)break;
         }
         if (entrances.Count == 0) return empty;
         var previous = first;

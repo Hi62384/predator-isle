@@ -13,6 +13,7 @@ public partial class SharedCaveSettings : Resource
     [Export(PropertyHint.Range,"6,16,0.5")]public double main_route_width_metres {get;set;}=8;
     [Export(PropertyHint.Range,"6,16,0.5")]public double main_route_height_metres {get;set;}=8;
     [Export(PropertyHint.Range,"0.1,0.25,0.01")]public double maximum_route_grade {get;set;}=.2;
+    [Export(PropertyHint.Range,"1,8,1")]public int entrances_per_region {get;set;}=1;
     [ExportGroup("Graph-Aware Cave Biomes")]
     [Export]public Resource? biome_regions {get;set;}=GD.Load<Resource>("res://config/caves/cave_biome_regions.tres");
     [ExportGroup("Default Geology")]

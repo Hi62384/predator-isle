@@ -13,6 +13,7 @@ namespace PredatorIsle.Terrain;
 /// </summary>
 public sealed class TerrainRingStream : IDisposable
 {
+    private const int PriorityLayerCount=5;
     private readonly record struct Key(TerrainRingLayout.Patch Patch,int Resolution,long SourceRevision);
     private sealed class BuildProgress
     {
@@ -88,7 +89,7 @@ public sealed class TerrainRingStream : IDisposable
     private TerrainRingLayout.Plan? preparedPlan;
     private bool preparedComplete,completeEver;
     private int publishedCount;
-    private long publishedGeneration=-1;
+    private long committedGeneration = -1;
     private CancellationTokenSource? preparationCancellation;
     private long preparationGeneration=-1;
     private int resolution;
@@ -100,6 +101,79 @@ public sealed class TerrainRingStream : IDisposable
     public long CacheMisses{get;private set;}
     public long CancelledJobs{get;private set;}
     public string LastRetiredWorkerError{get;private set;}="";
+    internal TerrainRingMeshGeometry.Data? ReadyFine(Vector2I cell)
+    {
+        return ReadyFlight(new Vector3I(cell.X,cell.Y,0));
+    }
+    internal TerrainRingMeshGeometry.Data? ReadyFlight(Vector3I tile)
+    {
+        if(requested is null)return null;
+        var patch=new TerrainRingLayout.Patch(tile,requested.BaseSize*Math.Pow(3,tile.Z),default);
+        var key=new Key(patch,resolution,revision);
+        return ready.GetValueOrDefault(key)??flightReady.GetValueOrDefault(key)??cache.GetValueOrDefault(key)?.Data;
+    }
+    private readonly List<Key> flightQueue=new();
+    private readonly Dictionary<Key,TerrainRingMeshGeometry.Data> flightReady=new();
+    private (Vector2I Cell,long Revision,int Resolution)? flightWindow;
+    internal void FollowCamera(Vector2 position,bool enabled)
+    {
+        if(!enabled || requested is null)
+        {
+            flightWindow=null;flightReady.Clear();flightQueue.Clear();return;
+        }
+        var size=(float)requested.BaseSize;
+        var cell=(Vector2I)(position/size).Floor();
+        var window=(cell,revision,resolution);
+        if(flightWindow==window)return;
+        flightWindow=window;
+        flightQueue.Clear();
+        for(int radius=0;radius<=1;radius++)
+        for(int z=-radius;z<=radius;z++)
+        for(int x=-radius;x<=radius;x++)
+        {
+            if(Math.Max(Math.Abs(x),Math.Abs(z))!=radius)continue;
+            var patch=new TerrainRingLayout.Patch(new Vector3I(cell.X+x,cell.Y+z,0),size,default);
+            flightQueue.Add(new Key(patch,resolution,revision));
+        }
+        for(int radius=0;radius<=1;radius++)
+        for(int level=1;level<=Math.Min(2,requested.OuterRings);level++)
+        {
+            double span=size*Math.Pow(3,level);
+            var middle=(Vector2I)(position/(float)span).Floor();
+            for(int z=-radius;z<=radius;z++)
+            for(int x=-radius;x<=radius;x++)
+            {
+                if(Math.Max(Math.Abs(x),Math.Abs(z))!=radius)continue;
+                var patch=new TerrainRingLayout.Patch(new Vector3I(middle.X+x,middle.Y+z,level),span,default);
+                flightQueue.Add(new Key(patch,resolution,revision));
+            }
+        }
+        foreach(var key in flightReady.Keys.ToArray())if(!flightQueue.Contains(key))flightReady.Remove(key);
+        if(flightQueue.Any(key=>!FlightFinished(key)&&!jobs.ContainsKey(key)) && jobs.Count>0 &&
+            jobs.Values.All(job=>!flightQueue.Contains(job.Key)&&!job.Cancellation.IsCancellationRequested))
+        {
+            var farthest=jobs.Values.Where(job=>!ReusableJob(job.Key)).MaxBy(job=>DistanceTo(job.Key.Patch,position));
+            if(farthest is not null){farthest.Cancellation.Cancel();CancelledJobs++;}
+        }
+    }
+    private static bool SameLattice(Key a,Key b)=>a.Patch.Key==b.Patch.Key && a.Patch.Size==b.Patch.Size &&
+        a.Resolution==b.Resolution && a.SourceRevision==b.SourceRevision;
+    private bool ReusableJob(Key key)=>key.Patch.Key.Z is 1 or 2 && wanted.Any(candidate=>SameLattice(candidate,key));
+    private bool FlightFinished(Key key)=>flightReady.ContainsKey(key)||ready.ContainsKey(key)||cache.ContainsKey(key);
+    private bool NextBuild(out Key key)
+    {
+        // Share flight capacity with the middle rings while the center moves.
+        if(jobs.Keys.Any(k=>k.Patch.Key.Z==0 && flightQueue.Contains(k)) && !jobs.Keys.Any(k=>k.Patch.Key.Z is 1 or 2 && flightQueue.Contains(k)))
+        {
+            foreach(var middle in flightQueue)
+                if(middle.Patch.Key.Z>0 && !FlightFinished(middle) && !jobs.ContainsKey(middle)){key=middle;return true;}
+        }
+        foreach(var candidate in flightQueue)
+            if(!FlightFinished(candidate)&&!jobs.ContainsKey(candidate)){key=candidate;return true;}
+        return TryDequeueAvailable(pending,candidate=>(wanted.Contains(candidate)||prefetch.Contains(candidate))&&!ready.ContainsKey(candidate),
+            candidate=>jobs.ContainsKey(candidate) || (candidate.Patch.Key.Z is 1 or 2 && jobs.Keys.Any(k=>SameLattice(k,candidate))),out key);
+    }
+    public bool PublicationInProgress => preparation is not null || preparedCut is not null;
     public int RunningJobs=>jobs.Count+(preparation is not null?1:0);
     public int PendingPatches=>pending.Count(key=>wanted.Contains(key));
     public int ReadyPatches=>ready.Count;
@@ -117,7 +191,7 @@ public sealed class TerrainRingStream : IDisposable
         if(requested is not null&&sourceRevision==revision&&subdivisions==resolution&&requested.BaseSize==plan.BaseSize&&requested.Patches.SequenceEqual(plan.Patches))return false;
         bool newSource=sourceRevision!=revision;if(newSource)prefetch.Clear();requested=plan;revision=sourceRevision;resolution=subdivisions;generation++;preparationCancellation?.Cancel();preparedGeneration=-1;preparedCut=null;preparedPlan=null;publishedCount=0;LastError="";wanted.Clear();pending.Clear();foreach(var patch in plan.Patches)wanted.Add(new Key(patch,subdivisions,sourceRevision));
         lastLocalAttempt=-1;preparedSources=Array.Empty<TerrainRingMeshGeometry.Data>();
-        foreach(var job in jobs.Values)if(!wanted.Contains(job.Key)&&!prefetch.Contains(job.Key)&&!job.Cancellation.IsCancellationRequested){job.Cancellation.Cancel();CancelledJobs++;}
+        foreach(var job in jobs.Values)if(!wanted.Contains(job.Key)&&!prefetch.Contains(job.Key)&&!flightQueue.Contains(job.Key)&&!ReusableJob(job.Key)&&!job.Cancellation.IsCancellationRequested){job.Cancellation.Cancel();CancelledJobs++;}
         foreach(var key in ready.Keys.ToArray())if(!wanted.Contains(key))ready.Remove(key);
         if(newSource){sharedSamples=new();foreach(var item in idle)item.Builder.Dispose();idle.Clear();foreach(var key in cache.Keys.Where(k=>k.SourceRevision!=sourceRevision).ToArray())RemoveCache(key);}
         sharedSamples.Protect(plan.Camera.X,plan.Camera.Y,plan.BaseSize*2+2);
@@ -126,12 +200,89 @@ public sealed class TerrainRingStream : IDisposable
             if(ready.ContainsKey(key)||jobs.TryGetValue(key,out var job)&&!job.Cancellation.IsCancellationRequested)continue;
             if(cache.TryGetValue(key,out var entry)){ready[key]=entry.Data;Touch(entry);CacheHits++;if(prefetched.Remove(key))PrefetchHits++;}else{pending.Add(key);CacheMisses++;}
         }
-        pending.Sort((a,b)=>{int level=a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);if(level!=0)return level;double Priority(TerrainRingLayout.Patch patch)=>plan.CollisionInterests.Length>0?plan.CollisionInterests.Min(point=>Distance(patch,point)):Distance(patch,plan.Camera);return Priority(a.Patch).CompareTo(Priority(b.Patch));});Trim();return true;
+        SortPending();
+        if (AllowLocalPublication && committed is not null && pending.Count > 0)
+        {
+            int nextTier = PriorityTier(pending[0].Patch, plan, committed);
+            foreach (var job in jobs.Values)
+            {
+                if (job.Cancellation.IsCancellationRequested || flightQueue.Contains(job.Key) || ReusableJob(job.Key) ||
+                    (wanted.Contains(job.Key) && PriorityTier(job.Key.Patch, plan, committed) <= nextTier))
+                    continue;
+                job.Cancellation.Cancel();
+                CancelledJobs++;
+            }
+        }
+        Trim();
+        return true;
     }
-    private static double Distance(TerrainRingLayout.Patch patch,Vector2 focus)
+
+    private void SortPending()
     {
-        double dx=Math.Max(Math.Max(patch.OriginX-focus.X,focus.X-(patch.OriginX+patch.Size)),0),dz=Math.Max(Math.Max(patch.OriginZ-focus.Y,focus.Y-(patch.OriginZ+patch.Size)),0);return dx*dx+dz*dz;
+        if (requested is not { } plan) return;
+        var tiers = pending.Distinct().ToDictionary(key => key, Tier);
+        pending.Sort((a, b) =>
+        {
+            int tier = tiers[a].CompareTo(tiers[b]);
+            if (tier != 0) return tier;
+            if(tiers[a]==0 && a.Patch.Key.Z!=b.Patch.Key.Z)return a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);
+            int distance = Distance(a.Patch, plan).CompareTo(Distance(b.Patch, plan));
+            if (distance != 0) return distance;
+            int level = a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);
+            if (level != 0) return level;
+            int row = a.Patch.Key.Y.CompareTo(b.Patch.Key.Y);
+            return row != 0 ? row : a.Patch.Key.X.CompareTo(b.Patch.Key.X);
+        });
+
+        int Tier(Key key) => wanted.Contains(key) ? PriorityTier(key.Patch, plan, committed) : 3;
     }
+
+    internal static int PriorityTier(TerrainRingLayout.Patch patch, TerrainRingLayout.Plan desired,
+        TerrainRingLayout.Plan? published)
+    {
+        if (patch.Key.Z < PriorityLayerCount) return 0;
+        if (published is null) return 1;
+        foreach (var local in patch.OwnedRegions())
+        {
+            var region = new Rect2(local.Position + new Vector2((float)patch.OriginX, (float)patch.OriginZ), local.Size);
+            double uncovered = (double)region.Size.X * region.Size.Y;
+            foreach (var owner in published.Patches)
+            {
+                if (owner.OriginX >= region.End.X || owner.OriginX + owner.Size <= region.Position.X ||
+                    owner.OriginZ >= region.End.Y || owner.OriginZ + owner.Size <= region.Position.Y)
+                    continue;
+                foreach (var owned in owner.OwnedRegions())
+                {
+                    var intersection = region.Intersection(new Rect2(
+                        owned.Position + new Vector2((float)owner.OriginX, (float)owner.OriginZ), owned.Size));
+                    uncovered -= (double)intersection.Size.X * intersection.Size.Y;
+                }
+                if (uncovered <= .01) break;
+            }
+            if (uncovered > .01) return 1;
+        }
+        return 2;
+    }
+
+    private static double Distance(TerrainRingLayout.Patch patch, TerrainRingLayout.Plan plan)
+    {
+        return plan.CollisionInterests.Length == 0
+            ? DistanceTo(patch, plan.Camera)
+            : plan.CollisionInterests.Min(point => DistanceTo(patch, point));
+    }
+
+    private static double DistanceTo(TerrainRingLayout.Patch patch, Vector2 focus)
+    {
+        double nearest = double.PositiveInfinity;
+        foreach (var region in patch.OwnedRegions())
+        {
+            double dx = Math.Max(0, Math.Max(patch.OriginX + region.Position.X - focus.X, focus.X - patch.OriginX - region.End.X));
+            double dz = Math.Max(0, Math.Max(patch.OriginZ + region.Position.Y - focus.Y, focus.Y - patch.OriginZ - region.End.Y));
+            nearest = Math.Min(nearest, dx * dx + dz * dz);
+        }
+        return nearest;
+    }
+
     /// <summary>Bounded incoming rows; speculative work uses only spare terrain slots after current requests.</summary>
     public void Prefetch(Vector2 focus,Vector2 velocity)
     {
@@ -139,33 +290,35 @@ public sealed class TerrainRingStream : IDisposable
         var candidates=TerrainPrefetch.Select(focus,velocity,NearBuildSeconds,requested.BaseSize);
         prefetch.Clear();foreach(var patch in candidates){var key=new Key(patch,resolution,revision);if(!wanted.Contains(key))prefetch.Add(key);}
         pending.RemoveAll(key=>!wanted.Contains(key));
-        foreach(var job in jobs.Values)if(!wanted.Contains(job.Key)&&!prefetch.Contains(job.Key)&&!job.Cancellation.IsCancellationRequested){job.Cancellation.Cancel();CancelledJobs++;}
+        foreach(var job in jobs.Values)if(!wanted.Contains(job.Key)&&!prefetch.Contains(job.Key)&&!flightQueue.Contains(job.Key)&&!ReusableJob(job.Key)&&!job.Cancellation.IsCancellationRequested){job.Cancellation.Cancel();CancelledJobs++;}
         foreach(var key in prefetch)if(!cache.ContainsKey(key)&&!jobs.ContainsKey(key))pending.Add(key);
     }
     // An in-flight cancelled job may still own a key. Examine the bounded queue
     // rather than blocking runnable work behind that key.
     internal static bool TryDequeueAvailable<T>(List<T> queue,Func<T,bool> eligible,Func<T,bool> busy,out T item)
     {
-        int remaining=queue.Count;
-        while(remaining-->0)
+        for(int index=0;index<queue.Count;)
         {
-            T candidate=queue[0];queue.RemoveAt(0);
-            if(!eligible(candidate))continue;
-            if(busy(candidate)){queue.Add(candidate);continue;}
-            item=candidate;return true;
+            T candidate=queue[index];
+            if(!eligible(candidate)){queue.RemoveAt(index);continue;}
+            if(busy(candidate)){index++;continue;}
+            queue.RemoveAt(index);
+            item=candidate;
+            return true;
         }
         item=default!;return false;
     }
     public void Tick(int availableSharedWorkers,Func<TerrainMeshBuilder> createBuilder)
     {
         ObjectDisposedException.ThrowIf(disposed,this);
+        TerrainWorkerScripts.Prepare();
         foreach(var job in jobs.Values.ToArray())
         {
             if(!job.Task.IsCompleted)continue;jobs.Remove(job.Key);
-            try{var data=job.Task.GetAwaiter().GetResult();completedJobs++;if(job.Key.Patch.Key.Z==0)NearBuildSeconds=NearBuildSeconds*.8+Math.Clamp((Time.GetTicksUsec()-job.Started)/1000000.0,.001,2)*.2;canonicalEvaluations+=job.Progress.CanonicalEvaluations;allocatedWorkerBytes+=job.Progress.AllocatedBytes;gpuSamples+=job.Progress.GpuSamples;gpuSampleHits+=job.Progress.GpuSampleHits;if(job.Progress.GpuRejected)gpuRejected++;gpuPreparationMilliseconds+=job.Progress.GpuPreparationMilliseconds;gpuMaximumHeightError=Math.Max(gpuMaximumHeightError,job.Progress.GpuMaximumHeightError);foreach(var pair in job.Progress.Milliseconds)stageMilliseconds[pair.Key]=stageMilliseconds.GetValueOrDefault(pair.Key)+pair.Value;if(job.Key.SourceRevision==revision){Store(job.Key,data);if(wanted.Contains(job.Key))ready[job.Key]=data;else {PrefetchCompletions++;if(cache.ContainsKey(job.Key))prefetched.Add(job.Key);}}}
-            catch(OperationCanceledException){if(wanted.Contains(job.Key)&&!pending.Contains(job.Key))pending.Add(job.Key);}
+            try{var data=job.Task.GetAwaiter().GetResult();completedJobs++;if(job.Key.Patch.Key.Z==0)NearBuildSeconds=NearBuildSeconds*.8+Math.Clamp((Time.GetTicksUsec()-job.Started)/1000000.0,.001,2)*.2;canonicalEvaluations+=job.Progress.CanonicalEvaluations;allocatedWorkerBytes+=job.Progress.AllocatedBytes;gpuSamples+=job.Progress.GpuSamples;gpuSampleHits+=job.Progress.GpuSampleHits;if(job.Progress.GpuRejected)gpuRejected++;gpuPreparationMilliseconds+=job.Progress.GpuPreparationMilliseconds;gpuMaximumHeightError=Math.Max(gpuMaximumHeightError,job.Progress.GpuMaximumHeightError);foreach(var pair in job.Progress.Milliseconds)stageMilliseconds[pair.Key]=stageMilliseconds.GetValueOrDefault(pair.Key)+pair.Value;if(job.Key.SourceRevision==revision){Store(job.Key,data);if(flightQueue.Contains(job.Key))flightReady[job.Key]=data;if(wanted.Contains(job.Key))ready[job.Key]=data;else {PrefetchCompletions++;if(cache.ContainsKey(job.Key))prefetched.Add(job.Key);}}}
+            catch(OperationCanceledException){if(wanted.Contains(job.Key)&&!pending.Contains(job.Key)){pending.Add(job.Key);SortPending();}}
             catch(Exception error){if(wanted.Contains(job.Key))LastError=error.ToString();else LastRetiredWorkerError=error.ToString();}
-            finally{job.Cancellation.Dispose();if(job.Key.SourceRevision==revision&&idle.Count<Math.Max(MaximumWorkers,1))idle.Enqueue((revision,job.Builder));else job.Builder.Dispose();}
+            finally{job.Cancellation.Dispose();if(job.Key.SourceRevision==revision&&idle.Count<Math.Max(Math.Max(availableSharedWorkers,MaximumWorkers),1))idle.Enqueue((revision,job.Builder));else job.Builder.Dispose();}
         }
         if(preparation is not null&&preparation.IsCompleted)
         {
@@ -176,13 +329,17 @@ public sealed class TerrainRingStream : IDisposable
         }
         Trim();if(LastError.Length>0)return;int allowance=Math.Max(0,Math.Min(MaximumWorkers,availableSharedWorkers));
         TryStartPreparation(allowance);
-        while(RunningJobs<allowance&&TryDequeueAvailable(pending,
-            candidate=>(wanted.Contains(candidate)||prefetch.Contains(candidate))&&!ready.ContainsKey(candidate),
-            candidate=>jobs.ContainsKey(candidate),out var key))
+        // Retuning the background budget must not serialize live near terrain behind stitching.
+        while(jobs.Count<availableSharedWorkers &&
+              (jobs.Count<allowance || flightQueue.Any(k=>!FlightFinished(k)&&!jobs.ContainsKey(k)) ||
+               pending.Any(k=>k.Patch.Key.Z<PriorityLayerCount&&wanted.Contains(k)&&!jobs.ContainsKey(k))) && NextBuild(out var key))
         {
             TerrainMeshBuilder builder;try{builder=idle.Count>0?idle.Dequeue().Builder:createBuilder();}catch(Exception error){LastError=error.ToString();pending.Insert(0,key);return;}
             var cancellation=new CancellationTokenSource();var token=cancellation.Token;
-            var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();var gpuPreparation=GpuPreparation;
+            var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();var sameTile=key.Patch.Key.Z is 1 or 2
+                ? cache.FirstOrDefault(pair=>SameLattice(pair.Key,key)).Value?.Data : null;
+            bool prepareFlightWater=key.Patch.Key.Z<=2 && key.Patch.Hole.Empty;
+            var gpuPreparation=sameTile is null?GpuPreparation:null;
             try
             {
                 var task=Task.Run(async ()=>
@@ -203,7 +360,12 @@ public sealed class TerrainRingStream : IDisposable
                     // Allocation measurement begins after the await, on the same thread
                     // that performs the numerical build; thread-local counters cannot span awaits.
                     using var biomeScope=biomeNoise?.Activate();
-                    var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples);
+                    var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples,sameTile);
+                    if(prepareFlightWater)
+                    {
+                        var water=TerrainRingWater.Build(data,data.WaterLevel,data.BeachesEnabled,data.WaterEnabled);
+                        data=data with{LocalWater=water,AdditionalBytes=data.AdditionalBytes+TerrainPayloadMemory.Estimate(water)};
+                    }
                     progress.CanonicalEvaluations=builder._native_height.CanonicalEvaluations-evaluations;
                     progress.GpuSampleHits=builder._native_grass.GpuSampleHits-hits;progress.Finish();attempt?.Complete();return data;
                 },token);
@@ -215,19 +377,38 @@ public sealed class TerrainRingStream : IDisposable
     }
     private void TryStartPreparation(int allowance)
     {
-        if(preparation is not null||preparedCut is not null||requested is null||ReferenceEquals(requested,committed)||RunningJobs>=allowance)return;
-        bool complete=wanted.All(key=>ready.ContainsKey(key)),startup=!completeEver&&(committed is null||publishedGeneration==generation);int available=wanted.Count(key=>ready.ContainsKey(key));
-        bool local=AllowLocalPublication&&!complete&&!startup&&completeEver&&committed is not null&&committedSourceRevision==revision&&requested.BaseSize==committed.BaseSize;
+        if(preparation is not null||preparedCut is not null||requested is null||ReferenceEquals(requested,committed)||allowance<=0)return;
+        bool complete=wanted.All(key=>ready.ContainsKey(key)),startup=!completeEver&&(committed is null||(committedGeneration==generation && committed.Patches.All(p=>wanted.Contains(new Key(p,resolution,revision))))||!AllowLocalPublication||committedSourceRevision!=revision||requested.BaseSize!=committed.BaseSize);int available=wanted.Count(key=>ready.ContainsKey(key));
+        // A finished numerical queue can still contain dozens of unshown meshes.
+        // Present nearby closures first even if the last worker has already finished.
+        if (complete && AllowLocalPublication && committed is not null && committedSourceRevision==revision &&
+            committed.BaseSize==requested.BaseSize && requested.Patches.Except(committed.Patches).Skip(1).Any() &&
+            lastLocalAttempt!=available)
+            complete=false;
+        bool local=AllowLocalPublication&&!complete&&!startup&&committed is not null&&committedSourceRevision==revision&&requested.BaseSize==committed.BaseSize;
         if(!complete&&!local&&(!startup||available<=publishedCount||!CentralReady()))return;
+        // Let a ready nearby grid reach publication even when distant jobs occupy
+        // the worker slots. Other stitching stays within the normal budget.
+        // Once all requested meshes are ready, speculative workers must not delay their swap.
+          if(!complete && RunningJobs>=allowance && !local && !startup)return;
         if(local&&available<=lastLocalAttempt)return;
         if(local)lastLocalAttempt=available;
         {
-            var source=requested.Patches.Select(p=>new Key(p,resolution,revision)).Where(key=>ready.ContainsKey(key)).Select(key=>ready[key]).ToArray();var plan=complete?requested:requested with{Patches=source.Select(data=>data.Patch).ToArray()};var desired=requested;var prior=committed;var originals=committedSources;long requestedGeneration=generation;preparationGeneration=generation;preparationCancellation=new CancellationTokenSource();var token=preparationCancellation.Token;
+            var ordered = requested.Patches.OrderBy(p=>PriorityTier(p,requested,committed)).ThenBy(p=>Math.Min(p.Key.Z,PriorityLayerCount)).ThenBy(p => Distance(p, requested)).ThenBy(p => p.Key.Z).ToArray();
+            // A slow tile must not hold up completed neighbors on the same ring.
+            var candidates = ordered.AsEnumerable();
+            if (startup && !complete)
+            {
+                int firstMissingLevel = ordered.Where(p => !ready.ContainsKey(new Key(p,resolution,revision)))
+                    .Min(p => p.Key.Z);
+                candidates = ordered.Where(p => p.Key.Z <= Math.Max(firstMissingLevel, PriorityLayerCount - 1));
+            }
+            var source=candidates.Select(p=>new Key(p,resolution,revision)).Where(key=>ready.ContainsKey(key)).Select(key=>ready[key]).ToArray();if(startup && !complete && source.Length<=publishedCount)return;var plan=complete?requested:requested with{Patches=source.Select(data=>data.Patch).ToArray()};var desired=requested;var prior=committed;var originals=committedSources;long requestedGeneration=generation;preparationGeneration=generation;preparationCancellation=new CancellationTokenSource();var token=preparationCancellation.Token;
             preparation=Task.Run(()=>
             {
                 if(local)
                 {
-                    var next=source.ToDictionary(d=>d.Patch);var patches=TerrainLocalPublication.Select(prior!.Patches,desired.Patches,next.Keys.ToHashSet(),()=>token.IsCancellationRequested);
+                    var next=source.ToDictionary(d=>d.Patch);var patches=TerrainLocalPublication.Select(prior!.Patches,ordered,next.Keys.ToHashSet(),()=>token.IsCancellationRequested,1);
                     if(patches is null)return new Prepared(requestedGeneration,plan,null,false,Array.Empty<TerrainRingMeshGeometry.Data>());
                     var old=originals.ToDictionary(d=>d.Patch);source=patches.Select(p=>next.TryGetValue(p,out var data)?data:old[p]).ToArray();plan=prior with{Patches=patches,Camera=desired.Camera,CollisionInterests=desired.CollisionInterests};
                 }
@@ -237,7 +418,8 @@ public sealed class TerrainRingStream : IDisposable
     }
     private bool CentralReady()
     {
-        if(requested is null)return false;int x=(int)Math.Floor(requested.Camera.X/requested.BaseSize),z=(int)Math.Floor(requested.Camera.Y/requested.BaseSize);for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++){var key=new Key(new TerrainRingLayout.Patch(new Vector3I(x+dx,z+dz,0),requested.BaseSize,TerrainRingLayout.Mask.None),resolution,revision);if(!ready.ContainsKey(key))return false;}return true;
+        if (requested?.Owner(requested.Camera.X, requested.Camera.Y) is not { } center) return false;
+        return ready.ContainsKey(new Key(center,resolution,revision));
     }
     public bool TryPrepare(out long preparedGeneration,out TerrainRingTransitions.Result? cut)
     {
@@ -252,7 +434,7 @@ public sealed class TerrainRingStream : IDisposable
     }
     public bool Acknowledge(long preparedGeneration)
     {
-        if(!IsCurrent(preparedGeneration)||this.preparedGeneration!=preparedGeneration||preparedCut is null||preparedPlan is null||requested is null)return false;if(completeEver&&!preparedComplete)LocalPublications++;committed=preparedComplete?requested:preparedPlan;committedSources=preparedSources;committedSourceRevision=revision;preparedSources=Array.Empty<TerrainRingMeshGeometry.Data>();completeEver|=preparedComplete;publishedCount=preparedCut.Meshes.Length;publishedGeneration=generation;preparedCut=null;preparedPlan=null;this.preparedGeneration=-1;return true;
+        if(!IsCurrent(preparedGeneration)||this.preparedGeneration!=preparedGeneration||preparedCut is null||preparedPlan is null||requested is null)return false;if(completeEver&&!preparedComplete)LocalPublications++;committedGeneration=generation;committed=preparedComplete?requested:preparedPlan;committedSources=preparedSources;committedSourceRevision=revision;lastLocalAttempt=-1;SortPending();preparedSources=Array.Empty<TerrainRingMeshGeometry.Data>();completeEver|=preparedComplete;publishedCount=preparedCut.Meshes.Length;preparedCut=null;preparedPlan=null;this.preparedGeneration=-1;return true;
     }
     private void Store(Key key,TerrainRingMeshGeometry.Data data)
     {

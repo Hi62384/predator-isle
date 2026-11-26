@@ -12,7 +12,7 @@ public partial class TerrainRingSettings : Resource
     // Keep the proven fragment shader as default until renderer parity passes.
     [Export] public bool gpu_vertex_bake {get;set;}=false;
     [ExportGroup("World-aligned terrain rings")]
-    [Export(PropertyHint.Range,"16,64,16")] public double base_patch_metres{get;set;}=16;
+    [Export(PropertyHint.Range,"16,64,16")] public double base_patch_metres{get;set;}=32;
     [Export(PropertyHint.Range,"0,8,1")] public int outer_rings{get;set;}=6;
     [Export(PropertyHint.Enum,"Low,Medium,High,Ultra")] public int profile{get;set;}=1;
     [ExportToolButton("Apply selected profile")]
@@ -37,6 +37,6 @@ public partial class TerrainRingSettings : Resource
     }
     public void apply_profile(int selected)
     {
-        profile=Math.Clamp(selected,0,3);int capacity=Math.Max(1,(System.Environment.ProcessorCount-2)/2);base_patch_metres=16;nearby_vertex_metres=profile==0?2:profile==3?.5:1;outer_rings=profile==0?5:profile==3?7:6;maximum_workers=Math.Min(capacity,profile==0?1:profile==1?4:8);upload_budget_ms=profile==0?.75:profile==1?1.5:profile==2?2:3;cache_mebibytes=profile==0?48:profile==1?128:profile==2?256:384;shader_detail_quality=profile;selective_geometry_refinement=profile>0;
+        profile=Math.Clamp(selected,0,3);int capacity=Math.Max(1,(System.Environment.ProcessorCount-2)/2);base_patch_metres=32;nearby_vertex_metres=profile==0?2:profile==3?.5:1;outer_rings=profile==0?5:profile==3?7:6;maximum_workers=Math.Min(capacity,profile==0?1:profile==1?4:8);upload_budget_ms=profile==0?.75:profile==1?1.5:profile==2?2:3;cache_mebibytes=profile==0?48:profile==1?128:profile==2?256:384;shader_detail_quality=profile;selective_geometry_refinement=profile>0;
     }
 }

@@ -50,9 +50,9 @@ public partial class JungleSettings : Resource
     public double albedo_gain { get; set; } = .9;
     // Living ground cover color; mud and rock retain independent colors.
     [Export]
-    public Color green_tint { get; set; } = new Color((float)(.22),(float)(.56),(float)(.075),(float)(1));
+    public Color green_tint { get; set; } = new Color(.24f, .34f, .18f);
     [Export(PropertyHint.Range,"0,1,.01")]
-    public double green_coverage { get; set; } = .96;
+    public double green_coverage { get; set; } = .60;
     [Export(PropertyHint.Range,"0,1,.05")]
     public double organic_soil { get; set; } = .65;
     [Export(PropertyHint.Range,"0,1,.05")]

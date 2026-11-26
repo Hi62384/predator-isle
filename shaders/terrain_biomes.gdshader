@@ -80,13 +80,16 @@ uniform vec3 sand_tint : source_color=vec3(1.0,0.82,0.46);
 uniform int debug_view=0;
 uniform int diagnostic_surface=0;
 uniform float chunk_lod=0.0;
+uniform bool middle_preview=false;
+uniform sampler2D middle_coverage : filter_nearest, repeat_disable;
+uniform sampler2D flight_coverage : filter_nearest, repeat_disable;
+uniform float flight_cell_size=0.0;
 uniform float chunk_size_metres=256.0;
 // Sixteen custom interpolators leave one location for composed cave controls
 // under the tested 32-location Vulkan limit (Godot reserves fifteen). Reuse COLOR/UV2
 // only after decoding their vertex inputs. Coordinates retain full precision.
-varying vec4 terrain_world_values;
-#define world_position terrain_world_values.xyz
-#define view_distance terrain_world_values.w
+varying vec3 world_position;
+varying float view_distance;
 varying vec4 terrain_geology_values;
 #define geology_control terrain_geology_values.xyz
 varying vec4 terrain_jungle_control_values;
@@ -169,7 +172,6 @@ void vertex() {
   grid_control3=terrain_grid_control(grid_index,3);
  }
  world_position=(MODEL_MATRIX*vec4(VERTEX,1.0)).xyz;
- view_distance=length((VIEW_MATRIX*vec4(world_position,1.0)).xyz);
  geology_control=CUSTOM0.xyz;
  if(terrain_grid_enabled)geology_control=grid_control0.xyz;
  jungle_control=unpack_control24(grid_control0.w);
@@ -470,6 +472,15 @@ void ambient_band(bool macro_band,vec3 dx,vec3 dy,vec3 n,vec3 projection,out vec
 #include "res://shaders/badlands_material.gdshaderinc"
 #include "res://shaders/biome_extensions.gdshaderinc"
 void fragment() {
+ view_distance=length(VERTEX);
+ if(flight_cell_size>0.0){
+  vec2 cell=floor(world_position.xz/flight_cell_size);
+  vec4 cover=texelFetch(flight_coverage,ivec2(mod(cell,8.0)),0);
+  vec4 mid=texelFetch(middle_coverage,ivec2(mod(cell,64.0)),0);
+  bool matched=mid.a>0.5 && all(equal(cell,mid.xy));
+  if(middle_preview ? (!matched || mid.z!=chunk_lod) : (matched && mid.z<chunk_lod))discard;
+  if(cover.a>0.5 && all(equal(cell,cover.xy)))discard;
+ }
  vec3 forest_origin=MODEL_MATRIX[3].xyz;
  float swamp_water_level=UV.x;vec2 terrain_surface=UV2;vec4 terrain_coast_values=COLOR;
  for(int i=0;i<cavity_portal_count;i++){
@@ -823,22 +834,25 @@ if(.001<jungle_control.z && coast_control.x<=.999 && dot(extension_weights_a,vec
   debug_weights=mix(debug_weights,id_color(8),cliff*0.93);
  }
  if(diagnostic_surface==1) {albedo=vec3(0.3);gradient=vec3(0.0);}
+ // Blend reflectivity with the same fractions as biome color.
+ float biome_specular=mix(0.22,grass_specular,ground);
+ roughness=clamp(roughness,.35,1.0);
  vec3 jungle_weights=vec3(0);
- if(jungle_control.z>.001){vec3 jc,jg;float jr;jc=cache_jungle_color;jr=cache_jungle_rough;jg=cache_jungle_gradient;jungle_weights=cache_jungle_materials;float j=jungle_control.z/max(1.0-forest_control.z-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001);if(savanna_control.z+swamp_control.z+mountain_control.z+tropical_control.x>.001)j=clamp(j,0.0,1.0);albedo=mix(albedo,jc,j);roughness=mix(roughness,jr,j);gradient=mix(gradient,jg,j);}
+ if(jungle_control.z>.001){vec3 jc,jg;float jr;jc=cache_jungle_color;jr=cache_jungle_rough;jg=cache_jungle_gradient;jungle_weights=cache_jungle_materials;float j=jungle_control.z/max(1.0-forest_control.z-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001);j=clamp(j,0.0,1.0);biome_specular=mix(biome_specular,.22,j);albedo=mix(albedo,jc,j);roughness=mix(roughness,jr,j);gradient=mix(gradient,jg,j);}
  vec3 forest_material_mix=vec3(0),forest_diagnostics=vec3(0);
- if(forest_control.z>.001){vec3 fc,fg;float fr;fc=cache_forest_color;fr=cache_forest_rough;fg=cache_forest_gradient;forest_material_mix=cache_forest_materials;forest_diagnostics=cache_forest_extra;float f=clamp(forest_control.z/max(1.0-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,fc,f);roughness=mix(roughness,fr,f);gradient=mix(gradient,fg,f);}
+ if(forest_control.z>.001){vec3 fc,fg;float fr;fc=cache_forest_color;fr=cache_forest_rough;fg=cache_forest_gradient;forest_material_mix=cache_forest_materials;forest_diagnostics=cache_forest_extra;float f=clamp(forest_control.z/max(1.0-savanna_control.z-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);biome_specular=mix(biome_specular,.16,f);albedo=mix(albedo,fc,f);roughness=mix(roughness,fr,f);gradient=mix(gradient,fg,f);}
  vec3 savanna_material_mix=vec3(0),savanna_masks=vec3(0);
- if(savanna_control.z>.001){vec3 sc,sg;float sr;sc=cache_savanna_color;sr=cache_savanna_rough;sg=cache_savanna_gradient;savanna_material_mix=cache_savanna_materials;savanna_masks=cache_savanna_extra;float fraction=clamp(savanna_control.z/max(1.0-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
+ if(savanna_control.z>.001){vec3 sc,sg;float sr;sc=cache_savanna_color;sr=cache_savanna_rough;sg=cache_savanna_gradient;savanna_material_mix=cache_savanna_materials;savanna_masks=cache_savanna_extra;float fraction=clamp(savanna_control.z/max(1.0-swamp_control.z-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);biome_specular=mix(biome_specular,.15,fraction);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
  vec3 swamp_material_mix=vec3(0),swamp_masks=vec3(0);
- if(swamp_control.z>.001){vec3 sc,sg;float sr;sc=cache_swamp_color;sr=cache_swamp_rough;sg=cache_swamp_gradient;swamp_material_mix=cache_swamp_materials;swamp_masks=cache_swamp_extra;float fraction=clamp(swamp_control.z/max(1.0-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
+ if(swamp_control.z>.001){vec3 sc,sg;float sr;sc=cache_swamp_color;sr=cache_swamp_rough;sg=cache_swamp_gradient;swamp_material_mix=cache_swamp_materials;swamp_masks=cache_swamp_extra;float fraction=clamp(swamp_control.z/max(1.0-mountain_control.z-tropical_control.x-badlands_control.x,.00001),0.0,1.0);biome_specular=mix(biome_specular,.25,fraction);albedo=mix(albedo,sc,fraction);roughness=mix(roughness,sr,fraction);gradient=mix(gradient,sg,fraction);}
  vec3 mountain_material_mix=vec3(0),mountain_overlays=vec3(0);
- if(mountain_control.z>.001){vec3 mc,mg;float mr;mc=cache_mountain_color;mr=cache_mountain_rough;mg=cache_mountain_gradient;mountain_material_mix=cache_mountain_materials;mountain_overlays=cache_mountain_extra;float fraction=clamp(mountain_control.z/max(1.0-tropical_control.x-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,mc,fraction);roughness=mix(roughness,mr,fraction);gradient=mix(gradient,mg,fraction);}
+ if(mountain_control.z>.001){vec3 mc,mg;float mr;mc=cache_mountain_color;mr=cache_mountain_rough;mg=cache_mountain_gradient;mountain_material_mix=cache_mountain_materials;mountain_overlays=cache_mountain_extra;float fraction=clamp(mountain_control.z/max(1.0-tropical_control.x-badlands_control.x,.00001),0.0,1.0);biome_specular=mix(biome_specular,.2,fraction);albedo=mix(albedo,mc,fraction);roughness=mix(roughness,mr,fraction);gradient=mix(gradient,mg,fraction);}
  vec3 tropical_material_mix=vec3(0),tropical_masks=vec3(0);
- if(tropical_control.x>.001){vec3 tc,tg;float tr;tc=cache_tropical_color;tr=cache_tropical_rough;tg=cache_tropical_gradient;tropical_material_mix=cache_tropical_materials;tropical_masks=cache_tropical_extra;float fraction=clamp(tropical_control.x/max(1.0-badlands_control.x,.00001),0.0,1.0);albedo=mix(albedo,tc,fraction);roughness=mix(roughness,tr,fraction);gradient=mix(gradient,tg,fraction);}
+ if(tropical_control.x>.001){vec3 tc,tg;float tr;tc=cache_tropical_color;tr=cache_tropical_rough;tg=cache_tropical_gradient;tropical_material_mix=cache_tropical_materials;tropical_masks=cache_tropical_extra;float fraction=clamp(tropical_control.x/max(1.0-badlands_control.x,.00001),0.0,1.0);biome_specular=mix(biome_specular,.15,fraction);albedo=mix(albedo,tc,fraction);roughness=mix(roughness,tr,fraction);gradient=mix(gradient,tg,fraction);}
  vec3 badlands_material_mix=vec3(0),badlands_masks=vec3(0);
- if(badlands_control.x>.001){vec3 bc,bg;float br;bc=cache_badlands_color;br=cache_badlands_rough;bg=cache_badlands_gradient;badlands_material_mix=cache_badlands_materials;badlands_masks=cache_badlands_extra;albedo=mix(albedo,bc,badlands_control.x);roughness=mix(roughness,br,badlands_control.x);gradient=mix(gradient,bg,badlands_control.x);}
- ALBEDO=albedo; ROUGHNESS=clamp(roughness,mix(.35,.16,swamp_control.z),1.0);
- SPECULAR=mix(0.22,grass_specular,ground);
+ if(badlands_control.x>.001){vec3 bc,bg;float br;bc=cache_badlands_color;br=cache_badlands_rough;bg=cache_badlands_gradient;badlands_material_mix=cache_badlands_materials;badlands_masks=cache_badlands_extra;biome_specular=mix(biome_specular,.12,badlands_control.x);albedo=mix(albedo,bc,badlands_control.x);roughness=mix(roughness,br,badlands_control.x);gradient=mix(gradient,bg,badlands_control.x);}
+ ALBEDO=albedo; ROUGHNESS=clamp(roughness,0.0,1.0);
+ SPECULAR=biome_specular;
  vec3 mapped_normal=normalize(n+gradient);
  NORMAL=normalize((VIEW_MATRIX*vec4(mapped_normal,0.0)).xyz);
  if(ground_debug>0) {

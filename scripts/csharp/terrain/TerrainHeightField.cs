@@ -161,7 +161,8 @@ public partial class TerrainHeightField : RefCounted
                 if (Random((long)Math.Floor(site.X), (long)Math.Floor(site.Y), 103, 19) > Q(config, "lake_frequency")) continue;
                 var p = Rotate(new Vector2((float)x, (float)z) - new Vector2(site.X, site.Y), site.W) / (float)Math.Max(site.Z, 1);
                 double contour = Math.Min(new Vector2((float)(p.X / .85), (float)(p.Y / .65)).Length(), (p - new Vector2(.48f, .25f)).Length() / .6);
-                lake = Math.Max(lake, 1 - S(.65, 1.12, contour));
+                // Fade sea-level lake carving out on rising ground before the 100 m cutoff.
+                lake = Math.Max(lake, (1 - S(.65, 1.12, contour)) * (1 - S(20, 100, h)));
             }
         }
         double water = Math.Max(channel, lake); h = L(h, -Math.Max(P("grass_river_depth"), P("grass_lake_depth")), water);

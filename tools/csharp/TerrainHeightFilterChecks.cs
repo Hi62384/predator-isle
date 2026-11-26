@@ -140,6 +140,7 @@ internal static class TerrainHeightFilterChecks
         retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,center-otherHigh));
         retention=Math.Max(retention,Smooth(footprint*.05,footprint*.15,otherLow-center));
         retention=Math.Max(retention,Smooth(0,footprint*.1,Math.Max(0,Math.Min(water-low,high-water))));
+        retention*=1-Smooth(9,54,footprint)*Smooth(footprint*.75,footprint*1.5,low-water);
         double filtered=sum/16;return filtered+(center-filtered)*retention;
     }
 }

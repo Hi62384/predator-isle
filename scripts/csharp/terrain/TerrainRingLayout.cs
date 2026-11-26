@@ -40,7 +40,7 @@ public sealed class TerrainRingLayout
     public sealed record Delta(Patch[] Retained,Patch[] Required,Patch[] Replaced,Patch[] Retired);
     public double BaseSize{get;}
     public int OuterRings{get;}
-    public TerrainRingLayout(double baseSize=16,int outerRings=6)
+    public TerrainRingLayout(double baseSize=32,int outerRings=6)
     {
         if(!double.IsFinite(baseSize)||baseSize<=0||outerRings<0||outerRings>12)throw new ArgumentOutOfRangeException(nameof(baseSize),"Ring sizes must be finite and positive; supported outer ring count is 0–12.");BaseSize=baseSize;OuterRings=outerRings;
     }

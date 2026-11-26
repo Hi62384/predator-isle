@@ -5,3 +5,5 @@
 [resource]
 script = ExtResource("1")
 enabled = true
+regional_activity = 1.0
+entrances_per_region = 6

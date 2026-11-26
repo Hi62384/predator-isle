@@ -116,6 +116,20 @@ public partial class CaveStreamer : Node3D
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting)=>dispatch_allowance(terrain_free_slots,cave_jobs,terrain_waiting,4);
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting,long total_workers)
     {long free=Math.Max(0,terrain_free_slots-cave_jobs),reserved=total_workers>1?1:0;return checked((int)(terrain_waiting?Math.Min(free,Math.Max(0,reserved-cave_jobs)):free));}
+    private Vector2 groundSamplePosition=Vector2.Inf;
+    private double sampledGround;
+    public bool underground_interest(Vector3 point)
+    {
+        if(host is not ChunkTerrain terrain)return false;
+        var horizontal=new Vector2(point.X,point.Z);
+        if(!groundSamplePosition.IsFinite()||horizontal!=groundSamplePosition)
+        {
+            sampledGround=terrain.get_height_at(point);
+            groundSamplePosition=horizontal;
+        }
+        return point.Y<sampledGround;
+    }
+    private bool wasUnderground;
     public void tick(Vector3 point,Vector3 protected_point,long terrain_free_slots,bool terrain_waiting)
     {
         _protected_point=protected_point;collect();var cell=Region(point);
@@ -129,13 +143,15 @@ public partial class CaveStreamer : Node3D
             clear_surface_staging();_surface_request=new();_surface_batch=null;_surface_build_pending=false;_rebuild_nodes=new();_rebuild_columns=new();
             _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;discovery_progress=new D{["cached"]=!_discovery_pending};
         }
-        if(_bundle.Count>0){if(!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16)plan(point,protected_point);else if(_pending.Count==0)refill_pending();}
-        if(host!.HasMethod("_commit_partition"))service_surface(point);
+        bool underground=underground_interest(point);
+        if(underground!=wasUnderground){_last_plan=Vector3.Inf;wasUnderground=underground;}
+        if(underground&&_bundle.Count>0){if(!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16)plan(point,protected_point);else if(_pending.Count==0)refill_pending();}
+        if(!underground && host!.HasMethod("_commit_partition"))service_surface(point);
         if(_surface_batch==null&&_surface_request.Count>0)
         {
             _surface_serial++;var batch=new SurfaceBatch();if(batch.configure(_surface_serial,_generation,_surface_request)){_surface_batch=batch;_surface_build_pending=true;}else surface_status="Invalid bounded surface batch";_surface_request=new();
         }
-        int allowance=dispatch_allowance(terrain_free_slots,_jobs.Count,terrain_waiting,host.Get("worker_count").AsInt64());
+        int allowance=dispatch_allowance(terrain_free_slots,_jobs.Count,terrain_waiting&&!underground,host!.Get("worker_count").AsInt64());
         while(allowance>0&&_ready.Count<8)
         {
             var resuming=_discovery_pending&&parkedDiscoveryWorker is not null;
@@ -150,13 +166,13 @@ public partial class CaveStreamer : Node3D
                 // steps small enough to release old interests promptly.
                 execute=()=>work.discover_step(region,4,5);
             }
-            else if(_surface_batch!=null&&_surface_batch.pending())
+            else if(!underground&&_surface_batch!=null&&_surface_batch.pending()&&!(underground&&_pending.Count>0&&_bundle.Count>0))
             {
                 var part=_surface_batch.take();job["kind"]="portal";job["batch_id"]=part["batch_id"];job["part"]=part["part"];
                 var bundle=_bundle;var columns=_surface_batch.request["columns"].AsGodotDictionary();var parents=_surface_batch.request["snapshot"].AsGodotDictionary()["records"].AsGodotArray();var owned=part["columns"].AsGodotDictionary();bool ground=part["part"].AsInt32()==0;
                 execute=()=>work.portal(bundle,columns,parents,owned,ground);
             }
-            else if(_pending.Count>0&&_bundle.Count>0)
+            else if(underground&&_pending.Count>0&&_bundle.Count>0)
             {
                 var key=_pending[0].AsVector3I();_pending.RemoveAt(0);var bundle=_bundle;job["key"]=key;_inflight[key]=generation;
                 execute=()=>work.use_bundle(bundle)?work.build_cell(key):new D{["key"]=key,["arrays"]=new A(),["valid"]=false};
@@ -247,14 +263,14 @@ public partial class CaveStreamer : Node3D
     }
     public bool position_ready()=>position_ready(Vector3.Inf);
     public bool position_ready(Vector3 point)
-    {if(point.IsFinite()&&(_region!=Region(point)||!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16))return false;if(_bundle.Count==0||_discovery_pending)return false;foreach(var key in _wanted.Keys)if(!_cells.ContainsKey(key))return false;return true;}
+    {if(point.IsFinite()&&!underground_interest(point))return true;if(point.IsFinite()&&(_region!=Region(point)||!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16))return false;if(_bundle.Count==0||_discovery_pending)return false;foreach(var key in _wanted.Keys)if(!_cells.ContainsKey(key))return false;return true;}
     public bool traversal_ready(Vector3 point)
     {
         if(Flag("seal_stream_frontiers")){if(!_traversal.ready(point,_cells,_wanted))return false;}else if(!_cells.ContainsKey(new Vector3I((int)Math.Floor(point.X/64.0),(int)Math.Floor(point.Y/64.0),(int)Math.Floor(point.Z/64.0))))return false;
         foreach(var value in Get(_bundle,"entrances",new A()).AsGodotArray()){var entrance=value.AsGodotDictionary();if(!entrance_needed(entrance,point))continue;if(_surface_transaction==null||!_surface_transaction.committed)return false;foreach(var column in entrance["columns"].AsGodotDictionary().Keys)if(!_surface_columns.ContainsKey(column))return false;}return true;
     }
     public bool entrance_needed(D entrance,Vector3 point)
-    {var mouth=entrance["point"].AsVector3();return point.Y>=Get(entrance,"minimum_exposed_floor",mouth.Y).AsDouble()-Number("main_route_height_metres")*2&&point.DistanceTo(mouth)<=Number("preload_radius_metres");}
+    {var mouth=entrance["point"].AsVector3();return point.Y>=Get(entrance,"minimum_exposed_floor",mouth.Y).AsDouble()-Number("main_route_height_metres")*2&&new Vector2(point.X-mouth.X,point.Z-mouth.Z).Length()<=Number("preload_radius_metres");}
     public bool defer_surface_plan(Vector3 point)
     {if(configuration==null||!Flag("retain_deep_surface_cut")||_bundle.Count==0||!point.IsFinite()||!Valid(host))return false;double ground=host!.Call("get_height_at",point).AsDouble();return _surfacePolicy.can_defer(point,ground,true,false)&&nearby_columns(point).Count==0;}
     public ShaderMaterial? material_for(Vector3I key)=>material_for(key,new A());
@@ -279,6 +295,7 @@ public partial class CaveStreamer : Node3D
         if(caveGpu is not null&&GodotObject.IsInstanceValid(caveGpu))caveGpu.Shutdown();
         discoveryCache.Clear();
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();foreach(var task in _jobs.Keys)WorkerThreadPool.WaitForTaskCompletion(task.AsInt64());
+        locationField?.Dispose();locationField=null;locationBundle=null;
         if(parkedDiscoveryWorker is not null){_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}
         _jobs.Clear();_ready.Clear();_idle.Clear();_surface_batch=null;_surface_request=new();_surface_build_pending=false;_surface_transaction?.reset();clear_surface_staging();_frontiers.synchronize(_cells,false);
         foreach(var value in _cells.Values){var node=value.As<Node3D>();if(Valid(node))node!.GetNode<StaticBody3D>("CaveCollision").CollisionLayer=0;}_cells.Clear();
@@ -334,7 +351,7 @@ public partial class CaveStreamer : Node3D
         var columns=new D();var nearby=Get(_bundle,"entrances",new A()).AsGodotArray().Select((v,i)=>(Data:v.AsGodotDictionary(),Ordinal:i)).ToList();
         var p=new Vector2(point.X,point.Z);
         nearby.Sort((a,b)=>{var ap=a.Data["point"].AsVector3();var bp=b.Data["point"].AsVector3();int order=new Vector2(ap.X,ap.Z).DistanceSquaredTo(p).CompareTo(new Vector2(bp.X,bp.Z).DistanceSquaredTo(p));return order!=0?order:a.Ordinal.CompareTo(b.Ordinal);});
-        foreach(var item in nearby){if(!entrance_needed(item.Data,point))continue;var complete=columns.Duplicate();foreach(var key in item.Data["columns"].AsGodotArray())complete[key]=true;if(complete.Count<=64)columns=complete;}return columns;
+        foreach(var item in nearby){if(!entrance_needed(item.Data,point))continue;var complete=columns.Duplicate();foreach(var key in item.Data["columns"].AsGodotDictionary().Keys)complete[key]=true;if(complete.Count<=64)columns=complete;}return columns;
     }
     public void service_surface(Vector3 point)
     {
@@ -395,5 +412,38 @@ public partial class CaveStreamer : Node3D
         var result=new A();if(_surface_transaction==null)return result;foreach(var value in _surface_transaction.materials())result.Add(value);
         foreach(var value in _surface_transaction.patches){var node=value.As<MeshInstance3D>();if(Valid(node))for(int i=0;i<node.Mesh.GetSurfaceCount();i++)result.Add(node.Mesh.SurfaceGetMaterial(i));}return result;
     }
+    private CaveField? locationField;
+    private D? locationBundle;
+    public string CaveNameAt(Vector3 point)
+    {
+        if(_bundle.Count==0 || !_bundle.ContainsKey("regions") || Registry is null)return "";
+        if(!ReferenceEquals(locationBundle,_bundle))
+        {
+            locationField?.Dispose();
+            locationField=new CaveField{maximum_depth=Number("maximum_depth_metres"),minimum_roof=Number("minimum_rock_cover_metres")};
+            var terrain=(PredatorIsle.Terrain.ChunkTerrain)host!;
+            var height=Callable.From<double,double,double>((x,z)=>terrain.get_height_at(new Vector3((float)x,0,(float)z)));
+            locationBundle=_bundle;
+            if(!locationField.compile(_bundle["regions"].AsGodotArray(),height,_bundle["connections"].AsGodotArray(),
+                Get(_bundle,"cave_biome_regions",new D()).AsGodotDictionary())){locationField.Dispose();locationField=null;}
+        }
+        if(locationField is null || locationField.sample(point)>=0)return "";
+        var cell=(Vector3I)(point/64).Floor();
+        var ids=locationField.biome_ids_for_cell(cell);
+        string best=Registry.Get("fallback_biome_id").AsString();float highest=0;
+        for(int offset=0;offset<ids.Count;offset+=4)
+        {
+            var group=new A();for(int j=offset;j<Math.Min(offset+4,ids.Count);j++)group.Add(ids[j]);
+            var weights=locationField.biome_weights_at(point,group);
+            for(int j=0;j<group.Count;j++)if(weights[j]>highest){highest=weights[j];best=group[j].AsString();}
+        }
+        foreach(var item in Registry.Get("definitions").AsGodotArray())
+        {
+            var definition=item.AsGodotObject();
+            if(definition.Get("biome_id").AsString()==best)return definition.Get("display_name").AsString();
+        }
+        return "Cave";
+    }
     public string debug_text()=>$"Shared caves: {_cells.Count}/{_wanted.Count} cells, {_jobs.Count} jobs; entrance {surface_status}\n{_biome_debug}";
 }
+

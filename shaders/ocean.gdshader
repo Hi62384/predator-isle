@@ -10,23 +10,19 @@ uniform float water_roughness = 0.18;
 varying vec3 world_position;
 
 void vertex() {
-	vec3 world = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
-	float wave_a = sin((world.x + TIME * wave_speed * 7.0) * 0.055) * 0.18 * wave_height;
-	float wave_b = sin((world.z - TIME * wave_speed * 5.0) * 0.073) * 0.13 * wave_height;
-	VERTEX.y += wave_a + wave_b;
+	// This ocean grid spans kilometres per quad. Keep its shoreline at sea level
+    // and animate the small ripples in the fragment shader.
 	world_position = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
+#include "res://shaders/cave_ocean_mask.gdshaderinc"
+#include "res://shaders/water_ripples.gdshaderinc"
 void fragment() {
+    if(dry_cave_ground(world_position))discard;
 	vec2 p = world_position.xz;
-	float wave_x = cos((p.x + TIME * wave_speed * 7.0) * 0.055) * 0.010 * wave_height;
-	float wave_z = cos((p.y - TIME * wave_speed * 5.0) * 0.073) * 0.009 * wave_height;
-	// Analytically filter waves once their phase is subpixel. Unfiltered
-	// cosine normals produced the repeating distant water stripe pattern.
-	wave_x *= exp2(-pow(fwidth(p.x)*0.055,2.0));
-	wave_z *= exp2(-pow(fwidth(p.y)*0.073,2.0));
-	NORMAL_MAP = vec3(0.5 + wave_x, 0.5 + wave_z, 1.0);
-	NORMAL_MAP_DEPTH = 1.6;
+	vec2 ripple=water_ripples(p,TIME*wave_speed)*wave_height;
+ NORMAL_MAP=vec3(vec2(.5)+.018*ripple,1.0);
+ NORMAL_MAP_DEPTH=1.0;
 	float fresnel = pow(1.0 - max(dot(NORMAL, VIEW), 0.0), 3.0);
 	ALBEDO = mix(shallow_color, deep_color, 0.42 + fresnel * 0.38);
 	ROUGHNESS = water_roughness;

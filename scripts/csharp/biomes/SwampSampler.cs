@@ -17,12 +17,17 @@ public partial class SwampSampler : RefCounted
     public float[] weights { get; set; } = System.Array.Empty<float>();
     public double[] state { get; set; } = System.Array.Empty<double>();
     private WeakRef? _host;
+    private GrasslandField? riverField;
+    private double riverSpacing;
     private double P(string key) => _parameters[key];
     private static double Lerp(double a, double b, double t) => a + (b - a) * t;
     private static double Smooth(double a, double b, double value) { double t = Math.Clamp((value - a) / (b - a), 0, 1); return t * t * (3 - 2 * t); }
     public void configure(Resource config, long world_seed, RefCounted host)
     {
-        settings = config; seed_value = world_seed; _host = GodotObject.WeakRef(host); _parameters.Clear();
+        settings = config; seed_value = world_seed;
+        riverField=(host as TerrainMeshBuilder)?._native_grass;
+        _host=riverField is null?GodotObject.WeakRef(host):null;
+        riverSpacing=4000/Math.Max(host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(),.01); _parameters.Clear();
         foreach (string key in new[] { "region_metres", "floodplain_frequency", "island_density", "basin_frequency", "raised_frequency", "pool_frequency", "water_coverage", "terrain_relief", "island_height", "hummock_amplitude", "hollow_frequency", "channel_frequency", "channel_width", "floodplain_connectivity", "depth_variation", "levee_height", "erosion_intensity", "sediment_deposition", "water_table_influence" }) _parameters[key] = config.Get(key).AsDouble();
         var noises = new[] { _macro, _meso, _detail }; int[] offsets = { 19701, 19717, 19739 }; double[] frequencies = { 1.0 / 7000, 1.0 / 460, 1.0 / 95 };
         for (int i = 0; i < 3; i++)
@@ -106,13 +111,13 @@ public partial class SwampSampler : RefCounted
         if(TerrainBiomeNoiseCache.TryShape(this,p,-1,out var baked)){land=baked.Value.X;raised=baked.Value.Y;}
         else (land,raised)=BaseShape(w,a,b,c);
         double channel = 0, flood = 0, levee = 0, basin = 0, deposition = 0, abandoned = 0;
-        var host = _host!.GetRef().AsGodotObject(); double spacing = 4000 / Math.Max(host.Get("settings").AsGodotObject().Get("grass_river_frequency").AsDouble(), .01);
+        double spacing = riverSpacing;
         if (P("channel_frequency") > 0)
         {
             long lane = (long)Math.Round(p.Y / spacing, MidpointRounding.AwayFromZero);
             for (int j = -1; j <= 1; j++)
             {
-                var carrier = host.Call("_river_column", p.X, lane + j, spacing).AsVector3();
+                var carrier = riverField?.river_column(p.X,lane+j,spacing) ?? _host!.GetRef().AsGodotObject().Call("_river_column",p.X,lane+j,spacing).AsVector3();
                 double d = Math.Abs((double)p.Y - carrier.X) / Math.Sqrt(1 + (double)carrier.Y * carrier.Y);
                 double width = P("channel_width") * (.8 + .25 * Math.Sin(p.X / 700.0 + (lane + j) * 1.7)) * (.65 + w[3] + w[7] * .8 + w[4] * .3);
                 if (d > width + 1100) continue; double country = P("channel_frequency") * (.4 + w[3] * .6 + w[7] * .6 + w[4] * .4);
