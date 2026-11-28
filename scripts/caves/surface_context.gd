@@ -90,7 +90,10 @@ func surfaces(arrays:Array,chunk_origin:Vector3)->Dictionary:
 				if payload.is_empty():return {"valid":false,"reason":"Surface replacement triangle crosses unsupported parent boundary"}
 				# The previously padded component transports physical entry depth.
 				# No packed terrain field is overwritten to carry this new value.
-				var depth:float=height_at(world.x,world.z)-world.y;payload[67]=maxf(0,depth);group.payload.append_array(payload);n=n.lerp(normal_at(id,Vector2(world.x,world.z)),1-smoothstep(0,2,depth)).normalized()
+				var depth:float=height_at(world.x,world.z)-world.y;payload[67]=maxf(0,depth);group.payload.append_array(payload);
+				if depth<1.25 and n.y>0:
+					var top:float=(1-smoothstep(0,1.25,depth))*smoothstep(0,.65,n.y)
+					n=n.lerp(normal_at(id,Vector2(world.x,world.z)),top).normalized()
 			group.vertices.append(positions[i+j]);group.normals.append(n);group.colors.append(arrays[Mesh.ARRAY_COLOR][i+j] if arrays[Mesh.ARRAY_COLOR]!=null else Color(.38,.35,.30,1))
 	for id:String in groups:
 		var group:Dictionary=groups[id];var built:Array=[];built.resize(Mesh.ARRAY_MAX);built[Mesh.ARRAY_VERTEX]=group.vertices;built[Mesh.ARRAY_NORMAL]=group.normals;built[Mesh.ARRAY_COLOR]=group.colors;group["arrays"]=built
@@ -115,7 +118,10 @@ func surfaces_indexed(arrays:Array,chunk_origin:Vector3,retain_source:bool=false
 			if not id.is_empty():
 				var payload:PackedFloat32Array=controls(id,Vector2(world.x,world.z))
 				if payload.is_empty():return {"valid":false,"reason":"Surface replacement triangle crosses unsupported parent boundary"}
-				var depth:float=height_at(world.x,world.z)-world.y;payload[67]=maxf(0,depth);group.payload.append_array(payload);n=n.lerp(normal_at(id,Vector2(world.x,world.z)),1-smoothstep(0,2,depth)).normalized()
+				var depth:float=height_at(world.x,world.z)-world.y;payload[67]=maxf(0,depth);group.payload.append_array(payload);
+				if depth<1.25 and n.y>0:
+					var top:float=(1-smoothstep(0,1.25,depth))*smoothstep(0,.65,n.y)
+					n=n.lerp(normal_at(id,Vector2(world.x,world.z)),top).normalized()
 			group.vertices.append(local);group.normals.append(n);group.colors.append(color)
 	for id:String in groups:
 		var group:Dictionary=groups[id];var built:Array=[];built.resize(Mesh.ARRAY_MAX);built[Mesh.ARRAY_VERTEX]=group.vertices;built[Mesh.ARRAY_NORMAL]=group.normals;built[Mesh.ARRAY_COLOR]=group.colors;built[Mesh.ARRAY_INDEX]=group.indices;group["arrays"]=built;group.erase("lookup")

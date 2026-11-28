@@ -146,29 +146,14 @@ internal static class CaveFieldCompiler
                     if(!AddProceduralRoom(f,node,point,radius,roof,Int(node,"cross_section_style",style),region["id"].AsVector2I()))return Failed();
                     continue;
                 }
-                bool fractured=region.ContainsKey("cross_section_style") && node.ContainsKey("level") &&
-                    !node.ContainsKey("parent") && !node.ContainsKey("confluence") && !node.ContainsKey("biome_parent") && family is not (6 or 7);
-                if(fractured && Text(node,"id").EndsWith(":0",StringComparison.Ordinal)){
-                    var floor=point-Vector3.Up*18;
-                    float span=48+8*Mathf.Sin(point.Z*.037f);
-                    if(!f.append_feature(floor,floor,new Vector2(span,56),3,style))return Failed();
-                    string id=Text(node,"id");
-                    if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);
-                    continue;
-                }
-                // Offset overlapping chambers within the original clearance-tested footprint.
-                double bearing=point.X*.193 + point.Z*.279;
-                int lobes=fractured ? 2+(int)Math.Abs(Math.Sin(bearing)*2.99) : 1;
-                for(int n=0;n<lobes;n++){
-                    var center=point;
-                    float r=radius,h=roof;
-                    if(lobes>1){
-                        r*= n==0 ? .60f : .38f+.13f*(float)Math.Abs(Math.Sin(bearing+n));
-                        h*= n==0 ? .63f : .55f+.45f*(float)Math.Abs(Math.Cos(bearing+n));
-                        if(n>0)center+=new Vector3(Mathf.Cos((float)bearing+n*2.1f),0,Mathf.Sin((float)bearing+n*2.1f))*(radius-r);
-                    }
-                    if(!f.append_feature(center,center,new Vector2(r,h),2,Int(node,"cross_section_style",style)))return Failed();
-                    if(f.BiomeFields.Count>0){string id=Text(node,"biome_parent",Text(node,"id"));f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);}
+                // Non-procedural helpers (pool beds, specialized chambers and
+                // historical fixtures) retain their exact authored footprint.
+                // Never infer a second morphology generator from an ID suffix.
+                if(!f.append_feature(point,point,new Vector2(radius,roof),2,Int(node,"cross_section_style",style)))return Failed();
+                if(f.BiomeFields.Count>0)
+                {
+                    string id=Text(node,"biome_parent",Text(node,"id"));
+                    f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);
                 }
             }
         }

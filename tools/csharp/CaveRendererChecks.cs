@@ -24,7 +24,12 @@ internal static class CaveRendererChecks
         foreach (int resolution in new[] { 0, 1, 32 })
         {
             parent.SetMeta("resolution", resolution); var expected = old.Call("capture", nodes, columns); var actual = current.capture(nodes, columns);
-            require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)), "Surface snapshot capture differs");
+            require(expected.AsGodotDictionary()["valid"].AsBool()==actual["valid"].AsBool(), "Surface snapshot admission differs");
+            // Rejection diagnostics now include the actual tile and resolution.
+            // For admitted snapshots all numeric records and references must still match.
+            if(actual["valid"].AsBool())
+                require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)), "Surface snapshot capture differs");
+            else require(actual["reason"].AsString().Length>0,"Rejected parent omitted diagnostic");
             if (actual["valid"].AsBool())
             {
                 require(old.Call("matches", actual, nodes, columns).AsBool() == current.matches(actual, nodes, columns), "Surface snapshot match differs");
