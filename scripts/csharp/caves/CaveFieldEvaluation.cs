@@ -173,7 +173,8 @@ internal static class CaveFieldEvaluation
         double radial=r/Math.Max(.34,warp),vertical=(y-rise-h*.45)/(h*.55);
         double power=2+2.6*(.5+.5*Math.Sin(phase));
         double arch=(Math.Pow(Math.Pow(Math.Abs(radial),power)+Math.Pow(Math.Abs(vertical),power),1/power)-1)*Math.Min(minor,h*.55);
-        double value=Math.Max(rise+floorOffset-y,arch+wall);
+        double value=Math.Max(Math.Max(rise+floorOffset-y,arch+wall),
+            (Math.Sqrt(u*u+v*v)-.98)*Math.Min(size.X,minor));
         // Raised side galleries can leave a natural arch or terrace. This
         // feature's solid is local to its own room, never a global subtraction
         // from other graph routes, biome chambers, or the protected core.

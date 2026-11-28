@@ -47,7 +47,7 @@ float field_value(int index){
    float exponent=2.0+2.6*(.5+.5*sin(phase));
    vec2 powers=pow(abs(normalized),vec2(exponent));
    float arch=(pow(powers.x+powers.y,1.0/exponent)-1.0)*min(minor,h*.55);
-   float value=max(rise-y,arch+wall);
+   float value=max(max(rise-y,arch+wall),(length(vec2(u,v))-.98)*min(shape.x,minor));
    if(shape.x>=15.0&&roof>=20.0){
     float ru=u-(.53+.09*sin(phase+y*.13));
     float rv=v-(.28+.07*cos(phase-y*.11));

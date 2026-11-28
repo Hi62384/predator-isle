@@ -31,9 +31,9 @@ internal static class CaveFieldCompiler
             // Spatially coherent alternating erosion shelves and narrow
             // fractures. Keep the extra reach inside a small lateral reserve
             // so adjacent supported routes are not consumed by expansion.
-            width=size.X*(1+swell*(.12f+.23f*MathF.Abs(MathF.Sin(local))));
+            width=size.X*(1+swell*(.10f+.18f*MathF.Abs(MathF.Sin(local))));
             height=size.Y*(1+swell*(.25f+.85f*MathF.Abs(MathF.Cos(local))));
-            offset=normal*(swell*size.X*.20f*MathF.Sin(local));
+            offset=normal*(swell*Math.Min(size.X*.18f,.7f)*MathF.Sin(local));
             offset.Y=swell*size.Y*.16f*MathF.Abs(MathF.Sin(local*.61f));
             if(f.ground_height(a+offset)-a.Y<f.minimum_roof+height+offset.Y+4 || f.ground_height(b+offset)-b.Y<f.minimum_roof+height+offset.Y+4)return true;
         }

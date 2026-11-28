@@ -77,7 +77,36 @@ public partial class CaveStreamer : Node3D
     private bool Flag(string key)=>configuration!.Get(key).AsBool();
     private Resource? Registry=>configuration==null?null:configuration.Get("biome_regions").As<Resource>();
     private bool HostFlag(string key){var value=host!.Get(key);return value.VariantType!=Variant.Type.Bool||value.AsBool();}
-    private bool Teleport=>host!.Get("_teleport_pending").AsBool();
+    private bool Teleport=>Valid(host)&&host!.Get("_teleport_pending").AsBool();
+    // Stable entrance leases survive discovery-map replacement and direction
+    // changes. Only a successful surface commit may create a published lease.
+    private readonly Dictionary<string,D> publishedMouths=new(StringComparer.Ordinal);
+    private static string MouthId(D mouth)=>Get(mouth,"id",mouth["point"].AsVector3().ToString()).AsString();
+    private double RetentionRadius=>Number("preload_radius_metres")*3+128;
+    private bool RetainMouth(D mouth,Vector3 point)
+    {
+        var center=mouth["point"].AsVector3();
+        var delta=new Vector2(center.X-point.X,center.Z-point.Z);
+        return delta.LengthSquared()<=RetentionRadius*RetentionRadius;
+    }
+    private D HeldColumns(Vector3 point)
+    {
+        var held=new D();
+        if(Teleport||_surface_transaction?.committed!=true)return held;
+        foreach(var mouth in publishedMouths.Values)
+            if(RetainMouth(mouth,point)||RetainMouth(mouth,_protected_point))
+                foreach(var key in mouth["columns"].AsGodotDictionary().Keys)
+                    if(_surface_columns.ContainsKey(key))held[key]=true;
+        // A transaction from an older or synthetic source may not have IDs.
+        if(publishedMouths.Count==0&&surface_distance(point)<=RetentionRadius)
+            return _surface_columns.Duplicate();
+        return held;
+    }
+    private bool PreservesHeld(D columns)
+    {
+        if(Teleport)return true;
+        return HeldColumns(_surface_interest).Keys.All(key=>columns.ContainsKey(key));
+    }
     private static Vector2I Region(Vector3 point)=>new((int)Math.Floor(point.X/1536.0),(int)Math.Floor(point.Z/1536.0));
     public void initialize(Node3D terrain_node)
     {
@@ -155,7 +184,8 @@ public partial class CaveStreamer : Node3D
             {_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}
             clear_surface_staging();_surface_request=new();_surface_batch=null;_surface_build_pending=false;_rebuild_nodes=new();_rebuild_columns=new();
             CancelInitialUpload();
-            attemptedColumns=null;generatedSurface=null;reserve_detail(new D());
+            previewPending=false;attemptedColumns=null;generatedSurface=null;
+            reserve_detail(Teleport?new D():HeldColumns(point));
             _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;
             if(_bundle.Count==0 && forecastSurface!=null)
             {
@@ -177,7 +207,7 @@ public partial class CaveStreamer : Node3D
         while(allowance>0&&_ready.Count<8)
         {
             bool portalPending = _surface_batch?.pending() == true;
-            bool waitingForMouth = PreparingEntrance && _detail_columns.Count > 0 && _surface_transaction == null;
+            bool waitingForMouth = (previewPending || initialUpload!=null || portalPending) && _detail_columns.Count > 0 && _surface_transaction == null;
             bool discoverNow = _discovery_pending && !portalPending && !waitingForMouth;
             if (!discoverNow && !portalPending && !(underground && _pending.Count > 0 && _bundle.Count > 0)) break;
             var resuming=discoverNow&&parkedDiscoveryWorker is not null;
@@ -225,8 +255,8 @@ public partial class CaveStreamer : Node3D
                 }
                 _idle.Add(work);continue;
             }
-            if(kind=="entrance-preview")previewPending=false;
             if(generation!=_generation||results.Count==0){_idle.Add(work);continue;}
+            if(kind=="entrance-preview")previewPending=false;
             var data=results[0].AsGodotDictionary();
             if(kind=="entrance-preview")
             {
@@ -234,6 +264,7 @@ public partial class CaveStreamer : Node3D
                 if(Get(data,"valid",false).AsBool()){
                     generatedSurface=data;
                     generatedSurface["columns"]=job["columns"];
+                    generatedSurface["source_columns"]=job["source_columns"];
                     attemptedColumns=null;
                 }
                 else if(_detail_columns.RecursiveEqual(job["columns"].AsGodotDictionary()))
@@ -405,10 +436,17 @@ public partial class CaveStreamer : Node3D
         }
         // An incoming fine tile at a reserved mouth stays hidden until the
         // prepared entrance is ready. Disjoint terrain continues publishing.
-        if(_surface_transaction==null && _detail_columns.Count>0 &&
-            (initialUpload!=null || previewPending || generatedSurface!=null) &&
-            nodes.Any(raw=>_renderer.touches(raw.As<MeshInstance3D>(),_detail_columns)))
-            return false;
+        if(_detail_columns.Count>0 &&
+            (initialUpload!=null || previewPending || generatedSurface!=null))
+        {
+            var incoming=new D();
+            foreach(var key in _detail_columns.Keys)
+                if(!_surface_columns.ContainsKey(key))incoming[key]=true;
+            if(_surface_transaction==null&&nodes.Any(raw=>_renderer.touches(raw.As<MeshInstance3D>(),incoming)))return false;
+            // Existing cuts remain live; only the canonical preview may add
+            // the new mouth while its products are being uploaded.
+            if(_surface_transaction!=null&&_renderer.matches(_surface_snapshot,nodes,_surface_columns))return true;
+        }
 
         // Build against the incoming terrain while it is still staged. Commit
         // its collision, surface cut and cave lining in the same publication.
@@ -495,8 +533,14 @@ public partial class CaveStreamer : Node3D
         if(_close_surface_on_partition){close_surface();_close_surface_on_partition=false;_rebuild_nodes=new();_rebuild_columns=new();}
         if(_surface_prepared!=null&&_surface_prepared.ready_to_commit())
         {
-            if(_surface_prepared.commit())adopt_surface(_surface_prepared,_surface_staging["request"].AsGodotDictionary()["snapshot"].AsGodotDictionary(),_surface_staging["data"].AsGodotDictionary());
-            _surface_prepared=null;_surface_staging=new();_rebuild_nodes=new();_rebuild_columns=new();
+            var request=_surface_staging["request"].AsGodotDictionary();
+            if(PreservesHeld(request["columns"].AsGodotDictionary())&&_surface_prepared.commit())
+            {
+                adopt_surface(_surface_prepared,request["snapshot"].AsGodotDictionary(),_surface_staging["data"].AsGodotDictionary());
+                _surface_prepared=null;_surface_staging=new();
+            }
+            else clear_surface_staging();
+            _rebuild_nodes=new();_rebuild_columns=new();
         }
         if(_surface_transaction!=null)foreach(var value in active_parent_nodes())_surface_transaction.apply_node(value.As<MeshInstance3D>());
     }
@@ -508,6 +552,7 @@ public partial class CaveStreamer : Node3D
     {double distance=double.PositiveInfinity;var p=new Vector2(point.X,point.Z);foreach(var value in _surface_columns.Keys){var origin=(Vector2)value.AsVector2I()*64;distance=Math.Min(distance,p.DistanceTo(p.Clamp(origin,origin+Vector2.One*64)));}return distance;}
     public void close_surface()
     {
+        publishedMouths.Clear();
         _surface_transaction?.reset();foreach(var key in _surface_owned.Keys){var node=_cells.ContainsKey(key)?_cells[key].As<Node>():null;if(Valid(node))node!.QueueFree();_cells.Remove(key);}
         _surface_transaction=null;_surface_owned.Clear();_surface_columns.Clear();_surface_snapshot=new();_last_plan=Vector3.Inf;_frontiers_dirty=true;refresh_frontiers();
     }
@@ -528,35 +573,18 @@ public partial class CaveStreamer : Node3D
             var p=a.Data["point"].AsVector3();var q=b.Data["point"].AsVector3();
             order=p.X.CompareTo(q.X);return order!=0?order:p.Z.CompareTo(q.Z);
         });
-        // Keep a published mouth on the flight path until the camera has
-        // passed it. The nearest-mouth poll must not close a preloaded exit.
-        if (_surface_transaction!=null && !Teleport)
-        {
-            bool moving=flightLead.LengthSquared()>100*100;
-            var direction=moving?flightLead.Normalized():Vector2.Zero;
-            foreach (var current in nearby)
-            {
-                var held=current.Data["columns"].AsGodotDictionary();
-                if(held.Count==0 || !held.Keys.All(key=>_surface_columns.ContainsKey(key)))continue;
-                var mouth=current.Data["point"].AsVector3();
-                var offset=new Vector2(mouth.X-point.X,mouth.Z-point.Z);
-                float along=offset.Dot(direction);
-                bool ahead=moving && along>0 && along<=420 &&
-                    (offset-direction*along).LengthSquared()<=88*88;
-                double retain=Number("preload_radius_metres")*3+128;
-                // Retain a published cut beyond its admission range. A change of
-                // nearest mouth, flight direction, or discovery ordering is not an eviction.
-                if(offset.LengthSquared()<=retain*retain || ahead)
-                    foreach(var key in held.Keys)columns[key]=true;
-            }
-        }
-        // The local discovery map cannot prove that an old mouth disappeared.
-        // Keep its complete transaction until the halo map can identify its owner.
-        if(_surface_transaction?.committed==true && !Teleport &&
-            (_bundle.ContainsKey("local_only") || _discovery_pending) &&
-            surface_distance(point)<=Number("preload_radius_metres")*3+128 &&
-            _surface_columns.Keys.Any(key=>!columns.ContainsKey(key)))
-            return _surface_columns.Duplicate();
+        // Ownership is persistent rather than reconstructed from the current
+        // discovery bundle. Even a complete bundle cannot evict a nearby
+        // published mouth simply because that mouth isn't in its halo.
+        columns=HeldColumns(point);
+        // Partial maps cannot build a full replacement containing a mouth from
+        // outside their region. Keep its existing transaction; new mouths can
+        // append independent products without reconstructing held columns.
+        if(_surface_transaction?.committed==true&&!Teleport&&
+            (_bundle.ContainsKey("local_only")||_discovery_pending)&&
+            _surface_columns.Keys.Any(key=>!columns.ContainsKey(key))&&
+            surface_distance(point)<=RetentionRadius)
+            columns=_surface_columns.Duplicate();
         foreach (var item in nearby)
         {
             if (!entrance_needed(item.Data,point)) continue;
@@ -617,7 +645,8 @@ public partial class CaveStreamer : Node3D
     private void ShowInitialEntrance(D columns,bool allowBuild=true)
     {
         if(initialUpload!=null || host is not ChunkTerrain terrain || terrain.authority_only || Teleport ||
-           columns.RecursiveEqual(_surface_columns))return;
+           _surface_batch!=null || _surface_build_pending || _surface_request.Count>0 ||
+           _rebuild_nodes.Count>0 || columns.RecursiveEqual(_surface_columns) || !PreservesHeld(columns))return;
         var cells=new A();
         var sourceColumns=columns;
         bool append=_surface_transaction?.committed==true &&
@@ -646,11 +675,10 @@ public partial class CaveStreamer : Node3D
             cells=forecastSurface["cells"].AsGodotArray();
             forecastSurface=null;
         }
-        if(generatedSurface!=null && columns.RecursiveEqual(generatedSurface["columns"].AsGodotDictionary())){
+        if(generatedSurface!=null && columns.RecursiveEqual(generatedSurface["columns"].AsGodotDictionary()) &&
+            sourceColumns.RecursiveEqual(generatedSurface["source_columns"].AsGodotDictionary())){
             cells=generatedSurface["cells"].AsGodotArray();
             generatedSurface=null;
-            sourceColumns=columns;
-            append=false;
         }
         if(cells.Count==0 && (!allowBuild || previewPending || attemptedColumns?.RecursiveEqual(columns)==true))return;
         attemptedColumns=columns.Duplicate();
@@ -659,8 +687,9 @@ public partial class CaveStreamer : Node3D
             if(work==null)return;
             var map=_bundle;
             var result=new A();
-            long task=WorkerThreadPool.AddTask(Callable.From(()=>result.Add(work.BuildEntranceSurface(map,columns))));
-            _jobs[task]=new D{["kind"]="entrance-preview",["generation"]=_generation,["work"]=work,["result"]=result,["columns"]=columns};
+            var requested=sourceColumns.Duplicate();
+            long task=WorkerThreadPool.AddTask(Callable.From(()=>result.Add(work.BuildEntranceSurface(map,requested))));
+            _jobs[task]=new D{["kind"]="entrance-preview",["generation"]=_generation,["work"]=work,["result"]=result,["columns"]=columns,["source_columns"]=requested};
             previewPending=true;
             return;
         }
@@ -694,6 +723,9 @@ public partial class CaveStreamer : Node3D
     private void UploadInitialEntrance(bool useFrameBudget=true)
     {
         if(initialUpload is not {} upload)return;
+        var desired=nearby_columns(_surface_interest);
+        if(!PreservesHeld(upload.Columns) || !upload.Columns.Keys.All(key=>desired.ContainsKey(key)))
+        {CancelInitialUpload();attemptedColumns=null;return;}
         ulong began=Time.GetTicksUsec();
         while(upload.Cursor<upload.Cells.Count)
         {
@@ -775,7 +807,7 @@ public partial class CaveStreamer : Node3D
         if(_surface_staging.Count>0)
         {
             var request=_surface_staging["request"].AsGodotDictionary();var snapshot=request["snapshot"].AsGodotDictionary();var columns=request["columns"].AsGodotDictionary();var desired=_rebuild_nodes.Count>0?_rebuild_nodes:active_parent_nodes();
-            if(!_renderer.matches(snapshot,desired,columns)){clear_surface_staging();surface_status="surface parents changed; retaining old entrance";return;}
+            if(!PreservesHeld(columns)||!_renderer.matches(snapshot,desired,columns)){clear_surface_staging();surface_status="surface ownership/parents changed; retaining old entrance";return;}
             var remaining=_surface_staging["remaining"].AsGodotArray();
             if(remaining.Count>0)
             {
@@ -793,7 +825,11 @@ public partial class CaveStreamer : Node3D
                 _surface_prepared=transaction;
             }
             if(_rebuild_nodes.Count==0&&!Teleport&&_surface_prepared.ready_to_commit())
-            {if(_surface_prepared.commit())adopt_surface(_surface_prepared,snapshot,_surface_staging["data"].AsGodotDictionary());_surface_prepared=null;_surface_staging=new();}return;
+            {
+                if(PreservesHeld(columns)&&_surface_prepared.commit())
+                {adopt_surface(_surface_prepared,snapshot,_surface_staging["data"].AsGodotDictionary());_surface_prepared=null;_surface_staging=new();}
+                else clear_surface_staging();
+            }return;
         }
         if(_bundle.Count==0||_surface_build_pending||_surface_request.Count>0||now-_surface_poll_usec<250000)return;
         _surface_poll_usec=now;var wantedColumns=nearby_columns(point);if(_rebuild_nodes.Count>0)wantedColumns=_rebuild_columns.Duplicate();
@@ -810,7 +846,16 @@ public partial class CaveStreamer : Node3D
         reserve_detail(wantedColumns);
         // Canonical previews already contain both the opening and its collision.
         // Only extract from the live parents when that path cannot build the cut.
-        if (initialUpload != null || previewPending && attemptedColumns?.RecursiveEqual(wantedColumns) == true) return;
+        if (initialUpload != null || previewPending) return;
+        // A full live-parent extraction cannot reconstruct a leased mouth from
+        // a partial local map. Do not replace a valid cut with an incomplete one.
+        if(_bundle.ContainsKey("local_only")&&_surface_transaction?.committed==true)
+        {
+            var known=new D();
+            foreach(var raw in Get(_bundle,"entrances",new A()).AsGodotArray())
+                foreach(var key in raw.AsGodotDictionary()["columns"].AsGodotDictionary().Keys)known[key]=true;
+            if(wantedColumns.Keys.Any(key=>!known.ContainsKey(key)))return;
+        }
         var parents=_rebuild_nodes.Count>0?_rebuild_nodes:active_parent_nodes();
         if(_surface_transaction!=null&&wantedColumns.RecursiveEqual(_surface_columns)&&_renderer.matches(_surface_snapshot,parents,wantedColumns)){surface_status="active";_rebuild_nodes=new();return;}
         var capture=_renderer.capture(parents,wantedColumns);if(!capture["valid"].AsBool()){surface_status=capture["reason"].AsString();return;}
@@ -827,7 +872,16 @@ public partial class CaveStreamer : Node3D
             var result=value.AsGodotDictionary();var key=result["key"].AsVector3I();var node=retained.ContainsKey(key)?retained[key].As<MeshInstance3D>():null;var old=_cells.ContainsKey(key)?_cells[key].As<MeshInstance3D>():null;
             if(Valid(old)&&old!=node){old!.Visible=false;old.GetNode<StaticBody3D>("CaveCollision").CollisionLayer=0;old.QueueFree();}_cells[key]=ObjectValue(node);_surface_owned[key]=true;
         }
-        _surface_transaction=transaction;_surface_columns=data["columns"].AsGodotDictionary().Duplicate();_surface_snapshot=snapshot;_last_plan=Vector3.Inf;surface_status="active";_frontiers_dirty=true;refresh_frontiers();
+        _surface_transaction=transaction;_surface_columns=data["columns"].AsGodotDictionary().Duplicate();_surface_snapshot=snapshot;
+        foreach(string id in publishedMouths.Keys.ToArray())
+            if(!publishedMouths[id]["columns"].AsGodotDictionary().Keys.All(key=>_surface_columns.ContainsKey(key)))publishedMouths.Remove(id);
+        foreach(var raw in Get(_bundle,"entrances",new A()).AsGodotArray())
+        {
+            var mouth=raw.AsGodotDictionary();var keys=mouth["columns"].AsGodotDictionary();
+            if(keys.Count>0&&keys.Keys.All(key=>_surface_columns.ContainsKey(key)))
+                publishedMouths[MouthId(mouth)]=mouth.Duplicate();
+        }
+        _last_plan=Vector3.Inf;surface_status="active";_frontiers_dirty=true;refresh_frontiers();
     }
     public A surface_materials()
     {
