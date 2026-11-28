@@ -5,7 +5,7 @@ using A = Godot.Collections.Array;
 using D = Godot.Collections.Dictionary;
 
 namespace PredatorIsle.Caves;
-/// <summary>Temporary matching face seals keep unloaded cave neighbours safe.</summary>
+/// <summary>Temporary clipped collision seals keep unloaded cave neighbours safe without rendering artificial slice planes.</summary>
 public partial class CaveStreamFrontiers : RefCounted
 {
     private static readonly Vector3I[] Directions = { Vector3I.Left, Vector3I.Right, Vector3I.Down, Vector3I.Up, Vector3I.Forward, Vector3I.Back };
@@ -71,7 +71,7 @@ public partial class CaveStreamFrontiers : RefCounted
         foreach (var entry in payload)
         {
             var arrays = entry.Value.AsGodotArray(); var mesh = new ArrayMesh(); mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays); mesh.SurfaceSetMaterial(0, material);
-            var node = new MeshInstance3D { Mesh = mesh, CastShadow = shadows ? GeometryInstance3D.ShadowCastingSetting.DoubleSided : GeometryInstance3D.ShadowCastingSetting.Off }; node.SetMeta("face", entry.Key);
+            var node = new MeshInstance3D { Mesh = mesh, Visible = false, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off }; node.SetMeta("face", entry.Key);
             var body = new StaticBody3D { Name = "FrontierCollision", CollisionLayer = 0, CollisionMask = 0 };
             var shape = new ConcavePolygonShape3D { BackfaceCollision = true, Data = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array() };
             body.AddChild(new CollisionShape3D { Shape = shape }); node.AddChild(body); container.AddChild(node);
@@ -87,7 +87,9 @@ public partial class CaveStreamFrontiers : RefCounted
             foreach (var child in container.GetChildren())
             {
                 var node = (MeshInstance3D)child; bool closed = !cells.ContainsKey(entry.Key.AsVector3I() + Directions[node.GetMeta("face").AsInt32()]);
-                node.Visible = closed; node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer = closed && collision_enabled ? 1u : 0u;
+                // These planes are a traversal safety boundary, not geological walls.
+                // Never expose them to the surface or underground debug camera.
+                node.Visible = false; node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer = closed && collision_enabled ? 1u : 0u;
             }
         }
     }

@@ -434,7 +434,8 @@ public partial class CaveStreamer : Node3D
         }
         if(_surface_transaction==null)return true;
         if(_renderer.matches(_surface_snapshot,nodes,_surface_columns))return true;
-        if((surface_distance(_protected_point)>96 && !_detail_columns.RecursiveEqual(_surface_columns))||Teleport){_close_surface_on_partition=true;return true;}
+        if((surface_distance(_protected_point)>Number("preload_radius_metres")*3+128 &&
+            !_surface_columns.Keys.Any(key=>_detail_columns.ContainsKey(key)))||Teleport){_close_surface_on_partition=true;return true;}
         if(_surface_prepared?.ready_to_commit()==true)
         {
             var prepared=_surface_staging["request"].AsGodotDictionary();
@@ -522,7 +523,11 @@ public partial class CaveStreamer : Node3D
             float ahead = Mathf.Clamp(offset.Dot(flightLead)/flightLead.LengthSquared(),0,1);
             return (offset-flightLead*ahead).LengthSquared() + offset.LengthSquared()*.015f;
         }
-        nearby.Sort((a,b)=>{int order=Score(a.Data).CompareTo(Score(b.Data));return order!=0?order:a.Ordinal.CompareTo(b.Ordinal);});
+        nearby.Sort((a,b)=>{
+            int order=Score(a.Data).CompareTo(Score(b.Data));if(order!=0)return order;
+            var p=a.Data["point"].AsVector3();var q=b.Data["point"].AsVector3();
+            order=p.X.CompareTo(q.X);return order!=0?order:p.Z.CompareTo(q.Z);
+        });
         // Keep a published mouth on the flight path until the camera has
         // passed it. The nearest-mouth poll must not close a preloaded exit.
         if (_surface_transaction!=null && !Teleport)
@@ -538,18 +543,28 @@ public partial class CaveStreamer : Node3D
                 float along=offset.Dot(direction);
                 bool ahead=moving && along>0 && along<=420 &&
                     (offset-direction*along).LengthSquared()<=88*88;
-                if(offset.LengthSquared()<=96*96 || ahead)
+                double retain=Number("preload_radius_metres")*3+128;
+                // Retain a published cut beyond its admission range. A change of
+                // nearest mouth, flight direction, or discovery ordering is not an eviction.
+                if(offset.LengthSquared()<=retain*retain || ahead)
                     foreach(var key in held.Keys)columns[key]=true;
             }
         }
+        // The local discovery map cannot prove that an old mouth disappeared.
+        // Keep its complete transaction until the halo map can identify its owner.
+        if(_surface_transaction?.committed==true && !Teleport &&
+            (_bundle.ContainsKey("local_only") || _discovery_pending) &&
+            surface_distance(point)<=Number("preload_radius_metres")*3+128 &&
+            _surface_columns.Keys.Any(key=>!columns.ContainsKey(key)))
+            return _surface_columns.Duplicate();
         foreach (var item in nearby)
         {
             if (!entrance_needed(item.Data,point)) continue;
             var mouthColumns = item.Data["columns"].AsGodotDictionary();
             if (mouthColumns.Count is 0 or >64) continue;
+            int additional=mouthColumns.Keys.Count(key=>!columns.ContainsKey(key));
+            if(columns.Count+additional>64)continue;
             foreach (var key in mouthColumns.Keys) columns[key]=true;
-            if (columns.Count > 64) return _surface_columns.Duplicate();
-            break;
         }
         return columns;
     }
@@ -823,7 +838,7 @@ public partial class CaveStreamer : Node3D
             if(_surface_transaction!=null&&_rebuild_nodes.Count==0)
             {
                 if(Teleport){reserve_detail(new D());surface_status="active retained entrance";return;}
-                if(surface_distance(_protected_point)<=96){surface_status="active retained entrance";return;}close_surface();
+                if(surface_distance(_protected_point)<=Number("preload_radius_metres")*3+128){surface_status="active retained entrance";return;}close_surface();
             }
             attemptedColumns=null;reserve_detail(new D());surface_status="no nearby admitted entrance";return;
         }

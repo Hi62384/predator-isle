@@ -195,10 +195,16 @@ public partial class CaveNetwork : RefCounted
             if (layerNodes.Count != stationCount) break;
             var from = layerNodes[stationCount-1].AsGodotDictionary(); var to = layerNodes[0].AsGodotDictionary(); var loop = route(from, to, new[] { Xz(from["point"].AsVector3()), Xz(to["point"].AsVector3()) }); if (loop.Count > 0 && random(cell, 2400 + level) < .55) { edges.Add(loop); previous = to; } else previous = from;
         }
-        for (int attempt = 0; attempt < 24 * EntrancesPerRegion; attempt++)
+        // Density is independent of underground graph size. Bias the budget toward
+        // one or two mouths; the configured count is a ceiling, not a quota.
+        int entranceBudget = 1 + Math.Min(EntrancesPerRegion - 1,
+            (int)(Math.Pow(random(cell, 75001), 1.8) * EntrancesPerRegion));
+        const float minimumSeparation = 400;
+        var regionOrigin = (Vector2)cell * (float)REGION_METRES;
+        for (int attempt = 0; attempt < 24 * entranceBudget; attempt++)
         {
             double yaw = angle + Math.Tau * random(cell, 40 + attempt); var p = center + new Vector2((float)Math.Cos(yaw), (float)Math.Sin(yaw)) * (float)(360 + random(cell, 80 + attempt) * 220);
-            if (entrances.Count >= 6 || attempt >= 144)
+            if (attempt >= 24)
             {
                 // Visit all 25 sectors before retrying one. The coprime stride
                 // spreads successive candidates across the whole region.
@@ -207,7 +213,12 @@ public partial class CaveNetwork : RefCounted
                 double v = (sector / 5 + .15 + .7 * random(cell, 1001 + attempt * 2)) / 5;
                 p = new Vector2((float)((cell.X + u) * REGION_METRES), (float)((cell.Y + v) * REGION_METRES));
             }
-            if (nodes.Any(v=>v.AsGodotDictionary()["level"].AsInt32()==-1 && Xz(v.AsGodotDictionary()["point"].AsVector3()).DistanceSquaredTo(p)<120*120))continue;
+            // Half the separation on each side of a region boundary gives the
+            // same lower bound across independently discovered neighbouring regions.
+            var local = p - regionOrigin;
+            float margin = minimumSeparation * .5f;
+            if(local.X < margin || local.Y < margin || local.X > REGION_METRES-margin || local.Y > REGION_METRES-margin)continue;
+            if (nodes.Any(v=>v.AsGodotDictionary()["level"].AsInt32()==-1 && Xz(v.AsGodotDictionary()["point"].AsVector3()).DistanceSquaredTo(p)<minimumSeparation*minimumSeparation))continue;
             if (!CaveHeightSampler.TrySamplePair(height, water, p.X, p.Y, out double terrain, out double wet))
             { terrain = Height(p.X, p.Y); wet = Water(p.X, p.Y); }
             if (!double.IsFinite(terrain) || !double.IsFinite(wet) || terrain <= Math.Max(wet,OceanLevel) + 3) continue;
@@ -242,7 +253,7 @@ public partial class CaveNetwork : RefCounted
                 access["to"]=id; access["points"]=stations[..(split+1)];
             }
             nodes.Add(entry); edges.Add(access); entrances.Add(entry["id"]);
-            if(entrances.Count>=EntrancesPerRegion)break;
+            if(entrances.Count>=entranceBudget)break;
         }
         if (entrances.Count == 0) return empty;
         var result = new D { ["id"] = cell, ["center"] = center, ["nodes"] = nodes, ["edges"] = edges, ["entrances"] = entrances, ["valid"] = true, ["reason"] = "", ["default_biome_id"] = 0, ["geology"] = Math.Min(5, (int)(random(cell, 102) * 6)) };
