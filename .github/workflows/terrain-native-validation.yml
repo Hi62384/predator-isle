@@ -143,7 +143,7 @@ jobs:
           CFG
           LIBGL_ALWAYS_SOFTWARE=1 PREDATOR_ISLE_TEST_DUMMY_AUDIO=1 PREDATOR_ISLE_TEST_MEMORY_MIB=5120 xvfb-run -a \
             dotnet run --project tools/csharp-runner/PredatorIsle.Checks.csproj --no-build -- \
-              gpu-materials gpu-caves \
+              gpu-materials gpu-caves cave-visual \
               gpu-cave-scene-0 gpu-cave-scene-1 gpu-cave-scene-2 gpu-cave-scene-3 \
               gpu-cave-scene-4 gpu-cave-scene-5 gpu-cave-scene-6 gpu-cave-scene-7
       - name: Upload diagnostic reports even after failure
@@ -156,5 +156,7 @@ jobs:
           path: |
             data/csharp_check_*_latest.json
             data/csharp_runner_latest.json
+            data/cave_visual_*.png
+            data/cave_visual_*.svg
             .godot/csharp_checks/**/receipt.json
             .godot/csharp_checks/**/*.log

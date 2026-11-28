@@ -18,6 +18,14 @@ public partial class MigrationChecks : Node
     {
         try
         {
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-visual-only")>=0)
+            {
+                _mode="cave-visual";
+                var evidence=await CaveVisualEvidenceChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true,evidence);
+                GD.Print($"C# generated cave visual evidence checks passed: {_checks}");
+                await Finish();return;
+            }
             if (Array.IndexOf(OS.GetCmdlineUserArgs(), "cave-smoothing") >= 0)
             {
                 CaveMesherOptimizationChecks.RunSmoothing(Require);

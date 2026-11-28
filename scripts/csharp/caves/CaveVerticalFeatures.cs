@@ -13,7 +13,7 @@ namespace PredatorIsle.Caves;
 internal static class CaveVerticalFeatures
 {
     private readonly record struct Station(Vector3 Point,D Edge);
-    internal static A Build(D region,Func<double,double,double> height,double minimumRoof,double maximumDepth,long seed)
+    internal static A Build(D region,Func<double,double,double> height,double minimumRoof,double maximumDepth,long seed,Func<D,A,bool> supportedJoin)
     {
         var result=new A();
         var cell=region["id"].AsVector2I();
@@ -118,7 +118,12 @@ internal static class CaveVerticalFeatures
                 }
                 return true;
             }
-            return Covered(bottom,top,radius,10)&&Covered(lower.Point,bottom,4,8)&&Covered(upper.Point,top,4,8);
+            // Side galleries must also meet the same support test as the
+            // regular graph. A shaft never undercuts an unrelated main route.
+            bool Side(Vector3 a,Vector3 b,string id)=>supportedJoin(new D{
+                ["from"]=id,["to"]=id,["points"]=new[]{a,b},["half_width"]=4.0,["headroom"]=8.0},edges);
+            return Covered(bottom,top,radius,10)&&Covered(lower.Point,bottom,4,8)&&Covered(upper.Point,top,4,8)
+                &&Side(lower.Point,bottom,lower.Edge["from"].AsString())&&Side(upper.Point,top,upper.Edge["to"].AsString());
         }
     }
 }

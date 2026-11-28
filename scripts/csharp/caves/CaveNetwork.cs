@@ -115,6 +115,7 @@ public partial class CaveNetwork : RefCounted
     {
         var bypasses=new A();
         int originalCount=edges.Count;
+        var routeIndex=new SupportIndex();var bypassIndex=new SupportIndex();
         for(int i=0;i<originalCount;i++)
         {
             var edge=edges[i].AsGodotDictionary();
@@ -131,7 +132,7 @@ public partial class CaveNetwork : RefCounted
             var end=new D{["id"]=edge["to"],["point"]=b};
             var side=route(start,end,new[]{Xz(a),Xz(points[(2*first+last)/3])+normal*offset,
                 Xz(points[(first+2*last)/3])+normal*offset*.62f,Xz(b)});
-            if(side.Count==0 || !supported_join(side,edges) || !supported_join(side,bypasses))continue;
+            if(side.Count==0 || !SupportedJoin(side,edges,routeIndex) || !SupportedJoin(side,bypasses,bypassIndex))continue;
             side["half_width"]=half_width*(.56+.23*random(cell,salt+2));
             side["headroom"]=headroom*(.62+.35*random(cell,salt+4));
             side["bypass"]=true;
@@ -143,44 +144,71 @@ public partial class CaveNetwork : RefCounted
     // Spatial broad phase for the exact symmetric support test. Segment IDs
     // are visited at most once per candidate station regardless of bin overlap.
     private readonly record struct SupportSegment(D Edge,Vector3 A,Vector3 B,double Width,double Height);
-    public bool supported_join(D candidate,A retained)
+    private static int SupportCell(float x)=>Mathf.FloorToInt(x/64);
+    // Owned by a single append-only graph growth operation. Failed proposals
+    // no longer rebuild thousands of immutable segments or allocate a new
+    // dictionary of buckets. Public callers still receive a fresh index.
+    private sealed class SupportIndex
+    {
+        internal readonly List<SupportSegment> Segments=new();
+        internal readonly Dictionary<Vector2I,List<int>> Bins=new();
+        internal double LargestWidth;
+        private int indexed,stamp;
+        private int[] seen=Array.Empty<int>();
+        internal void Sync(A retained)
+        {
+            if(retained.Count<indexed)throw new InvalidOperationException("Support index requires append-only edges");
+            while(indexed<retained.Count)
+            {
+                var edge=retained[indexed++].AsGodotDictionary();var previous=edge["points"].AsVector3Array();
+                double width=Number(edge,"half_width"),height=Number(edge,"headroom");
+                LargestWidth=Math.Max(LargestWidth,width);
+                for(int j=0;j<previous.Length-1;j++)
+                {
+                    var c=previous[j];var d=previous[j+1];int id=Segments.Count;
+                    Segments.Add(new SupportSegment(edge,c,d,width,height));
+                    for(int z=SupportCell(Math.Min(c.Z,d.Z));z<=SupportCell(Math.Max(c.Z,d.Z));z++)
+                        for(int x=SupportCell(Math.Min(c.X,d.X));x<=SupportCell(Math.Max(c.X,d.X));x++)
+                        {
+                            var key=new Vector2I(x,z);
+                            if(!Bins.TryGetValue(key,out var bucket))Bins[key]=bucket=new();
+                            bucket.Add(id);
+                        }
+                }
+            }
+            if(seen.Length<Segments.Count)Array.Resize(ref seen,Math.Max(Segments.Count,seen.Length*2+64));
+        }
+        internal void BeginStation()
+        {
+            if(stamp==int.MaxValue){Array.Clear(seen);stamp=0;}
+            stamp++;
+        }
+        internal bool Visit(int id)
+        {
+            if(seen[id]==stamp)return false;
+            seen[id]=stamp;return true;
+        }
+    }
+    public bool supported_join(D candidate,A retained)=>SupportedJoin(candidate,retained,new SupportIndex());
+    private bool SupportedJoin(D candidate,A retained,SupportIndex index)
     {
         last_support_conflict=new D();
+        index.Sync(retained);
         var points=candidate["points"].AsVector3Array();
-        var segments=new List<SupportSegment>();
-        var bins=new Dictionary<Vector2I,List<int>>();
-        double candidateWidth=Number(candidate,"half_width"),candidateHeight=Number(candidate,"headroom"),largestWidth=0;
-        static int Cell(float x)=>Mathf.FloorToInt(x/64);
-        foreach(var value in retained)
-        {
-            var edge=value.AsGodotDictionary();var previous=edge["points"].AsVector3Array();
-            double width=Number(edge,"half_width"),height=Number(edge,"headroom");
-            largestWidth=Math.Max(largestWidth,width);
-            for(int j=0;j<previous.Length-1;j++)
-            {
-                var c=previous[j];var d=previous[j+1];int id=segments.Count;
-                segments.Add(new SupportSegment(edge,c,d,width,height));
-                for(int z=Cell(Math.Min(c.Z,d.Z));z<=Cell(Math.Max(c.Z,d.Z));z++)
-                    for(int x=Cell(Math.Min(c.X,d.X));x<=Cell(Math.Max(c.X,d.X));x++)
-                    {
-                        var key=new Vector2I(x,z);
-                        if(!bins.TryGetValue(key,out var bucket))bins[key]=bucket=new();
-                        bucket.Add(id);
-                    }
-            }
-        }
-        var seen=new int[segments.Count];
+        var segments=index.Segments;var bins=index.Bins;
+        double candidateWidth=Number(candidate,"half_width"),candidateHeight=Number(candidate,"headroom"),largestWidth=index.LargestWidth;
         float reach=(float)(candidateWidth+largestWidth+2);
         for(int i=0;i<points.Length-1;i++)
         {
+            index.BeginStation();
             var a=points[i];var b=points[i+1];var ab=Xz(b-a);
-            for(int z=Cell(Math.Min(a.Z,b.Z)-reach);z<=Cell(Math.Max(a.Z,b.Z)+reach);z++)
-                for(int x=Cell(Math.Min(a.X,b.X)-reach);x<=Cell(Math.Max(a.X,b.X)+reach);x++)
+            for(int z=SupportCell(Math.Min(a.Z,b.Z)-reach);z<=SupportCell(Math.Max(a.Z,b.Z)+reach);z++)
+                for(int x=SupportCell(Math.Min(a.X,b.X)-reach);x<=SupportCell(Math.Max(a.X,b.X)+reach);x++)
                 {
                     if(!bins.TryGetValue(new Vector2I(x,z),out var bucket))continue;
                     foreach(int id in bucket)
                     {
-                        if(seen[id]==i+1)continue;seen[id]=i+1;
+                        if(!index.Visit(id))continue;
                         var segment=segments[id];var c=segment.A;var d=segment.B;
                         double clearance=candidateWidth+segment.Width+2,height=Math.Max(candidateHeight,segment.Height)+3;
                         if(Math.Max(a.X,b.X)+clearance<Math.Min(c.X,d.X)||Math.Min(a.X,b.X)-clearance>Math.Max(c.X,d.X)||
@@ -250,6 +278,7 @@ public partial class CaveNetwork : RefCounted
         // while its branching, extent and depth are independently seeded.
         double Fracture(Vector2 p)=>FractureBearing(p);
         int serial=0;
+        var growthIndex=new SupportIndex();
         double reserve=Number(_active_context,"planning_depth_reserve");
         double floorLimit=Math.Max(-1000,Height(center.X,center.Y)-max_depth+reserve+8);
         double startY=first["point"].AsVector3().Y;
@@ -326,7 +355,7 @@ public partial class CaveNetwork : RefCounted
                     if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,occupancy,new A()))
                     {
                         edge=route(parent,node,controls.ToArray());
-                        if(edge.Count>0&&supported_join(edge,edges)&&
+                        if(edge.Count>0&&SupportedJoin(edge,edges,growthIndex)&&
                             !edge["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))break;
                     }
                     edge=new();
@@ -403,7 +432,7 @@ public partial class CaveNetwork : RefCounted
             var mid=(p+q)*.5f+(q-p).Orthogonal()*(float)((random(cell,salt+2)-.5)*.45);
             if(!Inside(mid,40))continue;
             var loop=route(from,to,new[]{p,mid,q});
-            if(loop.Count==0||!supported_join(loop,edges)||loop["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+            if(loop.Count==0||!SupportedJoin(loop,edges,growthIndex)||loop["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
             loop["growth_role"]="loop";edges.Add(loop);i++;
         }
         // Density is independent of underground graph size. Bias the budget toward
@@ -451,7 +480,7 @@ public partial class CaveNetwork : RefCounted
                 foreach(var controls in proposals)
                 {
                     var candidate=route(entry,destination,controls,true);
-                    if(candidate.Count==0 || !supported_join(candidate,edges) || candidate["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+                    if(candidate.Count==0 || !SupportedJoin(candidate,edges,growthIndex) || candidate["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
                     if(access_admission.Target is CaveInsectEntryGuard guard&&access_admission.Method==nameof(CaveInsectEntryGuard.clear_access))
                     {if(!guard.clear_access(candidate))continue;}
                     else if(Valid(access_admission)&&!access_admission.Call(candidate).AsBool())continue;
@@ -497,7 +526,7 @@ public partial class CaveNetwork : RefCounted
         if(region_decorator.Target is CaveHiveNetwork decoration&&region_decorator.Method==nameof(CaveHiveNetwork.decorate))result=decoration.decorate(result,_active_context);else if(Valid(region_decorator))result=region_decorator.Call(result,_active_context).AsGodotDictionary();
         if (chamber_variety && !result.ContainsKey("pockets")) { result["pockets"] = Profiles.make(result, height, seed_id, max_depth, minimum_roof); result["pocket_passages"] = Profiles.passages(result, result["pockets"].AsGodotArray()); }
         if(seepage_density>0)result["pools"]=Basins.make(result,seed_id,seepage_density);
-        if(geological_morphology)result["vertical_links"]=CaveVerticalFeatures.Build(result,Height,minimum_roof,max_depth-reserve,seed_id);
+        if(geological_morphology)result["vertical_links"]=CaveVerticalFeatures.Build(result,Height,minimum_roof,max_depth-reserve,seed_id,supported_join);
         if(region_finalizer.Target is CaveBiomeRegions finalizer&&region_finalizer.Method==nameof(CaveBiomeRegions.decorate))result=finalizer.decorate(result);else if(Valid(region_finalizer))result=region_finalizer.Call(result).AsGodotDictionary();return result;
     }
     public D region(Vector2I cell)
@@ -535,6 +564,7 @@ public partial class CaveNetwork : RefCounted
         var left=Items(a,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
         var right=Items(b,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
         double reserve=Get(a,"cave_family",-1).AsInt32()==7||Get(b,"cave_family",-1).AsInt32()==7?2:0;
+        var linkIndex=new SupportIndex();
         void Link(bool deep,bool unrestricted=false)
         {
             var candidates=new List<(D From,D To,double Score)>();
@@ -554,7 +584,7 @@ public partial class CaveNetwork : RefCounted
                 {
                     var mid=(p+q)*.5f+delta.Orthogonal()*(float)offset;
                     var solved=route(candidate.From,candidate.To,new[]{p,mid,q},false,reserve);
-                    if(solved.Count==0||!supported_join(solved,protectedEdges))continue;
+                    if(solved.Count==0||!SupportedJoin(solved,protectedEdges,linkIndex))continue;
                     // Pair-owned links must not spill into a third region,
                     // whose independently compiled halo would omit the link.
                     var lo=(Vector2)first*(float)REGION_METRES;

@@ -671,7 +671,7 @@ public partial class CaveStreamer : Node3D
             }
             break;
         }
-        if(forecastSurface?.TryGetValue("columns",out var forecastColumns)==true && sourceColumns.RecursiveEqual(forecastColumns.AsGodotDictionary())){
+        if(forecastSurface?.TryGetValue("columns",out var forecastColumns)==true && Get(forecastSurface,"valid",false).AsBool() && forecastSurface.ContainsKey("cells") && sourceColumns.RecursiveEqual(forecastColumns.AsGodotDictionary())){
             cells=forecastSurface["cells"].AsGodotArray();
             forecastSurface=null;
         }
