@@ -73,7 +73,7 @@ internal static class CaveWorkloadChecks
         var regions = new A { region }; var connections = new A();
         var bundle = new D { ["cell"] = site, ["regions"] = regions, ["connections"] = connections };
         require(work.Call("use_bundle", bundle).AsBool(), "C# cave field rejected actual generated region");
-        require(referenceWork.Call("use_bundle", bundle).AsBool(), "Original worker rejected actual generated region");
+        require(referenceWork.Call("use_bundle", bundle).AsBool(), "Independent worker rejected actual generated region");
         foreach (var edge in region["edges"].AsGodotArray())
         {
             var entrance = new D { ["access"] = edge }; var copy = entrance.Duplicate(true);
@@ -90,15 +90,15 @@ internal static class CaveWorkloadChecks
         var key = new Vector3I(Mathf.FloorToInt(point.X / 64), Mathf.FloorToInt(point.Y / 64), Mathf.FloorToInt(point.Z / 64));
         byte[]? expected = null;
         var rows = new A();
-        foreach (var field in new[] { reference, managed })
+        foreach (var candidateWork in new[] { referenceWork, work })
         {
-            work.Set("field", field); work.Get("_water_cache").AsGodotDictionary().Clear();
-            long start = Stopwatch.GetTimestamp(); var payload = work.Call("build_cell", key).AsGodotDictionary(); double seconds = Stopwatch.GetElapsedTime(start).TotalSeconds;
+            candidateWork.Get("_water_cache").AsGodotDictionary().Clear();
+            long start = Stopwatch.GetTimestamp(); var payload = candidateWork.Call("build_cell", key).AsGodotDictionary(); double seconds = Stopwatch.GetElapsedTime(start).TotalSeconds;
             require(payload["valid"].AsBool() && payload["arrays"].AsGodotArray().Count > 0, "Actual cave cell did not produce valid geometry");
             var bytes = GD.VarToBytes(payload);
-            if (expected == null) expected = bytes; else require(expected.SequenceEqual(bytes), "Complete actual cave worker payload differs after field migration");
-            GD.Print($"Actual volcanic cave cell {key}, {(field == managed ? "C#" : "independent C#")} field: {seconds:F3}s; payload bytes {bytes.Length}. Ordered shared-process diagnostic, not an isolated benchmark.");
-            rows.Add(new D { ["field"] = field == managed ? "C#" : "independent C#", ["seconds"] = seconds, ["complete_payload_bytes"] = bytes.Length });
+            if (expected == null) expected = bytes; else require(expected.SequenceEqual(bytes), "Independent worker cell payload differs");
+            GD.Print($"Actual volcanic cave cell {key}, {(candidateWork == work ? "C#" : "independent C#")} field: {seconds:F3}s; payload bytes {bytes.Length}. Ordered shared-process diagnostic, not an isolated benchmark.");
+            rows.Add(new D { ["field"] = candidateWork == work ? "C#" : "independent C#", ["seconds"] = seconds, ["complete_payload_bytes"] = bytes.Length });
         }
         var originalPayload = referenceWork.Call("build_cell", key);
         require(expected!.SequenceEqual(GD.VarToBytes(originalPayload)), "Independent C# worker orchestration payload differs");
