@@ -56,6 +56,21 @@ public partial class CaveNetwork : RefCounted
         }
     }
     public double random(Vector2I cell,long salt)=>SeededRandom(cell,seed_id,salt);
+    // Continuous value fields at independent geological scales. Coordinates,
+    // not the discovery region or iteration order, own each lattice corner.
+    internal double GeologyAt(Vector2 point,double scale,long salt)
+    {
+        double x=point.X/scale,z=point.Y/scale;
+        int ix=(int)Math.Floor(x),iz=(int)Math.Floor(z);
+        double u=Smooth(0,1,x-ix),v=Smooth(0,1,z-iz);
+        return Lerp(Lerp(random(new(ix,iz),salt),random(new(ix+1,iz),salt),u),
+            Lerp(random(new(ix,iz+1),salt),random(new(ix+1,iz+1),salt),u),v);
+    }
+    private double FractureBearing(Vector2 p)
+    {
+        double x=GeologyAt(p,2700,82001)*2-1,z=GeologyAt(p,2700,82005)*2-1;
+        return Math.Atan2(z,x)+(GeologyAt(p,430,82006)-.5)*1.8;
+    }
     public Vector2[] curve(Vector2[] control)
     {
         var path = new List<Vector2>();
@@ -84,11 +99,13 @@ public partial class CaveNetwork : RefCounted
     public D route(D a, D b, Vector2[] controls, bool entry, double extra_depth_reserve)
     {
         var path = curve(controls); float[] cover = System.Array.Empty<float>();
+        double startFlat=entry?0:Math.Max(flat_radius,Number(a,"chamber_radius")+half_width+2);
+        double endFlat=Math.Max(flat_radius,Number(b,"chamber_radius")+half_width+2);
         if (entry)
         { double length = 0; var distances = new double[path.Length]; for (int i = 1; i < path.Length; i++) { length += path[i].DistanceTo(path[i - 1]); distances[i] = length; } cover = new float[path.Length]; for (int i = 0; i < path.Length; i++) cover[i] = (float)Smooth(0, .75, distances[i] / length); }
         double reserve = Math.Max(extra_depth_reserve, Number(_active_context, "planning_depth_reserve"));
-        var solved = Solver is RouteSolver native ? native.solve(path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, entry ? 0 : flat_radius, flat_radius)
-            : Solver.Call("solve", path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, entry ? 0 : flat_radius, flat_radius).AsGodotDictionary();
+        var solved = Solver is RouteSolver native ? native.solve(path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, startFlat, endFlat)
+            : Solver.Call("solve", path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, startFlat, endFlat).AsGodotDictionary();
         if (!solved["valid"].AsBool() || solved["points"].AsVector3Array().Any(p=>p.Y < -1000.001f)) return new();
         return new D { ["from"] = a["id"], ["to"] = b["id"], ["points"] = solved["points"], ["half_width"] = half_width, ["headroom"] = headroom, ["entrance"] = entry, ["maximum_grade"] = solved["maximum_grade"], ["minimum_measured_roof_m"] = solved["minimum_measured_roof_m"], ["maximum_measured_depth_m"] = solved["maximum_measured_depth_m"] };
     }
@@ -231,11 +248,7 @@ public partial class CaveNetwork : RefCounted
 
         // A region's fracture bearing changes continuously through space,
         // while its branching, extent and depth are independently seeded.
-        double Fracture(Vector2 p)
-        {
-            double phase=random(new Vector2I((int)Math.Floor(cell.X/3.0),(int)Math.Floor(cell.Y/3.0)),82001)*Math.Tau;
-            return phase+1.1*Math.Sin(p.X*.0017+p.Y*.0006+phase)+.75*Math.Cos(p.Y*.0021-p.X*.0004);
-        }
+        double Fracture(Vector2 p)=>FractureBearing(p);
         int serial=0;
         double reserve=Number(_active_context,"planning_depth_reserve");
         double floorLimit=Math.Max(-1000,Height(center.X,center.Y)-max_depth+reserve+8);
@@ -243,7 +256,9 @@ public partial class CaveNetwork : RefCounted
         double depthRoll=random(cell,82002),depthFraction=random(cell,82003);
         double fraction=depthRoll<.23?.13+.24*depthFraction:depthRoll<.58?.40+.43*depthFraction:1;
         double targetY=Lerp(startY,Math.Min(startY,floorLimit),fraction);
-        double regionalDensity=random(cell,82004);
+        double permeability=GeologyAt(center,1800,82007);
+        double regionalDensity=.45*random(cell,82004)+.55*permeability;
+        double bedding=GeologyAt(center,940,82008);
         int shallowSteps=1+(int)(regionalDensity*3);
 
         // Every admitted child is connected by a proven grade/roof-safe route.
@@ -258,15 +273,27 @@ public partial class CaveNetwork : RefCounted
             {
                 long salt=90000+ordinal*256L+attempt*12L;
                 double bearing=attempt<6?Fracture(p)+(random(cell,salt)<.5?0:Math.PI)+(random(cell,salt+1)-.5)*2.5:random(cell,salt+1)*Math.Tau;
-                double span=(descending?245:125)+(descending?295:300)*random(cell,salt+2);
+                double span=(descending?245:105)+(descending?295:390)*random(cell,salt+2);
+                if(!descending&&!shallow)span*=.75+.5*GeologyAt(p,670,82009);
                 var q=p+new Vector2((float)Math.Cos(bearing),(float)Math.Sin(bearing))*(float)span;
                 if(!Inside(q,85))continue;
                 var delta=q-p;var side=delta.Orthogonal();
                 float bend=(float)((random(cell,salt+3)-.5)*.64);
                 float bend2=(float)((random(cell,salt+4)-.5)*.50);
                 var m1=p.Lerp(q,.28f)+side*bend;var m2=p.Lerp(q,.71f)+side*bend2;
+                // A second fracture family can create sinuous longer descents,
+                // instead of forcing every edge into a two-bend motif.
+                var controls=new List<Vector2>{p,m1};
+                if(random(cell,salt+9)<.42)
+                {
+                    var middle=p.Lerp(q,.50f)+side*(float)((random(cell,salt+10)-.5)*.84);
+                    if(!Inside(middle,40))continue;
+                    controls.Add(middle);
+                }
+                controls.Add(m2);controls.Add(q);
                 if(!Inside(m1,40)||!Inside(m2,40))continue;
-                double possible=Math.Max(0,span-2*flat_radius-12)*maximum_grade;
+                double routeLength=0;for(int j=1;j<controls.Count;j++)routeLength+=controls[j].DistanceTo(controls[j-1]);
+                double possible=Math.Max(0,Math.Min(routeLength*.92,span*1.20)-Math.Max(flat_radius,Number(parent,"chamber_radius")+half_width+2)-flat_radius-12)*maximum_grade;
                 double goal=descending?Math.Max(desiredFloor,a.Y-possible*(.67+.25*random(cell,salt+5))):
                     a.Y+possible*(random(cell,salt+5)-.5)*(shallow?.28:1.35);
                 var node=node_floor(q,Height(q.X,q.Y)-goal);
@@ -282,19 +309,35 @@ public partial class CaveNetwork : RefCounted
                 node["level"]=shallow?0:Math.Clamp((int)(localDepth/Math.Max(100,max_depth*.27)),0,3);
                 node["shape_seed"]=(long)(random(cell,salt+6)*9007199254740992.0);
                 if(shallow)node["entry_anchor"]=true;
-                var edge=route(parent,node,new[]{p,m1,m2,q});
-                if(edge.Count==0||!supported_join(edge,edges))continue;
-                if(edge["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+                // Independently vary horizontal and vertical growth. Rare
+                // soluble zones admit rooms over 100m across; resistant zones
+                // stay narrow. Large envelopes are cleared BEFORE solving so
+                // the joining route has a genuinely level room threshold.
+                double localSolubility=GeologyAt(q,560,82007);
+                double radius=Math.Max(half_width+2,7+(25+47*localSolubility)*Math.Pow(random(cell,salt+7),2.0));
+                double room=Math.Max(headroom,8+(26+48*bedding)*Math.Pow(random(cell,salt+8),1.8));
+                if(!geological_morphology){radius=Math.Min(radius,30);room=Math.Min(room,30);}
+                if(shallow){radius=Math.Min(radius,28);room=Math.Min(room,30);}
+                var occupancy=new D{["nodes"]=nodes,["edges"]=edges};
+                D edge=new();
+                for(int shrink=0;shrink<3;shrink++)
+                {
+                    node["chamber_radius"]=radius;node["chamber_height"]=room;
+                    if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,occupancy,new A()))
+                    {
+                        edge=route(parent,node,controls.ToArray());
+                        if(edge.Count>0&&supported_join(edge,edges)&&
+                            !edge["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))break;
+                    }
+                    edge=new();
+                    radius=shrink==0?Math.Max(half_width+1,radius*.58):half_width+1;
+                    room=shrink==0?Math.Max(headroom,room*.65):headroom;
+                }
+                if(edge.Count==0)continue;
                 edge["growth_role"]=descending?"descent":shallow?"access_spine":"branch";
-                // Room dimensions are admitted against the real terrain and
-                // existing graph before any geometry is emitted.
-                double radius=Math.Max(half_width+2,7+34*Math.Pow(random(cell,salt+7),1.8));
-                double room=Math.Max(headroom,8+34*Math.Pow(random(cell,salt+8),1.5));
-                var roomEdges=edges.Duplicate();roomEdges.Add(edge);
-                if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,new D{["nodes"]=nodes,["edges"]=roomEdges},new A()))
-                {node["chamber_radius"]=radius;node["chamber_height"]=room;}
-                else
-                {node["chamber_radius"]=half_width+1;node["chamber_height"]=headroom;}
+                node["geology_bearing"]=Fracture(q);
+                node["geology_solubility"]=localSolubility;
+                node["geology_bedding"]=GeologyAt(q,940,82008);
                 nodes.Add(node);edges.Add(edge);child=node;return true;
             }
             return false;
@@ -335,13 +378,17 @@ public partial class CaveNetwork : RefCounted
             if(!progressed&&Grow(descent,false,false,targetY,out child)){descent=child;progressed=true;}
             if(progressed)failed=0;else if(++failed>=3)break;
         }
-        int tributaries=2+(int)(regionalDensity*regionalDensity*13);
+        int tributaries=3+(int)(regionalDensity*regionalDensity*19);
         for(int i=0;i<tributaries&&nodes.Count<72;i++)
         {
-            var parent=nodes[(int)(random(cell,83000+i)*nodes.Count)].AsGodotDictionary();
+            // Repeated branching from a newly grown tributary creates
+            // hierarchies; a separate roll returns to a primary trunk.
+            int parentIndex=(int)(random(cell,83000+i)*nodes.Count);
+            if(i>0&&random(cell,83100+i)<.35+regionalDensity*.3)parentIndex=nodes.Count-1;
+            var parent=nodes[parentIndex].AsGodotDictionary();
             Grow(parent,false,false,targetY,out _);
         }
-        int loopBudget=(int)(random(cell,83080)*7);
+        int loopBudget=1+(int)(random(cell,83080)*(5+regionalDensity*9));
         for(int i=0,attempt=0;i<loopBudget&&attempt<loopBudget*12;attempt++)
         {
             long salt=84000+attempt*4;
@@ -486,18 +533,18 @@ public partial class CaveNetwork : RefCounted
         var left=Items(a,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
         var right=Items(b,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
         double reserve=Get(a,"cave_family",-1).AsInt32()==7||Get(b,"cave_family",-1).AsInt32()==7?2:0;
-        void Link(bool deep)
+        void Link(bool deep,bool unrestricted=false)
         {
             var candidates=new List<(D From,D To,double Score)>();
             foreach(var from in left)foreach(var to in right)
             {
                 var p=from["point"].AsVector3();var q=to["point"].AsVector3();
-                if(deep?(p.Y>-250||q.Y>-250):(!Get(from,"entry_anchor",false).AsBool()||!Get(to,"entry_anchor",false).AsBool()))continue;
+                if(!unrestricted&&(deep?(p.Y>-250||q.Y>-250):(!Get(from,"entry_anchor",false).AsBool()||!Get(to,"entry_anchor",false).AsBool())))continue;
                 double distance=Xz(p).DistanceTo(Xz(q)),drop=Math.Abs(p.Y-q.Y);
                 if(distance<100||distance>2600||drop>(distance-2*flat_radius)*maximum_grade*.9)continue;
                 candidates.Add((from,to,distance+drop*3+(deep?(p.Y+q.Y)*.25:0)));
             }
-            foreach(var candidate in candidates.OrderBy(c=>c.Score).Take(6))
+            foreach(var candidate in candidates.OrderBy(c=>c.Score).Take(unrestricted?16:10))
             {
                 var p=Xz(candidate.From["point"].AsVector3());var q=Xz(candidate.To["point"].AsVector3());
                 var delta=q-p;
@@ -506,6 +553,11 @@ public partial class CaveNetwork : RefCounted
                     var mid=(p+q)*.5f+delta.Orthogonal()*(float)offset;
                     var solved=route(candidate.From,candidate.To,new[]{p,mid,q},false,reserve);
                     if(solved.Count==0||!supported_join(solved,protectedEdges))continue;
+                    // Pair-owned links must not spill into a third region,
+                    // whose independently compiled halo would omit the link.
+                    var lo=(Vector2)first*(float)REGION_METRES;
+                    var hi=((Vector2)second+Vector2.One)*(float)REGION_METRES;
+                    if(solved["points"].AsVector3Array().Any(v=>v.X<lo.X+8||v.Z<lo.Y+8||v.X>hi.X-8||v.Z>hi.Y-8))continue;
                     solved["id"]=FormattableString.Invariant($"{first.X}:{first.Y}>{second.X}:{second.Y}")+(deep?":deep":"");
                     solved["growth_role"]=deep?"deep_region_link":"region_link";
                     if(geological_morphology){solved["cross_section_style"]=Get(a,"cross_section_style",0);solved["profile_phase"]=random(first,deep?86002:86001)*Math.Tau;solved["procedural_profile"]=true;}
@@ -513,6 +565,10 @@ public partial class CaveNetwork : RefCounted
                 }
             }
         }
-        Link(false);Link(true);return result;
+        Link(false);Link(true);
+        // A buried region without shallow admission still gets an opportunity
+        // to connect through any compatible pair of reachable interior nodes.
+        if(result.Count==0)Link(false,true);
+        return result;
     }
 }

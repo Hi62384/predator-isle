@@ -158,22 +158,36 @@ internal static class CaveFieldEvaluation
         double ux=direction.X/minor,uz=direction.Y/minor;
         double dx=(double)p.X-a.X,dz=(double)p.Z-a.Z;
         double u=(dx*ux+dz*uz)/size.X,v=(-dx*uz+dz*ux)/minor;
-        double r=Math.Sqrt(u*u+v*v),phase=ux*2.3+uz*3.7+style*.73;
-        double warp=.79+.12*Math.Sin(u*5+v*3+phase)+.09*Math.Sin(v*7-u*2+phase*1.7);
-        double rise=Smooth(.25,.85,r)*Math.Min(size.Y*.18,5)*(.5+.5*Math.Sin(u*5-v*3+phase));
-        double ceiling=size.Y*(.60+.40*(.5+.5*Math.Sin(u*3+v*4+phase)));
-        double h=Math.Max(1,ceiling-rise),y=(double)p.Y-a.Y;
-        double radial=r/warp,vertical=(y-rise-h*.45)/(h*.55);
+        double y=(double)p.Y-a.Y,phase=ux*2.3+uz*3.7+style*.73+size.X*.019+minor*.031+size.Y*.023;
+        double layer=Math.Clamp(y/size.Y,0,1);
+        // The axes drift and twist through the elevation of the room, while
+        // angular dissolution and bedding independently change each section.
+        double twist=.46*Math.Sin(phase*1.7)*(layer-.5);
+        double cu=u*Math.Cos(twist)-v*Math.Sin(twist),cv=u*Math.Sin(twist)+v*Math.Cos(twist);
+        cu-=.15*Math.Sin(layer*5+phase)*layer;cv-=.13*Math.Cos(layer*4-phase)*layer;
+        double r=Math.Sqrt(cu*cu+cv*cv);
+        double warp=.68+.16*Math.Sin(cu*5+cv*3+phase)+.10*Math.Sin(cv*7-cu*2+phase*1.7)+.06*Math.Cos(layer*11+cu*4-phase);
+        double rise=Smooth(.25,.85,r)*Math.Min(size.Y*.20,7)*(.5+.5*Math.Sin(u*5-v*3+phase));
+        double ceiling=size.Y*(.56+.44*(.5+.5*Math.Sin(u*3+v*4+phase)));
+        double h=Math.Max(1,ceiling-rise);
+        double radial=r/Math.Max(.34,warp),vertical=(y-rise-h*.45)/(h*.55);
         double power=2+2.6*(.5+.5*Math.Sin(phase));
         double arch=(Math.Pow(Math.Pow(Math.Abs(radial),power)+Math.Pow(Math.Abs(vertical),power),1/power)-1)*Math.Min(minor,h*.55);
         double value=Math.Max(rise+floorOffset-y,arch+wall);
-        // Local rock remnants never subtract the protected core or other routes.
-        if(size.X>=15&&size.Y>=20&&Math.Cos(phase)>.1)
+        // Raised side galleries can leave a natural arch or terrace. This
+        // feature's solid is local to its own room, never a global subtraction
+        // from other graph routes, biome chambers, or the protected core.
+        if(size.X>=15&&size.Y>=20)
         {
-            double ru=u-(.57+.07*Math.Sin(phase+y*.13));
-            double rv=v-(.30+.05*Math.Cos(phase-y*.11));
-            double rib=(Math.Sqrt(ru*ru+rv*rv)-(.085+.045*Math.Abs(Math.Sin(phase+y*.17))))*minor;
-            value=Math.Max(value,-rib);
+            double ru=u-(.53+.09*Math.Sin(phase+y*.13));
+            double rv=v-(.28+.07*Math.Cos(phase-y*.11));
+            double rib=(Math.Sqrt(ru*ru+rv*rv)-(.07+.055*Math.Abs(Math.Sin(phase+y*.17))))*minor;
+            if(Math.Cos(phase)>.0)value=Math.Max(value,-rib);
+            double shelfWidth=.16+.12*(.5+.5*Math.Sin(phase*1.9));
+            double shelfY=size.Y*(.36+.12*Math.Sin(phase*1.3));
+            double shelf=Math.Max((Math.Abs(u-.58)-shelfWidth)*size.X,Math.Abs(y-shelfY)-Math.Max(1,size.Y*.055));
+            shelf=Math.Max(shelf,(Math.Abs(v+.12)-.42)*minor);
+            if(Math.Sin(phase*1.4)>.12)value=Math.Max(value,-shelf);
         }
         return value;
     }

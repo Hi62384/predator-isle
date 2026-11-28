@@ -75,7 +75,7 @@ internal static class CaveGpuLattice
                 data.Add(new Vector4(b.X,b.Y,b.Z,f.Styles[i]));
                 data.Add(new Vector4(size.X,(float)f.ArchHeight[i],(float)f.ArchCenter[i],(float)f.ArchScale[i]));
                 data.Add(new Vector4(dir.X,dir.Y,(float)f.SpanSquared[i],(float)f.SpanLength[i]));
-                data.Add(new Vector4(double.IsFinite(firstGrade)?(float)firstGrade:0,
+                data.Add(new Vector4(f.Kinds[i]==4?size.Y:double.IsFinite(firstGrade)?(float)firstGrade:0,
                     double.IsFinite(lastGrade)?(float)lastGrade:0,
                     double.IsFinite(firstGrade)?1:0,double.IsFinite(lastGrade)?1:0));
             }

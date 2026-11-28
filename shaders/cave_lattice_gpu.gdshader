@@ -30,24 +30,34 @@ float field_value(int index){
   vec2 q=p.xz-a.xz;
   if(kind==4){
    if(options.z>0.5&&abs(p.y-a.y)<=5.01)return 5.0;
-   float minor=direction.w,roof=shape.y/.6;
+   float minor=direction.w,roof=grades.x;
    vec2 axis=direction.xy/minor;
    float u=dot(q,axis)/shape.x,v=dot(q,vec2(-axis.y,axis.x))/minor;
-   float r=length(vec2(u,v)),phase=axis.x*2.3+axis.y*3.7+float(style)*.73;
-   float warp=.79+.12*sin(u*5.0+v*3.0+phase)+.09*sin(v*7.0-u*2.0+phase*1.7);
-   float rise=smoothstep(.25,.85,r)*min(roof*.18,5.0)*(.5+.5*sin(u*5.0-v*3.0+phase));
-   float ceiling=roof*(.60+.40*(.5+.5*sin(u*3.0+v*4.0+phase)));
-   float h=max(1.0,ceiling-rise),y=p.y-a.y;
-   vec2 normalized=vec2(r/warp,(y-rise-h*.45)/(h*.55));
+   float y=p.y-a.y,phase=axis.x*2.3+axis.y*3.7+float(style)*.73+shape.x*.019+minor*.031+roof*.023;
+   float layer=clamp(y/roof,0.0,1.0);
+   float twist=.46*sin(phase*1.7)*(layer-.5);
+   float cu=u*cos(twist)-v*sin(twist),cv=u*sin(twist)+v*cos(twist);
+   cu-=.15*sin(layer*5.0+phase)*layer;cv-=.13*cos(layer*4.0-phase)*layer;
+   float r=length(vec2(cu,cv));
+   float warp=.68+.16*sin(cu*5.0+cv*3.0+phase)+.10*sin(cv*7.0-cu*2.0+phase*1.7)+.06*cos(layer*11.0+cu*4.0-phase);
+   float rise=smoothstep(.25,.85,r)*min(roof*.20,7.0)*(.5+.5*sin(u*5.0-v*3.0+phase));
+   float ceiling=roof*(.56+.44*(.5+.5*sin(u*3.0+v*4.0+phase)));
+   float h=max(1.0,ceiling-rise);
+   vec2 normalized=vec2(r/max(.34,warp),(y-rise-h*.45)/(h*.55));
    float exponent=2.0+2.6*(.5+.5*sin(phase));
    vec2 powers=pow(abs(normalized),vec2(exponent));
    float arch=(pow(powers.x+powers.y,1.0/exponent)-1.0)*min(minor,h*.55);
    float value=max(rise-y,arch+wall);
-   if(shape.x>=15.0&&roof>=20.0&&cos(phase)>.1){
-    float ru=u-(.57+.07*sin(phase+y*.13));
-    float rv=v-(.30+.05*cos(phase-y*.11));
-    float rib=(length(vec2(ru,rv))-(.085+.045*abs(sin(phase+y*.17))))*minor;
-    value=max(value,-rib);
+   if(shape.x>=15.0&&roof>=20.0){
+    float ru=u-(.53+.09*sin(phase+y*.13));
+    float rv=v-(.28+.07*cos(phase-y*.11));
+    float rib=(length(vec2(ru,rv))-(.07+.055*abs(sin(phase+y*.17))))*minor;
+    if(cos(phase)>0.0)value=max(value,-rib);
+    float shelf_width=.16+.12*(.5+.5*sin(phase*1.9));
+    float shelf_y=roof*(.36+.12*sin(phase*1.3));
+    float shelf=max((abs(u-.58)-shelf_width)*shape.x,abs(y-shelf_y)-max(1.0,roof*.055));
+    shelf=max(shelf,(abs(v+.12)-.42)*minor);
+    if(sin(phase*1.4)>.12)value=max(value,-shelf);
    }
    closed_value=min(closed_value,value);
    continue;

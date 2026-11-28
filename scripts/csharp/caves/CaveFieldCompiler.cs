@@ -27,10 +27,15 @@ internal static class CaveFieldCompiler
         offset.Y=form==1 ? swell*size.Y*.72f : swell*swell*size.Y*.32f;
         if(Flag(edge,"procedural_profile"))
         {
-            width=size.X*(1+swell*(.4f+1.5f*MathF.Abs(MathF.Sin((float)phase))));
-            height=size.Y*(1+swell*(.35f+1.1f*MathF.Abs(MathF.Cos((float)phase))));
-            offset=normal*(swell*size.X*.65f*side);
-            if(f.ground_height(a)-a.Y<f.minimum_roof+height+4 || f.ground_height(b)-b.Y<f.minimum_roof+height+4)return true;
+            float local=(float)(phase+station/(38+phase*5));
+            // Spatially coherent alternating erosion shelves and narrow
+            // fractures. Keep the extra reach inside a small lateral reserve
+            // so adjacent supported routes are not consumed by expansion.
+            width=size.X*(1+swell*(.12f+.23f*MathF.Abs(MathF.Sin(local))));
+            height=size.Y*(1+swell*(.25f+.85f*MathF.Abs(MathF.Cos(local))));
+            offset=normal*(swell*size.X*.20f*MathF.Sin(local));
+            offset.Y=swell*size.Y*.16f*MathF.Abs(MathF.Sin(local*.61f));
+            if(f.ground_height(a+offset)-a.Y<f.minimum_roof+height+offset.Y+4 || f.ground_height(b+offset)-b.Y<f.minimum_roof+height+offset.Y+4)return true;
         }
         if(!f.append_feature(a+offset,b+offset,new Vector2(width,height),0,style))return false;
         if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,Text(edge,"from"),Text(edge,"to"),station,station+a.DistanceTo(b),length);
@@ -49,14 +54,14 @@ internal static class CaveFieldCompiler
             if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);
             return true;
         }
-        float core=Math.Min(radius,Math.Min(22,Math.Max((float)Num(node,"half_width",4)+1,radius*(.42f+.2f*R(1)))));
-        float coreHeight=Math.Min(roof,Math.Max((float)Num(node,"headroom",8),roof*(.70f+.3f*R(2))));
+        float core=Math.Min(radius,Math.Max((float)Num(node,"half_width",4)+1,Math.Min(11,radius*(.26f+.16f*R(1)))));
+        float coreHeight=Math.Min(roof,Math.Max((float)Num(node,"headroom",8),Math.Min(13,roof*(.40f+.22f*R(2)))));
         if(!Add(p,p,core,coreHeight,2))return false;
         if(radius-core<2)return true;
-        float bearing=R(3)*Mathf.Tau;
+        float bearing=node.ContainsKey("geology_bearing")?(float)Num(node,"geology_bearing")+(R(3)-.5f)*2.3f:R(3)*Mathf.Tau;
         // A continuously warped anisotropic volume, not a ring of identical
         // spheres. Its encoded axis also carries the minor horizontal radius.
-        float minor=Math.Max(3,radius*(.32f+.64f*R(6)));
+        float minor=Math.Max(3,radius*(.20f+.76f*R(6)));
         var majorAxis=new Vector3(Mathf.Cos(bearing),0,Mathf.Sin(bearing));
         if(!Add(p,p+majorAxis*minor,radius,roof,4))return false;
         int count=(int)(R(4)*3);
@@ -177,8 +182,8 @@ internal static class CaveFieldCompiler
                     if(!procedural){section.X *= (float)(.72 + .28*bedding);section.Y *= (float)(.72 + .28*fissure);}
                     else if(!Flag(edge,"entrance"))
                     {
-                        section.X*=1+(float)(.08*(1+bedding));
-                        section.Y*=1+(float)(.10*(1+fissure));
+                        section.X*=1+(float)(.10*(1+bedding));
+                        section.Y*=1+(float)(.15*(1+fissure));
                     }
                 }
                 if(varied && !edge.ContainsKey("bypass") && (!Flag(edge,"entrance") || i>5)){
