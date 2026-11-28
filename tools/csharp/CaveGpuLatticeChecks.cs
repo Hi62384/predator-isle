@@ -29,11 +29,11 @@ internal static class CaveGpuLatticeChecks
                     "Complementary tetrahedron case table changed");
             }
             var cases=new A();
-            for(int scenario=0;scenario<10;scenario++)
+            for(int scenario=0;scenario<12;scenario++)
             {
-                int style=scenario>=8?3:scenario;
-                var key=new Vector3I(-2,-1,1);var origin=(Vector3)key*64;
-                using var field=new PortalCaveField{include_surface_air=style==7,opening_rock_cover=style==7?0:6};
+                int style=scenario==11?7:scenario>=8?3:scenario;
+                var key=scenario>=10?new Vector3I(-1744,-16,3334):new Vector3I(-2,-1,1);var origin=(Vector3)key*64;
+                using var field=new PortalCaveField{maximum_depth=scenario>=10?1200:400,include_surface_air=style==7,opening_rock_cover=style==7?0:6};
                 field.height=Callable.From<double,double,double>((x,z)=>100);
                 field.top_height=Callable.From<double,double,double>((x,z)=>origin.Y+57);
                 if(style==7)field.surface_columns[new Vector2I(key.X,key.Z)]=true;
@@ -59,7 +59,7 @@ internal static class CaveGpuLatticeChecks
                     "Cave GPU screening changed exact mesh topology, crossings or normals for style "+style);
                 require(GD.VarToBytes(cpu.boundary_values).SequenceEqual(GD.VarToBytes(candidate.boundary_values)),
                     "Cave GPU screening changed exact chunk frontier for style "+style);
-                cases.Add(new D{["style"]=style,["warped_room"]=scenario==8,["vertical_fissure"]=scenario==9,["gpu_samples"]=candidate.GpuLatticeSamples,
+                cases.Add(new D{["style"]=style,["warped_room"]=scenario==8,["vertical_fissure"]=scenario==9,["distant_world"]=scenario>=10,["gpu_samples"]=candidate.GpuLatticeSamples,
                     ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples,["gpu_topology_cubes"]=candidate.GpuTopologyCubes});
             }
             return new D{["styles"]=cases,["gpu_topology_scalars"]=gpu.CompletedScalars};

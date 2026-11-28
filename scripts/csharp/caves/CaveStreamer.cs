@@ -455,7 +455,7 @@ public partial class CaveStreamer : Node3D
             if (_surface_prepared != null && _surface_prepared.ready_to_commit())
             {
                 var prepared = _surface_staging["request"].AsGodotDictionary();
-                if (_renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,_detail_columns))
+                if (PreservesHeld(prepared["columns"].AsGodotDictionary()) && prepared["columns"].AsGodotDictionary().RecursiveEqual(_detail_columns) && _renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,_detail_columns))
                     return true;
             }
             if (_rebuild_nodes.Count > 0 && _rebuild_nodes.RecursiveEqual(nodes)) return false;
@@ -477,13 +477,13 @@ public partial class CaveStreamer : Node3D
         if(_surface_prepared?.ready_to_commit()==true)
         {
             var prepared=_surface_staging["request"].AsGodotDictionary();
-            if(_renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,prepared["columns"].AsGodotDictionary()))
+            if(PreservesHeld(prepared["columns"].AsGodotDictionary())&&_renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,prepared["columns"].AsGodotDictionary()))
                 return true;
         }
         if (host is ChunkTerrain { nested_rings: true, authority_only: false } && RebindRingParents(nodes))return true;
         _rebuild_nodes=nodes;_rebuild_columns=_surface_columns.Duplicate();
         if(_surface_prepared==null||!_surface_prepared.ready_to_commit())return false;
-        var request=_surface_staging["request"].AsGodotDictionary();return _renderer.matches(request["snapshot"].AsGodotDictionary(),nodes,request["columns"].AsGodotDictionary());
+        var request=_surface_staging["request"].AsGodotDictionary();return PreservesHeld(request["columns"].AsGodotDictionary())&&_renderer.matches(request["snapshot"].AsGodotDictionary(),nodes,request["columns"].AsGodotDictionary());
     }
     // The ring portal is carved on a canonical grid. Changing the LOD around
     // an existing cut only needs new parent masks and clipped parent colliders.
@@ -843,7 +843,7 @@ public partial class CaveStreamer : Node3D
             attemptedColumns=null;reserve_detail(new D());surface_status="no nearby admitted entrance";return;
         }
         ShowInitialEntrance(wantedColumns);
-        reserve_detail(wantedColumns);
+        if(_rebuild_nodes.Count==0)reserve_detail(wantedColumns);
         // Canonical previews already contain both the opening and its collision.
         // Only extract from the live parents when that path cannot build the cut.
         if (initialUpload != null || previewPending) return;
