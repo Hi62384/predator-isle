@@ -762,46 +762,11 @@ public partial class CaveStreamer : Node3D
         if(OS.GetCmdlineUserArgs().Contains("trace"))GD.Print($"Published entrance {upload.Mouth} at camera {_surface_interest}");
     }
 
-    private long lastFlightEntranceCheck;
     public void service_surface(Vector3 point)
     {
         _surface_interest=point;
         long now=(long)Time.GetTicksUsec();
-        if(!wasUnderground && !Teleport && _bundle.Count>0 && flightLead.LengthSquared()>100*100 &&
-            now-lastFlightEntranceCheck>=100000)
-        {
-            lastFlightEntranceCheck=now;
-            var heading=flightLead.Normalized();
-            D? next=null;
-            float best=float.PositiveInfinity;
-            foreach(var raw in _bundle["entrances"].AsGodotArray())
-            {
-                var entry=raw.AsGodotDictionary();
-                var mouth=entry["point"].AsVector3();
-                var offset=new Vector2(mouth.X-point.X,mouth.Z-point.Z);
-                float along=offset.Dot(heading);
-                if(along<0 || along>420 || !entrance_needed(entry,point))continue;
-                float across=(offset-heading*along).LengthSquared();
-                if(across>88*88)continue;
-                var columns=entry["columns"].AsGodotDictionary();
-                if(columns.Count==0 || columns.Keys.All(key=>_surface_columns.ContainsKey(key)))continue;
-                float score=across+along*along*.035f;
-                if(score>=best)continue;
-                next=columns;
-                best=score;
-            }
-            if(next!=null)
-            {
-                var incoming=next.Duplicate();
-                // The regular poll retains mouths that are still ahead. Keep
-                // those same cuts when appending a preview so the two paths
-                // cannot replace each other's entrances on alternating polls.
-                var retained = nearby_columns(point);
-                foreach (var key in _surface_columns.Keys)
-                    if (retained.ContainsKey(key)) incoming[key] = true;
-                if(incoming.Count<=64)ShowInitialEntrance(incoming,allowBuild:false);
-            }
-        }
+        // Flight prediction affects the common planner and background prefetch only.
         if(initialUpload!=null)
         {
             if(Teleport)CancelInitialUpload();
@@ -830,7 +795,6 @@ public partial class CaveStreamer : Node3D
             if(_rebuild_nodes.Count==0&&!Teleport&&_surface_prepared.ready_to_commit())
             {if(_surface_prepared.commit())adopt_surface(_surface_prepared,snapshot,_surface_staging["data"].AsGodotDictionary());_surface_prepared=null;_surface_staging=new();}return;
         }
-        if (_detail_columns.Count>0 && _bundle.Count>0) ShowInitialEntrance(_detail_columns);
         if(_bundle.Count==0||_surface_build_pending||_surface_request.Count>0||now-_surface_poll_usec<250000)return;
         _surface_poll_usec=now;var wantedColumns=nearby_columns(point);if(_rebuild_nodes.Count>0)wantedColumns=_rebuild_columns.Duplicate();
         if(wantedColumns.Count==0)

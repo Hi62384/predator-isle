@@ -270,7 +270,7 @@ public partial class CaveWorkload : RefCounted
         {
             var edge=value.AsGodotDictionary();
             if(!edge["entrance"].AsBool())continue;
-            output.Add(new D{["region"]=region["id"],["point"]=edge["points"].AsVector3Array()[0],["access"]=edge});
+            output.Add(new D{["id"]=edge["from"],["region"]=region["id"],["point"]=edge["points"].AsVector3Array()[0],["access"]=edge});
         }
     }
     public D exposed_columns(D entrance)
@@ -314,7 +314,6 @@ public partial class CaveWorkload : RefCounted
         mesher.capture_boundary_values=capture_frontiers; mesher.GpuLattice=GpuLattice; var arrays = mesher.build(field,key,2);
         if (capture_frontiers) _last_frontiers = Frontiers.build(field,key,mesher.boundary_values);
         var bound = SurfaceBiomes.bind(decorated(arrays,key),field,key); _last_biome_ids = bound["ids"].AsGodotArray(); _last_valid = bound["valid"].AsBool();
-        if (capture_frontiers) foreach (var face in _last_frontiers.Keys.ToArray()) _last_frontiers[face] = SurfaceBiomes.bind(_last_frontiers[face].AsGodotArray(),field,key,_last_biome_ids)["arrays"];
         return bound["arrays"].AsGodotArray();
     }
     public A decorated(A arrays, Vector3I key)
@@ -381,7 +380,6 @@ public partial class CaveWorkload : RefCounted
                     if (Enabled("seal_stream_frontiers"))
                     {
                         var frontiers = Frontiers.build(field,key); groups["frontiers"] = frontiers;
-                        foreach (var face in frontiers.Keys.ToArray()) frontiers[face] = SurfaceBiomes.bind(frontiers[face].AsGodotArray(),field,key,ids)["arrays"];
                     }
                     result.Add(groups);
                 }

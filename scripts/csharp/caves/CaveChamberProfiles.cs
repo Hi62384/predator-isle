@@ -58,13 +58,16 @@ public partial class CaveChamberProfiles : RefCounted
         {
             var node = nodes[index].AsGodotDictionary();
             if (Level(node, -1) < 0 || random(cell, seed_id, 900 + index) > chance) continue;
-            for (int lobe = 0; lobe < (soluble ? 2 : 1); lobe++)
+            bool procedural=node.ContainsKey("shape_seed");
+            int count=procedural?1+(int)(CaveNetwork.SeededRandom(cell,node["shape_seed"].AsInt64(),11)*(soluble?4:2)):(soluble?2:1);
+            for (int lobe = 0; lobe < count; lobe++)
             {
                 if (pockets.Count >= 24) break;
-                int salt = 1000 + index * 16 + lobe * 4; double angle = random(cell, seed_id, salt) * Math.Tau;
+                int salt = 1000 + index * (procedural?32:16) + lobe * 4; double angle = random(cell, seed_id, salt) * Math.Tau;
                 double radius = 22 + random(cell, seed_id, salt + 1) * 6, span = 23 + random(cell, seed_id, salt + 2) * 7;
+                if(procedural){radius=9+22*Math.Pow(random(cell,seed_id,salt+1),1.3);span=Math.Max(12,N(node,"chamber_radius")*.65+radius*.65);}
                 var origin = node["point"].AsVector3(); var p = origin + new Vector3((float)(Math.Cos(angle) * span), 0, (float)(Math.Sin(angle) * span));
-                double headroom = 18 + random(cell, seed_id, salt + 3) * 8;
+                double headroom = procedural?8+25*Math.Pow(random(cell,seed_id,salt+3),1.4):18 + random(cell, seed_id, salt + 3) * 8;
                 if (!compatible(p, radius, headroom, region, pockets)) continue;
                 bool admitted = true; int stations = (int)Math.Ceiling(span / 2);
                 for (int station = 0; station <= stations; station++)
@@ -78,7 +81,12 @@ public partial class CaveChamberProfiles : RefCounted
                     double surface = sampleHeight(p.X + x * radius * .5, p.Z + z * radius * .5);
                     if (!double.IsFinite(surface) || surface - p.Y > maximum_depth - 4 || surface - p.Y < headroom + minimum_roof + 4) { admitted = false; if(shortCircuit)break; }
                 }
-                if (admitted) pockets.Add(new D { ["id"] = node["id"].AsString() + ":lobe:" + lobe, ["point"] = p, ["level"] = node["level"], ["chamber_radius"] = radius, ["chamber_height"] = headroom, ["parent"] = node["id"] });
+                if(admitted)
+                {
+                    var pocket=new D { ["id"] = node["id"].AsString() + ":lobe:" + lobe, ["point"] = p, ["level"] = node["level"], ["chamber_radius"] = radius, ["chamber_height"] = headroom, ["parent"] = node["id"] };
+                    if(procedural)pocket["shape_seed"]=(long)(CaveNetwork.SeededRandom(cell,seed_id,salt+80000)*9007199254740992.0);
+                    pockets.Add(pocket);
+                }
             }
         }
         return pockets;

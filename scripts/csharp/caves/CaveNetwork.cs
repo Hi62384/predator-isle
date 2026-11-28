@@ -222,6 +222,7 @@ public partial class CaveNetwork : RefCounted
         if(first.Count==0)return empty;
         first[NodeIdKey]=FormattableString.Invariant($"{cell.X}:{cell.Y}:root");
         first["level"]=0;
+        first["entry_anchor"]=true;
         first["shape_seed"]=(long)(random(cell,82000)*9007199254740992.0);
         nodes.Add(first);
         var origin=(Vector2)cell*(float)REGION_METRES;
@@ -280,6 +281,7 @@ public partial class CaveNetwork : RefCounted
                 // biome consumers and entrance access, never a generation tier.
                 node["level"]=shallow?0:Math.Clamp((int)(localDepth/Math.Max(100,max_depth*.27)),0,3);
                 node["shape_seed"]=(long)(random(cell,salt+6)*9007199254740992.0);
+                if(shallow)node["entry_anchor"]=true;
                 var edge=route(parent,node,new[]{p,m1,m2,q});
                 if(edge.Count==0||!supported_join(edge,edges))continue;
                 if(edge["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
@@ -288,7 +290,8 @@ public partial class CaveNetwork : RefCounted
                 // existing graph before any geometry is emitted.
                 double radius=Math.Max(half_width+2,7+34*Math.Pow(random(cell,salt+7),1.8));
                 double room=Math.Max(headroom,8+34*Math.Pow(random(cell,salt+8),1.5));
-                if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,new D{["nodes"]=nodes,["edges"]=edges},new A()))
+                var roomEdges=edges.Duplicate();roomEdges.Add(edge);
+                if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,new D{["nodes"]=nodes,["edges"]=roomEdges},new A()))
                 {node["chamber_radius"]=radius;node["chamber_height"]=room;}
                 else
                 {node["chamber_radius"]=half_width+1;node["chamber_height"]=headroom;}
@@ -387,17 +390,29 @@ public partial class CaveNetwork : RefCounted
             double low = terrain, high = terrain;
             foreach (var offset in new[] { new Vector2(8, 0), new Vector2(-8, 0), new Vector2(0, 8), new Vector2(0, -8) }) { double h = Height((double)p.X + offset.X, (double)p.Y + offset.Y); low = Math.Min(low, h); high = Math.Max(high, h); }
             if (low <= Math.Max(wet,OceanLevel)+2 || high - low > headroom*.85) continue;
-            var entry = new D { ["id"] = FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance"), ["point"] = new Vector3(p.X, (float)(low - Math.Min(headroom*.25,1.5)), p.Y), ["level"] = -1 }; if(entrances.Count>0)entry["id"]=FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance:{entrances.Count}"); var destination = nodes.Select(v => v.AsGodotDictionary()).Where(n => n["level"].AsInt32() == 0 && !n.ContainsKey("confluence")).OrderBy(n => Xz(n["point"].AsVector3()).DistanceSquaredTo(p)).First(); var q = Xz(destination["point"].AsVector3()); var delta = q - p; var middle = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * .12f;
-            var access=route(entry,destination,new[]{p,middle,q},true);if(access.Count==0)continue;
-            if(access_admission.Target is CaveInsectEntryGuard guard&&access_admission.Method==nameof(CaveInsectEntryGuard.clear_access)){if(!guard.clear_access(access))continue;}else if(Valid(access_admission)&&!access_admission.Call(access).AsBool())continue;
-            if (geological_morphology)
+            var entry = new D { ["id"] = FormattableString.Invariant($"{cell.X}:{cell.Y}:entrance:{attempt}"), ["point"] = new Vector3(p.X, (float)(low - Math.Min(headroom*.25,1.5)), p.Y), ["level"] = -1 };
+            D access=new();
+            foreach(var destination in nodes.Select(v=>v.AsGodotDictionary())
+                .Where(n=>Get(n,"entry_anchor",false).AsBool())
+                .OrderBy(n=>Xz(n["point"].AsVector3()).DistanceSquaredTo(p)).Take(5))
             {
-                var receiver = nodes.Select(v => v.AsGodotDictionary())
-                    .Where(n => n["level"].AsInt32() == 0)
-                    .OrderBy(n => Xz(n["point"].AsVector3()).DistanceSquaredTo(p)).First();
-                var tributary = route(entry, receiver, AccessControls(cell, attempt, p, Xz(receiver["point"].AsVector3())), true);
-                if (tributary.Count > 0 && (!Valid(access_admission) || access_admission.Call(tributary).AsBool())) access = tributary;
+                var q=Xz(destination["point"].AsVector3());var delta=q-p;
+                var middle=(p+q)*.5f+delta.Orthogonal()*.12f;
+                var proposals=new List<Vector2[]>();
+                if(geological_morphology)proposals.Add(AccessControls(cell,attempt,p,q));
+                proposals.Add(new[]{p,middle,q});proposals.Add(new[]{p,(p+q)*.5f-delta.Orthogonal()*.19f,q});
+                foreach(var controls in proposals)
+                {
+                    var candidate=route(entry,destination,controls,true);
+                    if(candidate.Count==0 || !supported_join(candidate,edges) || candidate["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+                    if(access_admission.Target is CaveInsectEntryGuard guard&&access_admission.Method==nameof(CaveInsectEntryGuard.clear_access))
+                    {if(!guard.clear_access(candidate))continue;}
+                    else if(Valid(access_admission)&&!access_admission.Call(candidate).AsBool())continue;
+                    access=candidate;break;
+                }
+                if(access.Count>0)break;
             }
+            if(access.Count==0)continue;
             // Buried confluences become destinations for subsequent entrances.
             // Split the solved route at an existing station to preserve its grade.
             var stations = access["points"].AsVector3Array();
@@ -406,7 +421,7 @@ public partial class CaveNetwork : RefCounted
                 int split = (int)((stations.Length - 1) * (.78 + .09 * random(cell, 42000 + attempt)));
                 var junction = stations[split];
                 var id = entry["id"].AsString() + ":confluence";
-                nodes.Add(new D { ["id"]=id, ["confluence"]=true, ["level"]=0, ["point"]=junction,
+                nodes.Add(new D { ["id"]=id, ["confluence"]=true, ["entry_anchor"]=true, ["level"]=0, ["point"]=junction,
                     ["half_width"]=half_width, ["headroom"]=headroom,
                     ["chamber_radius"]=half_width+1, ["chamber_height"]=headroom });
                 var downstream = access.Duplicate();
@@ -429,6 +444,7 @@ public partial class CaveNetwork : RefCounted
             {
                 var edge=raw.AsGodotDictionary();
                 edge["profile_phase"]=random(cell, 52000 + ordinal++) * Math.Tau;
+                edge["procedural_profile"]=true;
             }
         }
         if(region_decorator.Target is CaveHiveNetwork decoration&&region_decorator.Method==nameof(CaveHiveNetwork.decorate))result=decoration.decorate(result,_active_context);else if(Valid(region_decorator))result=region_decorator.Call(result,_active_context).AsGodotDictionary();
@@ -476,7 +492,7 @@ public partial class CaveNetwork : RefCounted
             foreach(var from in left)foreach(var to in right)
             {
                 var p=from["point"].AsVector3();var q=to["point"].AsVector3();
-                if(deep?(p.Y>-250||q.Y>-250):(from["level"].AsInt32()!=0||to["level"].AsInt32()!=0))continue;
+                if(deep?(p.Y>-250||q.Y>-250):(!Get(from,"entry_anchor",false).AsBool()||!Get(to,"entry_anchor",false).AsBool()))continue;
                 double distance=Xz(p).DistanceTo(Xz(q)),drop=Math.Abs(p.Y-q.Y);
                 if(distance<100||distance>2600||drop>(distance-2*flat_radius)*maximum_grade*.9)continue;
                 candidates.Add((from,to,distance+drop*3+(deep?(p.Y+q.Y)*.25:0)));
@@ -492,7 +508,7 @@ public partial class CaveNetwork : RefCounted
                     if(solved.Count==0||!supported_join(solved,protectedEdges))continue;
                     solved["id"]=FormattableString.Invariant($"{first.X}:{first.Y}>{second.X}:{second.Y}")+(deep?":deep":"");
                     solved["growth_role"]=deep?"deep_region_link":"region_link";
-                    if(geological_morphology)solved["cross_section_style"]=Get(a,"cross_section_style",0);
+                    if(geological_morphology){solved["cross_section_style"]=Get(a,"cross_section_style",0);solved["profile_phase"]=random(first,deep?86002:86001)*Math.Tau;solved["procedural_profile"]=true;}
                     result.Add(solved);protectedEdges.Add(solved);return;
                 }
             }

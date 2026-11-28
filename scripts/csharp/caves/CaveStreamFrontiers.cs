@@ -70,8 +70,9 @@ public partial class CaveStreamFrontiers : RefCounted
         var container = new Node3D { Name = "CaveFrontiers" }; parent.AddChild(container);
         foreach (var entry in payload)
         {
-            var arrays = entry.Value.AsGodotArray(); var mesh = new ArrayMesh(); mesh.AddSurfaceFromArrays(Mesh.PrimitiveType.Triangles, arrays); mesh.SurfaceSetMaterial(0, material);
-            var node = new MeshInstance3D { Mesh = mesh, Visible = false, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off }; node.SetMeta("face", entry.Key);
+            var arrays = entry.Value.AsGodotArray();
+            // Collision-only: no render surface or GPU upload.
+            var node = new MeshInstance3D { Visible = false, CastShadow = GeometryInstance3D.ShadowCastingSetting.Off }; node.SetMeta("face", entry.Key);
             var body = new StaticBody3D { Name = "FrontierCollision", CollisionLayer = 0, CollisionMask = 0 };
             var shape = new ConcavePolygonShape3D { BackfaceCollision = true, Data = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array() };
             body.AddChild(new CollisionShape3D { Shape = shape }); node.AddChild(body); container.AddChild(node);
