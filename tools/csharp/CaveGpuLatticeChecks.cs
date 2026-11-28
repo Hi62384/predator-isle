@@ -29,18 +29,20 @@ internal static class CaveGpuLatticeChecks
                     "Complementary tetrahedron case table changed");
             }
             var cases=new A();
-            for(int style=0;style<8;style++)
+            for(int scenario=0;scenario<12;scenario++)
             {
-                var key=new Vector3I(-2,-1,1);var origin=(Vector3)key*64;
-                using var field=new PortalCaveField{include_surface_air=style==7,opening_rock_cover=style==7?0:6};
+                int style=scenario==11?7:scenario>=8?3:scenario;
+                var key=scenario>=10?new Vector3I(-1744,-16,3334):new Vector3I(-2,-1,1);var origin=(Vector3)key*64;
+                using var field=new PortalCaveField{maximum_depth=scenario>=10?1200:400,include_surface_air=style==7,opening_rock_cover=style==7?0:6};
                 field.height=Callable.From<double,double,double>((x,z)=>100);
                 field.top_height=Callable.From<double,double,double>((x,z)=>origin.Y+57);
                 if(style==7)field.surface_columns[new Vector2I(key.X,key.Z)]=true;
                 var center=origin+new Vector3(32,18,32);
-                require(field.append_feature(center,center,new Vector2(23,27),2,style),
+                require(scenario==8?field.append_feature(center,center+new Vector3(11,0,6),new Vector2(17,26),4,style):field.append_feature(center,center,new Vector2(23,27),2,style),
                     "Cave GPU fixture rejected its chamber");
                 require(field.append_feature(origin+new Vector3(2,12,9),origin+new Vector3(61,20,45),new Vector2(7,15),1,style),
                     "Cave GPU fixture rejected its route");
+                if(scenario==9)require(field.append_feature(center-Vector3.Up*14,center+Vector3.Up*24,new Vector2(5,6),5,style),"GPU fissure rejected");
                 if(style==5)field.floor_relief["fixture"]=1.0;
                 if(style==6)field.precise_shores.Add(new D{["center"]=center,["radius"]=24.0});
                 using var cpu=new PortalCaveMesher{capture_boundary_values=true};
@@ -57,7 +59,7 @@ internal static class CaveGpuLatticeChecks
                     "Cave GPU screening changed exact mesh topology, crossings or normals for style "+style);
                 require(GD.VarToBytes(cpu.boundary_values).SequenceEqual(GD.VarToBytes(candidate.boundary_values)),
                     "Cave GPU screening changed exact chunk frontier for style "+style);
-                cases.Add(new D{["style"]=style,["gpu_samples"]=candidate.GpuLatticeSamples,
+                cases.Add(new D{["style"]=style,["warped_room"]=scenario==8,["vertical_fissure"]=scenario==9,["distant_world"]=scenario>=10,["gpu_samples"]=candidate.GpuLatticeSamples,
                     ["cpu_exact_samples"]=candidate.GpuLatticeExactSamples,["gpu_topology_cubes"]=candidate.GpuTopologyCubes});
             }
             return new D{["styles"]=cases,["gpu_topology_scalars"]=gpu.CompletedScalars};

@@ -96,6 +96,15 @@ public partial class ChunkTerrain
     private void InitializeRings()
     {
         authority_only|=OS.HasFeature("dedicated_server")||OS.GetCmdlineUserArgs().Contains("terrain-server");if(authority_only)nested_rings=true;
+        // The legacy quadtree closes LOD cracks with deep vertical skirts. Those
+        // are not terrain or cave walls and can intersect an excavated volume.
+        // Cave worlds use the already-supported stitched ring topology (CPU or
+        // GPU rendering); keep the legacy quadtree available for surface-only worlds.
+        if(!nested_rings && cave_settings is not null && cave_settings.Get("enabled").AsBool())
+        {
+            nested_rings=true;
+            GD.Print("Cave-enabled terrain uses stitched rings instead of underground LOD skirts.");
+        }
         if(!nested_rings)return;
         ring_settings=(TerrainRingSettings)ring_settings.Duplicate();
         foreach(string argument in OS.GetCmdlineUserArgs())if(argument.StartsWith("terrain-profile=",StringComparison.OrdinalIgnoreCase)){string name=argument["terrain-profile=".Length..];int selected=Array.FindIndex(new[]{"low","medium","high","ultra"},p=>p.Equals(name,StringComparison.OrdinalIgnoreCase));if(selected<0)throw new ArgumentException("Unknown terrain profile: "+name);ring_settings.apply_profile(selected);}

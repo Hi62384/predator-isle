@@ -56,21 +56,21 @@ internal static class CaveRouteChecks
         }
         foreach (int seed in new[] { 17, 73921 })
         {
-            using var oldNetwork = networkScript.New().AsGodotObject(); using var newNetwork = new CaveNetwork();
-            oldNetwork.Set("Solver", reference);
+            using var oldNetwork = new CaveNetwork(); using var newNetwork = new CaveNetwork();
+            oldNetwork.Solver = reference;
             var surface = Callable.From<double, double, double>((x, z) => 100 + 8 * Math.Sin(x * .001) + 5 * Math.Sin(z * .002));
             var water = Callable.From<double, double, double>((x, z) => -1000);
             foreach (var network in new[] { oldNetwork, newNetwork }) { network.Call("configure", surface, water, seed, 400.0); network.Set("activity", 1.0); }
             foreach (var cell in new[] { Vector2I.Zero, new Vector2I(-2, 3), new Vector2I(9, -3) })
             {
                 var expected = oldNetwork.Call("region", cell); var actual = newNetwork.Call("region", cell);
-                require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)), $"Complete cave region differs after route migration: {seed}/{cell}; {MigrationComparison.FirstDifference(expected, actual)}");
+                require(GD.VarToBytes(expected).SequenceEqual(GD.VarToBytes(actual)),  $"Procedural region differs between route solver backends: {seed}/{cell}; {MigrationComparison.FirstDifference(expected, actual)}");
                 require(actual.AsGodotDictionary()["valid"].AsBool(), "Cave region fixture was not admitted");
             }
             foreach (var pair in new[] { (Vector2I.Zero, Vector2I.Right), (new Vector2I(-2,3), new Vector2I(-2,4)) })
                 require(GD.VarToBytes(oldNetwork.Call("connection", pair.Item1, pair.Item2)).SequenceEqual(GD.VarToBytes(newNetwork.connection(pair.Item1, pair.Item2))), "Canonical inter-region connection differs");
         }
-        using var contextualReference = networkScript.New().AsGodotObject(); using var contextualCandidate = new CaveNetwork();
+        using var contextualReference = new CaveNetwork(); using var contextualCandidate = new CaveNetwork();
         var context = Callable.From<Vector2I, D>(cell => new D { ["half_width"] = 5.0, ["headroom"] = 9.0, ["flat_radius"] = 30.0, ["planning_depth_reserve"] = 2.0, ["render_style"] = 7, ["hive_region"] = "fixture" });
         var decorate = Callable.From<D, D, D>((region, active) => { region["decorated"] = true; return region; });
         var finalize = Callable.From<D, D>(region => { region["finalized"] = true; return region; });
@@ -81,7 +81,7 @@ internal static class CaveRouteChecks
             network.Set("region_context", context); network.Set("region_decorator", decorate); network.Set("region_finalizer", finalize); network.Set("access_admission", Callable.From<D,bool>(edge => true));
         }
         var contextualExpected = contextualReference.Call("region", Vector2I.Zero); var contextualActual = contextualCandidate.region(Vector2I.Zero);
-        require(GD.VarToBytes(contextualExpected).SequenceEqual(GD.VarToBytes(contextualActual)), "Contextual cave graph/profile/seepage differs: " + MigrationComparison.FirstDifference(contextualExpected, contextualActual));
+        require(GD.VarToBytes(contextualExpected).SequenceEqual(GD.VarToBytes(contextualActual)),  "Contextual deterministic cave graph/profile/seepage differs: " + MigrationComparison.FirstDifference(contextualExpected, contextualActual));
         require(contextualCandidate.half_width == 4 && contextualCandidate.headroom == 8 && contextualCandidate.flat_radius == 26, "Context overrides leaked into later regions");
         foreach (var network in new GodotObject[] { contextualReference, contextualCandidate }) network.Set("activity", -1.0);
         for (int i = 1; i < 36; i++)

@@ -10,7 +10,7 @@ namespace PredatorIsle.Caves;
 /// crossing. Collision, winding, protected shores and normals stay canonical.</summary>
 internal static class CaveGpuLattice
 {
-    private const int Columns=256,BinsPerAxis=5,BinCount=125,Header=3;
+    private const int Columns=256,BinsPerAxis=5,BinCount=125,Header=5;
     private const float CpuRequired=5,Guard=.25f,ParityTolerance=.025f;
     internal const string ShaderPath="res://shaders/cave_lattice_gpu.gdshader";
     internal const string TopologyShaderPath="res://shaders/cave_topology_gpu.gdshader";
@@ -25,7 +25,9 @@ internal static class CaveGpuLattice
             packed|=((cubeMask>>Tets[t][j])&1)<<(t*4+j);
         return packed;
     }
-    private static bool Bounded(Vector3 p)=>p.IsFinite()&&Math.Abs(p.X)<=8192&&Math.Abs(p.Y)<=8192&&Math.Abs(p.Z)<=8192;
+    private static bool Bounded(Vector3 p)=>p.IsFinite()&&Math.Abs(p.X)<=8000000&&Math.Abs(p.Y)<=8000000&&Math.Abs(p.Z)<=8000000;
+    private static bool BoundedLocal(Vector3 p)=>p.IsFinite()&&Math.Abs(p.X)<=8192&&Math.Abs(p.Y)<=8192&&Math.Abs(p.Z)<=8192;
+    private static float Phase(double radians)=>(float)Math.IEEERemainder(radians,Math.Tau);
     private static bool Finite(double x)=>double.IsFinite(x)&&Math.Abs(x)<=1000000;
     private sealed record Plan(Vector4[] Inputs,int InputRows,int OutputRows,double[] Ground,double[]? Top);
 
@@ -42,6 +44,12 @@ internal static class CaveGpuLattice
         data[0]=new Vector4(origin.X,origin.Y,origin.Z,step);
         data[1]=new Vector4(row,(float)f.maximum_depth,(float)f.minimum_roof,(float)f.opening_rock_cover);
         data[2]=new Vector4(groundStart,portal?1:0,f.floor_relief.Count>0?1:0,0);
+        // Reduce world-dependent noise phases in double precision once per cell.
+        // All shader geometry remains local, even hundreds of kilometres away.
+        data[3]=new Vector4(Phase(origin.X*.71),Phase(origin.Y*.23),
+            Phase(origin.Z*.53+origin.Y*.41),Phase(origin.Y*.61+origin.X*.013+origin.Z*.017));
+        data[4]=new Vector4(Phase(origin.Y*.19+origin.X*.013+origin.Z*.017),
+            Phase(origin.X*.08+origin.Z*.11),Phase(origin.Y*.13),0);
         var first=f.bin_cell(origin);
         var active=new bool[BinsPerAxis*BinsPerAxis];
         int references=0;
@@ -57,11 +65,11 @@ internal static class CaveGpuLattice
             foreach(int i in features)
             {
                 var a=f.Begins[i];var b=f.Ends[i];var size=f.Dimensions[i];var dir=f.Directions[i];
-                if(!Bounded(a)||!Bounded(b)||!size.IsFinite()||size.X<=0||size.X>512||
+                if(f.Kinds[i]==3||!BoundedLocal(a-origin)||!BoundedLocal(b-origin)||!size.IsFinite()||size.X<=0||size.X>512||
                    !Finite(f.ArchHeight[i])||f.ArchHeight[i]<=0||f.ArchHeight[i]>512||
                    !Finite(f.ArchCenter[i])||!Finite(f.ArchScale[i])||
                    !Finite(f.SpanLength[i])||f.SpanLength[i]>512||!Finite(f.SpanSquared[i])||
-                   (f.Kinds[i]!=2&&f.SpanSquared[i]<.01))return null;
+                   (f.Kinds[i] is not (2 or 5)&&f.SpanSquared[i]<.01))return null;
                 double firstGrade=double.PositiveInfinity,lastGrade=double.PositiveInfinity;
                 if(f.continuous_route_floors)
                 {
@@ -75,7 +83,7 @@ internal static class CaveGpuLattice
                 data.Add(new Vector4(b.X,b.Y,b.Z,f.Styles[i]));
                 data.Add(new Vector4(size.X,(float)f.ArchHeight[i],(float)f.ArchCenter[i],(float)f.ArchScale[i]));
                 data.Add(new Vector4(dir.X,dir.Y,(float)f.SpanSquared[i],(float)f.SpanLength[i]));
-                data.Add(new Vector4(double.IsFinite(firstGrade)?(float)firstGrade:0,
+                data.Add(new Vector4(f.Kinds[i] is 4 or 5?size.Y:double.IsFinite(firstGrade)?(float)firstGrade:0,
                     double.IsFinite(lastGrade)?(float)lastGrade:0,
                     double.IsFinite(firstGrade)?1:0,double.IsFinite(lastGrade)?1:0));
             }

@@ -12,6 +12,17 @@ on:
       - 'shaders/**'
       - 'tools/csharp/TerrainGpu*'
       - 'tools/csharp/CaveGpu*'
+  pull_request:
+    branches: [main]
+    paths:
+      - '.github/workflows/terrain-vulkan-validation.yml'
+      - 'tools/csharp-runner/Program.cs'
+      - 'scripts/csharp/terrain/**'
+      - 'scripts/csharp/caves/**'
+      - 'config/caves/**'
+      - 'shaders/**'
+      - 'tools/csharp/TerrainGpu*'
+      - 'tools/csharp/CaveGpu*'
   workflow_dispatch:
 
 concurrency:

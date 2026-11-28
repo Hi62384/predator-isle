@@ -37,12 +37,22 @@ internal static class CaveFieldEvaluation
         bool floorReliefPossible=false;
         if(f.floor_relief.Count>0)
             foreach(int feature in features)
-                if(f.Kinds[feature]==2&&Math.Abs((double)point.Y-f.Begins[feature].Y)<=5)
+                if((f.Kinds[feature] is 2 or 4)&&Math.Abs((double)point.Y-f.Begins[feature].Y)<=5)
                 {floorReliefPossible=true;break;}
         bool uncertain=false;
         foreach(int feature in features)
         {
             int kind=f.Kinds[feature];if(kind==3)return null;bool opening=kind==1;
+            if(kind is 4 or 5)
+            {
+                if(!closedAllowed)continue;
+                var basePoint=f.Begins[feature];var dimensions=f.Dimensions[feature];
+                double yOffset=(double)point.Y-basePoint.Y;
+                double ceiling=kind==4?dimensions.Y:(double)f.Ends[feature].Y-basePoint.Y+dimensions.Y;
+                if(yOffset<=0||yOffset>ceiling+.001)continue;
+                if(new Vector2(point.X-basePoint.X,point.Z-basePoint.Z).Length()>dimensions.X+.001)continue;
+                uncertain=true;continue;
+            }
             if(opening?!openingAllowed:!closedAllowed)continue;
             var a=f.Begins[feature];var b=f.Ends[feature];var size=f.Dimensions[feature];
             double floorY=a.Y,radius;
@@ -150,12 +160,69 @@ internal static class CaveFieldEvaluation
         return Math.Max(air,-stone);
     }
 
+    // Bounded freeform chamber. The horizontal axes, height envelope,
+    // terraces and occasional off-centre stone rib are independently varied.
+    // Match cave_lattice_gpu.gdshader; exact scalar/normal/mesh authority is CPU.
+    private static double WarpedRoom(Vector3 p,Vector3 a,Vector2 size,Vector2 direction,double minor,int style,double wall,double floorOffset)
+    {
+        double ux=direction.X/minor,uz=direction.Y/minor;
+        double dx=(double)p.X-a.X,dz=(double)p.Z-a.Z;
+        double u=(dx*ux+dz*uz)/size.X,v=(-dx*uz+dz*ux)/minor;
+        double y=(double)p.Y-a.Y,phase=ux*2.3+uz*3.7+style*.73+size.X*.019+minor*.031+size.Y*.023;
+        double layer=Math.Clamp(y/size.Y,0,1);
+        // The axes drift and twist through the elevation of the room, while
+        // angular dissolution and bedding independently change each section.
+        double twist=.46*Math.Sin(phase*1.7)*(layer-.5);
+        double cu=u*Math.Cos(twist)-v*Math.Sin(twist),cv=u*Math.Sin(twist)+v*Math.Cos(twist);
+        cu-=.15*Math.Sin(layer*5+phase)*layer;cv-=.13*Math.Cos(layer*4-phase)*layer;
+        double r=Math.Sqrt(cu*cu+cv*cv);
+        double warp=.68+.16*Math.Sin(cu*5+cv*3+phase)+.10*Math.Sin(cv*7-cu*2+phase*1.7)+.06*Math.Cos(layer*11+cu*4-phase);
+        double rise=Smooth(.25,.85,r)*Math.Min(size.Y*.20,7)*(.5+.5*Math.Sin(u*5-v*3+phase));
+        double ceiling=size.Y*(.56+.44*(.5+.5*Math.Sin(u*3+v*4+phase)));
+        double h=Math.Max(1,ceiling-rise);
+        double radial=r/Math.Max(.34,warp),vertical=(y-rise-h*.45)/(h*.55);
+        double power=2+2.6*(.5+.5*Math.Sin(phase));
+        double arch=(Math.Pow(Math.Pow(Math.Abs(radial),power)+Math.Pow(Math.Abs(vertical),power),1/power)-1)*Math.Min(minor,h*.55);
+        double value=Math.Max(y-size.Y,Math.Max(Math.Max(rise+floorOffset-y,arch+wall),
+            (Math.Sqrt(u*u+v*v)-.98)*Math.Min(size.X,minor)));
+        // Raised side galleries can leave a natural arch or terrace. This
+        // feature's solid is local to its own room, never a global subtraction
+        // from other graph routes, biome chambers, or the protected core.
+        if(size.X>=15&&size.Y>=20)
+        {
+            double ru=u-(.53+.09*Math.Sin(phase+y*.13));
+            double rv=v-(.28+.07*Math.Cos(phase-y*.11));
+            double rib=(Math.Sqrt(ru*ru+rv*rv)-(.07+.055*Math.Abs(Math.Sin(phase+y*.17))))*minor;
+            if(Math.Cos(phase)>.0)value=Math.Max(value,-rib);
+            double shelfWidth=.16+.12*(.5+.5*Math.Sin(phase*1.9));
+            double shelfY=size.Y*(.36+.12*Math.Sin(phase*1.3));
+            double shelf=Math.Max((Math.Abs(u-.58)-shelfWidth)*size.X,Math.Abs(y-shelfY)-Math.Max(1,size.Y*.055));
+            shelf=Math.Max(shelf,(Math.Abs(v+.12)-.42)*minor);
+            if(Math.Sin(phase*1.4)>.12)value=Math.Max(value,-shelf);
+        }
+        return value;
+    }
+
+    private static double Fissure(Vector3 p,Vector3 a,Vector3 b,Vector2 size,int style,double wall)
+    {
+        double y=(double)p.Y-a.Y,span=(double)b.Y-a.Y;
+        double t=Math.Clamp(y/span,0,1),phase=style*.73+span*.047+size.X*.31;
+        double dx=((double)p.X-a.X)/size.X,dz=((double)p.Z-a.Z)/size.X;
+        double u=dx*Math.Cos(phase)+dz*Math.Sin(phase),v=-dx*Math.Sin(phase)+dz*Math.Cos(phase);
+        u-=.17*Math.Sin(t*7+phase)*Math.Sin(t*Math.PI);
+        v-=.14*Math.Cos(t*5+phase)*Math.Sin(t*Math.PI);
+        double narrow=.56+.30*(.5+.5*Math.Sin(t*8+phase));
+        double cross=(Math.Sqrt(u*u+v*v/(narrow*narrow))-1)*size.X;
+        double bound=(Math.Sqrt(dx*dx+dz*dz)-.98)*size.X;
+        return Math.Max(Math.Max(-y,y-span-size.Y),Math.Max(cross+wall,bound));
+    }
+
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
-        double closed = Far, opening = Far, floorOffset = 0, retainedRock = -Far;
+        double closed = Far, opening = Far, floorOffset = 0, retainedRock = double.NegativeInfinity;
         if (f.floor_relief.Count > 0)
             foreach (int feature in features)
-                if (f.Kinds[feature] == 2 && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)
+                if ((f.Kinds[feature] is 2 or 4) && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)
                 {
                     foreach (var pair in f.floor_relief) floorOffset = Math.Max(floorOffset, FloorRelief.Offset(f, point, pair.Value.AsDouble(), pair.Key.AsString()));
                     break;
@@ -164,6 +231,15 @@ internal static class CaveFieldEvaluation
         foreach (int feature in features)
         {
             var a = f.Begins[feature]; var b = f.Ends[feature]; var size = f.Dimensions[feature]; double floorY = a.Y, radius;
+            if(f.Kinds[feature]==5)
+            {
+                closed=Math.Min(closed,Fissure(point,a,b,size,f.Styles[feature],wall));continue;
+            }
+            if(f.Kinds[feature]==4)
+            {
+                closed=Math.Min(closed,WarpedRoom(point,a,size,f.Directions[feature],f.SpanLength[feature],f.Styles[feature],wall,floorOffset));
+                continue;
+            }
             if(f.Kinds[feature]==3){closed=Math.Min(closed,Vault(point,a,size.X,out var rock));retainedRock=Math.Max(retainedRock,rock);continue;}
             if (f.Kinds[feature] == 2) radius = new Vector2(point.X - a.X, point.Z - a.Z).Length();
             else
@@ -225,13 +301,14 @@ internal static class FloorRelief
             {
                 var a = f.Begins[feature]; var b = f.Ends[feature]; var q = new Vector2(point.X - a.X, point.Z - a.Z);
                 double t = 0, distance = q.Length(), floorY = a.Y, width = f.Dimensions[feature].X;
-                if (f.Kinds[feature] != 2)
+                if(f.Kinds[feature]==5)continue; // vertical opening has no traversable horizontal floor
+                if (f.Kinds[feature] is not (2 or 4))
                 {
                     t = Math.Clamp(q.Dot(f.Directions[feature]) / f.SpanSquared[feature], 0, 1); distance = (q - f.Directions[feature] * (float)t).Length(); floorY = Lerp(a.Y, b.Y, t);
                 }
                 double vertical = 1 - Smooth(2, 4, Math.Abs(point.Y - floorY)); var weights = field[feature];
                 double raw = Lerp(weights.X, weights.Y, t), support = 1 - Smooth(width * .6, width * .6 + 4, distance); amount = Math.Max(amount, raw * vertical * support);
-                if (f.Kinds[feature] != 2) mask = Math.Min(mask, 1 - vertical + vertical * Smooth(width + 1, width + 4, distance));
+                if (f.Kinds[feature] is not (2 or 4)) mask = Math.Min(mask, 1 - vertical + vertical * Smooth(width + 1, width + 4, distance));
             }
         foreach (var item in f._protected_shores)
         {

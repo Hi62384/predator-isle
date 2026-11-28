@@ -31,6 +31,14 @@ internal static class CaveContextChecks
         source[(int)Mesh.ArrayType.Vertex] = new[] { new Vector3(4, -1, 4), new Vector3(8, -1, 4), new Vector3(4, -1, 8), new Vector3(8, -1, 4), new Vector3(8, -1, 8), new Vector3(4, -1, 8), new Vector3(20, -30, 20), new Vector3(24, -30, 20), new Vector3(20, -30, 24) };
         source[(int)Mesh.ArrayType.Normal] = Enumerable.Repeat(Vector3.Up, 9).ToArray(); source[(int)Mesh.ArrayType.Color] = Enumerable.Repeat(new Color(.4f, .3f, .2f, 1), 9).ToArray();
         require(Equal(old.Call("surfaces", source, Vector3.Zero), current.surfaces(source, Vector3.Zero)), "Decoded replacement surfaces differ");
+        // Downward-facing entrance ceilings must not be blended toward the
+        // surface normal (the old rule could light them like the terrain).
+        var ceiling=source.Duplicate();
+        ceiling[(int)Mesh.ArrayType.Normal]=Enumerable.Repeat(Vector3.Down,9).ToArray();
+        var ceilingResult=current.surfaces(ceiling,Vector3.Zero);
+        require(ceilingResult["valid"].AsBool(),"Ceiling replacement rejected");
+        foreach(var raw in ceilingResult["groups"].AsGodotDictionary().Values)
+            require(raw.AsGodotDictionary()["normals"].AsVector3Array().All(n=>n==Vector3.Down),"Surface normal corrupted an entrance ceiling");
         foreach (bool retain in new[] { false, true }) require(Equal(old.Call("surfaces_indexed", source, Vector3.Zero, retain), current.surfaces_indexed(source, Vector3.Zero, retain)), "Indexed replacement surfaces differ");
         require(!current.configure(new A { new D() }, height) && current.parents.Count == 0, "Invalid parent retained stale surface state");
     }

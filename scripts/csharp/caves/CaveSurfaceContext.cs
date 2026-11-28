@@ -177,7 +177,8 @@ public partial class CaveSurfaceContext : RefCounted
                     double depth = height_at(world.X, world.Z) - world.Y; payload[67] = (float)Math.Max(0, depth); group.Payload.AddRange(payload);
                     if (depth < 1.25 && n.Y > 0)
                     {
-                        float top = (1 - Mathf.SmoothStep(0, 1.25f, (float)depth)) * Mathf.SmoothStep(0, .65f, n.Y);
+                        // Compute the continuous blend in double precision, then convert once for Vector3.Lerp.
+                        float top = (float)((1 - CaveField.Smooth(0, 1.25, depth)) * CaveField.Smooth(0, .65, n.Y));
                         n = n.Lerp(normal_at(id, new Vector2(world.X, world.Z)), top).Normalized();
                     }
                 }

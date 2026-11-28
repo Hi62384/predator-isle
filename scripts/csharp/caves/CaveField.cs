@@ -127,11 +127,14 @@ public partial class CaveField : RefCounted, ICaveField
     public bool append_feature(Vector3 a, Vector3 b, Vector2 size, int kind, int style)
     {
         if (!a.IsFinite() || !b.IsFinite() || !size.IsFinite() || size.X <= 0 || size.Y <= 0 || Begins.Count >= 65536) return false;
-        var low = a.Min(b) - new Vector3(size.X + 4, 4, size.X + 4); var high = a.Max(b) + new Vector3(size.X + 4, size.Y + 4, size.X + 4);
+        if(kind==5&&(b.Y<=a.Y||a.X!=b.X||a.Z!=b.Z))return false;
+        // Kind 4 encodes a room axis in B, not an excavated segment endpoint.
+        if(kind==4 && (new Vector2(b.X-a.X,b.Z-a.Z).Length()<1 || new Vector2(b.X-a.X,b.Z-a.Z).Length()>size.X+.01f || a.Y!=b.Y))return false;
+        var low = (kind==4?a:a.Min(b)) - new Vector3(size.X + 4, 4, size.X + 4); var high = (kind==4?a:a.Max(b)) + new Vector3(size.X + 4, size.Y + 4, size.X + 4);
         foreach (float component in new[] { low.X, low.Y, low.Z, high.X, high.Y, high.Z }) if (Math.Abs((double)component) > 2147483646.0 * BinMetres) return false;
         var first = bin_cell(low); var last = bin_cell(high);
         long sx = (long)last.X - first.X + 1, sy = (long)last.Y - first.Y + 1, sz = (long)last.Z - first.Z + 1;
-        if (sx > 256 || sy > 256 || sz > 256 || sx * sy * sz > (kind==3 ? 1024 : 256) || SpatialReferences + sx * sy * sz > 2097152) return false;
+        if (sx > 256 || sy > 256 || sz > 256 || sx * sy * sz > (kind is 3 or 4 ? 1024 : 256) || SpatialReferences + sx * sy * sz > 2097152) return false;
         SpatialReferences += sx * sy * sz;
         var ab = new Vector2(b.X - a.X, b.Z - a.Z); Directions.Add(ab); SpanSquared.Add(Math.Max(ab.LengthSquared(), .000001)); SpanLength.Add(ab.Length()); ArchHeight.Add(size.Y * .6); ArchCenter.Add(size.Y * .4); ArchScale.Add(Math.Min(size.X, size.Y * .6));
         int feature = Begins.Count; Begins.Add(a); Ends.Add(b); Dimensions.Add(size); Kinds.Add((byte)kind); Styles.Add((byte)Math.Clamp(style, 0, 7));

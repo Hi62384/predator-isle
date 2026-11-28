@@ -15,13 +15,13 @@ string engine = string.IsNullOrWhiteSpace(engineOverride)
         OperatingSystem.IsWindows() ? "Godot_v4.6.1-stable_mono_win64.exe" : "Godot_v4.6.1-stable_mono_linux.x86_64")
     : Path.GetFullPath(engineOverride);
 if (!File.Exists(engine)) throw new FileNotFoundException("Godot 4.6.1 .NET is required. Set GODOT_BIN to its executable or install it in the local .tools folder.", engine);
-string[] modes = args.Length == 0 || args.SequenceEqual(new[] { "all" }) ? new[] { "blob", "authority", "lifecycle", "rings", "sampling", "gpu-pipeline", "collision", "gpu-queues", "gpu-sampler", "gpu-terrain", "general", "field", "worker", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical", "startup" } : args;
+string[] modes = args.Length == 0 || args.SequenceEqual(new[] { "all" }) ? new[] { "blob", "authority", "lifecycle", "rings", "sampling", "gpu-pipeline", "collision", "gpu-queues", "gpu-sampler", "gpu-terrain", "general", "field", "worker", "network", "cave-procedural", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical", "startup" } : args;
 static bool IsCaveScene(string mode) => mode.StartsWith("gpu-cave-scene-",StringComparison.Ordinal)
     &&mode.Length=="gpu-cave-scene-".Length+1&&mode[^1] is >= '0' and <= '7';
 if (modes.Any(mode => !IsCaveScene(mode)&&!(mode.StartsWith("gpu-biome-",StringComparison.Ordinal)&&
     new[] {"grass","forest","savanna","swamp","jungle","mountain","tropical","badlands","quarry",
         "wise_mountains","volcanic","spore_forest","radiation_wasteland","crystal_wastes",
-        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "runner-race", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-materials", "gpu-caves", "cave-payload", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, gpu-caves, gpu-cave-scene-0..7, collision, general, field, worker, startup, network, samplers, placement, tissue, beach, coast, tropical, or all.");
+        "insect_colony","alien_infected"}.Contains(mode["gpu-biome-".Length..])) && !new[] { "blob", "authority", "lifecycle", "rings", "sampling", "sampling-benchmark", "terrain-performance", "quarry", "runner-race", "gpu-sampler", "gpu-vertex", "gpu-extension", "gpu-materials", "gpu-caves", "cave-visual", "cave-payload", "gpu-all-biomes", "cave-biomes", "gpu-pipeline", "gpu-queues", "gpu-terrain", "collision", "general", "field", "worker", "startup-reference", "startup-grid", "startup-shared", "startup-path", "startup-vulkan", "startup-vulkan-grid", "startup", "network", "cave-procedural", "discovery", "samplers", "placement", "tissue", "beach", "coast", "tropical" }.Contains(mode))) throw new ArgumentException("Modes: blob, authority, lifecycle, rings, sampling, sampling-benchmark, terrain-performance, gpu-sampler, gpu-pipeline, gpu-queues, gpu-terrain, gpu-caves, gpu-cave-scene-0..7, collision, general, field, worker, startup, network, cave-procedural, samplers, placement, tissue, beach, coast, tropical, or all.");
 var records = new List<object>();
 string logDirectory = Path.Combine(project, ".godot", "csharp_checks", DateTime.UtcNow.ToString("yyyyMMddTHHmmssfff")); Directory.CreateDirectory(logDirectory);
 bool passed = true;
@@ -85,7 +85,7 @@ foreach (string mode in modes)
     // Godot's Dummy audio driver rather than masking any other engine error.
     if (Environment.GetEnvironmentVariable("PREDATOR_ISLE_TEST_DUMMY_AUDIO") == "1")
     { start.ArgumentList.Add("--audio-driver"); start.ArgumentList.Add("Dummy"); }
-    if (mode is "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)||IsCaveScene(mode)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
+    if (mode is "cave-visual" or "general" or "lifecycle" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-queues" or "gpu-terrain" || mode.StartsWith("startup",StringComparison.Ordinal)||IsCaveScene(mode)) { start.ArgumentList.Add("--windowed"); start.ArgumentList.Add("--resolution"); start.ArgumentList.Add("640x360"); }
     else start.ArgumentList.Add("--headless");
     // Renderer equivalence checks can explicitly select either Vulkan renderer.
     // Keep the regular user workflow on its saved Compatibility renderer.
@@ -99,7 +99,7 @@ foreach (string mode in modes)
     if(mode is "startup" or "lifecycle")start.ArgumentList.Add("--verbose");
     if(mode.StartsWith("startup-vulkan",StringComparison.Ordinal)){start.ArgumentList.Add("--rendering-method");start.ArgumentList.Add("forward_plus");start.ArgumentList.Add("--rendering-driver");start.ArgumentList.Add("vulkan");}
     start.ArgumentList.Add(mode == "authority" ? "res://tools/csharp/authority_runtime_check.tscn" : mode == "lifecycle" ? "res://tools/csharp/render_lifecycle_check.tscn" : mode.StartsWith("startup",StringComparison.Ordinal) ? "res://tools/csharp/startup_check.tscn" : "res://tools/csharp/migration_checks.tscn");
-    if (mode is "blob" or "rings" or "sampling" or "sampling-benchmark" or "terrain-performance" or "quarry" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-all-biomes" or "cave-biomes" or "cave-payload" or "gpu-pipeline" or "gpu-queues" or "gpu-terrain" or "collision" or "field" or "worker" or "network" or "discovery" or "samplers" or "placement" or "tissue" or "beach" or "coast" or "tropical" || mode.StartsWith("gpu-biome-",StringComparison.Ordinal)||IsCaveScene(mode)) { start.ArgumentList.Add("--"); start.ArgumentList.Add(mode + "-only"); }
+    if (mode is "cave-visual" or "blob" or "rings" or "sampling" or "sampling-benchmark" or "terrain-performance" or "quarry" or "gpu-sampler" or "gpu-vertex" or "gpu-extension" or "gpu-materials" or "gpu-caves" or "gpu-all-biomes" or "cave-biomes" or "cave-payload" or "gpu-pipeline" or "gpu-queues" or "gpu-terrain" or "collision" or "field" or "worker" or "network" or "cave-procedural" or "discovery" or "samplers" or "placement" or "tissue" or "beach" or "coast" or "tropical" || mode.StartsWith("gpu-biome-",StringComparison.Ordinal)||IsCaveScene(mode)) { start.ArgumentList.Add("--"); start.ArgumentList.Add(mode + "-only"); }
     if(mode=="startup-reference"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=cpu");start.ArgumentList.Add("terrain-generation=cpu");start.ArgumentList.Add("terrain-shared-samples=off");}
     if(mode is "startup-grid" or "startup-vulkan-grid"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-render=grid");}
     if(mode=="startup-path"){start.ArgumentList.Add("--");start.ArgumentList.Add("terrain-path-check");}
@@ -150,7 +150,7 @@ foreach (string mode in modes)
     records.Add(new { mode, passed = ok, started_utc = started, completed_utc = DateTime.UtcNow, exit_code = process.ExitCode,
         sampled_peak_private_bytes = peak > 0 ? (long?)peak : null, environment_messages = environmentMessages, log_prefix = prefix, failure });
     Console.WriteLine($"{mode}: {(ok ? "PASS" : "FAIL")}; sampled private peak {(peak > 0 ? (peak / 1048576.0).ToString("F1") + " MiB" : "unsampled")}");
-    foreach (string line in output.Split('\n').Where(line => line.Contains("checks passed") || line.Contains("startup check passed") || line.Contains("Actual volcanic cave cell"))) Console.WriteLine(line.Trim());
+    foreach (string line in output.Split('\n').Where(line => line.Contains("checks passed") || line.Contains("startup check passed") || line.Contains("Actual volcanic cave cell") || line.Contains("Procedural cave measurements:"))) Console.WriteLine(line.Trim());
     if (!ok) { Console.Error.WriteLine(failure); passed = false; }
 }
 var receipt = new { passed, memory_limit_mib = memoryLimitMiB, deadline_seconds_per_mode = 180, sample_period_ms = 500, records,

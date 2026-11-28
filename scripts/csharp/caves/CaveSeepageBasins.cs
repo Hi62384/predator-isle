@@ -43,7 +43,7 @@ public partial class CaveSeepageBasins : RefCounted
             if(!room.ContainsKey("level")||room["level"].AsInt64()<0||Profiles.random(cell,seed_id,1800+index)>Math.Clamp(density,0,1)) continue;
             double radius=3+Profiles.random(cell,seed_id,2000+index)*2,depth=1.8+Profiles.random(cell,seed_id,2100+index)*1.7,angle=Profiles.random(cell,seed_id,2200+index)*Math.Tau,offset=N(room,"chamber_radius")*.7;
             var roomPoint=room["point"].AsVector3();var center=roomPoint+new Vector3((float)(Math.Cos(angle)*offset),0,(float)(Math.Sin(angle)*offset));double bedY=center.Y-depth,waterY=center.Y-.4;
-            if(!route_clear(center,radius,bedY,waterY,region)) continue;bool overlaps=false;
+            if(bedY < -1000 || !route_clear(center,radius,bedY,waterY,region)) continue;bool overlaps=false;
             foreach(var item in basins)
             {
                 var previous=item.AsGodotDictionary();var previousCenter=previous["center"].AsVector3();
