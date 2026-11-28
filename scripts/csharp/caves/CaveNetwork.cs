@@ -38,8 +38,24 @@ public partial class CaveNetwork : RefCounted
     public void configure(Callable surface, Callable water_surface, long seed_value) => configure(surface, water_surface, seed_value, 400);
     public void configure(Callable surface, Callable water_surface, long seed_value, double depth)
     { height = surface; water = water_surface; seed_id = seed_value; max_depth = depth; _regions.Clear(); _ring.Clear(); }
-    public double random(Vector2I cell, long salt)
-    { long h = unchecked(cell.X * 374761393L + cell.Y * 668265263L + seed_id * 69069 + salt * 1274126177) & 0x7fffffff; h = unchecked((h ^ (h >> 13)) * 1274126177) & 0x7fffffff; return (double)(h ^ (h >> 16)) / 2147483647.0; }
+    // Independent avalanche mixing avoids correlated regional/salt sequences,
+    // including negative coordinates. Values are strictly in [0,1).
+    internal static double SeededRandom(Vector2I cell,long seed,long salt)
+    {
+        static ulong Mix(ulong x)
+        {
+            unchecked { x=(x^(x>>30))*0xbf58476d1ce4e5b9UL; x=(x^(x>>27))*0x94d049bb133111ebUL; return x^(x>>31); }
+        }
+        unchecked
+        {
+            ulong h=Mix((ulong)seed+0x9e3779b97f4a7c15UL);
+            h=Mix(h^Mix((ulong)(long)cell.X+0x243f6a8885a308d3UL));
+            h=Mix(h^Mix((ulong)(long)cell.Y+0x13198a2e03707344UL));
+            h=Mix(h^Mix((ulong)salt+0xa4093822299f31d0UL));
+            return (h>>11)*(1.0/9007199254740992.0);
+        }
+    }
+    public double random(Vector2I cell,long salt)=>SeededRandom(cell,seed_id,salt);
     public Vector2[] curve(Vector2[] control)
     {
         var path = new List<Vector2>();
@@ -59,6 +75,7 @@ public partial class CaveNetwork : RefCounted
             double h = Height((double)p.X + dx * 24, (double)p.Y + dz * 24); if (!double.IsFinite(h)) return new();
             low = Math.Max(low, h - max_depth + 4 + Number(_active_context, "planning_depth_reserve")); high = Math.Min(high, h - minimum_roof - 18);
         }
+        low=Math.Max(low,-1000.0);
         if (low > high) return new();
         return new D { ["point"] = new Vector3(p.X, (float)Math.Clamp(Height(p.X, p.Y) - depth, low, high), p.Y), ["half_width"] = half_width, ["headroom"] = headroom, ["chamber_radius"] = 18.0, ["chamber_height"] = 18.0 };
     }
@@ -72,7 +89,7 @@ public partial class CaveNetwork : RefCounted
         double reserve = Math.Max(extra_depth_reserve, Number(_active_context, "planning_depth_reserve"));
         var solved = Solver is RouteSolver native ? native.solve(path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, entry ? 0 : flat_radius, flat_radius)
             : Solver.Call("solve", path, height, half_width, headroom, minimum_roof, max_depth - reserve, maximum_grade, a["point"].AsVector3().Y, b["point"].AsVector3().Y, cover, entry ? 0 : flat_radius, flat_radius).AsGodotDictionary();
-        if (!solved["valid"].AsBool()) return new();
+        if (!solved["valid"].AsBool() || solved["points"].AsVector3Array().Any(p=>p.Y < -1000.001f)) return new();
         return new D { ["from"] = a["id"], ["to"] = b["id"], ["points"] = solved["points"], ["half_width"] = half_width, ["headroom"] = headroom, ["entrance"] = entry, ["maximum_grade"] = solved["maximum_grade"], ["minimum_measured_roof_m"] = solved["minimum_measured_roof_m"], ["maximum_measured_depth_m"] = solved["maximum_measured_depth_m"] };
     }
     // Fractures occasionally divide a buried reach and rejoin it downstream.
@@ -106,30 +123,75 @@ public partial class CaveNetwork : RefCounted
         }
         return bypasses;
     }
-    public bool supported_join(D candidate, A retained)
+    // Spatial broad phase for the exact symmetric support test. Segment IDs
+    // are visited at most once per candidate station regardless of bin overlap.
+    private readonly record struct SupportSegment(D Edge,Vector3 A,Vector3 B,double Width,double Height);
+    public bool supported_join(D candidate,A retained)
     {
-        last_support_conflict = new D(); var points = candidate["points"].AsVector3Array();
-        foreach (var value in retained)
+        last_support_conflict=new D();
+        var points=candidate["points"].AsVector3Array();
+        var segments=new List<SupportSegment>();
+        var bins=new Dictionary<Vector2I,List<int>>();
+        double candidateWidth=Number(candidate,"half_width"),candidateHeight=Number(candidate,"headroom"),largestWidth=0;
+        static int Cell(float x)=>Mathf.FloorToInt(x/64);
+        foreach(var value in retained)
         {
-            var edge = value.AsGodotDictionary(); var previous = edge["points"].AsVector3Array(); double clearance = Number(candidate, "half_width") + Number(edge, "half_width") + 2;
-            for (int i = 0; i < points.Length - 1; i++)
+            var edge=value.AsGodotDictionary();var previous=edge["points"].AsVector3Array();
+            double width=Number(edge,"half_width"),height=Number(edge,"headroom");
+            largestWidth=Math.Max(largestWidth,width);
+            for(int j=0;j<previous.Length-1;j++)
             {
-                var a = points[i]; var b = points[i + 1]; var ab = Xz(b - a);
-                for (int j = 0; j < previous.Length - 1; j++)
-                {
-                    var c = previous[j]; var d = previous[j + 1];
-                    if (Math.Max(a.X, b.X) + clearance < Math.Min(c.X, d.X) || Math.Min(a.X, b.X) - clearance > Math.Max(c.X, d.X) || Math.Max(a.Z, b.Z) + clearance < Math.Min(c.Z, d.Z) || Math.Min(a.Z, b.Z) - clearance > Math.Max(c.Z, d.Z)) continue;
-                    var cd = Xz(d - c);
-                    for (int step = 0; step < 3; step++)
-                    { double t = step * .5; var p = a.Lerp(b, (float)t); var q = Xz(p - c); double u = Math.Clamp(q.Dot(cd) / Math.Max(cd.LengthSquared(), .000001), 0, 1); if ((q - cd * (float)u).Length() >= clearance) continue; double separation = Math.Abs(p.Y - Lerp(c.Y, d.Y, u)); if (Conflict(separation, p, edge)) return false; }
-                    for (int step = 0; step < 3; step++)
-                    { double u = step * .5; var p = c.Lerp(d, (float)u); var q = Xz(p - a); double t = Math.Clamp(q.Dot(ab) / Math.Max(ab.LengthSquared(), .000001), 0, 1); if ((q - ab * (float)t).Length() >= clearance) continue; double separation = Math.Abs(p.Y - Lerp(a.Y, b.Y, t)); if (Conflict(separation, p, edge)) return false; }
-                }
+                var c=previous[j];var d=previous[j+1];int id=segments.Count;
+                segments.Add(new SupportSegment(edge,c,d,width,height));
+                for(int z=Cell(Math.Min(c.Z,d.Z));z<=Cell(Math.Max(c.Z,d.Z));z++)
+                    for(int x=Cell(Math.Min(c.X,d.X));x<=Cell(Math.Max(c.X,d.X));x++)
+                    {
+                        var key=new Vector2I(x,z);
+                        if(!bins.TryGetValue(key,out var bucket))bins[key]=bucket=new();
+                        bucket.Add(id);
+                    }
             }
-            bool Conflict(double separation, Vector3 point, D e)
-            { if (separation <= .35 || separation >= Math.Max(Number(candidate, "headroom"), Number(e, "headroom")) + 3) return false; last_support_conflict = new D { ["point"] = point, ["separation"] = separation, ["edge"] = e["from"].AsString() + ">" + e["to"].AsString() }; return true; }
+        }
+        var seen=new int[segments.Count];
+        float reach=(float)(candidateWidth+largestWidth+2);
+        for(int i=0;i<points.Length-1;i++)
+        {
+            var a=points[i];var b=points[i+1];var ab=Xz(b-a);
+            for(int z=Cell(Math.Min(a.Z,b.Z)-reach);z<=Cell(Math.Max(a.Z,b.Z)+reach);z++)
+                for(int x=Cell(Math.Min(a.X,b.X)-reach);x<=Cell(Math.Max(a.X,b.X)+reach);x++)
+                {
+                    if(!bins.TryGetValue(new Vector2I(x,z),out var bucket))continue;
+                    foreach(int id in bucket)
+                    {
+                        if(seen[id]==i+1)continue;seen[id]=i+1;
+                        var segment=segments[id];var c=segment.A;var d=segment.B;
+                        double clearance=candidateWidth+segment.Width+2,height=Math.Max(candidateHeight,segment.Height)+3;
+                        if(Math.Max(a.X,b.X)+clearance<Math.Min(c.X,d.X)||Math.Min(a.X,b.X)-clearance>Math.Max(c.X,d.X)||
+                           Math.Max(a.Z,b.Z)+clearance<Math.Min(c.Z,d.Z)||Math.Min(a.Z,b.Z)-clearance>Math.Max(c.Z,d.Z)||
+                           Math.Max(a.Y,b.Y)+height<Math.Min(c.Y,d.Y)||Math.Min(a.Y,b.Y)-height>Math.Max(c.Y,d.Y))continue;
+                        var cd=Xz(d-c);
+                        for(int step=0;step<3;step++)
+                        {
+                            var p=a.Lerp(b,step*.5f);var q=Xz(p-c);double u=Math.Clamp(q.Dot(cd)/Math.Max(cd.LengthSquared(),.000001),0,1);
+                            if((q-cd*(float)u).Length()>=clearance)continue;
+                            if(Conflict(Math.Abs(p.Y-Lerp(c.Y,d.Y,u)),height,p,segment.Edge))return false;
+                        }
+                        for(int step=0;step<3;step++)
+                        {
+                            var p=c.Lerp(d,step*.5f);var q=Xz(p-a);double t=Math.Clamp(q.Dot(ab)/Math.Max(ab.LengthSquared(),.000001),0,1);
+                            if((q-ab*(float)t).Length()>=clearance)continue;
+                            if(Conflict(Math.Abs(p.Y-Lerp(a.Y,b.Y,t)),height,p,segment.Edge))return false;
+                        }
+                    }
+                }
         }
         return true;
+        bool Conflict(double separation,double height,Vector3 point,D edge)
+        {
+            if(separation<=.35||separation>=height)return false;
+            last_support_conflict=new D{["point"]=point,["separation"]=separation,["edge"]=edge["from"].AsString()+">"+edge["to"].AsString()};
+            return true;
+        }
     }
     // Follow locally varying fractures. Keep the initial heading at the lip so
     // the surface opening still ties into the same approach.
@@ -156,49 +218,149 @@ public partial class CaveNetwork : RefCounted
         if (!Valid(height) || !Valid(water) || max_depth < 80 || max_depth > 10000) return empty;
         if (random(new Vector2I((int)Math.Floor(cell.X / 3.0), (int)Math.Floor(cell.Y / 3.0)), 17) > activity) return empty;
         var center = ((Vector2)cell + new Vector2((float)(.4 + .2 * random(cell, 1)), (float)(.4 + .2 * random(cell, 2)))) * 1536; double angle = random(cell, 3) * Math.Tau; var nodes = new A(); var edges = new A(); var entrances = new A();
-        var first = node_floor(center + new Vector2(-120, -120).Rotated((float)angle), Math.Min(50, max_depth * .2)); if (first.Count == 0) return empty;
-        first[NodeIdKey] = FormattableString.Invariant($"{cell.X}:{cell.Y}:0:0"); first["level"] = 0;
+        var first=node_floor(center+new Vector2(-120,-120).Rotated((float)angle),Math.Min(50,max_depth*.2));
+        if(first.Count==0)return empty;
+        first[NodeIdKey]=FormattableString.Invariant($"{cell.X}:{cell.Y}:root");
+        first["level"]=0;
+        first["shape_seed"]=(long)(random(cell,82000)*9007199254740992.0);
         nodes.Add(first);
-        var previous = first;
-        for (int level = 0; level < 4; level++)
+        var origin=(Vector2)cell*(float)REGION_METRES;
+        bool Inside(Vector2 p,float margin)=>p.X>=origin.X+margin&&p.Y>=origin.Y+margin&&
+            p.X<=origin.X+REGION_METRES-margin&&p.Y<=origin.Y+REGION_METRES-margin;
+
+        // A region's fracture bearing changes continuously through space,
+        // while its branching, extent and depth are independently seeded.
+        double Fracture(Vector2 p)
         {
-            var layerNodes = new A();
-            int stationCount = 3 + (int)(random(cell, 3200 + level) * 4);
-            for (int corner = 0; corner < stationCount; corner++)
+            double phase=random(new Vector2I((int)Math.Floor(cell.X/3.0),(int)Math.Floor(cell.Y/3.0)),82001)*Math.Tau;
+            return phase+1.1*Math.Sin(p.X*.0017+p.Y*.0006+phase)+.75*Math.Cos(p.Y*.0021-p.X*.0004);
+        }
+        int serial=0;
+        double reserve=Number(_active_context,"planning_depth_reserve");
+        double floorLimit=Math.Max(-1000,Height(center.X,center.Y)-max_depth+reserve+8);
+        double startY=first["point"].AsVector3().Y;
+        double depthRoll=random(cell,82002),depthFraction=random(cell,82003);
+        double fraction=depthRoll<.23?.13+.24*depthFraction:depthRoll<.58?.40+.43*depthFraction:1;
+        double targetY=Lerp(startY,Math.Min(startY,floorLimit),fraction);
+        double regionalDensity=random(cell,82004);
+        int shallowSteps=1+(int)(regionalDensity*3);
+
+        // Every admitted child is connected by a proven grade/roof-safe route.
+        // Failed proposals retry different headings, lengths, parents and
+        // floor targets instead of ending a complete depth tier.
+        bool Grow(D parent,bool descending,bool shallow,double desiredFloor,out D child)
+        {
+            int ordinal=serial++;
+            child=new D();
+            var a=parent["point"].AsVector3();var p=Xz(a);
+            for(int attempt=0;attempt<16;attempt++)
             {
-                int salt = 3300 + level * 32 + corner * 4;
-                float bearing = (float)(angle + level * .83 + corner * 4.6 / stationCount + random(cell,salt) * .45);
-                var offset = new Vector2((float)(160 + 190 * random(cell,salt+1)),0).Rotated(bearing);
-                var p = center + offset;
-                double deepest = Math.Clamp(Height(p.X,p.Y) + 1000, max_depth * .65, max_depth * .9); double depth = level switch { 0 => Math.Min(50, max_depth * .2), 1 => deepest * .37, 2 => deepest * .72, _ => deepest }; var node = level == 0 && corner == 0 ? first : node_floor(p, depth); if (node.Count == 0) break;
-                node["chamber_radius"] = 8 + 16 * random(cell,salt);
-                node["chamber_height"] = 10 + 8 * random(cell,salt+2);
-                node[NodeIdKey] = FormattableString.Invariant($"{cell.X}:{cell.Y}:{level}:{corner}"); node["level"] = level; if (level == 0 && corner == 0) { layerNodes.Add(first); continue; }
-                if (corner >= 2 && random(cell,salt+3) < .30)
-                    previous = layerNodes[(int)(random(cell,salt+1) * (corner-1))].AsGodotDictionary();
-                var a = Xz(previous["point"].AsVector3()); var b = Xz(node["point"].AsVector3()); var lateral = (b - a).Orthogonal();
-                var controls = new[] { a, a.Lerp(b,.32f) + lateral * (float)((random(cell,salt + 2)-.5)*.62), a.Lerp(b,.72f) - lateral * (float)((random(cell,salt)-.5)*.46), b };
-                if (corner == 0) controls = new[] { a, center + new Vector2(-450, -450).Rotated((float)angle), center + new Vector2(450, -450).Rotated((float)angle), center + new Vector2(450, 450).Rotated((float)angle), center + new Vector2(-450, 450).Rotated((float)angle), b };
-                var connection = route(previous, node, controls);
-                if (corner == 0)
-                {
-                    for (int alternative = 0; alternative < 8; alternative++)
-                    {
-                        if (connection.Count > 0 && supported_join(connection, edges)) break; connection = new D(); var winding = new List<Vector2> { a }; double turn = angle + (alternative / 2) * Math.PI * .5, clockwise = alternative % 2 == 0 ? 1 : -1;
-                        for (int cornerId = 0; cornerId < 4; cornerId++) winding.Add(center + new Vector2(-450, -450).Rotated((float)(turn + clockwise * cornerId * Math.PI * .5)));
-                        winding.Add(b); connection = route(previous, node, winding.ToArray());
-                    }
-                    if (connection.Count > 0 && !supported_join(connection, edges)) connection = new D();
-                }
-                if (connection.Count == 0) break; nodes.Add(node); edges.Add(connection); layerNodes.Add(node); previous = node;
+                long salt=90000+ordinal*256L+attempt*12L;
+                double bearing=attempt<6?Fracture(p)+(random(cell,salt)<.5?0:Math.PI)+(random(cell,salt+1)-.5)*2.5:random(cell,salt+1)*Math.Tau;
+                double span=(descending?245:125)+(descending?295:300)*random(cell,salt+2);
+                var q=p+new Vector2((float)Math.Cos(bearing),(float)Math.Sin(bearing))*(float)span;
+                if(!Inside(q,85))continue;
+                var delta=q-p;var side=delta.Orthogonal();
+                float bend=(float)((random(cell,salt+3)-.5)*.64);
+                float bend2=(float)((random(cell,salt+4)-.5)*.50);
+                var m1=p.Lerp(q,.28f)+side*bend;var m2=p.Lerp(q,.71f)+side*bend2;
+                if(!Inside(m1,40)||!Inside(m2,40))continue;
+                double possible=Math.Max(0,span-2*flat_radius-12)*maximum_grade;
+                double goal=descending?Math.Max(desiredFloor,a.Y-possible*(.67+.25*random(cell,salt+5))):
+                    a.Y+possible*(random(cell,salt+5)-.5)*(shallow?.28:1.35);
+                var node=node_floor(q,Height(q.X,q.Y)-goal);
+                if(node.Count==0)continue;
+                var point=node["point"].AsVector3();
+                if(descending&&point.Y>a.Y-Math.Min(8,Math.Max(0,a.Y-desiredFloor)*.5))continue;
+                if(shallow&&Height(q.X,q.Y)-point.Y>100)continue;
+                if(nodes.Any(raw=>raw.AsGodotDictionary()["point"].AsVector3().DistanceSquaredTo(point)<72*72))continue;
+                double localDepth=Height(q.X,q.Y)-point.Y;
+                node[NodeIdKey]=FormattableString.Invariant($"{cell.X}:{cell.Y}:growth:{ordinal}");
+                // Legacy level metadata is only a coarse classification for
+                // biome consumers and entrance access, never a generation tier.
+                node["level"]=shallow?0:Math.Clamp((int)(localDepth/Math.Max(100,max_depth*.27)),0,3);
+                node["shape_seed"]=(long)(random(cell,salt+6)*9007199254740992.0);
+                var edge=route(parent,node,new[]{p,m1,m2,q});
+                if(edge.Count==0||!supported_join(edge,edges))continue;
+                if(edge["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+                edge["growth_role"]=descending?"descent":shallow?"access_spine":"branch";
+                // Room dimensions are admitted against the real terrain and
+                // existing graph before any geometry is emitted.
+                double radius=Math.Max(half_width+2,7+34*Math.Pow(random(cell,salt+7),1.8));
+                double room=Math.Max(headroom,8+34*Math.Pow(random(cell,salt+8),1.5));
+                if(RoomFits(point,radius,room)&&Profiles.compatible(point,radius,room,new D{["nodes"]=nodes,["edges"]=edges},new A()))
+                {node["chamber_radius"]=radius;node["chamber_height"]=room;}
+                else
+                {node["chamber_radius"]=half_width+1;node["chamber_height"]=headroom;}
+                nodes.Add(node);edges.Add(edge);child=node;return true;
             }
-            if (layerNodes.Count != stationCount) break;
-            var from = layerNodes[stationCount-1].AsGodotDictionary(); var to = layerNodes[0].AsGodotDictionary(); var loop = route(from, to, new[] { Xz(from["point"].AsVector3()), Xz(to["point"].AsVector3()) }); if (loop.Count > 0 && random(cell, 2400 + level) < .55) { edges.Add(loop); previous = to; } else previous = from;
+            return false;
+        }
+        bool RoomFits(Vector3 point,double radius,double room)
+        {
+            if(!Inside(Xz(point),(float)(radius+8)))return false;
+            for(int z=-2;z<=2;z++)for(int x=-2;x<=2;x++)
+            {
+                if(x*x+z*z>4)continue;
+                double h=Height(point.X+x*radius*.5,point.Z+z*radius*.5);
+                if(!double.IsFinite(h)||h-point.Y<minimum_roof+room+4||h-point.Y>max_depth-reserve-4)return false;
+            }
+            return true;
+        }
+        var previous=first;
+        for(int i=0;i<shallowSteps;i++)
+        {
+            if(Grow(previous,false,true,startY,out var child))previous=child;
+            else if(Grow(first,false,true,startY,out child))previous=child;
+        }
+        if(nodes.Count<2)return empty;
+        var descent=previous;
+        int failed=0,steps=Math.Clamp((int)Math.Ceiling((startY-targetY)/22)+5,8,48);
+        for(int i=0;i<steps&&descent["point"].AsVector3().Y>targetY+1;i++)
+        {
+            if(Grow(descent,true,false,targetY,out var child)){descent=child;failed=0;continue;}
+            // A difficult junction need not strand an otherwise viable network.
+            // Continue from another deepest reachable room, or lengthen the
+            // current descent by first establishing a lateral tributary.
+            var alternatives=nodes.Select(v=>v.AsGodotDictionary()).OrderBy(n=>n["point"].AsVector3().Y).Take(4).ToArray();
+            bool progressed=false;
+            foreach(var parent in alternatives)
+            {
+                if(parent==descent)continue;
+                if(Grow(parent,true,false,targetY,out child)){if(child["point"].AsVector3().Y<descent["point"].AsVector3().Y)descent=child;progressed=true;break;}
+            }
+            if(!progressed&&Grow(descent,false,false,targetY,out child)){descent=child;progressed=true;}
+            if(progressed)failed=0;else if(++failed>=3)break;
+        }
+        int tributaries=2+(int)(regionalDensity*regionalDensity*13);
+        for(int i=0;i<tributaries&&nodes.Count<72;i++)
+        {
+            var parent=nodes[(int)(random(cell,83000+i)*nodes.Count)].AsGodotDictionary();
+            Grow(parent,false,false,targetY,out _);
+        }
+        int loopBudget=(int)(random(cell,83080)*7);
+        for(int i=0,attempt=0;i<loopBudget&&attempt<loopBudget*12;attempt++)
+        {
+            long salt=84000+attempt*4;
+            var from=nodes[(int)(random(cell,salt)*nodes.Count)].AsGodotDictionary();
+            var to=nodes[(int)(random(cell,salt+1)*nodes.Count)].AsGodotDictionary();
+            if(from==to)continue;
+            string fromId=from["id"].AsString(),toId=to["id"].AsString();
+            if(edges.Any(v=>{var e=v.AsGodotDictionary();string a=e["from"].AsString(),b=e["to"].AsString();return (a==fromId&&b==toId)||(a==toId&&b==fromId);}))continue;
+            var aPoint=from["point"].AsVector3();var bPoint=to["point"].AsVector3();
+            var p=Xz(aPoint);var q=Xz(bPoint);double distance=p.DistanceTo(q);
+            if(distance<120||distance>570||Math.Abs(aPoint.Y-bPoint.Y)>(distance-2*flat_radius)*maximum_grade*.8)continue;
+            var mid=(p+q)*.5f+(q-p).Orthogonal()*(float)((random(cell,salt+2)-.5)*.45);
+            if(!Inside(mid,40))continue;
+            var loop=route(from,to,new[]{p,mid,q});
+            if(loop.Count==0||!supported_join(loop,edges)||loop["points"].AsVector3Array().Any(v=>!Inside(Xz(v),12)))continue;
+            loop["growth_role"]="loop";edges.Add(loop);i++;
         }
         // Density is independent of underground graph size. Bias the budget toward
         // one or two mouths; the configured count is a ceiling, not a quota.
         int entranceBudget = 1 + Math.Min(EntrancesPerRegion - 1,
             (int)(Math.Pow(random(cell, 75001), 1.8) * EntrancesPerRegion));
+        if(Number(_active_context,"family",-1)!=7 && random(cell,75002)<.13)entranceBudget=0;
         const float minimumSeparation = 400;
         var regionOrigin = (Vector2)cell * (float)REGION_METRES;
         for (int attempt = 0; attempt < 24 * entranceBudget; attempt++)
@@ -255,8 +417,9 @@ public partial class CaveNetwork : RefCounted
             nodes.Add(entry); edges.Add(access); entrances.Add(entry["id"]);
             if(entrances.Count>=entranceBudget)break;
         }
-        if (entrances.Count == 0) return empty;
-        var result = new D { ["id"] = cell, ["center"] = center, ["nodes"] = nodes, ["edges"] = edges, ["entrances"] = entrances, ["valid"] = true, ["reason"] = "", ["default_biome_id"] = 0, ["geology"] = Math.Min(5, (int)(random(cell, 102) * 6)) };
+        // A region can contain a buried network without a local surface mouth.
+        // Neighbour links are built canonically after both local graphs exist.
+        var result = new D { ["id"] = cell, ["center"] = center, ["nodes"] = nodes, ["edges"] = edges, ["entrances"] = entrances, ["valid"] = true, ["reason"] = "", ["default_biome_id"] = 0, ["geology"] = Math.Min(5, (int)(random(cell, 102) * 6)), ["target_floor_y"]=targetY, ["morphology_seed"]=seed_id };
         if(geological_morphology)
         {
             result["cross_section_style"]=result["geology"];
@@ -280,20 +443,60 @@ public partial class CaveNetwork : RefCounted
         if (_active_context.ContainsKey("render_style")) data["render_style"] = _active_context["render_style"]; if (_active_context.ContainsKey("hive_region")) data["hive_region"] = _active_context["hive_region"]; _active_context = new D();
         if (_ring.Count >= 32) _regions.Remove(_ring.Dequeue()); _ring.Enqueue(cell); _regions[cell] = data; return data;
     }
-    public D connection(Vector2I first, Vector2I second)
+    public D connection(Vector2I first,Vector2I second)
     {
-        if (Math.Abs((long)first.X - second.X) + Math.Abs((long)first.Y - second.Y) != 1) return new(); if (first.X > second.X || first.X == second.X && first.Y > second.Y) (first, second) = (second, first);
-        var a = region(first); var b = region(second); if (!a["valid"].AsBool() || !b["valid"].AsBool()) return new(); var from = a["nodes"].AsGodotArray()[1].AsGodotDictionary(); var to = b["nodes"].AsGodotArray()[1].AsGodotDictionary(); var p = Xz(from["point"].AsVector3()); var q = Xz(to["point"].AsVector3()); var delta = q - p;
-        var mid = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * (float)(.08 * Math.Sin(((long)first.X + first.Y) * 1.71)); var protectedEdges = Items(a, "edges").Duplicate(); protectedEdges.AddRange(Items(b, "edges"));
-        foreach (var data in new[] { a, b })
+        var result=connections(first,second);
+        return result.Count>0?result[0].AsGodotDictionary():new D();
+    }
+    public A connections(Vector2I first,Vector2I second)
+    {
+        var result=new A();
+        if(Math.Abs((long)first.X-second.X)+Math.Abs((long)first.Y-second.Y)!=1)return result;
+        if(first.X>second.X||first.X==second.X&&first.Y>second.Y)(first,second)=(second,first);
+        var a=region(first);var b=region(second);
+        if(!a["valid"].AsBool()||!b["valid"].AsBool())return result;
+        var protectedEdges=Items(a,"edges").Duplicate();protectedEdges.AddRange(Items(b,"edges"));
+        foreach(var data in new[]{a,b})
         {
-            protectedEdges.AddRange(Items(data, "pocket_passages")); protectedEdges.AddRange(Profiles.protected_edges(Items(data, "pockets"))); var beds = new A();
-            foreach (var value in Items(data, "pools")) { var pool = value.AsGodotDictionary(); var guard = pool["bed"].AsGodotDictionary().Duplicate(); guard["chamber_radius"] = pool["radius"]; beds.Add(guard); beds.AddRange(Items(pool, "bank_lobes")); protectedEdges.AddRange(Items(pool, "stream_edges")); }
+            protectedEdges.AddRange(Items(data,"pocket_passages"));protectedEdges.AddRange(Profiles.protected_edges(Items(data,"pockets")));
+            var beds=new A();
+            foreach(var value in Items(data,"pools"))
+            {
+                var pool=value.AsGodotDictionary();var guard=pool["bed"].AsGodotDictionary().Duplicate();
+                guard["chamber_radius"]=pool["radius"];beds.Add(guard);beds.AddRange(Items(pool,"bank_lobes"));protectedEdges.AddRange(Items(pool,"stream_edges"));
+            }
             protectedEdges.AddRange(Profiles.protected_edges(beds));
         }
-        double reserve = Get(a, "cave_family", -1).AsInt32() == 7 || Get(b, "cave_family", -1).AsInt32() == 7 ? 2 : 0; var solved = route(from, to, new[] { p, mid, q }, false, reserve);
-        foreach (double offset in new[] { 0.0, .12, -.12, .24, -.24, .36, -.36 }) { if (solved.Count > 0 && supported_join(solved, protectedEdges)) break; mid = (p + q) * .5f + new Vector2(-delta.Y, delta.X) * (float)offset; solved = route(from, to, new[] { p, mid, q }, false, reserve); }
-        if (solved.Count > 0 && !supported_join(solved, protectedEdges)) return new(); if (solved.Count > 0) { solved["id"] = FormattableString.Invariant($"{first.X}:{first.Y}>{second.X}:{second.Y}"); if (geological_morphology) solved["cross_section_style"] = Get(a, "cross_section_style", 0); } return solved;
+        var left=Items(a,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
+        var right=Items(b,"nodes").Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).ToArray();
+        double reserve=Get(a,"cave_family",-1).AsInt32()==7||Get(b,"cave_family",-1).AsInt32()==7?2:0;
+        void Link(bool deep)
+        {
+            var candidates=new List<(D From,D To,double Score)>();
+            foreach(var from in left)foreach(var to in right)
+            {
+                var p=from["point"].AsVector3();var q=to["point"].AsVector3();
+                if(deep?(p.Y>-250||q.Y>-250):(from["level"].AsInt32()!=0||to["level"].AsInt32()!=0))continue;
+                double distance=Xz(p).DistanceTo(Xz(q)),drop=Math.Abs(p.Y-q.Y);
+                if(distance<100||distance>2600||drop>(distance-2*flat_radius)*maximum_grade*.9)continue;
+                candidates.Add((from,to,distance+drop*3+(deep?(p.Y+q.Y)*.25:0)));
+            }
+            foreach(var candidate in candidates.OrderBy(c=>c.Score).Take(6))
+            {
+                var p=Xz(candidate.From["point"].AsVector3());var q=Xz(candidate.To["point"].AsVector3());
+                var delta=q-p;
+                foreach(double offset in new[]{.08,-.08,.19,-.19,0.0})
+                {
+                    var mid=(p+q)*.5f+delta.Orthogonal()*(float)offset;
+                    var solved=route(candidate.From,candidate.To,new[]{p,mid,q},false,reserve);
+                    if(solved.Count==0||!supported_join(solved,protectedEdges))continue;
+                    solved["id"]=FormattableString.Invariant($"{first.X}:{first.Y}>{second.X}:{second.Y}")+(deep?":deep":"");
+                    solved["growth_role"]=deep?"deep_region_link":"region_link";
+                    if(geological_morphology)solved["cross_section_style"]=Get(a,"cross_section_style",0);
+                    result.Add(solved);protectedEdges.Add(solved);return;
+                }
+            }
+        }
+        Link(false);Link(true);return result;
     }
 }
-

@@ -95,7 +95,7 @@ public partial class CaveWorkload : RefCounted
             foreach (var offset in new[] { Vector2I.Right, Vector2I.Down })
             {
                 var other = new Vector2I(x,z) + offset; if (other.X > cell.X + halo || other.Y > cell.Y + halo) continue;
-                var edge = network.connection(new(x,z), other); if (edge.Count > 0) edges.Add(edge);
+                edges.AddRange(network.connections(new(x,z),other));
             }
         var bundle = new D { ["cell"] = cell, ["regions"] = regions, ["connections"] = edges, ["entrances"] = entrances };
         if (Registry.Get("enabled").AsBool()) bundle["cave_biome_regions"] = Regions.combine(regions, edges, Registry.Get("fallback_biome_id").AsString());
@@ -216,8 +216,7 @@ public partial class CaveWorkload : RefCounted
                 {
                     var other=here+offset;
                     if(other.X>cell.X+cursor.Halo||other.Y>cell.Y+cursor.Halo)continue;
-                    var edge=network.connection(here,other);
-                    if(edge.Count>0)cursor.Edges.Add(edge);
+                    cursor.Edges.AddRange(network.connections(here,other));
                 }
                 continue;
             }
