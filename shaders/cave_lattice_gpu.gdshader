@@ -28,6 +28,19 @@ float field_value(int index){
   int kind=int(a.w),style=int(b.w);
   float floor_y=a.y,radius=0.0;
   vec2 q=p.xz-a.xz;
+  if(kind==5){
+   float y=p.y-a.y,span=b.y-a.y;
+   float t=clamp(y/span,0.0,1.0),phase=float(style)*.73+span*.047+shape.x*.31;
+   vec2 delta=q/shape.x;
+   float u=dot(delta,vec2(cos(phase),sin(phase))),v=dot(delta,vec2(-sin(phase),cos(phase)));
+   u-=.17*sin(t*7.0+phase)*sin(t*3.14159265359);
+   v-=.14*cos(t*5.0+phase)*sin(t*3.14159265359);
+   float narrow=.56+.30*(.5+.5*sin(t*8.0+phase));
+   float cross_section=(length(vec2(u,v/narrow))-1.0)*shape.x;
+   float bound=(length(delta)-.98)*shape.x;
+   closed_value=min(closed_value,max(max(-y,y-span-grades.x),max(cross_section+wall,bound)));
+   continue;
+  }
   if(kind==4){
    if(options.z>0.5&&abs(p.y-a.y)<=5.01)return 5.0;
    float minor=direction.w,roof=grades.x;

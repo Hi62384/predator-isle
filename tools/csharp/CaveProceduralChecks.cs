@@ -127,10 +127,29 @@ internal static class CaveProceduralChecks
             if((roomA.sample(test)<0)!=(roomB.sample(test)<0))distinct++;
         }
         require(distinct>40,"Warped cavern footprint is not materially different after independent axis variation");
+        int shafts=0;double maxRoom=0;
+        foreach(var sample in samples)
+        {
+            foreach(var raw in sample.Region["nodes"].AsGodotArray())
+                maxRoom=Math.Max(maxRoom,raw.AsGodotDictionary().TryGetValue("chamber_radius",out var radius)?radius.AsDouble():0);
+            if(!sample.Region.TryGetValue("vertical_links",out var vertical))continue;
+            foreach(var raw in vertical.AsGodotArray())
+            {
+                var shaft=raw.AsGodotDictionary();var low=shaft["bottom"].AsVector3();var high=shaft["top"].AsVector3();
+                require(high.Y-low.Y>=18&&low.X==high.X&&low.Z==high.Z,"Invalid optional fissure");
+                shafts++;
+            }
+        }
+        using var shaftField=new CaveField{maximum_depth=1200,minimum_roof=10};
+        shaftField.height=surface;
+        var foot=new Vector3(32,-570,32);var lip=foot+Vector3.Up*48;
+        require(shaftField.append_feature(foot,lip,new Vector2(5,8),5,3),"Vertical fissure rejected");
+        for(int i=1;i<=48;i++)require(shaftField.sample(foot+Vector3.Up*i)<0,"Fissure contains an internal rock barrier");
+        require(shaftField.sample(foot+Vector3.Right*7+Vector3.Up*24)>0,"Fissure escaped its admitted envelope");
         using var submerged=Make(17);
         submerged.configure(Callable.From<double,double,double>((x,z)=>-2),water,17,1200);
         require(submerged.region(Vector2I.Zero)["entrances"].AsGodotArray().Count==0,"Submerged entrance was admitted");
-        Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes(),["warped_footprint_different_samples"]=distinct};
+        Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes(),["warped_footprint_different_samples"]=distinct,["optional_vertical_links"]=shafts,["maximum_room_diameter_m"]=maxRoom*2};
         GD.Print("Procedural cave measurements: "+Json.Stringify(Measurements));
     }
 }

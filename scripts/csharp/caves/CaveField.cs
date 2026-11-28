@@ -127,6 +127,7 @@ public partial class CaveField : RefCounted, ICaveField
     public bool append_feature(Vector3 a, Vector3 b, Vector2 size, int kind, int style)
     {
         if (!a.IsFinite() || !b.IsFinite() || !size.IsFinite() || size.X <= 0 || size.Y <= 0 || Begins.Count >= 65536) return false;
+        if(kind==5&&(b.Y<=a.Y||a.X!=b.X||a.Z!=b.Z))return false;
         // Kind 4 encodes a room axis in B, not an excavated segment endpoint.
         if(kind==4 && (new Vector2(b.X-a.X,b.Z-a.Z).Length()<1 || new Vector2(b.X-a.X,b.Z-a.Z).Length()>size.X+.01f || a.Y!=b.Y))return false;
         var low = (kind==4?a:a.Min(b)) - new Vector3(size.X + 4, 4, size.X + 4); var high = (kind==4?a:a.Max(b)) + new Vector3(size.X + 4, size.Y + 4, size.X + 4);

@@ -41,7 +41,8 @@ internal static class CaveFieldBiomes
                 double value = f.Evaluate(point, singleFeature); if (value >= Far || value > best) continue;
                 if (value < best) { best = value; result = Vector4.Zero; }
                 var ab = f.Directions[feature]; var begin = f.Begins[feature];
-                double t = Math.Clamp(new Vector2(point.X - begin.X, point.Z - begin.Z).Dot(ab) / f.SpanSquared[feature], 0, 1);
+                double t = f.Kinds[feature]==5?Math.Clamp(((double)point.Y-begin.Y)/((double)f.Ends[feature].Y-begin.Y),0,1):
+                    Math.Clamp(new Vector2(point.X - begin.X, point.Z - begin.Z).Dot(ab) / f.SpanSquared[feature], 0, 1);
                 for (int i = 0; i < Math.Min(4, ids.Count); i++)
                 {
                     if (!f.BiomeFields.TryGetValue(ids[i].AsString(), out var field)) continue;

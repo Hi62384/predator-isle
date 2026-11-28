@@ -42,7 +42,17 @@ internal static class CaveFieldEvaluation
         bool uncertain=false;
         foreach(int feature in features)
         {
-            int kind=f.Kinds[feature];if(kind is 3 or 4)return null;bool opening=kind==1;
+            int kind=f.Kinds[feature];if(kind==3)return null;bool opening=kind==1;
+            if(kind is 4 or 5)
+            {
+                if(!closedAllowed)continue;
+                var basePoint=f.Begins[feature];var dimensions=f.Dimensions[feature];
+                double yOffset=(double)point.Y-basePoint.Y;
+                double ceiling=kind==4?dimensions.Y:(double)f.Ends[feature].Y-basePoint.Y+dimensions.Y;
+                if(yOffset<=0||yOffset>ceiling+.001)continue;
+                if(new Vector2(point.X-basePoint.X,point.Z-basePoint.Z).Length()>dimensions.X+.001)continue;
+                uncertain=true;continue;
+            }
             if(opening?!openingAllowed:!closedAllowed)continue;
             var a=f.Begins[feature];var b=f.Ends[feature];var size=f.Dimensions[feature];
             double floorY=a.Y,radius;
@@ -193,6 +203,20 @@ internal static class CaveFieldEvaluation
         return value;
     }
 
+    private static double Fissure(Vector3 p,Vector3 a,Vector3 b,Vector2 size,int style,double wall)
+    {
+        double y=(double)p.Y-a.Y,span=(double)b.Y-a.Y;
+        double t=Math.Clamp(y/span,0,1),phase=style*.73+span*.047+size.X*.31;
+        double dx=((double)p.X-a.X)/size.X,dz=((double)p.Z-a.Z)/size.X;
+        double u=dx*Math.Cos(phase)+dz*Math.Sin(phase),v=-dx*Math.Sin(phase)+dz*Math.Cos(phase);
+        u-=.17*Math.Sin(t*7+phase)*Math.Sin(t*Math.PI);
+        v-=.14*Math.Cos(t*5+phase)*Math.Sin(t*Math.PI);
+        double narrow=.56+.30*(.5+.5*Math.Sin(t*8+phase));
+        double cross=(Math.Sqrt(u*u+v*v/(narrow*narrow))-1)*size.X;
+        double bound=(Math.Sqrt(dx*dx+dz*dz)-.98)*size.X;
+        return Math.Max(Math.Max(-y,y-span-size.Y),Math.Max(cross+wall,bound));
+    }
+
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
         double closed = Far, opening = Far, floorOffset = 0, retainedRock = -Far;
@@ -207,6 +231,10 @@ internal static class CaveFieldEvaluation
         foreach (int feature in features)
         {
             var a = f.Begins[feature]; var b = f.Ends[feature]; var size = f.Dimensions[feature]; double floorY = a.Y, radius;
+            if(f.Kinds[feature]==5)
+            {
+                closed=Math.Min(closed,Fissure(point,a,b,size,f.Styles[feature],wall));continue;
+            }
             if(f.Kinds[feature]==4)
             {
                 closed=Math.Min(closed,WarpedRoom(point,a,size,f.Directions[feature],f.SpanLength[feature],f.Styles[feature],wall,floorOffset));

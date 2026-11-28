@@ -120,6 +120,21 @@ internal static class CaveFieldCompiler
             {
                 var edge = raw.AsGodotDictionary(); var decorated = edge.Duplicate(); decorated["cross_section_style"] = Flag(edge, "retain_cross_section_style") ? Int(edge, "cross_section_style", style) : style; edges.Add(decorated);
             }
+            foreach(var raw in Arr(region,"vertical_links"))
+            {
+                var shaft=raw.AsGodotDictionary();
+                var low=shaft["bottom"].AsVector3();var high=shaft["top"].AsVector3();
+                var size=new Vector2((float)Num(shaft,"radius"),(float)Num(shaft,"headroom"));
+                if(!f.append_feature(low,high,size,5,style))return Failed();
+                if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,Text(shaft,"from"),Text(shaft,"to"),0,low.DistanceTo(high),low.DistanceTo(high));
+                foreach(bool upper in new[]{false,true})
+                {
+                    var a=shaft[upper?"upper_access":"lower_access"].AsVector3();var b=upper?high:low;
+                    if(!f.append_feature(a,b,new Vector2(4,8),0,style))return Failed();
+                    string id=Text(shaft,upper?"to":"from");
+                    if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);
+                }
+            }
             var rooms = Arr(region, "nodes").Duplicate(); foreach (var room in Arr(region, "pockets")) rooms.Add(room);
             foreach (var raw in Arr(region, "pools"))
             {

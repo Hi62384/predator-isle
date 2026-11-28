@@ -496,7 +496,9 @@ public partial class CaveNetwork : RefCounted
         }
         if(region_decorator.Target is CaveHiveNetwork decoration&&region_decorator.Method==nameof(CaveHiveNetwork.decorate))result=decoration.decorate(result,_active_context);else if(Valid(region_decorator))result=region_decorator.Call(result,_active_context).AsGodotDictionary();
         if (chamber_variety && !result.ContainsKey("pockets")) { result["pockets"] = Profiles.make(result, height, seed_id, max_depth, minimum_roof); result["pocket_passages"] = Profiles.passages(result, result["pockets"].AsGodotArray()); }
-        if(seepage_density>0)result["pools"]=Basins.make(result,seed_id,seepage_density);if(region_finalizer.Target is CaveBiomeRegions finalizer&&region_finalizer.Method==nameof(CaveBiomeRegions.decorate))result=finalizer.decorate(result);else if(Valid(region_finalizer))result=region_finalizer.Call(result).AsGodotDictionary();return result;
+        if(seepage_density>0)result["pools"]=Basins.make(result,seed_id,seepage_density);
+        if(geological_morphology)result["vertical_links"]=CaveVerticalFeatures.Build(result,Height,minimum_roof,max_depth-reserve,seed_id);
+        if(region_finalizer.Target is CaveBiomeRegions finalizer&&region_finalizer.Method==nameof(CaveBiomeRegions.decorate))result=finalizer.decorate(result);else if(Valid(region_finalizer))result=region_finalizer.Call(result).AsGodotDictionary();return result;
     }
     public D region(Vector2I cell)
     {

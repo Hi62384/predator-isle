@@ -19,7 +19,7 @@ internal static class TerrainWorldIdentity
     // Bump the layout version and rebake when routes or baked entrance geometry change.
     internal static string CaveLayoutSignature(long seed,double water,Resource terrain,Resource caves)
     {
-        var layout=new A{"cave-layout-9",seed,water,Capture(terrain,0),Capture(caves,0)};
+        var layout=new A{"cave-layout-10",seed,water,Capture(terrain,0),Capture(caves,0)};
         return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Json.Stringify(layout,"",true,true))));
     }
     private static D Capture(Resource resource,int depth)
