@@ -1,4 +1,5 @@
 using Godot;
+using PredatorIsle.Rendering;
 using System;
 using System.Collections.Generic;
 using System.Security.Cryptography;
@@ -13,11 +14,12 @@ public partial class CaveSurfaceRenderer : RefCounted
     private readonly CaveSurfaceShader _surfaceShader = new(); private readonly CaveWaterRenderer _water = new(); private readonly CaveStreamFrontiers _frontiers = new(); private readonly CaveMaterialPalette _palette = new();
     private readonly Dictionary<string, Shader> _shaders = new(); private readonly Queue<string> _shaderRing = new();
     private readonly CaveBiomeMaterials _biomes = new(); private readonly CaveFeatureRenderer _features = new();
+    private static Shader? _grassAndCoastShader;
     private static Variant Get(D d, string key, Variant fallback = default) => d.ContainsKey(key) ? d[key] : fallback;
     private static string Hash(string value) => Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(value))).ToLowerInvariant();
     public bool touches(MeshInstance3D node, D columns)
     {
-        if (node.Mesh == null) return false;
+        if (!GodotObject.IsInstanceValid(node) || node.Mesh == null) return false;
         if(node.HasMeta("terrain_owned_regions"))
         {
             foreach(var value in node.GetMeta("terrain_owned_regions").AsGodotArray())
@@ -52,7 +54,8 @@ public partial class CaveSurfaceRenderer : RefCounted
             PredatorIsle.Terrain.TerrainGpuGrids.EnsureCpuSurface(node);
             if (!node.GlobalBasis.IsEqualApprox(Basis.Identity)) return Reject("Unsupported rotated/scaled terrain parent");
             int resolution = node.GetMeta("resolution", 0).AsInt32(); var key = node.GetMeta("tile", Vector3I.Zero).AsVector3I(); float span = node.Mesh.GetAabb().Size.X;
-            if (key.Z != 0 || resolution < 1 || span / (double)resolution > 2.00001) return Reject("Portal awaits complete fine terrain parents");
+            bool ringGround = node.Mesh.GetMeta("terrain_canonical_surface",false).AsBool();
+            if (resolution < 1 || (ringGround ? span / resolution > 9 : key.Z != 0 || span / (double)resolution > 2.00001)) return Reject($"Portal awaits fine terrain parent at {key} ({span} m, {resolution} subdivisions)");
             var arrays = node.Mesh.HasMeta("terrain_cpu_arrays") ? node.Mesh.GetMeta("terrain_cpu_arrays").AsGodotArray() : ((ArrayMesh)node.Mesh).SurfaceGetArrays(0);
             var material = node.Mesh.SurfaceGetMaterial(0); if (arrays.Count == 0 || material is not ShaderMaterial shaderMaterial) return Reject("Missing original surface payload/material");
             string id = key.ToString(); var ground = Get(node.Mesh.GetMeta("collision_data", new D()).AsGodotDictionary(), "ground_faces", System.Array.Empty<Vector3>());
@@ -82,6 +85,28 @@ public partial class CaveSurfaceRenderer : RefCounted
         if (!names.Contains("cave_surface_payload") || !names.Contains(hive_entry ? "cave_hive_entry_material" : "cave_entry_colors") || !names.Contains("cave_parent_origin")) return null;
         if (_shaderRing.Count >= 8) _shaders.Remove(_shaderRing.Dequeue()); _shaderRing.Enqueue(digest); _shaders[digest] = result; return result;
     }
+
+    private static Shader EntranceTerrainShader(ShaderMaterial parent, D atlas, byte[] bytes, bool hive)
+    {
+        var original = CaveSurfaceShader.OriginalTerrain(parent.Shader);
+        const string terrainPath = "res://shaders/terrain_biomes.gdshader";
+        if (hive || parent.GetShaderParameter("extension_payload_enabled").AsBool() ||
+            !(original.ResourcePath == terrainPath || original.Code.StartsWith("// CONFIGURED_TERRAIN_OWNERS_", StringComparison.Ordinal)) ||
+            !CaveSurfacePayload.UsesOnlyGrassAndCoast(atlas, bytes))
+            return original;
+        if (_grassAndCoastShader != null) return _grassAndCoastShader;
+        var baseShader = GD.Load<Shader>(terrainPath);
+        using var variants = new TerrainShaderVariants();
+        string source = variants.source_for(baseShader.Code, 1 << 7);
+        if (source == baseShader.Code) return original;
+        // These entrance atlases have no texture-based biome extensions.
+        // Removing unreachable material branches also reduces the driver's
+        // first-draw compile cost on OpenGL.
+        source = source.Replace("uniform bool extension_payload_enabled=false;",
+            "const bool extension_payload_enabled=false;", StringComparison.Ordinal);
+        return _grassAndCoastShader = new Shader { Code = source };
+    }
+
     public void release_uploaded_data(D data) { foreach (string field in new[] { "groups", "collision_faces", "water", "frontiers", "features", "biome_ids" }) data.Remove(field); }
     public D node(D data, D sources, ShaderMaterial interior, int style) => node(data, sources, interior, style, true, true);
     public D node(D data, D sources, ShaderMaterial interior, int style, bool shadows) => node(data, sources, interior, style, shadows, true);
@@ -95,19 +120,33 @@ public partial class CaveSurfaceRenderer : RefCounted
             if (id != "__interior__")
             {
                 if (!sources.ContainsKey(id)) return Reject("Original parent material unavailable"); var parent = sources[id].AsGodotDictionary(); material = (ShaderMaterial)parent["material"].As<ShaderMaterial>().Duplicate();
-                var alternate = shader(material.Shader, style == 7, common); if (alternate == null) return Reject("Surface material compilation rejected");
+                var atlas = group["atlas"].AsGodotDictionary();
+                var atlasBytes = atlas["bytes"].AsByteArray();
                 var ids = interior.GetMeta("biome_ids", new A()).AsGodotArray(); var registry = interior.HasMeta("biome_registry") ? interior.GetMeta("biome_registry").As<Resource>() : null;
-                // Finalize the varying interface even for default caves: their
-                // entry-depth value also occupies a shared interpolator lane.
-                alternate = _biomes.shader(alternate, ids, registry, true);
-                if (alternate == null) return Reject("Cave biome surface adapter rejected"); material.Shader = alternate;
+                if (style != 7 && ids.Count == 0 && CaveSurfaceShader.IsSharedTerrain(material.Shader))
+                {
+                    material.SetShaderParameter("cave_surface_enabled", true);
+                    material.SetShaderParameter("cave_common_projection", common);
+                    material.SetShaderParameter("terrain_grid_enabled", false);
+                    material.SetShaderParameter("cave_cut_enabled", false);
+                    material.SetShaderParameter("flight_cell_size", 0.0);
+                }
+                else
+                {
+                    var alternate = shader(EntranceTerrainShader(material, atlas, atlasBytes, style == 7), style == 7, common);
+                    if (alternate == null) return Reject("Surface material compilation rejected");
+                    alternate = _biomes.shader(alternate, ids, registry, true);
+                    if (alternate == null) return Reject("Cave biome surface adapter rejected");
+                    material.Shader = alternate;
+                }
                 material.SetShaderParameter("cave_parent_offset", origin - parent["origin"].AsVector3()); material.SetShaderParameter("cave_parent_origin", parent["origin"]);
                 if (ids.Count > 0) _biomes.bind(material, ids, registry, interior.GetMeta("biome_context", new D()).AsGodotDictionary());
                 if (style == 7)
                 { material.SetShaderParameter("biological_colors", GD.Load<Resource>("res://materials/biological_colors_v3.tres")); material.SetShaderParameter("cave_hive_entry_material", true); material.SetShaderParameter("alien_tissue_variation_enabled", interior.GetShaderParameter("alien_tissue_variation_enabled")); }
                 else
                 { var bank = _palette.paths(style, specialize_insect); material.SetShaderParameter("cave_entry_geology", style); material.SetShaderParameter("cave_entry_colors", GD.Load<Resource>(bank["colors"].AsString())); material.SetShaderParameter("cave_entry_normals", GD.Load<Resource>(bank["normals"].AsString())); material.SetShaderParameter("cave_entry_compact_palette", bank["compact"]); }
-                var atlas = group["atlas"].AsGodotDictionary(); material.SetShaderParameter("cave_surface_payload", ImageTexture.CreateFromImage(Image.CreateFromData(atlas["width"].AsInt32(), atlas["height"].AsInt32(), false, Image.Format.Rgbaf, atlas["bytes"].AsByteArray())));
+                material.SetShaderParameter("cave_surface_payload", ImageTexture.CreateFromImage(
+                    Image.CreateFromData(atlas["width"].AsInt32(), atlas["height"].AsInt32(), false, Image.Format.Rgbaf, atlasBytes)));
                 material.SetShaderParameter("cave_surface_texel_mask", Get(atlas, "texel_mask", (1 << CaveSurfacePayload.Texels) - 1));
                 material.SetShaderParameter("cave_surface_texels", Get(atlas, "texels_per_vertex", CaveSurfacePayload.Texels));
             }

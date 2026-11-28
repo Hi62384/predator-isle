@@ -7,13 +7,13 @@ public partial class SharedCaveSettings : Resource
 {
     [ExportGroup("Shared Cave Foundation")]
     [Export]public bool enabled {get;set;}
-    [Export(PropertyHint.Range,"350,450,1")]public double maximum_depth_metres {get;set;}=400;
+    [Export(PropertyHint.Range,"350,2000,1")]public double maximum_depth_metres {get;set;}=400;
     [Export(PropertyHint.Range,"0,1,0.01")]public double regional_activity {get;set;}=.85;
     [Export(PropertyHint.Range,"8,24,0.5")]public double minimum_rock_cover_metres {get;set;}=10;
     [Export(PropertyHint.Range,"6,16,0.5")]public double main_route_width_metres {get;set;}=8;
     [Export(PropertyHint.Range,"6,16,0.5")]public double main_route_height_metres {get;set;}=8;
     [Export(PropertyHint.Range,"0.1,0.25,0.01")]public double maximum_route_grade {get;set;}=.2;
-    [Export(PropertyHint.Range,"1,8,1")]public int entrances_per_region {get;set;}=1;
+    [Export(PropertyHint.Range,"1,24,1")]public int entrances_per_region {get;set;}=1;
     [ExportGroup("Graph-Aware Cave Biomes")]
     [Export]public Resource? biome_regions {get;set;}=GD.Load<Resource>("res://config/caves/cave_biome_regions.tres");
     [ExportGroup("Default Geology")]
@@ -41,7 +41,7 @@ public partial class SharedCaveSettings : Resource
         else foreach(var error in biome_regions.Call("validation_errors").AsGodotArray())errors.Add(error.AsString());
         foreach(double value in new[]{maximum_depth_metres,regional_activity,minimum_rock_cover_metres,main_route_width_metres,main_route_height_metres,maximum_route_grade,visible_radius_metres,preload_radius_metres,formation_density,seepage_density})
             if(!double.IsFinite(value)){errors.Add("Cave settings must be finite");return errors;}
-        if(maximum_depth_metres<350||maximum_depth_metres>450)errors.Add("Maximum cave depth must be350–450m below the actual local surface");
+        if(maximum_depth_metres<350||maximum_depth_metres>2000)errors.Add("Maximum cave depth must be350–2000m below the actual local surface");
         if(regional_activity<0||regional_activity>1)errors.Add("Regional activity must be0–1");
         if(formation_density<0||formation_density>1)errors.Add("Formation density must be0–1");
         if(seepage_density<0||seepage_density>1)errors.Add("Seepage density must be0–1");

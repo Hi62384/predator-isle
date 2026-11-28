@@ -16,6 +16,12 @@ internal static class TerrainWorldIdentity
         var world=new D{["protocol"]="predator-isle-canonical-1m-v1",["generator_build"]=typeof(TerrainMeshBuilder).Assembly.ManifestModule.ModuleVersionId.ToString(),["engine"]=Engine.GetVersionInfo()["string"],["seed"]=seed,["water_level"]=water,["terrain"]=Capture(settings,0),["caves"]=caves is null?default(Variant):Variant.From(Capture(caves,0))};
         string serialized=Json.Stringify(world,"",true,true);return new D{["sha256"]=Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(serialized))).ToLowerInvariant(),["snapshot"]=world};
     }
+    // Bump the layout version and rebake when routes or baked entrance geometry change.
+    internal static string CaveLayoutSignature(long seed,double water,Resource terrain,Resource caves)
+    {
+        var layout=new A{"cave-layout-4",seed,water,Capture(terrain,0),Capture(caves,0)};
+        return Convert.ToHexString(SHA256.HashData(Encoding.UTF8.GetBytes(Json.Stringify(layout,"",true,true))));
+    }
     private static D Capture(Resource resource,int depth)
     {
         if(depth>16)throw new InvalidOperationException("Canonical world settings contain a cycle or excessive nesting.");if(resource is Script script)return new D{["script_path"]=script.ResourcePath};if(resource is Texture2D or TextureLayered or Texture3D or Material or Shader)return new D{["asset"]=resource.ResourcePath};var result=new D{["type"]=resource.GetType().FullName??resource.GetClass()};

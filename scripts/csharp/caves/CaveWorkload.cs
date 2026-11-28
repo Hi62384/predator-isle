@@ -16,6 +16,8 @@ public partial class CaveWorkload : RefCounted
     private readonly CaveBiomeRegions Regions = new();
     private readonly CaveSurfaceBiomes SurfaceBiomes = new();
     private readonly CaveStreamFrontiers Frontiers = new();
+    private readonly PortalCaveMesher mesher = new() { SmoothSurface = true };
+    private readonly CaveSurfaceContext context = new() { CompactGpuPayload = true };
     private readonly CaveSurfaceCut SurfaceCut = new();
     private readonly TerrainCollision Collision = new();
     public GodotObject builder { get; set; } = null!;
@@ -44,6 +46,7 @@ public partial class CaveWorkload : RefCounted
     {
         internal readonly Vector2I Cell=cell;
         internal readonly int Halo=halo,Width=halo*2+1;
+        internal bool PublishedLocal;
         internal int RegionIndex,ConnectionIndex,EntranceIndex;
         internal readonly A Regions=new(),Edges=new(),Entrances=new();
         internal D? Bundle;
@@ -55,11 +58,11 @@ public partial class CaveWorkload : RefCounted
     public bool configure(Resource terrain_settings, Resource caves, long seed_value, double water)
     {
         if (caves == null || caves.Call("validation_errors").AsGodotArray().Count > 0) return false;
-        _water_cache.Clear();discovery=null;configuration = caves.DuplicateDeep(Resource.DeepDuplicateMode.All); _seed = seed_value; _regions = new();
+        mapSignature=null;_water_cache.Clear();discovery=null;configuration = caves.DuplicateDeep(Resource.DeepDuplicateMode.All); _seed = seed_value; _regions = new();
         builder = new TerrainMeshBuilder(); builder.Set("settings", terrain_settings.DuplicateDeep(Resource.DeepDuplicateMode.All));
         builder.Set("world_seed", seed_value); builder.Set("water_level", water); builder.Call("_configure_noise");
         network = new CaveNetwork(); network.configure(Height, new Callable(builder, "get_water_surface_height"), seed_value, Number("maximum_depth_metres"));
-        network.EntrancesPerRegion=Math.Clamp((int)Number("entrances_per_region"),1,8);
+        network.EntrancesPerRegion=Math.Clamp((int)Number("entrances_per_region"),1,24);
         network.OceanLevel=water;
         network.activity = Number("regional_activity"); network.half_width = Number("main_route_width_metres") * .5; network.headroom = Number("main_route_height_metres");
         network.minimum_roof = Number("minimum_rock_cover_metres"); network.maximum_grade = Number("maximum_route_grade");
@@ -76,7 +79,7 @@ public partial class CaveWorkload : RefCounted
         }
         _biomes.geometry_provider = Callable.From<D, D>(region => Features.decorate(region, configuration, _seed, Height, _magma_heat));
         network.region_finalizer = new Callable(_biomes, "decorate");
-        field = new PortalCaveField { maximum_depth = Number("maximum_depth_metres"), minimum_roof = Number("minimum_rock_cover_metres") };
+        field = new PortalCaveField { RoundEntrance = true, maximum_depth = Number("maximum_depth_metres"), minimum_roof = Number("minimum_rock_cover_metres") };
         bundle_key = new(int.MaxValue, int.MaxValue); return true;
     }
     public D discover(Vector2I cell)
@@ -102,6 +105,74 @@ public partial class CaveWorkload : RefCounted
         return bundle;
     }
     /// <summary>Same ordered graph as discover(), yielding between regional products. Partial results are never a solid-ground proof.</summary>
+    internal D BuildLocalMap(Vector2I cell)
+    {
+        var local = network.region(cell);
+        var mouths = new A();
+        AppendEntrances(local, mouths);
+        foreach (var value in mouths)
+        {
+            var mouth = value.AsGodotDictionary();
+            mouth["columns"] = exposed_columns(mouth);
+        }
+        return new D { ["cell"]=cell, ["regions"]=new A{local}, ["connections"]=new A(),
+            ["entrances"]=mouths, ["local_only"]=true };
+    }
+    internal static string StartupMapPath(Vector2I cell) => $"res://data/caves/region_{cell.X}_{cell.Y}.res";
+    private string? mapSignature;
+    internal string MapSignature() => mapSignature ??= TerrainWorldIdentity.CaveLayoutSignature(_seed,builder.Get("water_level").AsDouble(),builder.Get("settings").As<Resource>(),configuration);
+    internal D? ReadStartupMap(Vector2I cell)
+    {
+        string path=StartupMapPath(cell);
+        if (!ResourceLoader.Exists(path)) return null;
+        var resource=GD.Load<Resource>(path);
+        if(resource == null || resource.GetMeta("signature","").AsString()!=MapSignature())return null;
+        var map=GD.BytesToVar(resource.GetMeta("map").AsByteArray()).AsGodotDictionary();
+        map["baked_signature"]=resource.GetMeta("signature");
+        return map;
+    }
+    // The baked surface carries the same material channels, frontiers and collision as a streamed portal.
+    internal static string EntrancePath(Vector3 mouth) => $"res://data/caves/entrance_{Mathf.RoundToInt(mouth.X)}_{Mathf.RoundToInt(mouth.Z)}.res";
+    internal void BakeEntranceGeometry(D map,string signature)
+    {
+        foreach(var value in map["entrances"].AsGodotArray())
+        {
+            var mouth=value.AsGodotDictionary();
+            var columns=mouth["columns"].AsGodotDictionary();
+            if(columns.Count is 0 or >64) continue;
+            var surface=BuildEntranceSurface(map,columns);
+            if(!Get(surface,"valid",false).AsBool())continue;
+            using var resource=new Resource();
+            resource.SetMeta("columns",columns);
+            resource.SetMeta("cells",surface["cells"]);
+            resource.SetMeta("signature",signature);
+            var point=mouth["point"].AsVector3();
+            string path=EntrancePath(point);
+            if(ResourceSaver.Save(resource,path,ResourceSaver.SaverFlags.Compress)!=Error.Ok)
+                throw new InvalidOperationException("Failed to save entrance "+point);
+        }
+        ClearSurface();
+    }
+    internal D BuildEntranceSurface(D map,D columns)
+    {
+        var geometry=new TerrainRingMeshGeometry(new TerrainRingTopology()) { GenerateShapeRefinement=false };
+            var records=new A();
+            var terrainBuilder=(TerrainMeshBuilder)builder;
+            bool standardSurface=true;
+            foreach(var raw in columns.Keys)
+            {
+                var column=raw.AsVector2I();
+                var patch=new TerrainRingLayout.Patch(new Vector3I(column.X,column.Y,0),64,default);
+                var data=geometry.Build(terrainBuilder,patch,32,surfaceOnly:true);
+                standardSurface &= data.ExtensionData.Length==0 && data.AlienFlow.Length==0 && data.LocalWater.Count==0;
+                records.Add(new D{["id"]=column.ToString(),["origin"]=new Vector3(column.X*64,0,column.Y*64),
+                    ["span"]=64.0,["resolution"]=32,["arrays"]=data.Arrays,["ground_faces"]=Array.Empty<Vector3>(),
+                    ["canonical_surface"]=true,["extension_normalization"]=false});
+            }
+            if(!standardSurface)return new D();
+            var surface=portal(map,columns,records);
+            return surface;
+    }
     public D discover_step(Vector2I cell)=>discover_step(cell,1,0);
     /// <summary>
     /// Build a bounded sequence of graph products on one worker. The caller must
@@ -122,6 +193,15 @@ public partial class CaveWorkload : RefCounted
         {
             if(operation>0&&(Time.GetTicksUsec()-began)/1000.0>=maxMilliseconds)
                 return Pending();
+            if (PublishLocalEntrances && !cursor.PublishedLocal)
+            {
+                cursor.PublishedLocal = true;
+                var preview = ReadStartupMap(cell) ?? BuildLocalMap(cell);
+                if(use_bundle(preview))preview["cells"]=new A(field.Get("chunks").AsGodotDictionary().Keys);
+                var pending = Pending();
+                pending["local_bundle"] = preview;
+                return pending;
+            }
             if(cursor.RegionIndex<total)
             {
                 var region=network.region(cursor.At(cursor.RegionIndex++));
@@ -172,14 +252,17 @@ public partial class CaveWorkload : RefCounted
             ["connections_ready"]=cursor.ConnectionIndex,
             ["entrances_measured"]=cursor.EntranceIndex};
     }
+    internal bool PublishLocalEntrances;
+    private bool localBundle;
     public bool use_bundle(D bundle)
     {
         if (field == null || !bundle.ContainsKey("cell") || !bundle.ContainsKey("regions") || !bundle.ContainsKey("connections")) return false;
-        if (bundle_key == bundle["cell"].AsVector2I()) return true;
+        bool local = bundle.ContainsKey("local_only");
+        if (bundle_key == bundle["cell"].AsVector2I() && localBundle == local) return true;
         var regions = bundle["regions"].AsGodotArray(); var connections = bundle["connections"].AsGodotArray();
         var assignment = Registry.Get("enabled").AsBool() ? Regions.combine(regions, connections, Registry.Get("fallback_biome_id").AsString()) : new D();
         if (!Get(assignment, "valid", true).AsBool() || !field.Call("compile", regions, Height, connections, assignment).AsBool()) return false;
-        _regions = regions; bundle_key = bundle["cell"].AsVector2I(); _water_cache.Clear(); return true;
+        localBundle = local; _regions = regions; bundle_key = bundle["cell"].AsVector2I(); _water_cache.Clear(); return true;
     }
     private static void AppendEntrances(D region,A output)
     {
@@ -213,8 +296,11 @@ public partial class CaveWorkload : RefCounted
             }
             if (!exposed) continue;
             minimum = Math.Min(minimum, Math.Min(a.Y,b.Y));
-            int firstX = (int)Math.Floor((Math.Min(a.X,b.X)-width)/64)-1, lastX = (int)Math.Floor((Math.Max(a.X,b.X)+width)/64)+1;
-            int firstZ = (int)Math.Floor((Math.Min(a.Z,b.Z)-width)/64)-1, lastZ = (int)Math.Floor((Math.Max(a.Z,b.Z)+width)/64)+1;
+            // Pad the actual tunnel extent by two portal mesh samples. Padding
+            // by a whole 64 m column made a small mouth rebuild acres of beach.
+            double margin = width + 4;
+            int firstX = (int)Math.Floor((Math.Min(a.X,b.X)-margin)/64), lastX = (int)Math.Floor((Math.Max(a.X,b.X)+margin)/64);
+            int firstZ = (int)Math.Floor((Math.Min(a.Z,b.Z)-margin)/64), lastZ = (int)Math.Floor((Math.Max(a.Z,b.Z)+margin)/64);
             for (int z = firstZ; z <= lastZ; z++) for (int x = firstX; x <= lastX; x++) columns[new Vector2I(x,z)] = true;
         }
         entrance["minimum_exposed_floor"] = minimum; return columns;
@@ -226,7 +312,7 @@ public partial class CaveWorkload : RefCounted
     {
         if (field != null) { ClearSurface(); field.Set("include_surface_air", false); field.Set("opening_rock_cover", 6.0); }
         _last_frontiers = new(); _last_biome_ids = new(); _last_valid = true; if (field == null) return new();
-        using var mesher = new PortalCaveMesher { capture_boundary_values = capture_frontiers, GpuLattice=this.GpuLattice }; var arrays = mesher.build(field,key,2);
+        mesher.capture_boundary_values=capture_frontiers; mesher.GpuLattice=GpuLattice; var arrays = mesher.build(field,key,2);
         if (capture_frontiers) _last_frontiers = Frontiers.build(field,key,mesher.boundary_values);
         var bound = SurfaceBiomes.bind(decorated(arrays,key),field,key); _last_biome_ids = bound["ids"].AsGodotArray(); _last_valid = bound["valid"].AsBool();
         if (capture_frontiers) foreach (var face in _last_frontiers.Keys.ToArray()) _last_frontiers[face] = SurfaceBiomes.bind(_last_frontiers[face].AsGodotArray(),field,key,_last_biome_ids)["arrays"];
@@ -263,22 +349,24 @@ public partial class CaveWorkload : RefCounted
     public D portal(D bundle, D columns, A parents, D owned_columns) => portal(bundle,columns,parents,owned_columns,true);
     public D portal(D bundle, D columns, A parents, D owned_columns, bool prepare_ground)
     {
-        if (!use_bundle(bundle)) return Failure("Invalid portal bundle");
+        if (!use_bundle(bundle)) return Failure($"Invalid portal bundle (fields={bundle.Count}, regions={Get(bundle,"regions",new A()).AsGodotArray().Count})");
         var extraction = owned_columns.Count == 0 ? columns : owned_columns;
         foreach (var column in extraction.Keys) if (!columns.ContainsKey(column)) return Failure("Owned column outside complete surface mask");
-        using var context = new CaveSurfaceContext { CompactGpuPayload = true }; if (!context.configure(parents,Height)) return Failure("Invalid immutable surface snapshot");
-        field.Set("top_height",new Callable(context,"height_at")); field.Set("include_surface_air",true); field.Set("opening_rock_cover",0.0);
+        mesher.capture_boundary_values=false; mesher.GpuLattice=GpuLattice; if (!context.configure(parents,Height)) return Failure("Invalid immutable surface snapshot");
+        bool canonical=parents.All(value=>Get(value.AsGodotDictionary(),"canonical_surface",false).AsBool());
+        field.Set("top_height",new Callable(context,canonical ? nameof(CaveSurfaceContext.grid_height) : nameof(CaveSurfaceContext.height_at))); field.Set("include_surface_air",true); field.Set("opening_rock_cover",0.0);
         // Every exit releases the snapshot callable; build() restores ordinary underground extraction settings.
         try
         {
-            if (!field.Call("measure_surface",columns).AsBool()) return Failure("Invalid measured surface bounds");
+            if (!field.Call("measure_surface",extraction).AsBool()) return Failure("Invalid measured surface bounds");
+            field.Set("surface_columns",columns.Duplicate());
             var result = new A();
             foreach (var item in extraction.Keys)
             {
                 var column = item.AsVector2I(); var limits = field.Get("surface_limits").AsGodotDictionary()[column].AsVector2();
                 for (int y = (int)Math.Floor((double)limits.X/64)-1; y <= (int)Math.Floor((double)limits.Y/64); y++)
                 {
-                    var key = new Vector3I(column.X,y,column.Y); using var mesher = new PortalCaveMesher{GpuLattice=this.GpuLattice}; var arrays = decorated(mesher.build(field,key,2),key);
+                    var key = new Vector3I(column.X,y,column.Y); var arrays = decorated(mesher.build(field,key,2),key);
                     var groups = Enabled("indexed_entry_payload") ? context.surfaces_indexed(arrays,(Vector3)key*64) : context.surfaces(arrays,(Vector3)key*64);
                     if (!groups["valid"].AsBool()) return groups;
                     groups["key"] = key; groups["water"] = water_cell(key); var ids = field.Call("biome_ids_for_cell",key).AsGodotArray();

@@ -135,6 +135,9 @@ public partial class TerrainMeshBuilder : RefCounted
     }
     public void _configure_regions()
     { _native_regions.configure(settings, world_seed, _extras_enabled, _extra_coverage); _extra_coverage = _native_regions.extra_coverage; }
+    internal bool RingWaterEnabled { get; private set; }
+    internal bool RingBeachesEnabled { get; private set; }
+    internal bool RingFeaturesEnabled { get; private set; }
     public void _configure_noise()
     {
         _extras.Clear(); _extras.Resize(8); _extra_coverage = new double[8]; _extras_enabled = false;
@@ -147,6 +150,10 @@ public partial class TerrainMeshBuilder : RefCounted
         }
         _badlands = null; if (P("badlands_coverage") > 0) { _badlands = new BadlandsSampler(); _badlands.configure(R("badlands"), world_seed, this); _badlands.profile = profile_build; }
         _tropical = null; if (P("tropical_coverage") > 0) { _tropical = new TropicalSampler(); _tropical.configure(R("tropical"), world_seed, this); _tropical.profile = profile_build; }
+        RingWaterEnabled=B("water_enabled");
+        RingBeachesEnabled=B("beaches_enabled");
+        RingFeaturesEnabled=_extras_enabled || RingWaterEnabled && _tropical is not null &&
+            _tropical.settings.Get("waterfall_frequency").AsDouble()>0;
         _coast = null; _coast_limit = 0;
         if (B("rocky_coast_enabled") || B("beaches_enabled"))
         {

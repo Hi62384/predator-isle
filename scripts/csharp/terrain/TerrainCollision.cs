@@ -40,7 +40,8 @@ public partial class TerrainCollision : RefCounted
     {
         var vertices = arrays[(int)Mesh.ArrayType.Vertex].AsVector3Array();
         var indices = arrays[(int)Mesh.ArrayType.Index].AsInt32Array();
-        var result = new Vector3[resolution * resolution * 6];
+        // Ring topology omits triangles in the hole occupied by a finer ring.
+        var result = new Vector3[indices.Length];
         for (int i = 0; i < result.Length; i++) result[i] = vertices[indices[i]];
         return result;
     }

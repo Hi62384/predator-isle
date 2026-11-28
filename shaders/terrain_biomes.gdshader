@@ -231,7 +231,7 @@ vec2 path_node(vec2 id,float size) {
  return (id+0.5+(vec2(path_hash(id+17.3),path_hash(id+91.7))-0.5)*0.56)*size;
 }
 vec2 path_tangent(vec2 id) {
- float angle=(path_hash(id+vec2(43.1,19.7))-0.5)*1.5;
+ float angle=path_hash(id+vec2(43.1,19.7))*6.283185;
  return vec2(cos(angle),sin(angle));
 }
 vec2 path_curve(vec2 a,vec2 c1,vec2 c2,vec2 b,float t) {
@@ -266,7 +266,7 @@ vec2 ground_trail(vec2 p,float size,float width,float pixel_width,float edge_fal
        p.y<start.y-reach || p.y>end.y+reach)continue;
    }
    float seed=path_hash(id+vec2(float(edge)*57.0,37.0));
-   if(seed<(edge==0 ? 0.88 : 0.32)) {
+   if(seed<0.60) {
     if(!start_ready){a=path_node(id,size);start_ready=true;}
     vec2 next_id=id+(edge==0 ? vec2(1,0) : vec2(0,1));
     vec2 b=path_node(next_id,size);

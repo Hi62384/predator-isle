@@ -33,7 +33,7 @@ public partial class RockyCoastSampler : RefCounted
     private readonly TerrainParameterSnapshot numericSettings=new();
     private TerrainParameterSnapshot? beachNumbers;
     private double P(string key)=>numericSettings[key];
-    private Resource BeachSettings()=>beach!.Get("settings").As<Resource>();
+    private Resource BeachSettings()=>beach is BeachSampler sampler ? sampler.settings : beach!.Get("settings").As<Resource>();
     private double B(string key){if(beachNumbers is null){beachNumbers=new TerrainParameterSnapshot();beachNumbers.Capture(BeachSettings());}return beachNumbers[key];}
     private static double Smooth(double a,double b,double value){double t=Math.Clamp((value-a)/(b-a),0,1);return t*t*(3-2*t);}
     private static double Lerp(double a,double b,double t)=>a+(b-a)*t;

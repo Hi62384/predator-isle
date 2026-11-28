@@ -19,6 +19,7 @@ public partial class CaveStreamFrontiers : RefCounted
         double cover = volume.Get("opening_rock_cover").AsDouble(); volume.Set("opening_rock_cover", Math.Max(6, cover));
         try
         {
+            var portal = volume as PortalCaveField;
             bool caveOnly = volume.HasMethod("cave_sample");
             for (int face = 0; face < 6; face++)
             {
@@ -29,7 +30,7 @@ public partial class CaveStreamFrontiers : RefCounted
                 for (int y = 0; y < 33; y++) for (int x = 0; x < 33; x++)
                 {
                     int index = x + y * 33; var point = start + u * x * 2 + v * y * 2; points[index] = point;
-                    values[index] = reuse != null ? reuse[index] : (float)(caveOnly ? volume.Call("cave_sample", point).AsDouble() : volume is ICaveField native ? native.Sample(point) : volume.Call("sample", point).AsDouble());
+                    values[index] = reuse != null ? reuse[index] : (float)(portal != null ? portal.cave_sample(point) : caveOnly ? volume.Call("cave_sample", point).AsDouble() : volume is ICaveField native ? native.Sample(point) : volume.Call("sample", point).AsDouble());
                 }
                 var vertices = new List<Vector3>(); var inward = -direction;
                 for (int y = 0; y < 32; y++) for (int x = 0; x < 32; x++)

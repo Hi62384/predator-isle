@@ -12,17 +12,22 @@ public partial class FreeCamera : Camera3D
     [Export] public Label? debug_label { get; set; }
     [Export] public bool debug_overlay_visible { get; set; }
     private Label? frameRateLabel;
+    private Label? positionLabel;
     private Label? speedLabel,biomeLabel;
     private double speedDisplayRemaining;
     private double _pitch = -25;
     private double _debugRefresh;
+    private PhysicsRayQueryParameters3D? distanceQuery;
+    private Label? distanceLabel;
     private PlayerScaleMarker _marker = null!;
     private int _extensionIndex = -1;
     private static readonly string[] Extensions = { "quarry", "wise_mountains", "volcanic", "spore_forest", "radiation_wasteland", "crystal_wastes", "insect_colony", "alien_infected" };
 
     public override void _Ready()
     {
+        distanceLabel = GetNodeOrNull<Label>("../Interface/RayDistance");
         biomeLabel=GetNodeOrNull<Label>("../Interface/Biome");
+        positionLabel = GetNodeOrNull<Label>("../Interface/WorldPosition");
         frameRateLabel=GetNodeOrNull<Label>("../Interface/FrameRate");
         speedLabel=GetNodeOrNull<Label>("../Interface/FlightSpeed");
         CreateInputActions(); _set_debug_overlay_visible(debug_overlay_visible);
@@ -75,6 +80,12 @@ public partial class FreeCamera : Camera3D
             else if (mouse.Pressed && mouse.ButtonIndex == MouseButton.WheelDown) SetFlightSpeed(move_speed / 1.2);
         }
         else if (input.IsActionPressed("toggle_fullscreen")) ToggleFullscreen();
+        else if (input.IsActionPressed("measure_distance"))
+        {
+            var center = GetViewport().GetVisibleRect().GetCenter();
+            distanceQuery?.Dispose();
+            distanceQuery = PhysicsRayQueryParameters3D.Create(GlobalPosition, GlobalPosition + ProjectRayNormal(center) * Far);
+        }
         else if (input.IsActionPressed("scale_toggle")) { if (_marker.Visible) _marker.Hide(); else if (terrain != null) _marker.place(this, terrain); }
         else if (input.IsActionPressed("scale_place") && terrain != null) _marker.place(this, terrain);
         else if (input.IsActionPressed("terrain_debug_shaded") && terrain != null) SetDebug(0);
@@ -120,7 +131,7 @@ public partial class FreeCamera : Camera3D
         speedLabel.Show();
     }
 
-    public override void _Process(double delta)
+    public override void _PhysicsProcess(double delta)
     {
         var axes = Input.GetVector("freecam_left", "freecam_right", "freecam_forward", "freecam_back");
         var direction = Basis * new Vector3(axes.X, 0, axes.Y) + Vector3.Up * Input.GetAxis("freecam_down", "freecam_up");
@@ -133,10 +144,31 @@ public partial class FreeCamera : Camera3D
             if (speedDisplayRemaining <= 0) speedLabel.Hide();
         }
         GlobalPosition += direction * (float)(speed * delta);
+        if (distanceQuery is not null)
+        {
+            var hit = GetWorld3D().DirectSpaceState.IntersectRay(distanceQuery);
+            if (distanceLabel is not null)
+            {
+                distanceLabel.Text = hit.Count == 0 ? "No collision in range" : $"Distance  {distanceQuery.From.DistanceTo(hit["position"].AsVector3()):0.00} m";
+                distanceLabel.Show();
+            }
+            distanceQuery.Dispose();
+            distanceQuery = null;
+        }
         _debugRefresh -= delta;
         if (_debugRefresh > 0) return;
         _debugRefresh = .2;
-        if(biomeLabel is not null && terrain is not null)biomeLabel.Text=terrain.Call("get_location_biome",GlobalPosition).AsString();
+        if (terrain is PredatorIsle.Terrain.ChunkTerrain world)
+        {
+            string cave = world.GetCaveName(GlobalPosition);
+            if (biomeLabel is not null) biomeLabel.Text = cave.Length > 0 ? cave : world.get_biome_name_at(GlobalPosition);
+        }
+        else if(biomeLabel is not null && terrain is not null)biomeLabel.Text=terrain.Call("get_location_biome",GlobalPosition).AsString();
+        if (positionLabel is not null)
+        {
+            var p = GlobalPosition.Round();
+            positionLabel.Text = $"X {p.X:0}   Y {p.Y:0}   Z {p.Z:0}";
+        }
         if(frameRateLabel is not null)frameRateLabel.Text=$"{Engine.GetFramesPerSecond():0} FPS";
         if (terrain != null) Near = (float)System.Math.Clamp((GlobalPosition.Y - terrain.Call("get_height_at", GlobalPosition).AsDouble()) * .01, .1, 10);
         if (debug_label != null && debug_label.IsVisibleInTree()) UpdateDebugLabel(speed);
@@ -170,7 +202,7 @@ public partial class FreeCamera : Camera3D
             ("toggle_debug_overlay", Key.Quoteleft), ("freecam_forward", Key.W), ("freecam_back", Key.S),
             ("freecam_left", Key.A), ("freecam_right", Key.D), ("freecam_down", Key.Q), ("freecam_up", Key.E),
             ("freecam_sprint", Key.Shift), ("freecam_release_mouse", Key.Escape), ("toggle_fullscreen", Key.F11),
-            ("scale_toggle", Key.F7), ("scale_place", Key.P), ("terrain_debug", Key.F5)
+            ("measure_distance", Key.V), ("scale_toggle", Key.F7), ("scale_place", Key.P), ("terrain_debug", Key.F5)
         }) AddKey(name, new InputEventKey { PhysicalKeycode = key });
         AddKey("terrain_debug_shaded", new InputEventKey { PhysicalKeycode = Key.F5, CtrlPressed = true });
         AddKey("toggle_fullscreen", new InputEventKey { PhysicalKeycode = Key.Enter, AltPressed = true });

@@ -1,0 +1,7 @@
+Godot Engine v4.6.1.stable.mono.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+Flight starts with 1 published chunks
+Moving ring 2/3 newly visible tiles: 20/12; first seen at 0.00/0.00 seconds
+FLIGHT speed=35 cells=14 near=1080/1329 longest=1.56s active=57 error=

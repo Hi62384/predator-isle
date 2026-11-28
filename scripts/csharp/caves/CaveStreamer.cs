@@ -61,6 +61,7 @@ public partial class CaveStreamer : Node3D
     public A _biome_runtime_controllers {get;set;}=new();
     private TerrainBiomeNoiseGpu? caveGpu;
     private readonly CaveSurfaceRenderer _renderer=new();
+    private readonly CaveSurfaceCut parentCut=new();
     private readonly CaveWaterRenderer _water=new();
     private readonly CaveMaterialPalette _palette=new();
     private readonly CaveStreamFrontiers _frontiers=new();
@@ -111,7 +112,7 @@ public partial class CaveStreamer : Node3D
     public CaveWorkload? worker()
     {
         if(_idle.Count>0){var value=_idle[^1].As<CaveWorkload>();_idle.RemoveAt(_idle.Count-1);return value;}
-        var work=new CaveWorkload{GpuLattice=caveGpu};if(!work.configure(host!.Get("_settings_snapshot").As<Resource>(),configuration!,host.Get("world_seed").AsInt64(),host.Get("water_level").AsDouble())){work.Dispose();return null;}return work;
+        var work=new CaveWorkload{GpuLattice=caveGpu,PublishLocalEntrances=true};if(!work.configure(host!.Get("_settings_snapshot").As<Resource>(),configuration!,host.Get("world_seed").AsInt64(),host.Get("water_level").AsDouble())){work.Dispose();return null;}return work;
     }
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting)=>dispatch_allowance(terrain_free_slots,cave_jobs,terrain_waiting,4);
     public int dispatch_allowance(long terrain_free_slots,long cave_jobs,bool terrain_waiting,long total_workers)
@@ -130,8 +131,20 @@ public partial class CaveStreamer : Node3D
         return point.Y<sampledGround;
     }
     private bool wasUnderground;
+    private Vector2 previousFocus = Vector2.Inf, flightLead;
+    private ulong previousFocusTime;
+    internal bool PreparingEntrance => previewPending || initialUpload != null || _surface_batch?.pending() == true || _surface_request.Count > 0;
     public void tick(Vector3 point,Vector3 protected_point,long terrain_free_slots,bool terrain_waiting)
     {
+        var focus = new Vector2(point.X,point.Z);
+        ulong now = Time.GetTicksUsec();
+        if (previousFocus.IsFinite() && now > previousFocusTime)
+        {
+            float seconds = (now-previousFocusTime)/1000000f;
+            var travel = focus-previousFocus;
+            flightLead = travel.Length() > 128 ? Vector2.Zero : flightLead.Lerp((travel * (16 / seconds)).LimitLength(700),1-Mathf.Exp(-seconds*3));
+        }
+        previousFocus=focus; previousFocusTime=now;
         _protected_point=protected_point;collect();var cell=Region(point);
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("update",this,protected_point);
         if(cell!=_region)
@@ -141,35 +154,48 @@ public partial class CaveStreamer : Node3D
             if(parkedDiscoveryWorker is not null)
             {_idle.Add(parkedDiscoveryWorker);parkedDiscoveryWorker=null;}
             clear_surface_staging();_surface_request=new();_surface_batch=null;_surface_build_pending=false;_rebuild_nodes=new();_rebuild_columns=new();
-            _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;discovery_progress=new D{["cached"]=!_discovery_pending};
+            CancelInitialUpload();
+            attemptedColumns=null;generatedSurface=null;reserve_detail(new D());
+            _region=cell;_generation++;_wanted.Clear();_pending.Clear();_ready.Clear();_last_plan=Vector3.Inf;_discovery_pending=!discoveryCache.TryGet(cell,out var cached);_bundle=cached;
+            if(_bundle.Count==0 && forecastSurface!=null)
+            {
+                var forecastMap=forecastSurface["map"].AsGodotDictionary();
+                if(forecastMap["cell"].AsVector2I()==cell)_bundle=forecastMap;
+            }
+            discovery_progress=new D{["cached"]=!_discovery_pending};
         }
+        PreloadAcrossBoundary(point);
         bool underground=underground_interest(point);
         if(underground!=wasUnderground){_last_plan=Vector3.Inf;wasUnderground=underground;}
         if(underground&&_bundle.Count>0){if(!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16)plan(point,protected_point);else if(_pending.Count==0)refill_pending();}
-        if(!underground && host!.HasMethod("_commit_partition"))service_surface(point);
+        if(host!.HasMethod("_commit_partition"))service_surface(point);
         if(_surface_batch==null&&_surface_request.Count>0)
         {
             _surface_serial++;var batch=new SurfaceBatch();if(batch.configure(_surface_serial,_generation,_surface_request)){_surface_batch=batch;_surface_build_pending=true;}else surface_status="Invalid bounded surface batch";_surface_request=new();
         }
-        int allowance=dispatch_allowance(terrain_free_slots,_jobs.Count,terrain_waiting&&!underground,host!.Get("worker_count").AsInt64());
+        int allowance=dispatch_allowance(terrain_free_slots,_jobs.Count,terrain_waiting&&!underground&&!PreparingEntrance,host!.Get("worker_count").AsInt64());
         while(allowance>0&&_ready.Count<8)
         {
-            var resuming=_discovery_pending&&parkedDiscoveryWorker is not null;
+            bool portalPending = _surface_batch?.pending() == true;
+            bool waitingForMouth = PreparingEntrance && _detail_columns.Count > 0 && _surface_transaction == null;
+            bool discoverNow = _discovery_pending && !portalPending && !waitingForMouth;
+            if (!discoverNow && !portalPending && !(underground && _pending.Count > 0 && _bundle.Count > 0)) break;
+            var resuming=discoverNow&&parkedDiscoveryWorker is not null;
             var work=resuming?parkedDiscoveryWorker:worker();
             if(resuming){parkedDiscoveryWorker=null;discovery_worker_resumes++;}
             if(work==null){last_error="Invalid cave worker configuration";return;}
-            var result=new A();long generation=_generation;var job=new D{["work"]=work,["result"]=result,["generation"]=generation,["kind"]=_discovery_pending?"discovery":"mesh"};Func<D> execute;
-            if(_discovery_pending)
+            var result=new A();long generation=_generation;var job=new D{["work"]=work,["result"]=result,["generation"]=generation,["kind"]=discoverNow?"discovery":"mesh"};Func<D> execute;
+            if(discoverNow)
             {
                 _discovery_pending=false;var region=_region;
                 // Amortize thread-pool dispatch overhead while keeping individual
                 // steps small enough to release old interests promptly.
                 execute=()=>work.discover_step(region,4,5);
             }
-            else if(!underground&&_surface_batch!=null&&_surface_batch.pending()&&!(underground&&_pending.Count>0&&_bundle.Count>0))
+            else if(_surface_batch!=null&&_surface_batch.pending())
             {
                 var part=_surface_batch.take();job["kind"]="portal";job["batch_id"]=part["batch_id"];job["part"]=part["part"];
-                var bundle=_bundle;var columns=_surface_batch.request["columns"].AsGodotDictionary();var parents=_surface_batch.request["snapshot"].AsGodotDictionary()["records"].AsGodotArray();var owned=part["columns"].AsGodotDictionary();bool ground=part["part"].AsInt32()==0;
+                var bundle=_surface_batch.request["bundle"].AsGodotDictionary();var columns=_surface_batch.request["columns"].AsGodotDictionary();var parents=_surface_batch.request["snapshot"].AsGodotDictionary()["records"].AsGodotArray();var owned=part["columns"].AsGodotDictionary();bool ground=part["part"].AsInt32()==0;
                 execute=()=>work.portal(bundle,columns,parents,owned,ground);
             }
             else if(underground&&_pending.Count>0&&_bundle.Count>0)
@@ -190,23 +216,50 @@ public partial class CaveStreamer : Node3D
             var work=job["work"].As<CaveWorkload>();
             if(kind=="mesh"&&Get(_inflight,job["key"].AsVector3I(),-1).AsInt64()==generation)_inflight.Remove(job["key"]);
             var results=job["result"].AsGodotArray();
+            if(kind=="prefetch"){
+                prefetchPending=false;
+                if(results.Count>0 && Get(results[0].AsGodotDictionary(),"valid",false).AsBool()){
+                    forecastSurface=results[0].AsGodotDictionary();
+                    if(_bundle.Count==0 && forecastRegion==_region)_bundle=forecastSurface["map"].AsGodotDictionary();
+                    attemptedColumns=null;
+                }
+                _idle.Add(work);continue;
+            }
+            if(kind=="entrance-preview")previewPending=false;
             if(generation!=_generation||results.Count==0){_idle.Add(work);continue;}
             var data=results[0].AsGodotDictionary();
+            if(kind=="entrance-preview")
+            {
+                _idle.Add(work);
+                if(Get(data,"valid",false).AsBool()){
+                    generatedSurface=data;
+                    generatedSurface["columns"]=job["columns"];
+                    attemptedColumns=null;
+                }
+                else if(_detail_columns.RecursiveEqual(job["columns"].AsGodotDictionary()))
+                {
+                    host!.Call("_refresh_visible_chunks",Teleport?host.Get("_teleport_destination").AsVector3():Vector3.Inf);
+                }
+                continue;
+            }
             if(kind=="discovery"&&!data.ContainsKey("error")&&Get(data,"discovery_pending",false).AsBool())
             {
                 // An incomplete graph can resume only on this exact worker.
                 // Keep it out of the shared pool until it completes, fails,
                 // or the player moves to another discovery region.
+                if (data.TryGetValue("local_bundle",out var local)) { _bundle = local.AsGodotDictionary(); data.Remove("local_bundle"); }
                 parkedDiscoveryWorker=work;discovery_progress=data;_discovery_pending=true;continue;
             }
             _idle.Add(work);
             if(kind=="discovery")
-            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}discovery_progress=new D{["complete"]=true};_bundle=data;discoveryCache.Add(_region,data,work.DiscoveryBytes);_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
+            {if(data.ContainsKey("error")){last_error=data["error"].AsString();continue;}discovery_progress=new D{["complete"]=true};
+                if(_bundle.TryGetValue("baked_signature",out var signature))data["baked_signature"]=signature;
+                _bundle=data;discoveryCache.Add(_region,data,work.DiscoveryBytes);_last_plan=Vector3.Inf;_biome_debug=_regions.description(Get(data,"cave_biome_regions",new D()).AsGodotDictionary());}
             else if(kind=="portal")
             {
                 if(_surface_batch==null||job["batch_id"].AsInt64()!=_surface_batch.id)continue;
                 _surface_batch.accept(job["batch_id"].AsInt64(),generation,job["part"].AsInt32(),data);
-                if(_surface_batch.failure.Length>0){surface_status=_surface_batch.failure;_surface_batch=null;_surface_build_pending=false;continue;}
+                if(_surface_batch.failure.Length>0){last_error=surface_status=_surface_batch.failure;_surface_batch=null;_surface_build_pending=false;continue;}
                 if(_surface_batch.complete())
                 {
                     var assembled=_surface_batch.assemble();var request=_surface_batch.request;_surface_batch=null;_surface_build_pending=false;
@@ -263,14 +316,22 @@ public partial class CaveStreamer : Node3D
     }
     public bool position_ready()=>position_ready(Vector3.Inf);
     public bool position_ready(Vector3 point)
-    {if(point.IsFinite()&&!underground_interest(point))return true;if(point.IsFinite()&&(_region!=Region(point)||!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16))return false;if(_bundle.Count==0||_discovery_pending)return false;foreach(var key in _wanted.Keys)if(!_cells.ContainsKey(key))return false;return true;}
+    {if(point.IsFinite()&&!underground_interest(point))return true;if(point.IsFinite()&&(_region!=Region(point)||!_last_plan.IsFinite()||_last_plan.DistanceTo(point)>=16))return false;if(_bundle.Count==0||_bundle.ContainsKey("local_only")||_discovery_pending)return false;foreach(var key in _wanted.Keys)if(!_cells.ContainsKey(key))return false;return true;}
     public bool traversal_ready(Vector3 point)
     {
         if(Flag("seal_stream_frontiers")){if(!_traversal.ready(point,_cells,_wanted))return false;}else if(!_cells.ContainsKey(new Vector3I((int)Math.Floor(point.X/64.0),(int)Math.Floor(point.Y/64.0),(int)Math.Floor(point.Z/64.0))))return false;
-        foreach(var value in Get(_bundle,"entrances",new A()).AsGodotArray()){var entrance=value.AsGodotDictionary();if(!entrance_needed(entrance,point))continue;if(_surface_transaction==null||!_surface_transaction.committed)return false;foreach(var column in entrance["columns"].AsGodotDictionary().Keys)if(!_surface_columns.ContainsKey(column))return false;}return true;
+        foreach(var value in Get(_bundle,"entrances",new A()).AsGodotArray()){var entrance=value.AsGodotDictionary();if(!entrance_needed(entrance,point)||!entrance["columns"].AsGodotDictionary().ContainsKey(new Vector2I(Mathf.FloorToInt(point.X/64),Mathf.FloorToInt(point.Z/64))))continue;if(_surface_transaction==null||!_surface_transaction.committed)return false;foreach(var column in entrance["columns"].AsGodotDictionary().Keys)if(!_surface_columns.ContainsKey(column))return false;}return true;
     }
     public bool entrance_needed(D entrance,Vector3 point)
-    {var mouth=entrance["point"].AsVector3();return point.Y>=Get(entrance,"minimum_exposed_floor",mouth.Y).AsDouble()-Number("main_route_height_metres")*2&&new Vector2(point.X-mouth.X,point.Z-mouth.Z).Length()<=Number("preload_radius_metres");}
+    {
+        var mouth = entrance["point"].AsVector3();
+        double exitFloor = Get(entrance, "minimum_exposed_floor", mouth.Y).AsDouble();
+        double radius = Number("preload_radius_metres");
+        double distance = new Vector2(point.X - mouth.X, point.Z - mouth.Z).Length();
+        return point.Y >= exitFloor - Number("main_route_height_metres") * 2
+            ? distance <= radius * 3
+            : point.Y >= exitFloor - 80 && distance <= radius;
+    }
     public bool defer_surface_plan(Vector3 point)
     {if(configuration==null||!Flag("retain_deep_surface_cut")||_bundle.Count==0||!point.IsFinite()||!Valid(host))return false;double ground=host!.Call("get_height_at",point).AsDouble();return _surfacePolicy.can_defer(point,ground,true,false)&&nearby_columns(point).Count==0;}
     public ShaderMaterial? material_for(Vector3I key)=>material_for(key,new A());
@@ -292,6 +353,7 @@ public partial class CaveStreamer : Node3D
     }
     public void shutdown()
     {
+        CancelInitialUpload();
         if(caveGpu is not null&&GodotObject.IsInstanceValid(caveGpu))caveGpu.Shutdown();
         discoveryCache.Clear();
         foreach(var controller in _biome_runtime_controllers)controller.AsGodotObject().Call("release");_biome_runtime_controllers.Clear();foreach(var task in _jobs.Keys)WorkerThreadPool.WaitForTaskCompletion(task.AsInt64());
@@ -301,7 +363,29 @@ public partial class CaveStreamer : Node3D
         foreach(var value in _cells.Values){var node=value.As<Node3D>();if(Valid(node))node!.GetNode<StaticBody3D>("CaveCollision").CollisionLayer=0;}_cells.Clear();
     }
     public A active_parent_nodes()=>new(host!.Get("_active_chunks").AsGodotDictionary().Values);
-    public Godot.Collections.Array<Rect2> detail_rectangles(){var result=new Godot.Collections.Array<Rect2>();foreach(var key in _detail_columns.Keys)result.Add(new Rect2((Vector2)key.AsVector2I()*64,Vector2.One*64));return result;}
+    public Godot.Collections.Array<Rect2> detail_rectangles()
+    {
+        var result=new Godot.Collections.Array<Rect2>();
+        foreach(var key in _detail_columns.Keys)
+        {
+            var bounds=new Rect2((Vector2)key.AsVector2I()*64,Vector2.One*64);
+            if(!Teleport && host is ChunkTerrain { nested_rings:true, authority_only:false })
+            {
+                // A prepared entrance owns its surface and collider. Do not
+                // split a distant ring into fine tiles just to make a preview.
+                if(_surface_transaction?.committed==true && _surface_columns.ContainsKey(key))continue;
+                if((previewPending || initialUpload!=null) && attemptedColumns?.ContainsKey(key)==true)continue;
+                var focus=new Vector2(_protected_point.X,_protected_point.Z);
+                if(focus.DistanceSquaredTo(focus.Clamp(bounds.Position,bounds.End))>160*160)continue;
+            }
+            result.Add(bounds);
+        }
+        return result;
+    }
+    internal bool AwaitingLocalMap => _bundle.Count == 0 && last_error.Length == 0;
+    internal bool DeferFinePreview(Vector3I key) =>
+        AwaitingLocalMap && host is ChunkTerrain terrain && terrain._active_chunks.Count==0 ||
+        needs_fine_surface(key);
     public bool needs_fine_surface(Vector3I key)
     {if(key.Z!=0)return false;float span=(float)host!.Get("chunk_size").AsDouble();var bounds=new Rect2(new Vector2(key.X,key.Y)*span,Vector2.One*span);foreach(var keyValue in _detail_columns.Keys)if(bounds.Intersects(new Rect2((Vector2)keyValue.AsVector2I()*64,Vector2.One*64)))return true;return false;}
     public void reserve_detail(D columns)
@@ -319,14 +403,94 @@ public partial class CaveStreamer : Node3D
             }
             if(_surface_transaction!=null){_close_surface_on_partition=true;return true;}
         }
-        if(_surface_transaction==null)return true;if(_renderer.matches(_surface_snapshot,nodes,_surface_columns))return true;
-        if(surface_distance(_protected_point)>96||Teleport){_close_surface_on_partition=true;return true;}
+        // An incoming fine tile at a reserved mouth stays hidden until the
+        // prepared entrance is ready. Disjoint terrain continues publishing.
+        if(_surface_transaction==null && _detail_columns.Count>0 &&
+            (initialUpload!=null || previewPending || generatedSurface!=null) &&
+            nodes.Any(raw=>_renderer.touches(raw.As<MeshInstance3D>(),_detail_columns)))
+            return false;
+
+        // Build against the incoming terrain while it is still staged. Commit
+        // its collision, surface cut and cave lining in the same publication.
+        if (_bundle.Count > 0 && _detail_columns.Count > 0 && (_surface_transaction == null || !_detail_columns.RecursiveEqual(_surface_columns)))
+        {
+            if (_surface_prepared != null && _surface_prepared.ready_to_commit())
+            {
+                var prepared = _surface_staging["request"].AsGodotDictionary();
+                if (_renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,_detail_columns))
+                    return true;
+            }
+            if (_rebuild_nodes.Count > 0 && _rebuild_nodes.RecursiveEqual(nodes)) return false;
+            var staged = _renderer.capture(nodes,_detail_columns);
+            if (staged["valid"].AsBool())
+            {
+                _rebuild_nodes = nodes;
+                _rebuild_columns = _detail_columns.Duplicate();
+                if (_surface_batch == null && !_surface_build_pending && _surface_staging.Count == 0)
+                    _surface_request = new D { ["bundle"]=_bundle, ["snapshot"]=staged, ["columns"]=_rebuild_columns };
+                return false;
+            }
+            _rebuild_nodes = new();
+        }
+        if(_surface_transaction==null)return true;
+        if(_renderer.matches(_surface_snapshot,nodes,_surface_columns))return true;
+        if((surface_distance(_protected_point)>96 && !_detail_columns.RecursiveEqual(_surface_columns))||Teleport){_close_surface_on_partition=true;return true;}
+        if(_surface_prepared?.ready_to_commit()==true)
+        {
+            var prepared=_surface_staging["request"].AsGodotDictionary();
+            if(_renderer.matches(prepared["snapshot"].AsGodotDictionary(),nodes,prepared["columns"].AsGodotDictionary()))
+                return true;
+        }
+        if (host is ChunkTerrain { nested_rings: true, authority_only: false } && RebindRingParents(nodes))return true;
         _rebuild_nodes=nodes;_rebuild_columns=_surface_columns.Duplicate();
         if(_surface_prepared==null||!_surface_prepared.ready_to_commit())return false;
         var request=_surface_staging["request"].AsGodotDictionary();return _renderer.matches(request["snapshot"].AsGodotDictionary(),nodes,request["columns"].AsGodotDictionary());
     }
+    // The ring portal is carved on a canonical grid. Changing the LOD around
+    // an existing cut only needs new parent masks and clipped parent colliders.
+    private CaveSurfaceTransaction? ringRebind;
+    private D? ringRebindSources;
+    private bool RebindRingParents(A nodes)
+    {
+        if (_surface_transaction is not { committed: true } current) return false;
+        var parents = new A();
+        var sources = new D();
+        foreach (var value in nodes)
+        {
+            var node = value.As<MeshInstance3D>();
+            if (!_renderer.touches(node, _surface_columns)) continue;
+            if (!node.Mesh.GetMeta("terrain_canonical_surface", false).AsBool()) return false;
+            parents.Add(node);
+            sources[node.GetMeta("tile").AsVector3I().ToString()] = new D
+            {
+                ["node"] = node, ["origin"] = node.GlobalPosition, ["mesh"] = node.Mesh
+            };
+        }
+        var next = new CaveSurfaceTransaction
+        {
+            ParentCut = parentCut,
+            collision_enabled = current.collision_enabled,
+            common_vertex_projection = current.common_vertex_projection
+        };
+        if (!next.prepare(parents, current.patches, _surface_columns, new Vector2(_protected_point.X,_protected_point.Z), current))
+            return false;
+        ringRebind = next;
+        ringRebindSources = sources;
+        return true;
+    }
     public void partition_committed()
     {
+        if (ringRebind != null)
+        {
+            if (ringRebind.commit())
+            {
+                _surface_transaction = ringRebind;
+                _surface_snapshot["sources"] = ringRebindSources!;
+                clear_surface_staging();
+            }
+            ringRebind = null;
+            ringRebindSources = null;
+        }
         if(_close_surface_on_partition){close_surface();_close_surface_on_partition=false;_rebuild_nodes=new();_rebuild_columns=new();}
         if(_surface_prepared!=null&&_surface_prepared.ready_to_commit())
         {
@@ -349,13 +513,285 @@ public partial class CaveStreamer : Node3D
     public D nearby_columns(Vector3 point)
     {
         var columns=new D();var nearby=Get(_bundle,"entrances",new A()).AsGodotArray().Select((v,i)=>(Data:v.AsGodotDictionary(),Ordinal:i)).ToList();
-        var p=new Vector2(point.X,point.Z);
-        nearby.Sort((a,b)=>{var ap=a.Data["point"].AsVector3();var bp=b.Data["point"].AsVector3();int order=new Vector2(ap.X,ap.Z).DistanceSquaredTo(p).CompareTo(new Vector2(bp.X,bp.Z).DistanceSquaredTo(p));return order!=0?order:a.Ordinal.CompareTo(b.Ordinal);});
-        foreach(var item in nearby){if(!entrance_needed(item.Data,point))continue;var complete=columns.Duplicate();foreach(var key in item.Data["columns"].AsGodotDictionary().Keys)complete[key]=true;if(complete.Count<=64)columns=complete;}return columns;
+        var origin = new Vector2(point.X,point.Z);
+        float Score(D entrance)
+        {
+            var mouth = entrance["point"].AsVector3();
+            var offset = new Vector2(mouth.X,mouth.Z)-origin;
+            if (Teleport || flightLead.LengthSquared()<1) return offset.LengthSquared();
+            float ahead = Mathf.Clamp(offset.Dot(flightLead)/flightLead.LengthSquared(),0,1);
+            return (offset-flightLead*ahead).LengthSquared() + offset.LengthSquared()*.015f;
+        }
+        nearby.Sort((a,b)=>{int order=Score(a.Data).CompareTo(Score(b.Data));return order!=0?order:a.Ordinal.CompareTo(b.Ordinal);});
+        // Keep a published mouth on the flight path until the camera has
+        // passed it. The nearest-mouth poll must not close a preloaded exit.
+        if (_surface_transaction!=null && !Teleport)
+        {
+            bool moving=flightLead.LengthSquared()>100*100;
+            var direction=moving?flightLead.Normalized():Vector2.Zero;
+            foreach (var current in nearby)
+            {
+                var held=current.Data["columns"].AsGodotDictionary();
+                if(held.Count==0 || !held.Keys.All(key=>_surface_columns.ContainsKey(key)))continue;
+                var mouth=current.Data["point"].AsVector3();
+                var offset=new Vector2(mouth.X-point.X,mouth.Z-point.Z);
+                float along=offset.Dot(direction);
+                bool ahead=moving && along>0 && along<=420 &&
+                    (offset-direction*along).LengthSquared()<=88*88;
+                if(offset.LengthSquared()<=96*96 || ahead)
+                    foreach(var key in held.Keys)columns[key]=true;
+            }
+        }
+        foreach (var item in nearby)
+        {
+            if (!entrance_needed(item.Data,point)) continue;
+            var mouthColumns = item.Data["columns"].AsGodotDictionary();
+            if (mouthColumns.Count is 0 or >64) continue;
+            foreach (var key in mouthColumns.Keys) columns[key]=true;
+            if (columns.Count > 64) return _surface_columns.Duplicate();
+            break;
+        }
+        return columns;
     }
+    private D? attemptedColumns;
+    private D? generatedSurface;
+    private bool previewPending;
+    private bool prefetchPending;
+    private Vector2I? forecastRegion;
+    private D? forecastSurface;
+    // A flight can cross a region boundary before normal discovery finishes.
+    // Build the projected landing area's entrance while the current region streams.
+    private void PreloadAcrossBoundary(Vector3 point)
+    {
+        if(prefetchPending || flightLead.LengthSquared()<128*128 || underground_interest(point))return;
+        var lead=flightLead.Normalized()*Math.Clamp(flightLead.Length(),448f,560f);
+        var ahead=new Vector3(point.X+lead.X,point.Y,point.Z+lead.Y);
+        var region=Region(ahead);
+        var start=new Vector2(point.X,point.Z);
+        if(region==Region(point) || forecastRegion==region)return;
+        var work=worker();
+        if(work==null)return;
+        forecastRegion=region;prefetchPending=true;
+        var result=new A();
+        long task=WorkerThreadPool.AddTask(Callable.From(()=>{
+            var map=work.ReadStartupMap(region) ?? work.BuildLocalMap(region);
+            D? best=null;float nearest=float.PositiveInfinity;
+            foreach(var raw in map["entrances"].AsGodotArray()){
+                var mouth=raw.AsGodotDictionary();var position=mouth["point"].AsVector3();
+                var offset=new Vector2(position.X,position.Z)-start;
+                float progress=Mathf.Clamp(offset.Dot(lead)/lead.LengthSquared(),0,1);
+                float distance=(offset-lead*progress).LengthSquared()+offset.LengthSquared()*.015f;
+                if(distance>=nearest || mouth["columns"].AsGodotDictionary().Count is 0 or >64)continue;
+                best=mouth;nearest=distance;
+            }
+            var data=new D{{"valid",true}};
+            if(best!=null && !map.ContainsKey("baked_signature")){
+                var columns=best["columns"].AsGodotDictionary();
+                data=work.BuildEntranceSurface(map,columns);data["columns"]=columns;
+            }
+            data["map"]=map;
+            result.Add(data);
+        }));
+        _jobs[task]=new D{["kind"]="prefetch",["work"]=work,["result"]=result,["generation"]=_generation};
+    }
+
+    internal bool InitialEntranceVisible(Vector2I column) =>
+        _surface_snapshot.ContainsKey("initial") && _surface_columns.ContainsKey(column) &&
+        _surface_transaction?.committed==true;
+
+    private void ShowInitialEntrance(D columns,bool allowBuild=true)
+    {
+        if(initialUpload!=null || host is not ChunkTerrain terrain || terrain.authority_only || Teleport ||
+           columns.RecursiveEqual(_surface_columns))return;
+        var cells=new A();
+        var sourceColumns=columns;
+        bool append=_surface_transaction?.committed==true &&
+            _surface_columns.Keys.All(key=>columns.ContainsKey(key));
+        if(append)
+        {
+            sourceColumns=columns.Duplicate();
+            foreach(var key in _surface_columns.Keys)sourceColumns.Remove(key);
+        }
+        var point=_surface_interest;
+        foreach(var value in _bundle["entrances"].AsGodotArray())
+        {
+            var mouth=value.AsGodotDictionary();
+            if(!mouth["columns"].AsGodotDictionary().RecursiveEqual(sourceColumns))continue;
+            point=mouth["point"].AsVector3();
+            string path=CaveWorkload.EntrancePath(point);
+            if(_bundle.TryGetValue("baked_signature",out var signature) && ResourceLoader.Exists(path)){
+                var resource=GD.Load<Resource>(path);
+                if(resource.GetMeta("signature").AsString()==signature.AsString() &&
+                    resource.GetMeta("columns").AsGodotDictionary().RecursiveEqual(sourceColumns))
+                    cells=resource.GetMeta("cells").AsGodotArray();
+            }
+            break;
+        }
+        if(forecastSurface?.TryGetValue("columns",out var forecastColumns)==true && sourceColumns.RecursiveEqual(forecastColumns.AsGodotDictionary())){
+            cells=forecastSurface["cells"].AsGodotArray();
+            forecastSurface=null;
+        }
+        if(generatedSurface!=null && columns.RecursiveEqual(generatedSurface["columns"].AsGodotDictionary())){
+            cells=generatedSurface["cells"].AsGodotArray();
+            generatedSurface=null;
+            sourceColumns=columns;
+            append=false;
+        }
+        if(cells.Count==0 && (!allowBuild || previewPending || attemptedColumns?.RecursiveEqual(columns)==true))return;
+        attemptedColumns=columns.Duplicate();
+        if(cells.Count==0){
+            var work=worker();
+            if(work==null)return;
+            var map=_bundle;
+            var result=new A();
+            long task=WorkerThreadPool.AddTask(Callable.From(()=>result.Add(work.BuildEntranceSurface(map,columns))));
+            _jobs[task]=new D{["kind"]="entrance-preview",["generation"]=_generation,["work"]=work,["result"]=result,["columns"]=columns};
+            previewPending=true;
+            return;
+        }
+        var sources=new D();
+        var material=(ShaderMaterial)terrain._terrain_material.Duplicate();
+        material.SetShaderParameter("chunk_size_metres",64.0);
+        foreach(var raw in sourceColumns.Keys)
+        {
+            var column=raw.AsVector2I();
+            sources[column.ToString()]=new D {["origin"]=new Vector3(column.X*64,0,column.Y*64),["material"]=material};
+        }
+        initialUpload=new EntranceUpload(columns,sourceColumns,sources,cells,point,append);
+        if(OS.GetCmdlineUserArgs().Contains("trace"))GD.Print($"Queued entrance {point} at camera {_surface_interest}, cells={cells.Count}");
+        if(terrain._active_chunks.Count==0)UploadInitialEntrance(useFrameBudget:false);
+    }
+
+    private sealed record EntranceUpload(D Columns,D NewColumns,D Sources,A Cells,Vector3 Mouth,bool Append)
+    {
+        public int Cursor { get; set; }
+        public A Nodes { get; } = new();
+    }
+    private EntranceUpload? initialUpload;
+
+    private void CancelInitialUpload()
+    {
+        if(initialUpload is null)return;
+        foreach(var item in initialUpload.Nodes)item.As<Node>().QueueFree();
+        initialUpload=null;
+    }
+
+    private void UploadInitialEntrance(bool useFrameBudget=true)
+    {
+        if(initialUpload is not {} upload)return;
+        ulong began=Time.GetTicksUsec();
+        while(upload.Cursor<upload.Cells.Count)
+        {
+            var data=upload.Cells[upload.Cursor++].AsGodotDictionary();
+            var key=data["key"].AsVector3I();
+            var interior=material_for(key,Get(data,"biome_ids",new A()).AsGodotArray());
+            if(interior==null){CancelInitialUpload();return;}
+            var result=_renderer.node(data,upload.Sources,interior,interior.GetMeta("cave_style",0).AsInt32(),
+                HostFlag("terrain_shadows"),Flag("specialize_insect_palette"));
+            if(!result["valid"].AsBool()){CancelInitialUpload();return;}
+            if(result["node"].AsGodotObject() is MeshInstance3D node)
+            {
+                AddChild(node);
+                upload.Nodes.Add(node);
+            }
+            if(useFrameBudget && Time.GetTicksUsec()-began>=2000)return;
+        }
+
+        var patches=new A(upload.Nodes);
+        var products=new A(upload.Cells);
+        if(upload.Append)
+        {
+            if(_surface_transaction?.committed!=true ||
+                !_surface_columns.Keys.All(key=>upload.Columns.ContainsKey(key) && !upload.NewColumns.ContainsKey(key)) ||
+                _surface_columns.Count+upload.NewColumns.Count!=upload.Columns.Count)
+            {
+                CancelInitialUpload();
+                attemptedColumns=null;
+                return;
+            }
+            foreach(var patch in _surface_transaction.patches)patches.Add(patch);
+            foreach(var key in _surface_owned.Keys)products.Add(new D{["key"]=key});
+        }
+        var parents=new A();
+        var liveSources=new D();
+        foreach(var item in active_parent_nodes())
+        {
+            var parent=item.As<MeshInstance3D>();
+            if(!_renderer.touches(parent,upload.Columns))continue;
+            TerrainGpuGrids.EnsureCpuSurface(parent);
+            parents.Add(parent);
+            liveSources[parent.GetMeta("tile").AsVector3I().ToString()]=new D
+            {
+                ["node"]=parent,["origin"]=parent.GlobalPosition,["mesh"]=parent.Mesh
+            };
+        }
+        var transaction=new CaveSurfaceTransaction
+        {
+            ParentCut=parentCut,collision_enabled=HostFlag("terrain_collision_enabled"),
+            common_vertex_projection=Flag("common_vertex_projection")
+        };
+        if(!transaction.prepare(parents,patches,upload.Columns,new Vector2(upload.Mouth.X,upload.Mouth.Z),_surface_transaction) ||
+            !transaction.commit())
+        {
+            CancelInitialUpload();
+            return;
+        }
+        initialUpload=null;
+        clear_surface_staging();
+        _surface_batch=null;
+        _surface_build_pending=false;
+        _surface_request=new();
+        _rebuild_nodes=new();
+        _rebuild_columns=new();
+        adopt_surface(transaction,new D{["sources"]=liveSources,["initial"]=true},new D{["cells"]=products,["columns"]=upload.Columns});
+        if(OS.GetCmdlineUserArgs().Contains("trace"))GD.Print($"Published entrance {upload.Mouth} at camera {_surface_interest}");
+    }
+
+    private long lastFlightEntranceCheck;
     public void service_surface(Vector3 point)
     {
         _surface_interest=point;
+        long now=(long)Time.GetTicksUsec();
+        if(!wasUnderground && !Teleport && _bundle.Count>0 && flightLead.LengthSquared()>100*100 &&
+            now-lastFlightEntranceCheck>=100000)
+        {
+            lastFlightEntranceCheck=now;
+            var heading=flightLead.Normalized();
+            D? next=null;
+            float best=float.PositiveInfinity;
+            foreach(var raw in _bundle["entrances"].AsGodotArray())
+            {
+                var entry=raw.AsGodotDictionary();
+                var mouth=entry["point"].AsVector3();
+                var offset=new Vector2(mouth.X-point.X,mouth.Z-point.Z);
+                float along=offset.Dot(heading);
+                if(along<0 || along>420 || !entrance_needed(entry,point))continue;
+                float across=(offset-heading*along).LengthSquared();
+                if(across>88*88)continue;
+                var columns=entry["columns"].AsGodotDictionary();
+                if(columns.Count==0 || columns.Keys.All(key=>_surface_columns.ContainsKey(key)))continue;
+                float score=across+along*along*.035f;
+                if(score>=best)continue;
+                next=columns;
+                best=score;
+            }
+            if(next!=null)
+            {
+                var incoming=next.Duplicate();
+                // The regular poll retains mouths that are still ahead. Keep
+                // those same cuts when appending a preview so the two paths
+                // cannot replace each other's entrances on alternating polls.
+                var retained = nearby_columns(point);
+                foreach (var key in _surface_columns.Keys)
+                    if (retained.ContainsKey(key)) incoming[key] = true;
+                if(incoming.Count<=64)ShowInitialEntrance(incoming,allowBuild:false);
+            }
+        }
+        if(initialUpload!=null)
+        {
+            if(Teleport)CancelInitialUpload();
+            else {UploadInitialEntrance();return;}
+        }
         if(_surface_staging.Count>0)
         {
             var request=_surface_staging["request"].AsGodotDictionary();var snapshot=request["snapshot"].AsGodotDictionary();var columns=request["columns"].AsGodotDictionary();var desired=_rebuild_nodes.Count>0?_rebuild_nodes:active_parent_nodes();
@@ -366,12 +802,12 @@ public partial class CaveStreamer : Node3D
                 var data=remaining[0].AsGodotDictionary();remaining.RemoveAt(0);var interior=material_for(data["key"].AsVector3I(),Get(data,"biome_ids",new A()).AsGodotArray());
                 if(interior==null){clear_surface_staging();surface_status="Cave biome material rejected";return;}
                 int style=interior.GetMeta("cave_style",0).AsInt32();var built=_renderer.node(data,snapshot["sources"].AsGodotDictionary(),interior,style,HostFlag("terrain_shadows"),Flag("specialize_insect_palette"));
-                if(!built["valid"].AsBool()){clear_surface_staging();surface_status=built["reason"].AsString();return;}
+                if(!built["valid"].AsBool()){clear_surface_staging();last_error=surface_status=built["reason"].AsString();return;}
                 var node=built["node"].As<Node>();if(node!=null){AddChild(node);_surface_staging["nodes"].AsGodotArray().Add(node);}_renderer.release_uploaded_data(data);return;
             }
             if(_surface_prepared==null)
             {
-                var transaction=new CaveSurfaceTransaction{collision_enabled=HostFlag("terrain_collision_enabled"),common_vertex_projection=Flag("common_vertex_projection")};var nodes=new A();
+                var transaction=new CaveSurfaceTransaction{ParentCut=parentCut,collision_enabled=HostFlag("terrain_collision_enabled"),common_vertex_projection=Flag("common_vertex_projection")};var nodes=new A();
                 foreach(var value in snapshot["sources"].AsGodotDictionary().Values)nodes.Add(value.AsGodotDictionary()["node"]);
                 if(!transaction.prepare(nodes,_surface_staging["nodes"].AsGodotArray(),columns,new Vector2(point.X,point.Z),_surface_transaction,_surface_staging["data"].AsGodotDictionary()["ground"].AsGodotDictionary())){clear_surface_staging();surface_status="surface commit preparation rejected";return;}
                 _surface_prepared=transaction;
@@ -379,7 +815,8 @@ public partial class CaveStreamer : Node3D
             if(_rebuild_nodes.Count==0&&!Teleport&&_surface_prepared.ready_to_commit())
             {if(_surface_prepared.commit())adopt_surface(_surface_prepared,snapshot,_surface_staging["data"].AsGodotDictionary());_surface_prepared=null;_surface_staging=new();}return;
         }
-        long now=(long)Time.GetTicksUsec();if(_bundle.Count==0||_surface_build_pending||_surface_request.Count>0||now-_surface_poll_usec<250000)return;
+        if (_detail_columns.Count>0 && _bundle.Count>0) ShowInitialEntrance(_detail_columns);
+        if(_bundle.Count==0||_surface_build_pending||_surface_request.Count>0||now-_surface_poll_usec<250000)return;
         _surface_poll_usec=now;var wantedColumns=nearby_columns(point);if(_rebuild_nodes.Count>0)wantedColumns=_rebuild_columns.Duplicate();
         if(wantedColumns.Count==0)
         {
@@ -388,15 +825,21 @@ public partial class CaveStreamer : Node3D
                 if(Teleport){reserve_detail(new D());surface_status="active retained entrance";return;}
                 if(surface_distance(_protected_point)<=96){surface_status="active retained entrance";return;}close_surface();
             }
-            reserve_detail(new D());surface_status="no nearby admitted entrance";return;
+            attemptedColumns=null;reserve_detail(new D());surface_status="no nearby admitted entrance";return;
         }
-        reserve_detail(wantedColumns);var parents=_rebuild_nodes.Count>0?_rebuild_nodes:active_parent_nodes();
+        ShowInitialEntrance(wantedColumns);
+        reserve_detail(wantedColumns);
+        // Canonical previews already contain both the opening and its collision.
+        // Only extract from the live parents when that path cannot build the cut.
+        if (initialUpload != null || previewPending && attemptedColumns?.RecursiveEqual(wantedColumns) == true) return;
+        var parents=_rebuild_nodes.Count>0?_rebuild_nodes:active_parent_nodes();
         if(_surface_transaction!=null&&wantedColumns.RecursiveEqual(_surface_columns)&&_renderer.matches(_surface_snapshot,parents,wantedColumns)){surface_status="active";_rebuild_nodes=new();return;}
         var capture=_renderer.capture(parents,wantedColumns);if(!capture["valid"].AsBool()){surface_status=capture["reason"].AsString();return;}
-        _surface_request=new D{["snapshot"]=capture,["columns"]=wantedColumns};surface_status="building complete hidden entrance";
+        _surface_request=new D{["bundle"]=_bundle,["snapshot"]=capture,["columns"]=wantedColumns};surface_status="building complete hidden entrance";
     }
     public void adopt_surface(CaveSurfaceTransaction transaction,D snapshot,D data)
     {
+
         var retained=new D();foreach(var value in transaction.patches){var node=value.As<MeshInstance3D>();retained[node.GetMeta("cave_cell")]=node;}
         foreach(var key in _surface_owned.Keys){var old=_cells.ContainsKey(key)?_cells[key].As<Node>():null;if(Valid(old)&&!retained.Values.Contains(ObjectValue(old)))old!.QueueFree();if(!retained.ContainsKey(key))_cells.Remove(key);}
         _surface_owned.Clear();

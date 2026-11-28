@@ -10,15 +10,16 @@ public partial class PortalCaveField : CaveField
     public D surface_limits { get; set; } = new();
     private Callable _topHeight;
     private Func<double,double,double>? _sampleTopHeight;
-    public Callable top_height { get=>_topHeight; set { _topHeight=value;_sampleTopHeight=CaveHeightSampler.Bind(value); } }
+    public Callable top_height { get=>_topHeight; set { _topHeight=value;_sampleTopHeight=value.Delegate != null || GodotObject.IsInstanceValid(value.Target) && value.Target!.HasMethod(value.Method) ? CaveHeightSampler.Bind(value) : null; } }
     public bool include_surface_air { get; set; } = true;
+    internal const double EntranceFillet = 2.0;
+    internal bool RoundEntrance { get; set; }
     public double cave_sample(Vector3 point) => base.sample(point);
     public double surface_height(Vector2 point) => SurfaceHeight(point);
     public override bool HasSurfaceColumn(Vector2I column) => surface_columns.ContainsKey(column);
     public override double SurfaceHeight(Vector2 point)
     {
-        bool valid = top_height.Delegate != null || (GodotObject.IsInstanceValid(top_height.Target) && top_height.Target!.HasMethod(top_height.Method));
-        return valid&&_sampleTopHeight is not null?_sampleTopHeight(point.X,point.Y):base.SurfaceHeight(point);
+        return _sampleTopHeight is not null?_sampleTopHeight(point.X,point.Y):base.SurfaceHeight(point);
     }
     public override double sample(Vector3 point)
     {
@@ -31,7 +32,14 @@ public partial class PortalCaveField : CaveField
     internal double SampleWithSurfaceHeight(Vector3 point,double terrain)
     {
         if (!SafePoint(point)||!double.IsFinite(terrain)) return Far;
-        return Math.Min(base.sample(point),terrain-point.Y);
+        double cave = base.sample(point);
+        double surface = terrain - point.Y;
+        double distance = Math.Min(cave, surface);
+        if (!RoundEntrance) return distance;
+        // Round only the join between the passage and daylight. Where the
+        // terrain stands alone, or the cave is buried, preserve its surface.
+        double fillet = Math.Max(EntranceFillet - Math.Abs(cave - surface), 0);
+        return distance - fillet * fillet / (4 * EntranceFillet);
     }
     public override bool has_chunk(Vector3I key)
     {

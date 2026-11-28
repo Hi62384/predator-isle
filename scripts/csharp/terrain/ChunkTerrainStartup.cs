@@ -107,7 +107,8 @@ public partial class ChunkTerrain
     {material.SetShaderParameter(name+"_colors",GD.Load<Resource>("res://materials/"+name+"_colors.tres"));material.SetShaderParameter(name+"_normals",GD.Load<Resource>("res://materials/"+name+"_normals.tres"));}
     private void SetupMaterials()
     {
-        _terrain_material=(ShaderMaterial)GD.Load<ShaderMaterial>("res://materials/terrain.tres").Duplicate();using var variants=new TerrainShaderVariants();_terrain_material.Shader=variants.select(_terrain_material.Shader,_settings_snapshot,specialize_terrain_shader);
+        _terrain_material=(ShaderMaterial)GD.Load<ShaderMaterial>("res://materials/terrain.tres").Duplicate();using var variants=new TerrainShaderVariants();
+        _terrain_material.Shader=Caves.CaveSurfaceShader.SharedTerrain(variants.select(_terrain_material.Shader,_settings_snapshot,specialize_terrain_shader)!);
         foreach(var entry in new[]{("palette_color","palette_color_roughness.tres"),("palette_normal","palette_normals.tres"),("cliff_ambient_normals","cliff_ambient_normals.tres"),("grass_macro","grass_macro.res"),("meso_mask","meso_macro.res")})_terrain_material.SetShaderParameter(entry.Item1,GD.Load<Resource>("res://materials/"+entry.Item2));
         if(_terrain_material.GetShaderParameter("palette_color").As<Texture2DArray>().GetLayers()!=9||_terrain_material.GetShaderParameter("palette_normal").As<Texture2DArray>().GetLayers()!=9)throw new InvalidOperationException("Terrain palette must contain nine layers.");
         _terrain_material.SetShaderParameter("cliff_world_seed",(double)world_seed);_terrain_material.SetShaderParameter("water_level",water_level);_apply_material_settings();

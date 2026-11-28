@@ -21,6 +21,8 @@ internal static class CaveFieldEvaluation
         {
             if(!double.IsFinite(top.Value))return false;
             if((float)(top.Value-point.Y)<0)return true;
+            if(f is PortalCaveField { RoundEntrance: true } &&
+                top.Value - point.Y < PortalCaveField.EntranceFillet)return null;
         }
         if(!f.Bins.TryGetValue(f.bin_cell(point),out var features))return false;
         if(!double.IsFinite(ground))return false;
@@ -40,7 +42,7 @@ internal static class CaveFieldEvaluation
         bool uncertain=false;
         foreach(int feature in features)
         {
-            int kind=f.Kinds[feature];bool opening=kind==1;
+            int kind=f.Kinds[feature];if(kind==3)return null;bool opening=kind==1;
             if(opening?!openingAllowed:!closedAllowed)continue;
             var a=f.Begins[feature];var b=f.Ends[feature];var size=f.Dimensions[feature];
             double floorY=a.Y,radius;
@@ -93,9 +95,64 @@ internal static class CaveFieldEvaluation
         return uncertain?null:false;
     }
 
+    // Negative values are open air. The rock separating the two levels
+    // widens at the abutments and arches upward over the lower crossing.
+    private static double Vault(Vector3 p,Vector3 floor,double span,out double retainedRock)
+    {
+        double angle=Math.Sin(floor.X*.031+floor.Z*.013)*Math.PI;
+        double dx=p.X-floor.X,dz=p.Z-floor.Z;
+        double x=dx*Math.Cos(angle)+dz*Math.Sin(angle),z=dz*Math.Cos(angle)-dx*Math.Sin(angle), y=p.Y-floor.Y;
+        double phase=floor.X*.043;
+        double shoulder=Math.Sin(z*.089+phase)*3.1+Math.Sin(x*.14+y*.16)*1.7;
+        double r=Math.Sqrt(Math.Pow((x+shoulder)/(.84*span),2)+Math.Pow((z-3*Math.Sin(x*.073))/span,2));
+        // A sloping perimeter bench climbs to both bridgeheads from the lower floor.
+        double approach=Smooth(.38,.78,Math.Abs(x)/span);
+        double ledge=(18+.055*x)*approach+7*Smooth(.55,.95,r)*(1-approach);
+        ledge+=1.8*Math.Sin(z*.13+phase)*Smooth(.25,.75,r);
+        double structure=Math.Sin(phase);
+        // A stepped bedding plane makes a second walkable shelf in deeper bowls.
+        if(structure>.35)ledge+=7*Smooth(.19,.54,z/span)*Smooth(.3,.72,r);
+        double bed=ledge+2*Math.Sin(x*.12+phase)*Math.Cos(z*.074)+1.1*Math.Sin(z*.22);
+        double roof=32+13*(1-r*r)+5*Math.Sin(x*.065+phase)+4*Math.Cos(z*.081);
+        double flute=Math.Sin(x*.093-z*.11+y*.07+phase);
+        double wall=(r-1)*span+3*Math.Sin(y*.25+x*.055)+2.2*Math.Cos(z*.21+y*.12)+3.6*flute*flute;
+        roof-=3*Math.Abs(Math.Sin(x*.12+z*.07+phase))+2*Math.Sin(z*.19);
+        double air=Math.Max(wall,Math.Max(bed-y,y-roof));
+        double az=Math.Abs(x)/span;
+        double axis=4*Math.Sin(x*.067+phase)+2.5*Math.Sin(x*.12+phase*.6);
+        double deck=17+1.2*Math.Cos(x*.081)+x*.035;
+        double soffit=deck-3.6-15*Math.Pow(Math.Min(1,az*1.5),2);
+        double bank=Math.Abs(z-axis)-(3.3+6*az*az+1.1*Math.Cos(x*.17));
+        double stone=Math.Max(bank,Math.Max(y-deck,soffit-y));
+        if(structure>-.35 && structure<.35){
+            // A buttress beneath the deck separates the two lower arches.
+            double buttress=Math.Abs(x-5-2*Math.Sin(z*.13))-(3+5*Math.Pow(Math.Clamp((y-7)/13,-1,1),2));
+            stone=Math.Min(stone,Math.Max(Math.Max(buttress,bank-2),y-deck));
+        }else if(structure>=.35){
+            // An oblique shelf splits off from the bridge and descends into the side wall.
+            double run=Math.Clamp((x+17)/38,0,1);
+            double fork=axis+run*run*27;
+            double top=deck-6*run;
+            double slab=Math.Max(Math.Abs(z-fork)-(3.4+2.8*run),Math.Max(y-top,top-4.8-y));
+            stone=Math.Min(stone,Math.Max(slab,-18-x));
+        }
+        // Isolated remnants of the bedrock divide some chambers into aisles.
+        // Their flared bases and crown merge with the bed and ceiling.
+        int piers=(int)(1.5+1.49*Math.Sin(phase));
+        for(int i=0;i<piers;i++){
+            double px=span*(i==0 ? -.41 : .37)+2*Math.Sin(y*.09+phase);
+            double pz=span*(i==0 ? .29 : -.32)+1.8*Math.Cos(y*.12+phase);
+            double flare=4.2+6*Math.Pow(Math.Clamp(Math.Abs((y-19)/23),0,1),2);
+            double pier=Math.Sqrt((x-px)*(x-px)*.72+(z-pz)*(z-pz)*1.55)-flare;
+            stone=Math.Min(stone,pier);
+        }
+        retainedRock=Math.Min(-stone,-air);
+        return Math.Max(air,-stone);
+    }
+
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
-        double closed = Far, opening = Far, floorOffset = 0;
+        double closed = Far, opening = Far, floorOffset = 0, retainedRock = -Far;
         if (f.floor_relief.Count > 0)
             foreach (int feature in features)
                 if (f.Kinds[feature] == 2 && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)
@@ -107,6 +164,7 @@ internal static class CaveFieldEvaluation
         foreach (int feature in features)
         {
             var a = f.Begins[feature]; var b = f.Ends[feature]; var size = f.Dimensions[feature]; double floorY = a.Y, radius;
+            if(f.Kinds[feature]==3){closed=Math.Min(closed,Vault(point,a,size.X,out var rock));retainedRock=Math.Max(retainedRock,rock);continue;}
             if (f.Kinds[feature] == 2) radius = new Vector2(point.X - a.X, point.Z - a.Z).Length();
             else
             {
@@ -145,7 +203,7 @@ internal static class CaveFieldEvaluation
         double ground = f.ground_height(point); if (!double.IsFinite(ground)) return Far;
         double depth = ground - point.Y;
         if (f.opening_rock_cover > 0) opening = Math.Max(opening, f.opening_rock_cover - depth);
-        return Math.Min(Far, Math.Max(Math.Min(Math.Max(closed, f.minimum_roof - depth), opening), depth - f.maximum_depth));
+        return Math.Min(Far, Math.Max(retainedRock,Math.Max(Math.Min(Math.Max(closed, f.minimum_roof - depth), opening), depth - f.maximum_depth)));
     }
 }
 

@@ -8,6 +8,27 @@ namespace PredatorIsle.Caves;
 public partial class CaveSurfacePayload : RefCounted
 {
     public const int Stride = 68, Texels = 17, Width = 1024, MaxBytes = 16777216;
+    // Ownership weights in the order used by TerrainShaderVariants.
+    private static readonly int[] LandBiomeWeights = { 5, 8, 16, 28, 40, 56, 59 };
+
+    internal static bool UsesOnlyGrassAndCoast(D atlas, byte[] data)
+    {
+        int count = atlas["vertices"].AsInt32();
+        int stride = atlas["texels_per_vertex"].AsInt32() * 4;
+        int mask = atlas.TryGetValue("texel_mask", out var value) ? value.AsInt32() : (1 << Texels) - 1;
+        var values = MemoryMarshal.Cast<byte, float>(data);
+        if (count < 1 || stride < 4 || (long)count * stride > values.Length) return false;
+        foreach (int component in LandBiomeWeights)
+        {
+            int texel = 1 << (component / 4);
+            if ((mask & texel) == 0) continue;
+            int lane = System.Numerics.BitOperations.PopCount((uint)(mask & (texel - 1))) * 4 + component % 4;
+            if (lane >= stride) return false;
+            for (int index = lane, end = count * stride; index < end; index += stride)
+                if (!(values[index] <= .0009f)) return false;
+        }
+        return true;
+    }
     public int STRIDE => Stride;
     public int TEXELS => Texels;
     public int WIDTH => Width;

@@ -33,7 +33,10 @@ internal static class CaveHeightSampler
             if(surface.Method=="_get_height")return terrain._get_height;
             if(surface.Method=="get_water_surface_height")return terrain.get_water_surface_height;
         }
-        if(surface.Target is CaveSurfaceContext context&&surface.Method=="height_at")return context.height_at;
+        if(surface.Target is CaveSurfaceContext context){
+            if(surface.Method=="grid_height")return context.grid_height;
+            if(surface.Method=="height_at")return context.height_at;
+        }
         // Preserve custom providers and original GDScript comparison callbacks.
         return (x,z)=>surface.Call(x,z).AsDouble();
     }

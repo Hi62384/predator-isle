@@ -1,6 +1,7 @@
 using Godot;
 using System;
 using System.Threading.Tasks;
+using PredatorIsle.Caves;
 using GArray = Godot.Collections.Array;
 
 namespace PredatorIsle.Rendering;
@@ -10,7 +11,7 @@ public static class TerrainShaderPreparation
     public static async Task<Shader> Prepare(SceneTree tree, Resource settings)
     {
         using var variants = new TerrainShaderVariants();
-        var shader = variants.select(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader"), settings)!;
+        var shader = CaveSurfaceShader.SharedTerrain(variants.select(GD.Load<Shader>("res://shaders/terrain_biomes.gdshader"), settings)!);
         if (DisplayServer.GetName() == "headless") return shader;
         ulong start = Time.GetTicksUsec();
         using var material = new ShaderMaterial { Shader = shader };

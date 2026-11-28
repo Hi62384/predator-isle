@@ -8,7 +8,9 @@ namespace PredatorIsle.Caves;
 /// <summary>Prepare hidden resources, then exchange a complete visual/physics cut atomically.</summary>
 public partial class CaveSurfaceTransaction : RefCounted
 {
-    private readonly CaveSurfaceCut _cut = new(); private readonly TerrainCollision _collision = new();
+    internal CaveSurfaceCut ParentCut { get; init; } = new();
+    private readonly TerrainCollision _collision = new();
+    private Vector2I maskOrigin;
     public A records { get; set; } = new();
     public A patches { get; set; } = new();
     public D columns { get; set; } = new();
@@ -30,12 +32,39 @@ public partial class CaveSurfaceTransaction : RefCounted
     {
         if (prepared || committed || requested_columns.Count == 0) return false;
         records.Clear(); patches.Clear(); columns.Clear(); mask_texture = null; previous = null;
-        var mask = _cut.mask(requested_columns, center); if (mask.Count == 0 || mask["columns"].AsGodotDictionary().Count != requested_columns.Count) return false;
-        mask_texture = ImageTexture.CreateFromImage(Image.CreateFromData(mask["side"].AsInt32(), mask["side"].AsInt32(), false, Image.Format.R8, mask["r8_bytes"].AsByteArray())); previous = prior; columns = requested_columns.Duplicate();
+        var predecessor=prior as CaveSurfaceTransaction;
+        bool reuseMask=predecessor?.mask_texture!=null &&
+            predecessor.common_vertex_projection==common_vertex_projection &&
+            predecessor.columns.RecursiveEqual(requested_columns);
+        if(reuseMask)
+        {
+            mask_texture=predecessor!.mask_texture;
+            maskOrigin=predecessor.maskOrigin;
+        }
+        else
+        {
+            var centerCell=(Vector2I)(center/64).Floor();
+            long radius=0;
+            foreach(var value in requested_columns.Keys)
+            {
+                var cell=value.AsVector2I();
+                radius=Math.Max(radius,Math.Max(Math.Abs((long)cell.X-centerCell.X),Math.Abs((long)cell.Y-centerCell.Y)));
+            }
+            int side=(int)Math.Clamp((radius+1)*2,16,1024);
+            var mask=ParentCut.mask(requested_columns,center,side);
+            if(mask.Count==0 || mask["columns"].AsGodotDictionary().Count!=requested_columns.Count)return false;
+            maskOrigin=mask["origin_cell"].AsVector2I();
+            mask_texture=ImageTexture.CreateFromImage(Image.CreateFromData(side,side,false,
+                Image.Format.R8,mask["r8_bytes"].AsByteArray()));
+        }
+        previous=prior;
+        columns=requested_columns.Duplicate();
         foreach (var raw in replacements)
         {
             if (raw.VariantType != Variant.Type.Object || raw.AsGodotObject() is not MeshInstance3D node || !GodotObject.IsInstanceValid(node) || node.Mesh == null || !node.IsInsideTree()) return false;
-            var body = node.GetNodeOrNull<StaticBody3D>("CaveCollision"); if (body == null || body.CollisionLayer != 0 || node.Visible) return false; patches.Add(node);
+            var body = node.GetNodeOrNull<StaticBody3D>("CaveCollision"); bool retained = prior is CaveSurfaceTransaction current && current.committed && current.patches.Contains(raw);
+            if (body == null || (!retained && (body.CollisionLayer != 0 || node.Visible))) return false;
+            patches.Add(node);
         }
         if (patches.Count == 0) return false;
         foreach (var raw in nodes)
@@ -43,11 +72,18 @@ public partial class CaveSurfaceTransaction : RefCounted
             if(raw.AsGodotObject() is MeshInstance3D candidate)TerrainGpuGrids.EnsureCpuSurface(candidate);
             if (raw.VariantType != Variant.Type.Object || raw.AsGodotObject() is not MeshInstance3D node || !GodotObject.IsInstanceValid(node) || node.Mesh == null || node.Mesh.GetSurfaceCount() == 0 || !node.GlobalBasis.IsEqualApprox(Basis.Identity)) return false;
             var inherited = prior != null ? prior.Call("baseline", node).AsGodotDictionary() : new D();
+            if(reuseMask && inherited.Count>0 && inherited["transform"].AsTransform3D()==node.GlobalTransform)
+            {
+                records.Add(inherited);
+                continue;
+            }
             var originalOverride = inherited.Count == 0 ? node.GetSurfaceOverrideMaterial(0) : inherited["original_override"].As<Material>();
             var material = originalOverride ?? node.Mesh.SurfaceGetMaterial(0); if (material is not ShaderMaterial source) return false;
-            var shader = _cut.shader(source.Shader, common_vertex_projection); if (shader == null) return false;
-            var replacement = (ShaderMaterial)source.Duplicate(); replacement.Shader = shader; replacement.SetShaderParameter("cave_cut_enabled", true); replacement.SetShaderParameter("cave_cut_mask", mask_texture);
-            replacement.SetShaderParameter("cave_cut_tile_offset", new Vector2(node.GlobalPosition.X, node.GlobalPosition.Z) / 64 - (Vector2)mask["origin_cell"].AsVector2I());
+            var shader = ParentCut.shader(source.Shader, common_vertex_projection); if (shader == null) return false;
+            var replacement = (ShaderMaterial)source.Duplicate(); replacement.Shader = shader; replacement.SetShaderParameter("cave_cut_enabled", true); replacement.SetShaderParameter("cave_cut_mask", ObjectValue(mask_texture));
+            if (CaveSurfaceShader.IsSharedTerrain(shader))
+                replacement.SetShaderParameter("cave_common_projection", common_vertex_projection);
+            replacement.SetShaderParameter("cave_cut_tile_offset", new Vector2(node.GlobalPosition.X, node.GlobalPosition.Z) / 64 - (Vector2)maskOrigin);
             var shapeNode = node.GetNodeOrNull<CollisionShape3D>("NearTerrainCollision/Heightfield"); Shape3D? originalShape = null, groundShape = null;
             if (shapeNode != null)
             {
@@ -64,7 +100,7 @@ public partial class CaveSurfaceTransaction : RefCounted
                             var arrays = node.Mesh.HasMeta("terrain_cpu_arrays") ? node.Mesh.GetMeta("terrain_cpu_arrays").AsGodotArray() : ((ArrayMesh)node.Mesh).SurfaceGetArrays(0);
                             if (resolution < 1 || arrays.Count == 0) return false; faces = _collision.surface_faces(arrays, resolution);
                         }
-                        clipped = _cut.ground(faces, node.GlobalPosition, columns);
+                        clipped = ParentCut.ground(faces, node.GlobalPosition, columns);
                     }
                     if (!clipped["valid"].AsBool()) return false;
                     if (clipped["removed_source_triangles"].AsInt32() > 0 || clipped["split_source_triangles"].AsInt32() > 0) groundShape = new ConcavePolygonShape3D { Data = clipped["faces"].AsVector3Array() };

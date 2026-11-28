@@ -18,6 +18,89 @@ public partial class MigrationChecks : Node
     {
         try
         {
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(), "cave-smoothing") >= 0)
+            {
+                CaveMesherOptimizationChecks.RunSmoothing(Require);
+                GD.Print($"Passed {_checks} cave smoothing checks");
+                GetTree().Quit();
+                return;
+            }
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"bake-startup-caves")>=0)
+            {
+                var world=GD.Load<PackedScene>("res://scenes/main.tscn").Instantiate();
+                AddChild(world);
+                var terrain=world.GetNode<ChunkTerrain>("Terrain");
+                using var work=terrain.GetNode<CaveStreamer>("CaveStreaming").worker()!;
+                string signature=work.MapSignature();
+                for(int z=-1;z<=1;z++) for(int x=-1;x<=1;x++)
+                {
+                    var cell=new Vector2I(x,z);
+                    using var resource=new Resource();
+                    var map=work.BuildLocalMap(cell);
+                    resource.SetMeta("map",GD.VarToBytes(map));
+                    if(cell==Vector2I.Zero) work.BakeEntranceGeometry(map,signature);
+                    resource.SetMeta("signature",signature);
+                    Require(ResourceSaver.Save(resource,CaveWorkload.StartupMapPath(cell),ResourceSaver.SaverFlags.Compress)==Error.Ok,"Saving startup cave map failed");
+                }
+                GetTree().Quit();return;
+            }
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"tributary-layouts") >= 0)
+            {
+                foreach (long seed in new long[]{73921,2063,118})
+                {
+                    using var network = new CaveNetwork { activity=1, geological_morphology=true, EntrancesPerRegion=18 };
+                    network.configure(Callable.From<double,double,double>((x,z)=>72), Callable.From<double,double,double>((x,z)=>0), seed,1200);
+                    var region = network.region(Vector2I.Zero);
+                    int sideJoins=0, winding=0;
+                    foreach (var item in region["edges"].AsGodotArray())
+                    {
+                        var edge = item.AsGodotDictionary();
+                        if (!edge["entrance"].AsBool()) continue;
+                        var path = edge["points"].AsVector3Array();
+                        float length=0;
+                        for(int i=1;i<path.Length;i++) length+=path[i-1].DistanceTo(path[i]);
+                        if(length > path[0].DistanceTo(path[^1])*1.04f) winding++;
+                        string own = edge["from"].AsString()+":confluence";
+                        string end = edge["to"].AsString();
+                        if(end==own)
+                            foreach(var other in region["edges"].AsGodotArray())
+                            {
+                                var reach=other.AsGodotDictionary();
+                                if(reach["from"].AsString()==own){end=reach["to"].AsString();break;}
+                            }
+                        if(end.EndsWith(":confluence",StringComparison.Ordinal))sideJoins++;
+                    }
+                    GD.Print($"Seed {seed}: {sideJoins} entrances joined earlier passages, {winding} curved approaches");
+                    Require(sideJoins>0 && winding>0,"Repeated radial entrance layout");
+                }
+                await Finish();return;
+            }
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"distance-key") >= 0)
+            {
+                var hud = new CanvasLayer { Name = "Interface" };
+                AddChild(hud);
+                var label = new Label { Name = "RayDistance" };
+                hud.AddChild(label);
+                var probeCamera = new FreeCamera();
+                AddChild(probeCamera);
+                probeCamera.Rotation = Vector3.Zero;
+                var wall = new StaticBody3D { Position = new Vector3(0,0,-11) };
+                wall.AddChild(new CollisionShape3D { Shape = new BoxShape3D { Size = new Vector3(4,4,2) } });
+                AddChild(wall);
+                async System.Threading.Tasks.Task PressV()
+                {
+                    var key = new InputEventKey { PhysicalKeycode = Key.V, Pressed = true };
+                    probeCamera._UnhandledInput(key);
+                    for(int i=0;i<3;i++) await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
+                }
+                await PressV();
+                Require(label.Text == $"Distance  {10:0.00} m","Expected 10 m wall hit, got "+label.Text);
+                probeCamera.RotateY(Mathf.Pi);
+                await PressV();
+                Require(label.Text == "No collision in range","Miss retained the previous hit");
+                GD.Print("V measured the wall at 10.00 m and reported a miss facing away");
+                await Finish();return;
+            }
             if(Array.IndexOf(OS.GetCmdlineUserArgs(),"airborne-entrance")>=0)
             {
                 using var stream=new CaveStreamer{configuration=GD.Load<Resource>("res://config/caves/cave_settings.tres")};
@@ -26,6 +109,268 @@ public partial class MigrationChecks : Node
                 Require(stream.entrance_needed(entrance,mouth+Vector3.Up*1500),"Flight altitude blocked surface entrance");
                 Require(!stream.entrance_needed(entrance,mouth+Vector3.Right*1000),"Distant mouth requested");
                 await Finish();return;
+            }
+            var flightArg=Array.Find(OS.GetCmdlineUserArgs(),arg=>arg.StartsWith("interior-flight="));
+            if(flightArg!=null){
+                int seed=int.Parse(flightArg.Split('=')[1]);
+                var world=GD.Load<PackedScene>("res://scenes/main.tscn").Instantiate();
+                var terrain=world.GetNode<ChunkTerrain>("Terrain");
+                terrain.world_seed=seed;
+                AddChild(world);
+                var caves=terrain.GetNode<CaveStreamer>("CaveStreaming");
+                var flightCamera=world.GetNode<Camera3D>("FreeCamera");
+                bool gameLighting=Array.IndexOf(OS.GetCmdlineUserArgs(),"game-lighting")>=0;
+                if(!gameLighting)flightCamera.AddChild(new OmniLight3D {OmniRange=35,LightEnergy=2});
+                using var work=caves.worker()!;
+                GDictionary map=new();
+                for(int x=1;x<8;x++){
+                    map=work.BuildLocalMap(new Vector2I(x,0));
+                    if(map["entrances"].AsGodotArray().Count>0)break;
+                }
+                GD.Print("Buried split-and-rejoin passages: "+map["regions"].AsGodotArray()[0].AsGodotDictionary()["fracture_passages"].AsGodotArray().Count);
+                if(Array.IndexOf(OS.GetCmdlineUserArgs(),"vault-flight")>=0){
+                    var nodes=map["regions"].AsGodotArray()[0].AsGodotDictionary()["nodes"].AsGodotArray();
+                    var center=nodes[0].AsGodotDictionary()["point"].AsVector3();
+                    foreach(var raw in nodes){
+                        var n=raw.AsGodotDictionary();
+                        if(n["id"].AsString().EndsWith(":1:0")){center=n["point"].AsVector3();break;}
+                    }
+                    float angle=Mathf.Sin(center.X*.031f+center.Z*.013f)*Mathf.Pi;
+                    var across=new Vector3(Mathf.Cos(angle),0,Mathf.Sin(angle));
+                    var forward=new Vector3(-across.Z,0,across.X);
+                    Vector3 Spot(float x,float y,float z)=>center+x*across+y*Vector3.Up+z*forward;
+                    if(!gameLighting)foreach(var position in new[]{Spot(-17,5,8),Spot(16,-7,-14),Spot(-3,13,-3)}){
+                        world.AddChild(new OmniLight3D{Position=position,OmniRange=64,OmniAttenuation=.5f,LightEnergy=1.7f});
+                    }
+                    var poses=new[]{Spot(-12,-10,-30),Spot(12,-11,15),Spot(20,10,24)};
+                    var aims=new[]{Spot(3,-2,3),Spot(-7,-1,-6),Spot(-14,-4,-12)};
+                    flightCamera.GlobalPosition=poses[0];flightCamera.LookAt(aims[0]);
+                    var space=flightCamera.GetWorld3D().DirectSpaceState;
+                    var deadline=Time.GetTicksMsec()+120000;
+                    bool Hit(Vector3 a,Vector3 b)=>space.IntersectRay(PhysicsRayQueryParameters3D.Create(a,b)).Count>0;
+                    bool BridgeSupportsCrossing(){
+                        for(int x=-18;x<=18;x+=3){
+                            float z=4*Mathf.Sin(x*.067f+center.X*.043f)+2.5f*Mathf.Sin(x*.12f+center.X*.043f*.6f);
+                            if(!Hit(Spot(x,7,z),Spot(x,-5,z)))return false;
+                        }
+                        return true;
+                    }
+                    while(!BridgeSupportsCrossing() ||
+                          !Hit(poses[0],poses[0]+Vector3.Down*25) || !Hit(poses[1],poses[1]+Vector3.Down*25)){
+                        Require(Time.GetTicksMsec()<deadline,"Chamber bridge or lower floor failed to stream at "+center+" "+caves.debug_text());
+                        await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
+                    }
+                    for(int n=0;n<3;n++){
+                        var startPosition=flightCamera.GlobalPosition;
+                        for(int frame=1;frame<=90;frame++){
+                            flightCamera.GlobalPosition=startPosition.Lerp(poses[n],frame/90f);
+                            flightCamera.LookAt(aims[n]);
+                            await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+                        }
+                        await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
+                        if(gameLighting)Require(flightCamera.GetNodeOrNull<OmniLight3D>("CaveLight")==null,
+                            "Cave visibility still depends on a camera light switch");
+                        var pathName=System.IO.Path.Combine(System.IO.Path.GetTempPath(),$"vault-{seed}-{n}.png");
+                        Require(GetViewport().GetTexture().GetImage().SavePng(pathName)==Error.Ok,"Capture failed");
+                        GD.Print($"Vault {seed} at {center} view {n}");
+                    }
+                    await Finish();return;
+                }
+                var entrance=map["entrances"].AsGodotArray()[0].AsGodotDictionary();
+                var path=entrance["access"].AsGodotDictionary()["points"].AsVector3Array();
+                // Follow the entrance through its buried junction into an adjoining passage.
+                var route=new System.Collections.Generic.List<Vector3>(path);
+                var region=map["regions"].AsGodotArray()[0].AsGodotDictionary();
+                string destination=entrance["access"].AsGodotDictionary()["to"].AsString();
+                foreach(var item in region["edges"].AsGodotArray()){
+                    var next=item.AsGodotDictionary();
+                    if(next["entrance"].AsBool() || next["from"].AsString()!=destination)continue;
+                    var stations=next["points"].AsVector3Array();
+                    if(stations.Length<2 || stations[0].DistanceTo(route[^1])>1)continue;
+                    route.AddRange(stations[1..Math.Min(stations.Length,40)]);
+                    break;
+                }
+                path=route.ToArray();
+                var columns=entrance["columns"].AsGodotDictionary();
+                if (Array.IndexOf(OS.GetCmdlineUserArgs(), "exit-from-below") >= 0)
+                {
+                    // Start in the surveyed tunnel without visiting this surface or opening the cut first.
+                    var underground = Array.FindIndex(path, p =>
+                        path[0].DistanceTo(p) >= 30 && terrain.get_height_at(p) - p.Y >= 10);
+                    Require(underground > 0, "Exit fixture has no approach below terrain");
+                    flightCamera.GlobalPosition = path[underground] + Vector3.Up * 2;
+                    flightCamera.LookAt(path[underground-1] + Vector3.Up * 2);
+                    ulong entered = Time.GetTicksMsec();
+                    while (caves._surface_transaction?.committed != true ||
+                           !System.Linq.Enumerable.All(columns.Keys, key => caves._surface_columns.ContainsKey(key)))
+                    {
+                        Require(caves.underground_interest(flightCamera.GlobalPosition), "Exit test left the cave before publication");
+                        Require(Time.GetTicksMsec() - entered < 15000, "Exit stayed sealed below ground: " + caves.surface_status);
+                        await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                    }
+                    GD.Print($"Seed {seed}: Exit {path[0]} opened from below in {Time.GetTicksMsec()-entered} ms at {flightCamera.GlobalPosition}");
+                    await ToSignal(GetTree(), SceneTree.SignalName.PhysicsFrame);
+                    var space = flightCamera.GetWorld3D().DirectSpaceState;
+                    var interior = path[underground] + Vector3.Up * 2;
+                    using var floorProbe = PhysicsRayQueryParameters3D.Create(interior, interior + Vector3.Down * 12);
+                    Require(space.IntersectRay(floorProbe).Count > 0, "Published exit has no tunnel floor");
+                    Vector3 outside = path[0] + Vector3.Up * 4;
+                    for (int i = underground; i >= 0; i--)
+                    {
+                        Vector3 target = i > 0 ? path[i - 1] + Vector3.Up * 2 : outside;
+                        var from = flightCamera.GlobalPosition;
+                        if (new Vector2(from.X - target.X, from.Z - target.Z).LengthSquared() > .001f)
+                            flightCamera.LookAt(target);
+                        for (int frame = 1; frame <= 6; frame++)
+                        {
+                            flightCamera.GlobalPosition = from.Lerp(target, frame / 6f);
+                            Require(caves._surface_transaction?.committed == true &&
+                                System.Linq.Enumerable.All(columns.Keys, key => caves._surface_columns.ContainsKey(key)),
+                                "Exit closed again during ascent");
+                            await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                        }
+                    }
+                    if (DisplayServer.GetName() != "headless")
+                    {
+                        flightCamera.LookAt(path[underground] + Vector3.Up * 2);
+                        // Let the terrain around the mouth finish its normal startup pass
+                        // before capturing the surface. The timing above ends at publication.
+                        await ToSignal(GetTree().CreateTimer(3), SceneTreeTimer.SignalName.Timeout);
+                        await ToSignal(RenderingServer.Singleton, RenderingServer.SignalName.FramePostDraw);
+                        GetViewport().GetTexture().GetImage().SavePng(
+                            System.IO.Path.Combine(System.IO.Path.GetTempPath(), $"cave-exit-{seed}.png"));
+                    }
+                    await Finish();return;
+                }
+                bool flyIn=Array.IndexOf(OS.GetCmdlineUserArgs(),"approach")>=0;
+                flightCamera.GlobalPosition=path[0]+new Vector3(0,flyIn?65:12,flyIn?450:2);
+                flightCamera.LookAt(path[0]);
+                ulong start=Time.GetTicksMsec(),ground=0;
+                var tile=terrain.world_to_chunk(path[0]);
+                while(caves._surface_transaction?.committed!=true || !System.Linq.Enumerable.All(columns.Keys,key=>caves._surface_columns.ContainsKey(key))){
+                    await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+                    if(flyIn){
+                        float remaining=Math.Max(0,450-(Time.GetTicksMsec()-start)*.035f);
+                        flightCamera.GlobalPosition=path[0]+new Vector3(0,65,remaining+2);
+                        flightCamera.LookAt(path[0]);
+                    }
+                    if(ground==0 && terrain.HasVisibleGround(tile))ground=Time.GetTicksMsec();
+                    Require(Time.GetTicksMsec()-start<90000,"Entrance timeout "+caves.surface_status+" "+caves.debug_text()+" "+caves.last_error+" "+caves.discovery_progress+" region="+caves._region+" mouth="+path[0]+" owner="+caves._surface_columns+" expected="+columns);
+                }
+                ulong open=Time.GetTicksMsec();
+                GD.Print($"Seed {seed}, entrance {path[0]} open {open-start} ms, terrain-to-opening {(ground==0?0:open-ground)} ms");
+                GD.Print($"Remaining approach distance {flightCamera.GlobalPosition.Z-path[0].Z:0} m");
+                Require(ground==0 || open-ground<=3000,"Entrance appeared late relative to visible ground");
+                int samples=0;
+                for(int i=1;i<path.Length;i++){
+                    var from=path[i-1]+Vector3.Up*2;
+                    var to=path[i]+Vector3.Up*2;
+                    flightCamera.LookAt(to);
+                    for(int j=1;j<=3;j++){
+                        flightCamera.GlobalPosition=from.Lerp(to,j/3f);
+                        await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+                    }
+                    if(i<3 || (i!=path.Length/2 && i!=path.Length-1 && i!=path.Length/3))continue;
+                    ulong deadline=Time.GetTicksMsec()+45000;
+                    var space=flightCamera.GetWorld3D().DirectSpaceState;
+                    // A junction can open onto a vault with a floor well below route height.
+                    using var floorProbe=PhysicsRayQueryParameters3D.Create(to,to+Vector3.Down*32);
+                    while(space.IntersectRay(floorProbe).Count==0){
+                        Require(Time.GetTicksMsec()<deadline,"Missing floor at "+to);
+                        await ToSignal(GetTree(),SceneTree.SignalName.PhysicsFrame);
+                    }
+                    await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
+                    var file=System.IO.Path.Combine(System.IO.Path.GetTempPath(),$"cave-flight-{seed}-{samples}.png");
+                    GetViewport().GetTexture().GetImage().SavePng(file);
+                    GD.Print($"Flight sample {samples++}: {to}");
+                }
+                Require(samples>=2,"Flight did not traverse passage");
+                await Finish();return;
+            }
+            bool approach = Array.IndexOf(OS.GetCmdlineUserArgs(),"fly-to-beach-mouth")>=0;
+            if(approach || Array.IndexOf(OS.GetCmdlineUserArgs(),"live-beach-mouth")>=0)
+            {
+                bool fromBootstrap = Array.IndexOf(OS.GetCmdlineUserArgs(), "from-world-startup") >= 0;
+                ulong boot = Time.GetTicksMsec();
+                if (fromBootstrap)
+                {
+                    // Exercise the same shader preparation as the playable game's startup scene.
+                    await ToSignal(GetTree(), SceneTree.SignalName.ProcessFrame);
+                    TerrainWorkerScripts.Prepare();
+                    await TerrainShaderPreparation.Prepare(GetTree(), GD.Load<Resource>("res://config/world/terrain_settings.tres"));
+                    GD.Print($"World shader preparation: {Time.GetTicksMsec() - boot} ms");
+                }
+                ulong start = Time.GetTicksMsec();
+                var world=GD.Load<PackedScene>("res://scenes/main.tscn").Instantiate();
+                AddChild(world);
+                var terrain=world.GetNode<ChunkTerrain>("Terrain");
+                var caves=terrain.GetNode<CaveStreamer>("CaveStreaming");
+                var beachCamera=world.GetNode<Node3D>("FreeCamera");
+                beachCamera.GlobalPosition=new Vector3(51,85,378);
+                beachCamera.LookAt(new Vector3(49.65f,25.48f,371.20f));
+                ulong firstOpen=0, firstFineGround=0, firstGround=0;
+                ulong next=Time.GetTicksMsec();
+                if (approach) beachCamera.GlobalPosition = new Vector3(51,105,1070);
+                while(Time.GetTicksMsec()-start<180000)
+                {
+                    await ToSignal(GetTree(),SceneTree.SignalName.ProcessFrame);
+                    if (approach)
+                    {
+                        float remaining = Math.Max(0,700 - (Time.GetTicksMsec()-start)*.035f);
+                        beachCamera.GlobalPosition = new Vector3(51,105,370+remaining);
+                        beachCamera.LookAt(new Vector3(49.65f,25.48f,371.20f));
+                    }
+                    bool bakedVisible=caves.InitialEntranceVisible(new Vector2I(0,5));
+                    if(firstGround==0 && (bakedVisible || terrain.HasVisibleGround(terrain.world_to_chunk(new Vector3(50,26,371))))) firstGround=Time.GetTicksMsec();
+                    if (firstFineGround==0 && terrain.HasVisibleFineCell(terrain.world_to_chunk(new Vector3(50,26,371))))
+                        firstFineGround=Time.GetTicksMsec();
+                    if(bakedVisible || caves._surface_transaction?.committed==true && caves._surface_columns.ContainsKey(new Vector2I(0,5)))
+                    {
+                        if (firstOpen == 0)
+                        {
+                        firstOpen = Time.GetTicksMsec();
+                        GD.Print($"Beach mouth visible (initial surface={bakedVisible}) at {Time.GetTicksMsec()-start} ms, distance {Math.Abs(beachCamera.GlobalPosition.Z-370):0} m");
+                        if (fromBootstrap)
+                        {
+                            var cut = caves._surface_transaction!;
+                            var parentShader = terrain._terrain_material.Shader;
+                            bool shared = false;
+                            foreach (var patch in cut.patches)
+                            {
+                                var mesh = patch.As<MeshInstance3D>().Mesh;
+                                for (int i = 0; i < mesh.GetSurfaceCount(); i++)
+                                {
+                                    if (mesh.SurfaceGetMaterial(i) is not ShaderMaterial material ||
+                                        material.GetShaderParameter("cave_surface_payload").VariantType == Variant.Type.Nil) continue;
+                                    Require(material.Shader == parentShader, "Entrance surface compiled its own terrain shader");
+                                    shared = true;
+                                }
+                            }
+                            Require(shared, "No terrain-facing cave surface was rendered");
+                            GD.Print($"Beach uses the prepared terrain shader. Total elapsed from boot: {firstOpen - boot} ms");
+                        }
+                        if (approach) Require(beachCamera.GlobalPosition.Z > 405,"Entrance missed the approach deadline");
+                        }
+                        if (Time.GetTicksMsec()-start < (approach ? 20500UL : 32000UL)) continue;
+                        GD.Print($"First visible fine beach tile: {(firstFineGround==0 ? -1L : (long)(firstFineGround-start))} ms; mouth: {firstOpen-start} ms");
+                        GD.Print($"First ground at any visible layer {(long)firstGround-(long)start} ms, delay to opening {(long)firstOpen-(long)firstGround} ms");
+                        Require(firstGround!=0 && (long)firstOpen-(long)firstGround<=3000,"Mouth appeared over three seconds after terrain");
+                        Require(firstOpen-start<=3000,"Cold entrance exceeded three seconds");
+                        GD.Print($"Cave border segments in rendered cut {terrain.CaveBorderSegments}");
+                        Require(terrain.CaveBorderSegments>0,"Cave perimeter missing from seam stitch");
+                        Require(firstFineGround!=0 && firstOpen<=firstFineGround,"Fine beach was visible before cave cut");
+                        if (DisplayServer.GetName()!="headless")
+                        {
+                            await ToSignal(RenderingServer.Singleton,RenderingServer.SignalName.FramePostDraw);
+                            GetViewport().GetTexture().GetImage().SavePng(System.IO.Path.Combine(System.IO.Path.GetTempPath(),"predator-beach-mouth.png"));
+                        }
+                        await Finish();return;
+                    }
+                    if (firstOpen != 0) throw new Exception("Beach entrance disappeared during approach");
+                    if(Time.GetTicksMsec()>=next)
+                    {GD.Print($"Beach at {Time.GetTicksMsec()-start} ms, ground {terrain.get_height_at(beachCamera.GlobalPosition)}, {caves.surface_status}, {caves.discovery_progress}, {caves.last_error}, active {terrain._active_chunks.Count}, wanted {terrain._wanted.Count}, {terrain.last_error}, columns {caves._detail_columns.Count}, batch {caves._surface_batch?.cursor}/{caves._surface_batch?.received.Count}");next=Time.GetTicksMsec()+250;}
+                }
+                throw new Exception("Beach entrance failed to open: "+caves.surface_status+" "+caves.last_error);
             }
             if(Array.IndexOf(OS.GetCmdlineUserArgs(),"live-underground")>=0)
             {
@@ -65,16 +410,21 @@ public partial class MigrationChecks : Node
                     if(!edge["entrance"].AsBool())continue;
                     var points=edge["points"].AsVector3Array();
                     var entry=new Godot.Collections.Dictionary{["point"]=points[0],["access"]=edge};
-                    if(work.exposed_columns(entry).Count==0)continue;
+                    int columns=work.exposed_columns(entry).Count;
+                    if(columns is 0 or >64)continue;
                     mouths++;
                     var inside=points[^1]+Vector3.Up*2;
                     var key=(Vector3I)(inside/64).Floor();
-                    var mesh=work.build_cell(key);
-                    underground|=mesh["valid"].AsBool() && mesh["arrays"].AsGodotArray().Count>0;
+                    if (!underground)
+                    {
+                        var mesh=work.build_cell(key);
+                        underground=mesh["valid"].AsBool() && mesh["arrays"].AsGodotArray().Count>0;
+                    }
                     GD.Print($"Game terrain entrance {points[0]}, underground cell {key}");
-                    if(underground && mouths>=2)break;
+
                 }
-                Require(mouths>=2 && underground,"Expected multiple exposed entrances and underground geometry");
+                GD.Print($"Streamable entrances in origin region: {mouths}");
+                Require(mouths>=12 && underground,"Expected multiple exposed entrances and underground geometry");
                 await Finish();return;
             }
             if(Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-mouths-only")>=0)
@@ -82,9 +432,45 @@ public partial class MigrationChecks : Node
                 using var network=new PredatorIsle.Caves.CaveNetwork{EntrancesPerRegion=3,OceanLevel=0,activity=1};
                 var flat=Callable.From<double,double,double>((x,z)=>100);
                 var dry=Callable.From<double,double,double>((x,z)=>-1000);
-                network.configure(flat,dry,17);
+                network.configure(flat,dry,17,1200);
                 var region=network.region(Vector2I.Zero);
                 Require(region["entrances"].AsGodotArray().Count==3,"Expected three dry entrances on the flat fixture");
+                double lowest=double.PositiveInfinity;
+                foreach(var value in region["nodes"].AsGodotArray())
+                    lowest=Math.Min(lowest,value.AsGodotDictionary()["point"].AsVector3().Y);
+                GD.Print($"Deepest generated floor Y {lowest}");
+                Require(lowest <= -950,"Expected a route to approximately Y -1000");
+                var layouts = new System.Collections.Generic.HashSet<string>();
+                for (int x=0; x<4; x++)
+                {
+                    var sample = network.region(new Vector2I(x,0));
+                    var counts = new int[4];
+                    var reachable = new System.Collections.Generic.HashSet<string>();
+                    var entrances = sample["entrances"].AsGodotArray();
+                    Require(entrances.Count == 3,"Missing flat-world entrance");
+                    reachable.Add(entrances[0].AsString());
+                    int before;
+                    do
+                    {
+                        before = reachable.Count;
+                        foreach (var value in sample["edges"].AsGodotArray())
+                        {
+                            var edge = value.AsGodotDictionary();
+                            string a = edge["from"].AsString(), b = edge["to"].AsString();
+                            if (reachable.Contains(a) || reachable.Contains(b)) { reachable.Add(a); reachable.Add(b); }
+                        }
+                    } while (reachable.Count != before);
+                    foreach (var value in sample["nodes"].AsGodotArray())
+                    {
+                        var node = value.AsGodotDictionary();
+                        Require(reachable.Contains(node["id"].AsString()),"Disconnected cave node");
+                        int level = node["level"].AsInt32();
+                        if (level >= 0) counts[level]++;
+                    }
+                    layouts.Add(string.Join("/",counts));
+                }
+                Require(layouts.Count >= 3,"Repeated cave layouts across regions");
+                GD.Print("Connected chamber counts by depth: "+string.Join(", ",layouts));
                 network.configure(Callable.From<double,double,double>((x,z)=>-2),dry,17);
                 Require(!network.region(Vector2I.Zero)["valid"].AsBool(),"An entrance was admitted below the global ocean");
                 GD.Print("Three dry entrances generated; submerged terrain rejected.");await Finish();return;

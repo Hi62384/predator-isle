@@ -44,6 +44,8 @@ public partial class CaveMesher : RefCounted
     private static readonly bool[] Flip = { false, false, true, false, false, true, false, false, true, false, true, true, false, false, true, false };
     private readonly List<Vector3> _vertices = new(), _normals = new();
     private readonly Dictionary<Vector3, Vector3> _normalCache = new();
+    private readonly CaveMeshRelaxation _relaxation = new();
+    internal bool SmoothSurface { get; set; }
     // Expensive protected-shore bisections are identical for a shared tetrahedral
     // grid edge. Cache only these refinements, not cheap ordinary edge crosses.
     // Every biome uses this canonical mesher, including portals and specialty caves.
@@ -110,6 +112,11 @@ public partial class CaveMesher : RefCounted
         var cross = (c - a).Cross(b - a);
         if (cross.LengthSquared() == 0) return;
         if (case_flip) { (b, c) = (c, b); cross = -cross; }
+        if (SmoothSurface)
+        {
+            _relaxation.Add(a, b, c, cross);
+            return;
+        }
         var face = cross.Normalized();
         AddVertex(a, face); AddVertex(b, face); AddVertex(c, face);
     }
@@ -154,6 +161,7 @@ public partial class CaveMesher : RefCounted
     public A build(GodotObject volume, Vector3I coordinate, double step_metres)
     {
         _vertices.Clear(); _normals.Clear(); _normalCache.Clear(); _refinedEdges.Clear();
+        _relaxation.Clear();
         RefinedCacheHits = RefinedEvaluations = 0;
         SurfaceColumnEvaluations = SurfaceColumnReuseHits = 0;
         GpuLatticeSamples=GpuLatticeExactSamples=GpuTopologyCubes=0;
@@ -271,6 +279,8 @@ public partial class CaveMesher : RefCounted
             }
             for(int t=0;t<Tets.Length;t++)Tetra(cubePoints,cubeValues,Tets[t],cases<0?-1:(cases>>(t*4))&15);
         }
+        if (SmoothSurface)
+            _relaxation.Write(Field, origin, reuseSurface, _preciseShores.Length != 0, _vertices, _normals);
         if (_vertices.Count == 0){attempt?.Complete();return new();}
         var arrays = new A(); arrays.Resize((int)Mesh.ArrayType.Max);
         arrays[(int)Mesh.ArrayType.Vertex] = vertices; arrays[(int)Mesh.ArrayType.Normal] = normals; arrays[(int)Mesh.ArrayType.Color] = colors;

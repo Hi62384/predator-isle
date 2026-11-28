@@ -131,7 +131,7 @@ public partial class CaveField : RefCounted, ICaveField
         foreach (float component in new[] { low.X, low.Y, low.Z, high.X, high.Y, high.Z }) if (Math.Abs((double)component) > 2147483646.0 * BinMetres) return false;
         var first = bin_cell(low); var last = bin_cell(high);
         long sx = (long)last.X - first.X + 1, sy = (long)last.Y - first.Y + 1, sz = (long)last.Z - first.Z + 1;
-        if (sx > 256 || sy > 256 || sz > 256 || sx * sy * sz > 256 || SpatialReferences + sx * sy * sz > 2097152) return false;
+        if (sx > 256 || sy > 256 || sz > 256 || sx * sy * sz > (kind==3 ? 1024 : 256) || SpatialReferences + sx * sy * sz > 2097152) return false;
         SpatialReferences += sx * sy * sz;
         var ab = new Vector2(b.X - a.X, b.Z - a.Z); Directions.Add(ab); SpanSquared.Add(Math.Max(ab.LengthSquared(), .000001)); SpanLength.Add(ab.Length()); ArchHeight.Add(size.Y * .6); ArchCenter.Add(size.Y * .4); ArchScale.Add(Math.Min(size.X, size.Y * .6));
         int feature = Begins.Count; Begins.Add(a); Ends.Add(b); Dimensions.Add(size); Kinds.Add((byte)kind); Styles.Add((byte)Math.Clamp(style, 0, 7));

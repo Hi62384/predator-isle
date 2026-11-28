@@ -30,6 +30,7 @@ public partial class CaveSurfaceCut : RefCounted
     public Shader? shader(Shader? original, bool common_projection)
     {
         if (original == null) return null;
+        if (CaveSurfaceShader.IsSharedTerrain(original)) return original;
         string source = original.Code; const string marker = "void fragment() {";
         int first = source.IndexOf(marker, StringComparison.Ordinal);
         bool terrain = source.Contains("varying vec3 forest_local_position;", StringComparison.Ordinal)

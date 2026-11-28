@@ -12,6 +12,8 @@ public partial class CaveSurfaceContext : RefCounted
     public D parents { get; set; } = new();
     public Callable canonical { get; set; }
     private readonly CaveSurfacePayload _payload = new();
+    private Func<double,double,double>? sampleCanonical;
+    private readonly Dictionary<Vector2I,double> groundGrid = new();
     internal bool CompactGpuPayload { get; set; }
     private sealed class Parent
     {
@@ -23,7 +25,7 @@ public partial class CaveSurfaceContext : RefCounted
     private readonly Dictionary<Vector2, double> _heights = new(); private readonly List<Vector2> _heightRing = new(); private int _heightCursor;
     public bool configure(A records, Callable original_height)
     {
-        parents.Clear(); _parents.Clear(); canonical = original_height; _heights.Clear(); _heightRing.Clear(); _heightCursor = 0;
+        parents.Clear(); _parents.Clear(); groundGrid.Clear(); sampleCanonical = CaveHeightSampler.Bind(original_height); canonical = original_height; _heights.Clear(); _heightRing.Clear(); _heightCursor = 0;
         if (!(original_height.Delegate != null || GodotObject.IsInstanceValid(original_height.Target) && original_height.Target.HasMethod(original_height.Method))) return false;
         foreach (var value in records)
         {
@@ -77,10 +79,34 @@ public partial class CaveSurfaceContext : RefCounted
         }
         return value;
     }
+    // Match the portal mesher's two-metre grid. Shared edge samples also
+    // give both neighbouring columns the same ground height and slope.
+    private double CanonicalGridHeight(Vector2 point)
+    {
+        var cell = (Vector2I)(point / 2).Floor();
+        var fraction = point / 2 - (Vector2)cell;
+        double At(Vector2I key)
+        {
+            if (!groundGrid.TryGetValue(key,out var height))
+                groundGrid[key] = height = sampleCanonical!(key.X*2,key.Y*2);
+            return height;
+        }
+        double a = At(cell);
+        if (fraction == Vector2.Zero) return a;
+        double b = At(cell+Vector2I.Right), c = At(cell+Vector2I.Down);
+        double d = At(cell+Vector2I.One);
+        return Mathf.Lerp(Mathf.Lerp(a,b,fraction.X),Mathf.Lerp(c,d,fraction.X),fraction.Y);
+    }
+    internal void ConfigureCanonicalGrid(Callable sampler)
+    {
+        groundGrid.Clear();
+        sampleCanonical=CaveHeightSampler.Bind(sampler);
+    }
+    public double grid_height(double x,double z) => CanonicalGridHeight(new Vector2((float)x,(float)z));
     public double uncached_height(Vector2 point)
     {
         string id = owner_at(point); if (id.Length == 0) return canonical.Call(point.X, point.Y).AsDouble();
-        var parent = _parents[id]; if(parent.CanonicalSurface)return canonical.Call(point.X,point.Y).AsDouble();if (!TrySelection(id, point, out var chosen)) return double.NaN;
+        var parent = _parents[id]; if(parent.CanonicalSurface)return CanonicalGridHeight(point);if (!TrySelection(id, point, out var chosen)) return double.NaN;
         var weights = chosen.Weights; double y = 0;
         for (int corner = 0; corner < 3; corner++) y += (double)parent.Buffer.Positions[chosen.Index(corner)].Y * weights[corner]; return y + parent.Origin.Y;
     }
@@ -94,7 +120,7 @@ public partial class CaveSurfaceContext : RefCounted
             if (!parent.Decoded.TryGetValue(index, out var values))
             {
                 values = _payload.Decode(parent.Buffer, index, parent.Normalize); parent.Decoded[index] = values;
-                parents[id].AsGodotDictionary()["decoded"].AsGodotDictionary()[index] = values;
+                if (!CompactGpuPayload) parents[id].AsGodotDictionary()["decoded"].AsGodotDictionary()[index] = values;
             }
             if (values.Length != CaveSurfacePayload.Stride) return System.Array.Empty<float>();
             for (int component = 0; component < result.Length; component++) result[component] = (float)(result[component] + (double)values[component] * weights[corner]);
@@ -149,7 +175,11 @@ public partial class CaveSurfaceContext : RefCounted
                     var payload = controls(id, new Vector2(world.X, world.Z));
                     if (payload.Length == 0) return new D { ["valid"] = false, ["reason"] = "Surface replacement triangle crosses unsupported parent boundary" };
                     double depth = height_at(world.X, world.Z) - world.Y; payload[67] = (float)Math.Max(0, depth); group.Payload.AddRange(payload);
-                    double t = Math.Clamp(depth / 2, 0, 1); t = t * t * (3 - 2 * t); n = n.Lerp(normal_at(id, new Vector2(world.X, world.Z)), (float)(1 - t)).Normalized();
+                    if (depth < 1.25 && n.Y > 0)
+                    {
+                        float top = (1 - Mathf.SmoothStep(0, 1.25f, (float)depth)) * Mathf.SmoothStep(0, .65f, n.Y);
+                        n = n.Lerp(normal_at(id, new Vector2(world.X, world.Z)), top).Normalized();
+                    }
                 }
                 group.Vertices.Add(local); group.Normals.Add(n); group.Colors.Add(color);
             }

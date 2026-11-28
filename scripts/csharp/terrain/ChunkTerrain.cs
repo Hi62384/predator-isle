@@ -289,6 +289,13 @@ public partial class ChunkTerrain : Node3D
         if (!Valid(target)) { target = GetViewport().GetCamera3D(); if (target is null) return; }
         var point = target!.GlobalPosition;
         var focus = _teleport_pending ? _teleport_destination : point;
+        // The island-wide sea plane extends through inland tunnels as well.
+        // Use the current view, even while streaming a teleport destination.
+        if (_water is not null && _cave_streamer is not null)
+        {
+            var cameraPosition = GetViewport().GetCamera3D()?.GlobalPosition ?? point;
+            _water.Visible = !_cave_streamer.underground_interest(cameraPosition);
+        }
         if (!authority_only && _cave_streamer is not null && _cave_streamer.underground_interest(focus))
         {
             _cave_streamer.tick(focus, point, worker_count, false);
@@ -340,14 +347,13 @@ public partial class ChunkTerrain : Node3D
         if(_sampler._mountain_weight>Math.Max(w[strongest],_sampler._jungle_weight))return 5;
         return _sampler._jungle_weight>w[strongest]?4:strongest;
     }
+    internal string GetCaveName(Vector3 point) =>
+        _cave_streamer is not null && point.Y < get_height_at(point) ? _cave_streamer.CaveNameAt(point) : "";
+
     public string get_location_biome(Vector3 point)
     {
-        if(_cave_streamer is not null && point.Y<get_height_at(point))
-        {
-            var cave=_cave_streamer.CaveNameAt(point);
-            if(cave.Length>0)return cave;
-        }
-        return get_biome_name_at(point);
+        string cave = GetCaveName(point);
+        return cave.Length > 0 ? cave : get_biome_name_at(point);
     }
     public string get_biome_name_at(Vector3 p)
     {

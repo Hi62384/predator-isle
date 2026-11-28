@@ -52,6 +52,7 @@ public partial class ChunkTerrain
         _terrain_material.SetShaderParameter("debug_view",shader);foreach(var m in _structure_material_variants())Obj<ShaderMaterial>(m).SetShaderParameter("debug_view",shader);
         if(_swamp_water_material is not null){int water=v>=99?v+81:v>=61?v+79:0;if(v>=131)water=v is 137 or 145?172:0;_swamp_water_material.SetShaderParameter("swamp_water_debug",water);}
         foreach(var m in _material_variants())Obj<ShaderMaterial>(m).SetShaderParameter("cliff_normal_debug",v>=21&&v<28?v-21:0);
+        if (_water is not null) _water.Visible = v != 5;
         GetViewport().DebugDraw=v==5?Viewport.DebugDrawEnum.Wireframe:Viewport.DebugDrawEnum.Disabled;
     }
     public string get_debug_view_name()

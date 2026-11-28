@@ -1,5 +1,6 @@
 using Godot;
 using System;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace PredatorIsle.Caves;
@@ -9,6 +10,33 @@ public partial class CaveSurfaceShader : RefCounted
     private static readonly (string Name, int Width)[] Layout = {
         ("geology_control",3),("jungle_control",3),("forest_control",3),("forest_ecology",3),("forest_geology",2),("savanna_control",3),("savanna_geology",3),("savanna_water",3),("savanna_surface",3),("swamp_control",3),("swamp_hydro",3),("swamp_land",3),("swamp_ecology",3),("mountain_control",3),("mountain_geology",3),("mountain_shape",3),("mountain_wet",1),("terrain_surface",2),("coast_control",3),("coast_sediment",1),("beach_control",2),("tropical_control",3),("badlands_control",2),("swamp_water_level",1),("UV.y",1),("COLOR",4) };
     private const string Begin = "\n geology_control=CUSTOM0.xyz;", End = "\n}\n// Shared jittered junctions";
+    private const string SharedMarker = "cave_shared_terrain";
+    private static readonly ConditionalWeakTable<Shader, Shader> SharedShaders = new();
+
+    internal static Shader SharedTerrain(Shader original)
+    {
+        if (IsSharedTerrain(original)) return original;
+        return SharedShaders.GetValue(original, source =>
+        {
+            using var adapter = new CaveSurfaceShader();
+            string code = adapter.code(source.Code, true, true, false, true, true);
+            if (code.Length == 0) return source;
+            // The ordinary terrain shader already uses every available
+            // varying location. Append depth to a spare lane.
+            const string land = "varying vec3 swamp_land;";
+            if (!code.Contains(land, StringComparison.Ordinal)) return source;
+            code = adapter.CompactPayload(code)
+                .Replace(land, "varying vec4 terrain_swamp_land;\n#define swamp_land terrain_swamp_land.xyz", StringComparison.Ordinal)
+                .Replace("varying float cave_entry_depth;", "#define cave_entry_depth terrain_swamp_land.w", StringComparison.Ordinal);
+            var shader = new Shader { Code = code };
+            shader.SetMeta(SharedMarker, source);
+            return shader;
+        });
+    }
+
+    internal static bool IsSharedTerrain(Shader shader) => shader.HasMeta(SharedMarker);
+    internal static Shader OriginalTerrain(Shader shader) =>
+        IsSharedTerrain(shader) ? shader.GetMeta(SharedMarker).As<Shader>() : shader;
     public string load_texels()
     {
         var code = new StringBuilder("\n int surface_base=VERTEX_ID*17;\n");
@@ -25,7 +53,11 @@ public partial class CaveSurfaceShader : RefCounted
     internal const string CompactUniforms = "\nuniform int cave_surface_texel_mask=131071;\nuniform int cave_surface_texels=17;\n";
     internal string CompactCode(string original, bool parentSpace, bool entryTransition, bool hiveEntry, bool commonProjection)
     {
-        string result = code(original, parentSpace, entryTransition, hiveEntry, commonProjection);
+        return CompactPayload(code(original, parentSpace, entryTransition, hiveEntry, commonProjection));
+    }
+
+    private string CompactPayload(string result)
+    {
         if (result.Length == 0) return result;
         return result.Replace(load_texels(), CompactTexels(), StringComparison.Ordinal)
             .Replace("uniform sampler2D cave_surface_payload:filter_nearest,repeat_disable;",
@@ -49,7 +81,11 @@ public partial class CaveSurfaceShader : RefCounted
     public string code(string original, bool parent_space, bool entry_transition) => code(original, parent_space, entry_transition, false, false);
     public string code(string original, bool parent_space, bool entry_transition, bool hive_entry) => code(original, parent_space, entry_transition, hive_entry, false);
     public string code(string original, bool parent_space, bool entry_transition, bool hive_entry, bool common_projection)
+        => code(original, parent_space, entry_transition, hive_entry, common_projection, false);
+    private string code(string original, bool parent_space, bool entry_transition, bool hive_entry, bool common_projection,
+        bool sharedTerrain)
     {
+        original = original.ReplaceLineEndings("\n");
         if (Count(original, Begin) != 1 || Count(original, End) != 1) return "";
         int begin = original.IndexOf(Begin, StringComparison.Ordinal), end = original.IndexOf(End, begin, StringComparison.Ordinal);
         if (end <= begin) return "";
@@ -91,9 +127,32 @@ public partial class CaveSurfaceShader : RefCounted
         else replacement.Append("forest_origin=").Append(parent_space ? "cave_parent_origin" : "MODEL_MATRIX[3].xyz").Append(';');
         replacement.Append('\n');
         if (entry_transition) replacement.Append(" cave_entry_depth=surface_p16.w;\n");
-        string result = original[..begin].Replace("void vertex() {", uniforms(parent_space, entry_transition, hive_entry) + "\nvoid vertex() {", StringComparison.Ordinal) + replacement + original[end..];
+        string vertexUniforms = uniforms(parent_space, entry_transition, hive_entry);
+        string input = replacement.ToString();
+        if (sharedTerrain)
+        {
+            vertexUniforms += """
+                uniform bool cave_surface_enabled=false;
+                uniform bool cave_cut_enabled=false;
+                uniform sampler2D cave_cut_mask:filter_nearest,repeat_disable;
+                uniform vec2 cave_cut_tile_offset=vec2(0);
+                """ + "\n";
+            input = "\n if(cave_surface_enabled){\n" + input + "\n }else{\n cave_entry_depth=0.0;" +
+                original[begin..end] + "\n }";
+        }
+        string result = original[..begin].Replace("void vertex() {", vertexUniforms + "\nvoid vertex() {", StringComparison.Ordinal) + input + original[end..];
         if (packedInterface && parent_space)
-            result = result.Replace("vec3 forest_origin=MODEL_MATRIX[3].xyz;", "vec3 forest_origin=cave_parent_origin;", StringComparison.Ordinal);
+            result = result.Replace("vec3 forest_origin=MODEL_MATRIX[3].xyz;", sharedTerrain ?
+                "vec3 forest_origin=cave_surface_enabled?cave_parent_origin:MODEL_MATRIX[3].xyz;" :
+                "vec3 forest_origin=cave_parent_origin;", StringComparison.Ordinal);
+        if (sharedTerrain)
+            result = result.Replace("void fragment() {", """
+                void fragment() {
+                 if(cave_cut_enabled){
+                  ivec2 cell=ivec2(floor(forest_local_position.xz/64.0+cave_cut_tile_offset));
+                  if(all(greaterThanEqual(cell,ivec2(0)))&&all(lessThan(cell,textureSize(cave_cut_mask,0)))&&texelFetch(cave_cut_mask,cell,0).r>.5)discard;
+                 }
+                """, StringComparison.Ordinal);
         if (hive_entry && entry_transition)
         {
             string biology = Extensions.Code;
@@ -110,19 +169,23 @@ public partial class CaveSurfaceShader : RefCounted
         if (entry_transition)
         {
             int final = result.LastIndexOf("\n}", StringComparison.Ordinal); if (final < 0) return "";
-            result = result[..final] + (hive_entry ? HiveBlend : RockBlend) + result[final..];
+            string blend = hive_entry ? HiveBlend : RockBlend;
+            if (sharedTerrain) blend = "\n if(cave_surface_enabled){\n" + blend + "\n }";
+            result = result[..final] + blend + result[final..];
         }
         return common_projection ? CaveVertexProjection.Source(result) : result;
     }
     private const string RockBlend = "\n" + """
  if(debug_view==0 && ground_debug==0 && cliff_normal_debug==0){
-  float entry_amount=smoothstep(1.0,10.0,cave_entry_depth);
+  vec3 entry_position=forest_local_position+mod(forest_origin,vec3(3840.0));
+  vec3 entry_dx=dFdx(entry_position),entry_dy=dFdy(entry_position);
+  float wall_amount=(1.0-smoothstep(.25,.76,n.y))*smoothstep(.15,2.3,cave_entry_depth);
+  float entry_amount=max(smoothstep(.5,8.0,cave_entry_depth),.94*wall_amount);
   if(entry_amount>.0001){
    vec3 entry_base,entry_mapped;float entry_rough;
-   vec3 entry_position=forest_local_position+mod(forest_origin,vec3(3840.0));
-   shade_cave_entry(entry_position,n,dFdx(entry_position),dFdy(entry_position),entry_base,entry_rough,entry_mapped);
+   shade_cave_entry(entry_position,n,entry_dx,entry_dy,entry_base,entry_rough,entry_mapped);
    vec3 entry_previous=normalize((INV_VIEW_MATRIX*vec4(NORMAL,0)).xyz);
-   ALBEDO=mix(ALBEDO,entry_base,entry_amount);ROUGHNESS=mix(ROUGHNESS,entry_rough,entry_amount);SPECULAR=mix(SPECULAR,.2,entry_amount);EMISSION*=1.0-entry_amount;
+   ALBEDO=mix(ALBEDO,entry_base,entry_amount);ROUGHNESS=mix(ROUGHNESS,entry_rough,entry_amount);SPECULAR=mix(SPECULAR,.2,entry_amount);EMISSION=mix(EMISSION,cave_fill_light(entry_base,entry_mapped),entry_amount);
    AO=mix(AO,.08,entry_amount);AO_LIGHT_AFFECT=0.0;
    NORMAL=normalize((VIEW_MATRIX*vec4(normalize(mix(entry_previous,entry_mapped,entry_amount)),0)).xyz);
   }
@@ -131,7 +194,7 @@ public partial class CaveSurfaceShader : RefCounted
     private const string HiveBlend = "\n" + """
  if(debug_view==0 && ground_debug==0 && cliff_normal_debug==0){
   float entry_amount=smoothstep(1.0,10.0,cave_entry_depth);
-  AO=mix(AO,.08,entry_amount);AO_LIGHT_AFFECT=0.0;EMISSION*=1.0-entry_amount;
+  AO=mix(AO,.08,entry_amount);AO_LIGHT_AFFECT=0.0;EMISSION=mix(EMISSION,ALBEDO*(.72+.16*clamp(n.y,-1.0,1.0)),entry_amount);
  }
 """ + "\n";
 }

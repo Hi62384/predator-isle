@@ -10,6 +10,16 @@ public sealed class TerrainRingHeightFilter
     private readonly Dictionary<Key,double> values=new();
     private readonly Queue<Key> order=new();
     private readonly Func<double,double,double> sampleHeight;
+    // The nine-tap kernel shares half-grid coordinates between neighboring vertices.
+    private readonly Dictionary<(double X,double Z),double> taps=new();
+    private double Tap(double x,double z)
+    {
+        if(taps.TryGetValue((x,z),out double value))return value;
+        if(taps.Count>=Capacity*2)taps.Clear();
+        value=sampleHeight(x,z);
+        taps[(x,z)]=value;
+        return value;
+    }
     private bool hasWaterContext;
     private double cachedWaterLevel;
     public int Capacity{get;}
@@ -28,10 +38,10 @@ public sealed class TerrainRingHeightFilter
         // instead of storing the same water value in every bounded cache key.
         if(!hasWaterContext||!cachedWaterLevel.Equals(waterLevel))
         {
-            values.Clear();order.Clear();cachedWaterLevel=waterLevel;hasWaterContext=true;
+            values.Clear();order.Clear();taps.Clear();cachedWaterLevel=waterLevel;hasWaterContext=true;
         }
         var key=new Key(x,z,footprint);if(values.TryGetValue(key,out var saved))return saved;
-        double center=canonicalCenter??sampleHeight(x,z),result=center;
+        double center=canonicalCenter??Tap(x,z),result=center;
         // This retention band already selects the unchanged canonical height.
         // Do not perform eight expensive geographic queries whose contribution is zero.
         if(Math.Abs(center-waterLevel)<=footprint*.75)return Store(key,center);
@@ -40,7 +50,7 @@ public sealed class TerrainRingHeightFilter
             for(int dz=-1;dz<=1;dz++)for(int dx=-1;dx<=1;dx++)
             {
                 if(dx==0&&dz==0)continue;
-                double height=sampleHeight(x+dx*offset,z+dz*offset);
+                double height=Tap(x+dx*offset,z+dz*offset);
                 sum+=height*(dx==0||dz==0?2:1);
                 low=Math.Min(low,height);high=Math.Max(high,height);
                 otherLow=Math.Min(otherLow,height);otherHigh=Math.Max(otherHigh,height);

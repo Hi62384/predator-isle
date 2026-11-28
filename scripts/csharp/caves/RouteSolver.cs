@@ -77,6 +77,9 @@ public partial class RouteSolver : RefCounted
         {
             double t = Math.Clamp((cumulative[i] - flat_start_metres) / (length - flat_start_metres - flat_end_metres), 0, 1);
             double desired = start_floor + (end_floor - start_floor) * (t * t * (3 - 2 * t)), low = lower[i], high = upper[i];
+            // Descend under the lip promptly, even when the access route is hundreds of metres long.
+            if (cover.Length > 0 && cover[0] == 0)
+                desired = Math.Min(desired, start_floor - Math.Min(cumulative[i] * grade, headroom + roof));
             if (i > 0) { low = Math.Max(low, previous - distances[i] * grade); high = Math.Min(high, previous + distances[i] * grade); }
             if (low > high + .0000001) return Reject("selected_floor_envelope_empty");
             double floor = Math.Clamp(desired, low, Math.Max(low, high)); points[i] = new(stations[i].X, (float)floor, stations[i].Y);

@@ -9,6 +9,26 @@ namespace PredatorIsle.Caves;
 
 internal static class CaveFieldCompiler
 {
+    // Gradually widen and lift one side of a buried reach. Skipping the
+    // near-surface stations keeps galleries from becoming accidental mouths.
+    private static bool AddGallery(CaveField f, D edge, Vector3 a,Vector3 b,Vector2 size,
+        float swell,double phase,int style,double station,double length)
+    {
+        var tangent=new Vector2(b.X-a.X,b.Z-a.Z).Normalized();
+        var normal=new Vector3(-tangent.Y,0,tangent.X);
+        int form=Math.Clamp((int)(phase*3/Math.Tau),0,2);
+        float width=size.X*(1+swell*(form==1 ? .65f : 2.4f));
+        float height=size.Y*(1+swell*(form==0 ? .25f : 1.9f));
+        // A high side opening leaves an exposed rock shelf. In split galleries
+        // the side passage sweeps away from the main path around a solid rib.
+        float side=MathF.Cos((float)phase)>=0 ? 1 : -1;
+        float separation=form==2 ? width+size.X*1.7f : width*.66f;
+        var offset=normal*(swell*swell*separation*side);
+        offset.Y=form==1 ? swell*size.Y*.72f : swell*swell*size.Y*.32f;
+        if(!f.append_feature(a+offset,b+offset,new Vector2(width,height),0,style))return false;
+        if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,Text(edge,"from"),Text(edge,"to"),station,station+a.DistanceTo(b),length);
+        return true;
+    }
     internal static bool Compile(CaveField f, A regions, Callable surface, A extraEdges, D assignment)
     {
         f.clear(); f.height = surface;
@@ -40,6 +60,7 @@ internal static class CaveFieldCompiler
             if (f.BiomeFields.Count > 0 && family is 6 or 7) f._biome_locks[region["id"]] = true;
             int style = Int(region, "cross_section_style");
             var regionEdges = Arr(region, "edges").Duplicate(); foreach (var edge in Arr(region, "pocket_passages")) regionEdges.Add(edge);
+            foreach(var passage in Arr(region,"fracture_passages"))regionEdges.Add(passage);
             foreach (var raw in regionEdges)
             {
                 var edge = raw.AsGodotDictionary(); var decorated = edge.Duplicate(); decorated["cross_section_style"] = Flag(edge, "retain_cross_section_style") ? Int(edge, "cross_section_style", style) : style; edges.Add(decorated);
@@ -69,24 +90,65 @@ internal static class CaveFieldCompiler
             {
                 var node = raw.AsGodotDictionary(); if (Int(node, "level", -1) < 0) continue;
                 var point = node["point"].AsVector3();
-                if (!f.append_feature(point, point, new Vector2((float)Num(node, "chamber_radius"), (float)Num(node, "chamber_height")), 2, Int(node, "cross_section_style", style))) return Failed();
-                if (f.BiomeFields.Count > 0) { string id = Text(node, "biome_parent", Text(node, "id")); f.bind_feature_biomes(f.Begins.Count - 1, id, id, 0, 0, 0); }
+                float radius=(float)Num(node,"chamber_radius"), roof=(float)Num(node,"chamber_height");
+                bool fractured=region.ContainsKey("cross_section_style") && node.ContainsKey("level") &&
+                    !node.ContainsKey("parent") && !node.ContainsKey("confluence") && !node.ContainsKey("biome_parent") && family is not (6 or 7);
+                if(fractured && Text(node,"id").EndsWith(":0",StringComparison.Ordinal)){
+                    var floor=point-Vector3.Up*18;
+                    float span=48+8*Mathf.Sin(point.Z*.037f);
+                    if(!f.append_feature(floor,floor,new Vector2(span,56),3,style))return Failed();
+                    string id=Text(node,"id");
+                    if(f.BiomeFields.Count>0)f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);
+                    continue;
+                }
+                // Offset overlapping chambers within the original clearance-tested footprint.
+                double bearing=point.X*.193 + point.Z*.279;
+                int lobes=fractured ? 2+(int)Math.Abs(Math.Sin(bearing)*2.99) : 1;
+                for(int n=0;n<lobes;n++){
+                    var center=point;
+                    float r=radius,h=roof;
+                    if(lobes>1){
+                        r*= n==0 ? .60f : .38f+.13f*(float)Math.Abs(Math.Sin(bearing+n));
+                        h*= n==0 ? .63f : .55f+.45f*(float)Math.Abs(Math.Cos(bearing+n));
+                        if(n>0)center+=new Vector3(Mathf.Cos((float)bearing+n*2.1f),0,Mathf.Sin((float)bearing+n*2.1f))*(radius-r);
+                    }
+                    if(!f.append_feature(center,center,new Vector2(r,h),2,Int(node,"cross_section_style",style)))return Failed();
+                    if(f.BiomeFields.Count>0){string id=Text(node,"biome_parent",Text(node,"id"));f.bind_feature_biomes(f.Begins.Count-1,id,id,0,0,0);}
+                }
             }
         }
         foreach (var raw in edges)
         {
             var edge = raw.AsGodotDictionary(); var points = edge["points"].AsVector3Array(); double length = 0, station = 0;
+            var size = new Vector2((float)Num(edge,"half_width"), (float)Num(edge,"headroom"));
+            bool varied = edge.ContainsKey("profile_phase");
+            double phase = Num(edge,"profile_phase");
             if (f.BiomeFields.Count > 0) for (int i = 1; i < points.Length; i++) length += points[i - 1].DistanceTo(points[i]);
             for (int i = 0; i < points.Length - 1; i++)
             {
-                if (!f.append_feature(points[i], points[i + 1], new Vector2((float)Num(edge, "half_width"), (float)Num(edge, "headroom")), Flag(edge, "entrance") ? 1 : 0, Int(edge, "cross_section_style"))) return Failed();
+                var section = size;
+                if (varied)
+                {
+                    var midpoint = (points[i]+points[i+1])*.5f;
+                    double bedding = Math.Sin(midpoint.X*.041 + midpoint.Z*.027 + phase);
+                    double fissure = Math.Sin(midpoint.Z*.068 - midpoint.X*.035 + phase);
+                    section.X *= (float)(.72 + .28*bedding);
+                    section.Y *= (float)(.72 + .28*fissure);
+                }
+                if(varied && !edge.ContainsKey("bypass") && (!Flag(edge,"entrance") || i>5)){
+                    double distance=station+points[i].DistanceTo(points[i+1])*.5;
+                    float swell=Mathf.SmoothStep(.23f,.95f,(float)Math.Sin(distance/(17+phase*2)+phase));
+                    if(swell>.03f && !AddGallery(f,edge,points[i],points[i+1],size,swell,phase,Int(edge,"cross_section_style"),station,length))return Failed();
+                }
+                if (!f.append_feature(points[i], points[i + 1], section, Flag(edge, "entrance") ? 1 : 0, Int(edge, "cross_section_style"))) return Failed();
                 int feature = f.Begins.Count - 1;
                 if (f.continuous_route_floors)
                 {
                     if (i > 0) f.EndpointGrades[feature * 2] = ((double)points[i].Y - points[i - 1].Y) / Math.Max(new Vector2(points[i].X - points[i - 1].X, points[i].Z - points[i - 1].Z).Length(), .000001);
                     if (i + 2 < points.Length) f.EndpointGrades[feature * 2 + 1] = ((double)points[i + 2].Y - points[i + 1].Y) / Math.Max(new Vector2(points[i + 2].X - points[i + 1].X, points[i + 2].Z - points[i + 1].Z).Length(), .000001);
                 }
-                if (f.BiomeFields.Count > 0)
+                if (f.BiomeFields.Count == 0)station+=points[i].DistanceTo(points[i+1]);
+                else
                 {
                     double end = station + points[i].DistanceTo(points[i + 1]); string parent = Text(edge, "biome_parent");
                     f.bind_feature_biomes(feature, parent.Length == 0 ? Text(edge, "from") : parent, parent.Length == 0 ? Text(edge, "to") : parent, station, end, parent.Length == 0 ? length : 0); station = end;

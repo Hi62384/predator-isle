@@ -14,6 +14,7 @@ namespace PredatorIsle.Terrain;
 public sealed class TerrainRingStream : IDisposable
 {
     private const int PriorityLayerCount=5;
+    private const int FlightBackdropResolution=12;
     private readonly record struct Key(TerrainRingLayout.Patch Patch,int Resolution,long SourceRevision);
     private sealed class BuildProgress
     {
@@ -89,7 +90,6 @@ public sealed class TerrainRingStream : IDisposable
     private TerrainRingLayout.Plan? preparedPlan;
     private bool preparedComplete,completeEver;
     private int publishedCount;
-    private long committedGeneration = -1;
     private CancellationTokenSource? preparationCancellation;
     private long preparationGeneration=-1;
     private int resolution;
@@ -110,29 +110,43 @@ public sealed class TerrainRingStream : IDisposable
         if(requested is null)return null;
         var patch=new TerrainRingLayout.Patch(tile,requested.BaseSize*Math.Pow(3,tile.Z),default);
         var key=new Key(patch,resolution,revision);
-        return ready.GetValueOrDefault(key)??flightReady.GetValueOrDefault(key)??cache.GetValueOrDefault(key)?.Data;
+        var data=ready.GetValueOrDefault(key)??flightReady.GetValueOrDefault(key)??cache.GetValueOrDefault(key)?.Data;
+        if(data is not null || tile.Z!=2)return data;
+        var preview=key with{Resolution=FlightBackdropResolution};
+        return flightReady.GetValueOrDefault(preview)??cache.GetValueOrDefault(preview)?.Data;
     }
     private readonly List<Key> flightQueue=new();
     private readonly Dictionary<Key,TerrainRingMeshGeometry.Data> flightReady=new();
     private (Vector2I Cell,long Revision,int Resolution)? flightWindow;
-    internal void FollowCamera(Vector2 position,bool enabled)
+    private bool sprinting;
+    internal Vector2I FlightFocus { get; private set; }
+    internal void FollowCamera(Vector2 position,bool enabled,Vector2 velocity=default)
     {
+        sprinting=enabled && velocity.LengthSquared()>60*60;
         if(!enabled || requested is null)
         {
             flightWindow=null;flightReady.Clear();flightQueue.Clear();return;
         }
         var size=(float)requested.BaseSize;
         var cell=(Vector2I)(position/size).Floor();
+        FlightFocus=(Vector2I)((position+(velocity*.55f).LimitLength(size*2))/size).Floor();
         var window=(cell,revision,resolution);
         if(flightWindow==window)return;
         flightWindow=window;
         flightQueue.Clear();
-        for(int radius=0;radius<=1;radius++)
-        for(int z=-radius;z<=radius;z++)
-        for(int x=-radius;x<=radius;x++)
+        var velocityLead=(velocity*.7f).LimitLength(size*2.5f);
+        var lead = position + velocityLead;
+        var nearby = new HashSet<Vector2I>();
+        for(int z=-1;z<=1;z++)
+        for(int x=-1;x<=1;x++)nearby.Add(cell+new Vector2I(x,z));
+        if(sprinting)
         {
-            if(Math.Max(Math.Abs(x),Math.Abs(z))!=radius)continue;
-            var patch=new TerrainRingLayout.Patch(new Vector3I(cell.X+x,cell.Y+z,0),size,default);
+            for(int step=1;step<=3;step++)
+                nearby.Add((Vector2I)((position+velocityLead*(step/3f))/size).Floor());
+        }
+        foreach(var nextCell in nearby.OrderBy(p=>((Vector2)p*size+Vector2.One*size*.5f).DistanceSquaredTo(lead)))
+        {
+            var patch=new TerrainRingLayout.Patch(new Vector3I(nextCell.X,nextCell.Y,0),size,default);
             flightQueue.Add(new Key(patch,resolution,revision));
         }
         for(int radius=0;radius<=1;radius++)
@@ -148,6 +162,17 @@ public sealed class TerrainRingStream : IDisposable
                 flightQueue.Add(new Key(patch,resolution,revision));
             }
         }
+        // One cheap coarse tile covers the next stretch when sprinting
+        // outside the terrain already published around the camera.
+        if(velocity.LengthSquared()>25*25 && resolution>FlightBackdropResolution)
+        {
+            double span=size*9;
+            var ahead=(Vector2I)((position+(velocity*.65f).LimitLength(size*2))/(float)span).Floor();
+            var patch=new TerrainRingLayout.Patch(new Vector3I(ahead.X,ahead.Y,2),span,default);
+            double centerX=patch.OriginX+span*.5,centerZ=patch.OriginZ+span*.5;
+            if(committed?.Owner(centerX,centerZ) is null)
+                flightQueue.Add(new Key(patch,FlightBackdropResolution,revision));
+        }
         foreach(var key in flightReady.Keys.ToArray())if(!flightQueue.Contains(key))flightReady.Remove(key);
         if(flightQueue.Any(key=>!FlightFinished(key)&&!jobs.ContainsKey(key)) && jobs.Count>0 &&
             jobs.Values.All(job=>!flightQueue.Contains(job.Key)&&!job.Cancellation.IsCancellationRequested))
@@ -160,16 +185,82 @@ public sealed class TerrainRingStream : IDisposable
         a.Resolution==b.Resolution && a.SourceRevision==b.SourceRevision;
     private bool ReusableJob(Key key)=>key.Patch.Key.Z is 1 or 2 && wanted.Any(candidate=>SameLattice(candidate,key));
     private bool FlightFinished(Key key)=>flightReady.ContainsKey(key)||ready.ContainsKey(key)||cache.ContainsKey(key);
+    private int nextPriorityLevel;
     private bool NextBuild(out Key key)
     {
-        // Share flight capacity with the middle rings while the center moves.
-        if(jobs.Keys.Any(k=>k.Patch.Key.Z==0 && flightQueue.Contains(k)) && !jobs.Keys.Any(k=>k.Patch.Key.Z is 1 or 2 && flightQueue.Contains(k)))
+        bool stationaryStartup = !completeEver && requested is not null &&
+            (flightWindow is null || flightWindow.Value.Cell == (Vector2I)(requested.Camera/(float)requested.BaseSize).Floor());
+        if (stationaryStartup)
         {
-            foreach(var middle in flightQueue)
-                if(middle.Patch.Key.Z>0 && !FlightFinished(middle) && !jobs.ContainsKey(middle)){key=middle;return true;}
+            // Reserve one worker for the handoff to layers four and five.
+            // Their first full-resolution patches can build alongside layer three.
+            if (AllowLocalPublication && CentralReady() && !jobs.Keys.Any(k=>k.Patch.Key.Z is 3 or 4))
+            {
+                for (int level=3;level<=4;level++)
+                {
+                    if (ready.Keys.Any(k=>k.Patch.Key.Z==level)) continue;
+                    int index=pending.FindIndex(k=>wanted.Contains(k) && k.Patch.Key.Z==level && !jobs.ContainsKey(k));
+                    if(index<0)continue;
+                    key=pending[index];
+                    pending.RemoveAt(index);
+                    return true;
+                }
+            }
+            // Dispatch nearest layers first, but start the next layer whenever a
+            // worker is free. Visibility is ordered by the publication code.
+            return TryDequeueAvailable(pending,
+                candidate=>wanted.Contains(candidate)&&!ready.ContainsKey(candidate),
+                candidate=>jobs.ContainsKey(candidate),out key);
         }
-        foreach(var candidate in flightQueue)
-            if(!FlightFinished(candidate)&&!jobs.ContainsKey(candidate)){key=candidate;return true;}
+        // Keep one worker on the next fine tile during fast travel; farther
+        // rings can use the other workers without exhausting all near capacity.
+        if (sprinting && flightQueue.Count>0 && !jobs.Keys.Any(k=>k.Patch.Key.Z==0 && flightQueue.Contains(k)))
+        {
+            foreach(var nextFine in flightQueue)
+            {
+                if(nextFine.Patch.Key.Z!=0)break;
+                if(FlightFinished(nextFine) || jobs.ContainsKey(nextFine))continue;
+                var cell=new Vector2I(nextFine.Patch.Key.X,nextFine.Patch.Key.Y);
+                if(cell!=FlightFocus && cell!=flightWindow?.Cell)continue;
+                key=nextFine;
+                return true;
+            }
+        }
+        if (EntranceSupport is {} supports)
+        {
+            int index = pending.FindIndex(k => wanted.Contains(k) && !ready.ContainsKey(k) && !jobs.ContainsKey(k) && supports(k.Patch));
+            if (index >= 0)
+            {
+                key = pending[index];
+                pending.RemoveAt(index);
+                return true;
+            }
+        }
+        foreach(var preview in flightQueue)
+        {
+            if(preview.Resolution==resolution || FlightFinished(preview) || jobs.ContainsKey(preview))continue;
+            key=preview;
+            return true;
+        }
+        // Give every near ring a turn even while preview tiles are streaming.
+        for (int turn = 0; turn < PriorityLayerCount; turn++)
+        {
+            int level = nextPriorityLevel;
+            nextPriorityLevel = (level + 1) % PriorityLayerCount;
+            foreach (var candidate in flightQueue)
+            {
+                if (candidate.Patch.Key.Z != level || FlightFinished(candidate) || jobs.ContainsKey(candidate)) continue;
+                key = candidate;
+                return true;
+            }
+            int index = pending.FindIndex(candidate => candidate.Patch.Key.Z == level &&
+                wanted.Contains(candidate) && !ready.ContainsKey(candidate) && !jobs.ContainsKey(candidate) &&
+                !(level is 1 or 2 && jobs.Keys.Any(job => SameLattice(job, candidate))));
+            if (index < 0) continue;
+            key = pending[index];
+            pending.RemoveAt(index);
+            return true;
+        }
         return TryDequeueAvailable(pending,candidate=>(wanted.Contains(candidate)||prefetch.Contains(candidate))&&!ready.ContainsKey(candidate),
             candidate=>jobs.ContainsKey(candidate) || (candidate.Patch.Key.Z is 1 or 2 && jobs.Keys.Any(k=>SameLattice(k,candidate))),out key);
     }
@@ -225,7 +316,7 @@ public sealed class TerrainRingStream : IDisposable
         {
             int tier = tiers[a].CompareTo(tiers[b]);
             if (tier != 0) return tier;
-            if(tiers[a]==0 && a.Patch.Key.Z!=b.Patch.Key.Z)return a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);
+            if((!completeEver || tiers[a]==0) && a.Patch.Key.Z!=b.Patch.Key.Z)return a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);
             int distance = Distance(a.Patch, plan).CompareTo(Distance(b.Patch, plan));
             if (distance != 0) return distance;
             int level = a.Patch.Key.Z.CompareTo(b.Patch.Key.Z);
@@ -339,7 +430,8 @@ public sealed class TerrainRingStream : IDisposable
             var progress=new BuildProgress();TerrainSharedSamples? samples=ShareSamples?sharedSamples:null;ulong started=Time.GetTicksUsec();var sameTile=key.Patch.Key.Z is 1 or 2
                 ? cache.FirstOrDefault(pair=>SameLattice(pair.Key,key)).Value?.Data : null;
             bool prepareFlightWater=key.Patch.Key.Z<=2 && key.Patch.Hole.Empty;
-            var gpuPreparation=sameTile is null?GpuPreparation:null;
+            bool backdrop=key.Resolution!=resolution;
+            var gpuPreparation=sameTile is null&&!backdrop?GpuPreparation:null;
             try
             {
                 var task=Task.Run(async ()=>
@@ -360,7 +452,7 @@ public sealed class TerrainRingStream : IDisposable
                     // Allocation measurement begins after the await, on the same thread
                     // that performs the numerical build; thread-local counters cannot span awaits.
                     using var biomeScope=biomeNoise?.Activate();
-                    var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples,sameTile);
+                    var data=geometry.Build(builder,key.Patch,key.Resolution,()=>token.IsCancellationRequested,progress.Mark,samples,sameTile,surfaceOnly:backdrop);
                     if(prepareFlightWater)
                     {
                         var water=TerrainRingWater.Build(data,data.WaterLevel,data.BeachesEnabled,data.WaterEnabled);
@@ -375,10 +467,12 @@ public sealed class TerrainRingStream : IDisposable
         }
         TryStartPreparation(allowance);
     }
+
+    internal Func<TerrainRingLayout.Patch,bool>? EntranceSupport { get; set; }
     private void TryStartPreparation(int allowance)
     {
         if(preparation is not null||preparedCut is not null||requested is null||ReferenceEquals(requested,committed)||allowance<=0)return;
-        bool complete=wanted.All(key=>ready.ContainsKey(key)),startup=!completeEver&&(committed is null||(committedGeneration==generation && committed.Patches.All(p=>wanted.Contains(new Key(p,resolution,revision))))||!AllowLocalPublication||committedSourceRevision!=revision||requested.BaseSize!=committed.BaseSize);int available=wanted.Count(key=>ready.ContainsKey(key));
+        bool complete=wanted.All(key=>ready.ContainsKey(key)),startup=!completeEver&&(committed is null||(committedSourceRevision==revision && committed.Patches.All(p=>wanted.Contains(new Key(p,resolution,revision))))||!AllowLocalPublication||committedSourceRevision!=revision||requested.BaseSize!=committed.BaseSize);int available=wanted.Count(key=>ready.ContainsKey(key));
         // A finished numerical queue can still contain dozens of unshown meshes.
         // Present nearby closures first even if the last worker has already finished.
         if (complete && AllowLocalPublication && committed is not null && committedSourceRevision==revision &&
@@ -397,18 +491,40 @@ public sealed class TerrainRingStream : IDisposable
             var ordered = requested.Patches.OrderBy(p=>PriorityTier(p,requested,committed)).ThenBy(p=>Math.Min(p.Key.Z,PriorityLayerCount)).ThenBy(p => Distance(p, requested)).ThenBy(p => p.Key.Z).ToArray();
             // A slow tile must not hold up completed neighbors on the same ring.
             var candidates = ordered.AsEnumerable();
-            if (startup && !complete)
+            if (startup && AllowLocalPublication)
             {
-                int firstMissingLevel = ordered.Where(p => !ready.ContainsKey(new Key(p,resolution,revision)))
-                    .Min(p => p.Key.Z);
-                candidates = ordered.Where(p => p.Key.Z <= Math.Max(firstMissingLevel, PriorityLayerCount - 1));
+                var visible = committed?.Patches.ToHashSet();
+                int firstMissingLevel = ordered.Where(p => visible?.Contains(p)!=true)
+                    .Select(p => p.Key.Z).DefaultIfEmpty(int.MaxValue).Min();
+                int lastLevel=firstMissingLevel;
+                if (firstMissingLevel is >=2 and <=4)
+                {
+                    // Publish ready outer owners in the cut that finishes layer
+                    // three. Layer five can keep growing while layer four fills.
+                    bool thirdReady=ordered.Where(p=>p.Key.Z==2).All(IsReady);
+                    if(thirdReady)
+                    {
+                        // Both next levels must have a full-resolution owner
+                        // before the final layer-three batch goes visible.
+                        for(int level=3;level<=4;level++)
+                            if(ordered.Any(p=>p.Key.Z==level) && !ordered.Any(p=>p.Key.Z==level && IsReady(p)))
+                                return;
+                        lastLevel=4;
+                    }
+                    else lastLevel=2;
+                }
+                candidates = ordered.Where(p => p.Key.Z <= lastLevel);
+                if(ordered.Any(p=>p.Key.Z>lastLevel))complete=false;
+                if (EntranceSupport is {} support && ordered.Any(p => support(p) && !ready.ContainsKey(new Key(p,resolution,revision))))
+                    candidates = candidates.Where(p => !support(p));
             }
             var source=candidates.Select(p=>new Key(p,resolution,revision)).Where(key=>ready.ContainsKey(key)).Select(key=>ready[key]).ToArray();if(startup && !complete && source.Length<=publishedCount)return;var plan=complete?requested:requested with{Patches=source.Select(data=>data.Patch).ToArray()};var desired=requested;var prior=committed;var originals=committedSources;long requestedGeneration=generation;preparationGeneration=generation;preparationCancellation=new CancellationTokenSource();var token=preparationCancellation.Token;
+            var entranceGroup = local && EntranceSupport is {} includes ? ordered.Where(includes).ToHashSet() : null;
             preparation=Task.Run(()=>
             {
                 if(local)
                 {
-                    var next=source.ToDictionary(d=>d.Patch);var patches=TerrainLocalPublication.Select(prior!.Patches,ordered,next.Keys.ToHashSet(),()=>token.IsCancellationRequested,1);
+                    var next=source.ToDictionary(d=>d.Patch);var patches=TerrainLocalPublication.Select(prior!.Patches,ordered,next.Keys.ToHashSet(),()=>token.IsCancellationRequested,4,entranceGroup);
                     if(patches is null)return new Prepared(requestedGeneration,plan,null,false,Array.Empty<TerrainRingMeshGeometry.Data>());
                     var old=originals.ToDictionary(d=>d.Patch);source=patches.Select(p=>next.TryGetValue(p,out var data)?data:old[p]).ToArray();plan=prior with{Patches=patches,Camera=desired.Camera,CollisionInterests=desired.CollisionInterests};
                 }
@@ -416,6 +532,7 @@ public sealed class TerrainRingStream : IDisposable
             },token);
         }
     }
+    private bool IsReady(TerrainRingLayout.Patch patch) => ready.ContainsKey(new Key(patch,resolution,revision));
     private bool CentralReady()
     {
         if (requested?.Owner(requested.Camera.X, requested.Camera.Y) is not { } center) return false;
@@ -434,7 +551,7 @@ public sealed class TerrainRingStream : IDisposable
     }
     public bool Acknowledge(long preparedGeneration)
     {
-        if(!IsCurrent(preparedGeneration)||this.preparedGeneration!=preparedGeneration||preparedCut is null||preparedPlan is null||requested is null)return false;if(completeEver&&!preparedComplete)LocalPublications++;committedGeneration=generation;committed=preparedComplete?requested:preparedPlan;committedSources=preparedSources;committedSourceRevision=revision;lastLocalAttempt=-1;SortPending();preparedSources=Array.Empty<TerrainRingMeshGeometry.Data>();completeEver|=preparedComplete;publishedCount=preparedCut.Meshes.Length;preparedCut=null;preparedPlan=null;this.preparedGeneration=-1;return true;
+        if(!IsCurrent(preparedGeneration)||this.preparedGeneration!=preparedGeneration||preparedCut is null||preparedPlan is null||requested is null)return false;if(completeEver&&!preparedComplete)LocalPublications++;committed=preparedComplete?requested:preparedPlan;committedSources=preparedSources;committedSourceRevision=revision;lastLocalAttempt=-1;SortPending();preparedSources=Array.Empty<TerrainRingMeshGeometry.Data>();completeEver|=preparedComplete;publishedCount=preparedCut.Meshes.Length;preparedCut=null;preparedPlan=null;this.preparedGeneration=-1;return true;
     }
     private void Store(Key key,TerrainRingMeshGeometry.Data data)
     {

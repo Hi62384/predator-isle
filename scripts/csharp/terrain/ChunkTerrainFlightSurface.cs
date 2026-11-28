@@ -37,6 +37,23 @@ public partial class ChunkTerrain
             _swamp_water_material.SetShaderParameter("middle_coverage",middleTexture);
         }
     }
+    private bool CaveOwnsTerrainCell(Vector2I cell,bool requireDraw=false)
+    {
+        if(_cave_streamer?._surface_transaction is not { committed:true } cut || ringLayout is null)
+            return false;
+        double size=ringLayout.BaseSize;
+        if(size>64 || 64%size!=0)return false;
+        var column=new Vector2I((int)Math.Floor((cell.X+.5)*size/64),
+            (int)Math.Floor((cell.Y+.5)*size/64));
+        return cut.columns.ContainsKey(column) && (!requireDraw || drawnCaveColumns.Contains(column));
+    }
+
+    internal bool HasVisibleNearDetail(Vector2I cell) =>
+        CaveOwnsTerrainCell(cell,requireDraw:true) || HasVisibleFineCell(cell);
+
+    internal bool HasCavePreviewOverlap =>
+        flightNodes.Keys.Any(cell => CaveOwnsTerrainCell(cell));
+
     internal bool HasVisibleFineCell(Vector2I cell)
     {
         if(_active_chunks.TryGetValue(new Vector3I(cell.X,cell.Y,0),out var value))
@@ -51,38 +68,41 @@ public partial class ChunkTerrain
     {
         if(flightMask is null || ringStream is null)return;
         var center=world_to_chunk(point);
+        var ahead=ringStream.FlightFocus;
         var caves=CaveStreams().ToArray();
         bool changed=false;
         foreach(var cell in flightNodes.Keys.ToArray())
         {
             var key=new Vector3I(cell.X,cell.Y,0);
             if(flightRevision==ringSourceRevision && !_teleport_pending && !_active_chunks.ContainsKey(key) &&
+               !CaveOwnsTerrainCell(cell) &&
                (Math.Max(Math.Abs(cell.X-center.X),Math.Abs(cell.Y-center.Y))<=1 ||
-                Math.Max(Math.Abs(cell.X-center.X),Math.Abs(cell.Y-center.Y))<=3 && !CommittedCell(cell.X,cell.Y)) &&
-               !caves.Any(c=>c.needs_fine_surface(key)))continue;
+                cell==ahead ||
+                Math.Max(Math.Abs(cell.X-center.X),Math.Abs(cell.Y-center.Y))<=2 && !CommittedCell(cell.X,cell.Y)) &&
+               !caves.Any(c=>c.DeferFinePreview(key)))continue;
             var node=flightNodes[cell].Node;node.Hide();node.QueueFree();flightNodes.Remove(cell);
             SetFlightCell(cell,false);changed=true;
         }
         flightRevision=ringSourceRevision;
         if(!_teleport_pending)
         {
-            // A single new draw per frame, always closest first.
-            for(int radius=0;radius<=1;radius++)
+            // Upload the tile under the camera and one ahead before side
+            // tiles, so ready detail is visible before the next crossing.
+            var candidates=new List<Vector2I>{center,ahead};
+            for(int dz=-1;dz<=1;dz++)
+            for(int dx=-1;dx<=1;dx++)
+                if(dx!=0 || dz!=0)candidates.Add(center+new Vector2I(dx,dz));
+            int uploaded=0;
+            foreach(var cell in candidates)
             {
-                bool added=false;
-                for(int dz=-radius;dz<=radius&&!added;dz++)
-                for(int dx=-radius;dx<=radius&&!added;dx++)
-                {
-                    if(Math.Max(Math.Abs(dx),Math.Abs(dz))!=radius)continue;
-                    var cell=center+new Vector2I(dx,dz);var key=new Vector3I(cell.X,cell.Y,0);
-                    if(flightNodes.ContainsKey(cell)||_active_chunks.ContainsKey(key))continue;
-                    var data=ringStream.ReadyFine(cell);
-                    if(data is null||caves.Any(c=>c.needs_fine_surface(key)))continue;
-                    var node=new MeshInstance3D{Position=new Vector3((float)data.Patch.OriginX,0,(float)data.Patch.OriginZ)};
-                    AddChild(node);AddFlightWater(node,data);flightNodes.Add(cell,new FlightTile(node,data));SetFlightCell(cell,true);
-                    added=changed=true;
-                }
-                if(added)break;
+                var key=new Vector3I(cell.X,cell.Y,0);
+                if(flightNodes.ContainsKey(cell)||_active_chunks.ContainsKey(key)||CaveOwnsTerrainCell(cell))continue;
+                var data=ringStream.ReadyFine(cell);
+                if(data is null||caves.Any(c=>c.DeferFinePreview(key)))continue;
+                var node=new MeshInstance3D{Position=new Vector3((float)data.Patch.OriginX,0,(float)data.Patch.OriginZ)};
+                AddChild(node);AddFlightWater(node,data);flightNodes.Add(cell,new FlightTile(node,data));SetFlightCell(cell,true);
+                changed=true;
+                if(++uploaded>=2)break;
             }
         }
         bool middleChanged=UpdateMiddleSurface(center);
@@ -132,7 +152,7 @@ public partial class ChunkTerrain
     private ImageTexture? middleTexture;
     private readonly Dictionary<Vector3I,MeshInstance3D> middleNodes=new();
     internal readonly HashSet<Vector3I> VisibleMiddle=new();
-    private (Vector2I Cell,long Revision,object Render,bool Teleport)? middleState;
+    private (Vector2I Cell,long Revision,object Render,bool Teleport,object? CaveCut)? middleState;
 
     private TerrainRingMeshGeometry.Data? CommittedSurface(Vector2I cell)
     {
@@ -159,7 +179,7 @@ public partial class ChunkTerrain
 
     private bool UpdateMiddleSurface(Vector2I center)
     {
-        var state=(center,ringSourceRevision,(object)committedRender,_teleport_pending);
+        var state=(center,ringSourceRevision,(object)committedRender,_teleport_pending,(object?)_cave_streamer?._surface_transaction);
         bool changed=middleState!=state;
         if(changed)foreach(var (key,node) in middleNodes.ToArray())
         {
@@ -201,6 +221,10 @@ public partial class ChunkTerrain
             for(int dx=0;dx<span;dx++)
             {
                 int x=key.X*span+dx,z=key.Y*span+dz;
+                // The entrance owns both the draw and the collider in these columns.
+                double size=ringLayout!.BaseSize;
+                if(_cave_streamer is {} cave && size<=64 && 64%size==0 &&
+                    cave._surface_columns.ContainsKey(new Vector2I((int)Math.Floor((x+.5)*size/64),(int)Math.Floor((z+.5)*size/64))))continue;
                 var owner=CommittedSurface(new Vector2I(x,z))?.Patch;
                 if(owner.HasValue && owner.Value.Key.Z<=key.Z)continue;
                 middleMask.SetPixel(x&63,z&63,new Color(x,z,key.Z,1));

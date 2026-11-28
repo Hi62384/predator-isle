@@ -11,6 +11,39 @@ namespace PredatorIsle.Checks;
 /// protected-shore probes across the tetrahedral faces of every cave biome.</summary>
 internal static class CaveMesherOptimizationChecks
 {
+    internal static void RunSmoothing(Action<bool, string> require)
+    {
+        using var field = new CaveField { height = Callable.From<double, double, double>((x, z) => 200) };
+        require(field.append_feature(new Vector3(38, 22, 35), new Vector3(88, 25, 25),
+            new Vector2(6, 9), 0, 3), "Smoothing fixture rejected its crossing");
+        using var mesher = new CaveMesher();
+        var before = mesher.build(field, Vector3I.Zero, 2);
+        mesher.SmoothSurface = true;
+        var after = mesher.build(field, Vector3I.Zero, 2);
+        var original = before[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        var vertices = after[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        var normals = after[(int)Mesh.ArrayType.Normal].AsVector3Array();
+        require(original.Length > 0 && original.Length == vertices.Length, "Smoothing changed the passage topology");
+        int moved = 0;
+        for (int i = 0; i < original.Length; i += 3)
+        {
+            var initial = (original[i + 2] - original[i]).Cross(original[i + 1] - original[i]).Normalized();
+            var face = (vertices[i + 2] - vertices[i]).Cross(vertices[i + 1] - vertices[i]).Normalized();
+            require(face.Dot(initial) > 0, "A relaxed cave face reversed winding");
+            for (int j = i; j < i + 3; j++)
+            {
+                require(normals[j].Dot(face) > 0, "A cave corner normal points through its face");
+                if (vertices[j] != original[j]) moved++;
+            }
+        }
+        require(moved > 100, "Fixture did not exercise geometric smoothing");
+        var neighbor = mesher.build(field, Vector3I.Right, 2)[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        var firstBorder = vertices.Where(v => v.X == 64).Select(v => new Vector2(v.Y, v.Z)).ToHashSet();
+        var secondBorder = neighbor.Where(v => v.X == 0).Select(v => new Vector2(v.Y, v.Z));
+        require(firstBorder.Count > 10 && firstBorder.SetEquals(secondBorder), "Smoothing opened a cave chunk seam");
+        GD.Print($"Relaxed {moved} triangle corners with {firstBorder.Count} matching border vertices");
+    }
+
     internal static void Run(Action<bool,string> require)
     {
         using var field=new CaveField();

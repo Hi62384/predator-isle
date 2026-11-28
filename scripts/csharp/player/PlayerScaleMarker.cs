@@ -25,33 +25,27 @@ public partial class PlayerScaleMarker : Node3D
     }
     private void Box(Vector3 center, Vector3 size) => Part(new BoxMesh { Size = size }, center);
     private void Part(Mesh mesh, Vector3 center) => AddChild(new MeshInstance3D { Mesh = mesh, MaterialOverride = _material, Position = center });
-    private static double Height(Node terrain, Vector3 point) => terrain.Call("get_height_at", point).AsDouble();
+    private Camera3D? placementCamera;
 
-    public void place(Camera3D camera, Node terrain)
+    public void place(Camera3D camera, Node terrain) => placementCamera = camera;
+
+    public override void _PhysicsProcess(double delta)
     {
-        var origin = camera.GlobalPosition;
-        var ray = -camera.GlobalBasis.Z;
-        double previous = 0;
-        bool found = false;
-        var point = origin;
-        for (int step = 1; step <= 512; step++)
+        var camera = placementCamera;
+        placementCamera = null;
+        if (!IsInstanceValid(camera)) return;
+        var origin = camera!.GlobalPosition;
+        var query = PhysicsRayQueryParameters3D.Create(origin, origin - camera.GlobalBasis.Z * 4096, 1);
+        var space = camera.GetWorld3D().DirectSpaceState;
+        var hit = space.IntersectRay(query);
+        if (hit.Count > 0 && hit["normal"].AsVector3().Y < .45f)
         {
-            double distance = step * 8.0;
-            point = origin + ray * (float)distance;
-            if (point.Y <= Height(terrain, point))
-            {
-                double low = previous, high = distance;
-                for (int iteration = 0; iteration < 14; iteration++)
-                {
-                    double middle = (low + high) * .5;
-                    var sample = origin + ray * (float)middle;
-                    if (sample.Y > Height(terrain, sample)) low = middle; else high = middle;
-                }
-                point = origin + ray * (float)high; found = true; break;
-            }
-            previous = distance;
+            var besideWall = hit["position"].AsVector3() + hit["normal"].AsVector3() * .5f;
+            query.From = besideWall;
+            query.To = besideWall + Vector3.Down * 64;
+            hit = space.IntersectRay(query);
         }
-        if (!found) point = origin + new Vector3(ray.X, 0, ray.Z).Normalized() * 12;
-        point.Y = (float)Height(terrain, point); GlobalPosition = point; Visible = true;
+        Visible = hit.Count > 0 && hit["normal"].AsVector3().Y >= .45f;
+        if (Visible) GlobalPosition = hit["position"].AsVector3();
     }
 }

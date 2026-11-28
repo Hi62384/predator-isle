@@ -14,7 +14,7 @@ internal static class TerrainLocalPublication
         public bool Touches(Rectangle b)=>((X1==b.X0||X0==b.X1)&&Math.Min(Z1,b.Z1)>Math.Max(Z0,b.Z0))||((Z1==b.Z0||Z0==b.Z1)&&Math.Min(X1,b.X1)>Math.Max(X0,b.X0));
         public double IntersectionArea(Rectangle b)=>Math.Max(0,Math.Min(X1,b.X1)-Math.Max(X0,b.X0))*Math.Max(0,Math.Min(Z1,b.Z1)-Math.Max(Z0,b.Z0));
     }
-    internal static TerrainRingLayout.Patch[]? Select(TerrainRingLayout.Patch[] published,TerrainRingLayout.Patch[] requested,HashSet<TerrainRingLayout.Patch> ready,Func<bool>? cancelled=null, int additionBudget=int.MaxValue)
+    internal static TerrainRingLayout.Patch[]? Select(TerrainRingLayout.Patch[] published,TerrainRingLayout.Patch[] requested,HashSet<TerrainRingLayout.Patch> ready,Func<bool>? cancelled=null, int additionBudget=int.MaxValue, HashSet<TerrainRingLayout.Patch>? entranceGroup=null)
     {
         var regions=new Dictionary<TerrainRingLayout.Patch,Rectangle[]>();
         Rectangle[] Regions(TerrainRingLayout.Patch p)
@@ -70,6 +70,16 @@ internal static class TerrainLocalPublication
             while(changed&&valid)
             {
                 changed=false;
+                if (entranceGroup != null && additions.Overlaps(entranceGroup))
+                {
+                    foreach (var tile in entranceGroup)
+                    {
+                        if (accepted.Contains(tile) || additions.Contains(tile)) continue;
+                        if (!ready.Contains(tile)) { valid=false; break; }
+                        additions.Add(tile); changed=true;
+                    }
+                    if (!valid) break;
+                }
                 foreach(var old in accepted)if(!removals.Contains(old)&&additions.Any(p=>Overlap(old,p))){removals.Add(old);changed=true;}
                 foreach(var next in requested)if(!additions.Contains(next)&&removals.Any(p=>Overlap(p,next)))
                 {if(!ready.Contains(next)&&!accepted.Contains(next)){valid=false;break;}additions.Add(next);changed=true;}

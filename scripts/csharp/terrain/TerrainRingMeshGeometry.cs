@@ -66,7 +66,7 @@ public sealed class TerrainRingMeshGeometry
         if(weights==Vector4.Zero&&f.last_island<=0)weights=builder._native_regions.weights(x,z);
         return new Sample(h,weights,f.last_surface,f.last_geology,(float)f.last_jungle,Four(f.last_forest),Four(f.last_savanna),Four(f.last_swamp),Four(f.last_mountain),f.last_coast,f.last_tropical,f.last_badlands,f.last_badlands_palette,e[0],e[1],e[2],e[3],e[4],e[5],e[6],e[7],(float)f.last_water);
     }
-    internal Data Build(TerrainMeshBuilder builder,TerrainRingLayout.Patch patch,int resolution,Func<bool>? cancelled=null,Action<string>? stage=null,TerrainSharedSamples? shared=null,Data? sameTile=null)
+    internal Data Build(TerrainMeshBuilder builder,TerrainRingLayout.Patch patch,int resolution,Func<bool>? cancelled=null,Action<string>? stage=null,TerrainSharedSamples? shared=null,Data? sameTile=null,bool surfaceOnly=false)
     {
         builder.RingOwns=p=>patch.Contains(p.X,p.Y);
         try
@@ -78,8 +78,14 @@ public sealed class TerrainRingMeshGeometry
                 new Data(patch,topology.Get(resolution,true,patch.Hole),null!,sameTile.ExtensionData,sameTile.ExtensionRows,
                     sameTile.ExtensionMask,sameTile.BadlandsSlot,sameTile.AlienFlow,sameTile.AlienFlowRows)
                     {Products=sameTile.Products,HasMountain=sameTile.HasMountain};
+            if(surfaceOnly)return data with
+            {
+                WaterEnabled = builder.RingWaterEnabled,
+                BeachesEnabled = builder.RingBeachesEnabled,
+                WaterLevel = builder.water_level
+            };
             if(cancelled?.Invoke()==true)throw new OperationCanceledException();stage?.Invoke("feature geometry");
-            using var featuresBuilder=new TerrainFeatureMeshes();bool enabled=builder._extras_enabled||(builder._tropical is not null&&builder._tropical.settings.Get("waterfall_frequency").AsDouble()>0&&builder.settings.Get("water_enabled").AsBool());var features=enabled?featuresBuilder.build(builder,new Vector2I(patch.Key.X,patch.Key.Y)):new D();if(cancelled?.Invoke()==true)throw new OperationCanceledException();
+            using var featuresBuilder=new TerrainFeatureMeshes();bool enabled=builder.RingFeaturesEnabled;var features=enabled?featuresBuilder.build(builder,new Vector2I(patch.Key.X,patch.Key.Y)):new D();if(cancelled?.Invoke()==true)throw new OperationCanceledException();
             stage?.Invoke("structure geometry");using var structuresBuilder=new LodBiomeStructureGeometry();var structures=builder._extras_enabled?structuresBuilder.build(builder,new Vector2I(patch.Key.X,patch.Key.Y),SupportSteps,new Callable(featuresBuilder,"portal_sites")):new A();var flow=new D();if(structures.Count>2&&structures[2].VariantType!=Variant.Type.Nil){using var coordinates=new AlienTissueCoordinates();flow=coordinates.structure_atlas(builder,structures[2].AsGodotArray(),new Vector2((float)patch.OriginX,(float)patch.OriginZ));}
             // Sidecar payloads are bounded by the same numerical cache budget as the surface mesh.
             var detail=structuresBuilder.RefinementRegions.ToList();if(features.TryGetValue("waterfalls",out var falls))foreach(var value in falls.AsGodotArray()){var fall=value.AsGodotDictionary();if(fall.TryGetValue("position",out var p))detail.Add(new Rect2(p.AsVector2()-Vector2.One*160,Vector2.One*320));}
@@ -87,7 +93,7 @@ public sealed class TerrainRingMeshGeometry
             stage?.Invoke("collision");var ground=sameTile is not null && sameTile.AuthoritativeGround.Count>0
                 ? RemaskGround(sameTile.AuthoritativeGround,patch) : BuildAuthoritativeGround(builder,patch,cancelled,shared);
             using var collision=new TerrainCollision();var collisionData=collision.prepare_irregular(ground,ground.Count>0,structures,features,true);
-            long bytes=TerrainPayloadMemory.Estimate(structures)+TerrainPayloadMemory.Estimate(features)+TerrainPayloadMemory.Estimate(flow)+detail.Count*16L+TerrainPayloadMemory.Estimate(ground)+TerrainPayloadMemory.Estimate(collisionData);return data with{Structures=structures,Features=features,StructureFlow=flow,AuthoritativeGround=ground,Collision=collisionData,AdditionalBytes=bytes,WaterEnabled=builder.settings.Get("water_enabled").AsBool(),BeachesEnabled=builder.settings.Get("beaches_enabled").AsBool(),WaterLevel=builder.water_level,RefinementRegions=detail.ToArray()};
+            long bytes=TerrainPayloadMemory.Estimate(structures)+TerrainPayloadMemory.Estimate(features)+TerrainPayloadMemory.Estimate(flow)+detail.Count*16L+TerrainPayloadMemory.Estimate(ground)+TerrainPayloadMemory.Estimate(collisionData);return data with{Structures=structures,Features=features,StructureFlow=flow,AuthoritativeGround=ground,Collision=collisionData,AdditionalBytes=bytes,WaterEnabled=builder.RingWaterEnabled,BeachesEnabled=builder.RingBeachesEnabled,WaterLevel=builder.water_level,RefinementRegions=detail.ToArray()};
         }
         finally{builder.RingOwns=null;}
     }

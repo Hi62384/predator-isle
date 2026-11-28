@@ -15,6 +15,7 @@ public partial class ChunkTerrain
     [Export] public TerrainRingSettings ring_settings{get;set;}=GD.Load<TerrainRingSettings>("res://config/world/terrain_rings.tres");
     private TerrainRingLayout? ringLayout;
     private TerrainRingStream? ringStream;
+    internal TerrainRingLayout.Plan? RequestedRingPlan => ringStream?.Requested;
     private TerrainRingBudget? ringBudget;
     private readonly TerrainGpuGrids ringGpuGrids=new();
     private TerrainGpuSampler? ringGpuSampler;
@@ -145,6 +146,16 @@ public partial class ChunkTerrain
     private void TickRings(double delta,Vector3 point)
     {
         if(ringStream is null||ringBudget is null){last_error="Restart the scene after changing the terrain streaming mode.";return;}
+        bool trace=OS.GetCmdlineUserArgs().Contains("trace");
+        ulong began=Time.GetTicksMsec();
+        ulong queued=began;
+        void Mark(string phase)
+        {
+            if(!trace)return;
+            ulong now=Time.GetTicksMsec();
+            if(now-queued>150)GD.Print($"Terrain flight frame {phase} took {now-queued} ms");
+            queued=now;
+        }
         var planar=new Vector2(point.X,point.Z);var velocity=ringHasPreviousFocus&&delta>0?(planar-ringPreviousFocus)/(float)delta:Vector2.Zero;ringPreviousFocus=planar;ringHasPreviousFocus=true;ringPrefetchClock+=delta;
         if(!authority_only&&!_teleport_pending&&ringPrefetchClock>=.2){ringPrefetchClock=0;ringStream.Prefetch(planar,velocity);}
         var collisionCell=(point/256f).Floor();if(collisionCell!=_last_structure_collision_cell){_last_structure_collision_cell=collisionCell;foreach(var value in _active_chunks.Values)_update_near_collision(Obj<MeshInstance3D>(value),false,true);}
@@ -159,14 +170,17 @@ public partial class ChunkTerrain
                 RefreshRings(Vector3.Inf);
         }
         var caves=CaveStreams().ToArray();bool underground=caves.Length==1&&caves[0].underground_interest(point);
-        int reserve=underground?Math.Max(1,worker_count/2):caves.Length>0&&worker_count>1?1:0;
+        int reserve=underground||caves.Any(stream=>stream.PreparingEntrance)?Math.Max(1,worker_count/2):caves.Length>0&&worker_count>1?1:0;
         if(worker_count==1&&Engine.GetProcessFrames()%2==0)reserve=0;
         int caveJobs=caves.Sum(stream=>stream.job_count()),terrainSlots=Math.Max(0,worker_count-Math.Max(caveJobs,reserve));ringStream.MaximumWorkers=ringStream.HasCompletedCoverage?Math.Min(worker_count,ringBudget.WorkerAllowance):worker_count;ringStream.CacheBudgetBytes=(long)ring_settings.cache_mebibytes*1024*1024;
-        ringStream.FollowCamera(planar,!authority_only&&!_teleport_pending);
+        ringStream.FollowCamera(planar,!authority_only&&!_teleport_pending,velocity);
+        ringStream.EntranceSupport = caves.Length==0 ? null : patch => patch.Key.Z==0 && caves.Any(stream=>stream.needs_fine_surface(patch.Key));
         ringStream.AllowLocalPublication=!_teleport_pending;ringStream.Tick(terrainSlots,()=>{var builder=new TerrainMeshBuilder{settings=_settings_snapshot.DuplicateDeep(Resource.DeepDuplicateMode.All),world_seed=world_seed,water_level=water_level,chunk_size=chunk_size};builder._configure_noise();return builder;});
+        Mark("jobs");
         if(ringStream.LastError.Length>0)last_error=ringStream.LastError;ulong begin=Time.GetTicksUsec();if(ringStream.LastError.Length==0)try{UploadRings();}catch(Exception error){ringStream.RejectPrepared(ringUploadGeneration,error);last_error=error.ToString();DiscardRingStaging();GD.PushError("Terrain publication failed; existing terrain retained: "+error.Message);}ringLastUploadMilliseconds=(Time.GetTicksUsec()-begin)/1000.0;
+        Mark("upload");
         double savedBudget=upload_budget_ms;try{upload_budget_ms=Math.Max(.25,ringBudget.UploadMilliseconds-ringLastUploadMilliseconds)/Math.Max(1,caves.Length);for(int index=0;index<caves.Length;index++){var stream=caves[(ringCaveCursor+index)%caves.Length];var actor=authorityCaves.FirstOrDefault(pair=>pair.Value==stream);var protectedPoint=actor.Value is not null&&authorityActors.TryGetValue(actor.Key,out var body)?body.GlobalPosition:point;int otherJobs=caves.Where(other=>other!=stream).Sum(other=>other.job_count());stream.tick(_teleport_pending?_teleport_destination:protectedPoint,protectedPoint,Math.Max(0,worker_count-ringStream.RunningJobs-otherJobs),ringStream.LastError.Length==0&&ringStream.PendingPatches>0);}ringCaveCursor=caves.Length>0?(ringCaveCursor+1)%caves.Length:0;}finally{upload_budget_ms=savedBudget;}
-        CommitRings();UpdateFlightSurface(point);RefreshAuthorityGroundCuts();
+        Mark("cave");CommitRings();Mark("commit");UpdateFlightSurface(point);Mark("edges");RefreshAuthorityGroundCuts();
     }
     private static D RingUploadPayload(TerrainRingMeshGeometry.Data data,A arrays,bool groundOnly=false)
     {
@@ -191,6 +205,7 @@ public partial class ChunkTerrain
     private void CommitRings()
     {
         if(ringStream is null||ringStream.LastError.Length>0||ringUploading is null||ringUploadIndex<ringUploading.Meshes.Length)return;if(!ringStream.IsCurrent(ringUploadGeneration)){DiscardRingStaging();return;}
+        if(!authority_only && _cave_streamer?.AwaitingLocalMap==true && _active_chunks.Count==0)return;
         if(_teleport_pending&&_cave_streamer is not null&&!_cave_streamer.position_ready(_teleport_destination))return;foreach(var stream in CaveStreams())if(!stream.partition_ready(Values(ringNext)))return;if(!ringStream.Acknowledge(ringUploadGeneration))return;
         committedRender=ringUploading.Meshes.ToDictionary(data=>data.Patch.Key);
         ulong begin=Time.GetTicksUsec();

@@ -1,0 +1,10 @@
+Godot Engine v4.6.1.stable.mono.official.14d19694e - https://godotengine.org
+
+ERROR: Failed to read the root certificate store.
+   at: get_system_ca_certificates (platform/windows/os_windows.cpp:2570)
+Published layer 1 at 558 ms
+Published layer 2 at 740 ms
+Published layer 4 at 1336 ms
+Published layer 5 at 2132 ms
+Published layer 3 at 2624 ms
+Five full layers complete=True at 6804 ms
