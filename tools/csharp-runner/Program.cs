@@ -150,7 +150,7 @@ foreach (string mode in modes)
     records.Add(new { mode, passed = ok, started_utc = started, completed_utc = DateTime.UtcNow, exit_code = process.ExitCode,
         sampled_peak_private_bytes = peak > 0 ? (long?)peak : null, environment_messages = environmentMessages, log_prefix = prefix, failure });
     Console.WriteLine($"{mode}: {(ok ? "PASS" : "FAIL")}; sampled private peak {(peak > 0 ? (peak / 1048576.0).ToString("F1") + " MiB" : "unsampled")}");
-    foreach (string line in output.Split('\n').Where(line => line.Contains("checks passed") || line.Contains("startup check passed") || line.Contains("Actual volcanic cave cell"))) Console.WriteLine(line.Trim());
+    foreach (string line in output.Split('\n').Where(line => line.Contains("checks passed") || line.Contains("startup check passed") || line.Contains("Actual volcanic cave cell") || line.Contains("Procedural cave measurements:"))) Console.WriteLine(line.Trim());
     if (!ok) { Console.Error.WriteLine(failure); passed = false; }
 }
 var receipt = new { passed, memory_limit_mib = memoryLimitMiB, deadline_seconds_per_mode = 180, sample_period_ms = 500, records,

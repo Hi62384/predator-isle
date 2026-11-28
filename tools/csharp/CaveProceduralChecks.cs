@@ -111,10 +111,26 @@ internal static class CaveProceduralChecks
         require(mesh.Count>0,"Deep cave failed to generate geometry");
         var vertices=mesh[(int)Mesh.ArrayType.Vertex].AsVector3Array();
         require(vertices.Length>=3&&vertices.Length%3==0&&vertices.All(v=>v.IsFinite()),"Invalid deep cave mesh");
+        // Compare the actual freeform scalar geometry after rotating the major
+        // axis. A room must not merely be an orientation-invariant sphere.
+        using var roomA=new CaveField{maximum_depth=1200,minimum_roof=10};
+        using var roomB=new CaveField{maximum_depth=1200,minimum_roof=10};
+        roomA.height=surface;roomB.height=surface;
+        var center=new Vector3(32,-500,32);
+        require(roomA.append_feature(center,center+new Vector3(10,0,0),new Vector2(24,30),4,3),"Warped room A rejected");
+        require(roomB.append_feature(center,center+new Vector3(0,0,10),new Vector2(24,30),4,3),"Warped room B rejected");
+        require(roomA.sample(center+Vector3.Up*2)<0&&roomB.sample(center+Vector3.Up*2)<0,"Warped chamber core closed");
+        int distinct=0;
+        for(int z=-25;z<=25;z+=2)for(int x=-25;x<=25;x+=2)
+        {
+            var test=center+new Vector3(x,10,z);
+            if((roomA.sample(test)<0)!=(roomB.sample(test)<0))distinct++;
+        }
+        require(distinct>40,"Warped cavern footprint is not materially different after independent axis variation");
         using var submerged=Make(17);
         submerged.configure(Callable.From<double,double,double>((x,z)=>-2),water,17,1200);
         require(submerged.region(Vector2I.Zero)["entrances"].AsGodotArray().Count==0,"Submerged entrance was admitted");
-        Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes()};
+        Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes(),["warped_footprint_different_samples"]=distinct};
         GD.Print("Procedural cave measurements: "+Json.Stringify(Measurements));
     }
 }

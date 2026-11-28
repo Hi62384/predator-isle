@@ -28,6 +28,30 @@ float field_value(int index){
   int kind=int(a.w),style=int(b.w);
   float floor_y=a.y,radius=0.0;
   vec2 q=p.xz-a.xz;
+  if(kind==4){
+   if(options.z>0.5&&abs(p.y-a.y)<=5.01)return 5.0;
+   float minor=direction.w,roof=shape.y/.6;
+   vec2 axis=direction.xy/minor;
+   float u=dot(q,axis)/shape.x,v=dot(q,vec2(-axis.y,axis.x))/minor;
+   float r=length(vec2(u,v)),phase=axis.x*2.3+axis.y*3.7+float(style)*.73;
+   float warp=.79+.12*sin(u*5.0+v*3.0+phase)+.09*sin(v*7.0-u*2.0+phase*1.7);
+   float rise=smoothstep(.25,.85,r)*min(roof*.18,5.0)*(.5+.5*sin(u*5.0-v*3.0+phase));
+   float ceiling=roof*(.60+.40*(.5+.5*sin(u*3.0+v*4.0+phase)));
+   float h=max(1.0,ceiling-rise),y=p.y-a.y;
+   vec2 normalized=vec2(r/warp,(y-rise-h*.45)/(h*.55));
+   float exponent=2.0+2.6*(.5+.5*sin(phase));
+   vec2 powers=pow(abs(normalized),vec2(exponent));
+   float arch=(pow(powers.x+powers.y,1.0/exponent)-1.0)*min(minor,h*.55);
+   float value=max(rise-y,arch+wall);
+   if(shape.x>=15.0&&roof>=20.0&&cos(phase)>.1){
+    float ru=u-(.57+.07*sin(phase+y*.13));
+    float rv=v-(.30+.05*cos(phase-y*.11));
+    float rib=(length(vec2(ru,rv))-(.085+.045*abs(sin(phase+y*.17))))*minor;
+    value=max(value,-rib);
+   }
+   closed_value=min(closed_value,value);
+   continue;
+  }
   if(kind==2){
    if(options.z>0.5&&abs(p.y-a.y)<=5.01)return 5.0;
    radius=length(q);

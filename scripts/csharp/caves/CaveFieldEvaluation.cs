@@ -37,12 +37,12 @@ internal static class CaveFieldEvaluation
         bool floorReliefPossible=false;
         if(f.floor_relief.Count>0)
             foreach(int feature in features)
-                if(f.Kinds[feature]==2&&Math.Abs((double)point.Y-f.Begins[feature].Y)<=5)
+                if((f.Kinds[feature] is 2 or 4)&&Math.Abs((double)point.Y-f.Begins[feature].Y)<=5)
                 {floorReliefPossible=true;break;}
         bool uncertain=false;
         foreach(int feature in features)
         {
-            int kind=f.Kinds[feature];if(kind==3)return null;bool opening=kind==1;
+            int kind=f.Kinds[feature];if(kind is 3 or 4)return null;bool opening=kind==1;
             if(opening?!openingAllowed:!closedAllowed)continue;
             var a=f.Begins[feature];var b=f.Ends[feature];var size=f.Dimensions[feature];
             double floorY=a.Y,radius;
@@ -150,12 +150,40 @@ internal static class CaveFieldEvaluation
         return Math.Max(air,-stone);
     }
 
+    // Bounded freeform chamber. The horizontal axes, height envelope,
+    // terraces and occasional off-centre stone rib are independently varied.
+    // Match cave_lattice_gpu.gdshader; exact scalar/normal/mesh authority is CPU.
+    private static double WarpedRoom(Vector3 p,Vector3 a,Vector2 size,Vector2 direction,double minor,int style,double wall,double floorOffset)
+    {
+        double ux=direction.X/minor,uz=direction.Y/minor;
+        double dx=(double)p.X-a.X,dz=(double)p.Z-a.Z;
+        double u=(dx*ux+dz*uz)/size.X,v=(-dx*uz+dz*ux)/minor;
+        double r=Math.Sqrt(u*u+v*v),phase=ux*2.3+uz*3.7+style*.73;
+        double warp=.79+.12*Math.Sin(u*5+v*3+phase)+.09*Math.Sin(v*7-u*2+phase*1.7);
+        double rise=Smooth(.25,.85,r)*Math.Min(size.Y*.18,5)*(.5+.5*Math.Sin(u*5-v*3+phase));
+        double ceiling=size.Y*(.60+.40*(.5+.5*Math.Sin(u*3+v*4+phase)));
+        double h=Math.Max(1,ceiling-rise),y=(double)p.Y-a.Y;
+        double radial=r/warp,vertical=(y-rise-h*.45)/(h*.55);
+        double power=2+2.6*(.5+.5*Math.Sin(phase));
+        double arch=(Math.Pow(Math.Pow(Math.Abs(radial),power)+Math.Pow(Math.Abs(vertical),power),1/power)-1)*Math.Min(minor,h*.55);
+        double value=Math.Max(rise+floorOffset-y,arch+wall);
+        // Local rock remnants never subtract the protected core or other routes.
+        if(size.X>=15&&size.Y>=20&&Math.Cos(phase)>.1)
+        {
+            double ru=u-(.57+.07*Math.Sin(phase+y*.13));
+            double rv=v-(.30+.05*Math.Cos(phase-y*.11));
+            double rib=(Math.Sqrt(ru*ru+rv*rv)-(.085+.045*Math.Abs(Math.Sin(phase+y*.17))))*minor;
+            value=Math.Max(value,-rib);
+        }
+        return value;
+    }
+
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
         double closed = Far, opening = Far, floorOffset = 0, retainedRock = -Far;
         if (f.floor_relief.Count > 0)
             foreach (int feature in features)
-                if (f.Kinds[feature] == 2 && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)
+                if ((f.Kinds[feature] is 2 or 4) && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)
                 {
                     foreach (var pair in f.floor_relief) floorOffset = Math.Max(floorOffset, FloorRelief.Offset(f, point, pair.Value.AsDouble(), pair.Key.AsString()));
                     break;
@@ -164,6 +192,11 @@ internal static class CaveFieldEvaluation
         foreach (int feature in features)
         {
             var a = f.Begins[feature]; var b = f.Ends[feature]; var size = f.Dimensions[feature]; double floorY = a.Y, radius;
+            if(f.Kinds[feature]==4)
+            {
+                closed=Math.Min(closed,WarpedRoom(point,a,size,f.Directions[feature],f.SpanLength[feature],f.Styles[feature],wall,floorOffset));
+                continue;
+            }
             if(f.Kinds[feature]==3){closed=Math.Min(closed,Vault(point,a,size.X,out var rock));retainedRock=Math.Max(retainedRock,rock);continue;}
             if (f.Kinds[feature] == 2) radius = new Vector2(point.X - a.X, point.Z - a.Z).Length();
             else
@@ -225,13 +258,13 @@ internal static class FloorRelief
             {
                 var a = f.Begins[feature]; var b = f.Ends[feature]; var q = new Vector2(point.X - a.X, point.Z - a.Z);
                 double t = 0, distance = q.Length(), floorY = a.Y, width = f.Dimensions[feature].X;
-                if (f.Kinds[feature] != 2)
+                if (f.Kinds[feature] is not (2 or 4))
                 {
                     t = Math.Clamp(q.Dot(f.Directions[feature]) / f.SpanSquared[feature], 0, 1); distance = (q - f.Directions[feature] * (float)t).Length(); floorY = Lerp(a.Y, b.Y, t);
                 }
                 double vertical = 1 - Smooth(2, 4, Math.Abs(point.Y - floorY)); var weights = field[feature];
                 double raw = Lerp(weights.X, weights.Y, t), support = 1 - Smooth(width * .6, width * .6 + 4, distance); amount = Math.Max(amount, raw * vertical * support);
-                if (f.Kinds[feature] != 2) mask = Math.Min(mask, 1 - vertical + vertical * Smooth(width + 1, width + 4, distance));
+                if (f.Kinds[feature] is not (2 or 4)) mask = Math.Min(mask, 1 - vertical + vertical * Smooth(width + 1, width + 4, distance));
             }
         foreach (var item in f._protected_shores)
         {

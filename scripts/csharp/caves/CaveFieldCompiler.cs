@@ -54,7 +54,12 @@ internal static class CaveFieldCompiler
         if(!Add(p,p,core,coreHeight,2))return false;
         if(radius-core<2)return true;
         float bearing=R(3)*Mathf.Tau;
-        int count=1+(int)(R(4)*4);
+        // A continuously warped anisotropic volume, not a ring of identical
+        // spheres. Its encoded axis also carries the minor horizontal radius.
+        float minor=Math.Max(3,radius*(.32f+.64f*R(6)));
+        var majorAxis=new Vector3(Mathf.Cos(bearing),0,Mathf.Sin(bearing));
+        if(!Add(p,p+majorAxis*minor,radius,roof,4))return false;
+        int count=(int)(R(4)*3);
         float directionBias=R(5);
         for(int k=0;k<count;k++)
         {
@@ -136,7 +141,7 @@ internal static class CaveFieldCompiler
                 var node = raw.AsGodotDictionary(); if (Int(node, "level", -1) < 0) continue;
                 var point = node["point"].AsVector3();
                 float radius=(float)Num(node,"chamber_radius"), roof=(float)Num(node,"chamber_height");
-                if(node.ContainsKey("shape_seed") && region.ContainsKey("cross_section_style") && family is not (6 or 7))
+                if(node.ContainsKey("shape_seed") && region.ContainsKey("cross_section_style"))
                 {
                     if(!AddProceduralRoom(f,node,point,radius,roof,Int(node,"cross_section_style",style),region["id"].AsVector2I()))return Failed();
                     continue;

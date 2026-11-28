@@ -51,6 +51,9 @@ static func solve(stations:PackedVector2Array,surface:Callable,half_width:float,
 	var points:=PackedVector3Array();var previous:float=start_floor;var maximum_grade:float=0;var min_cover:float=INF;var max_depth:float=0
 	for i in range(stations.size()):
 		var t:float=clampf((cumulative[i]-flat_start_metres)/(lengths-flat_start_metres-flat_end_metres),0,1);var desired:float=lerpf(start_floor,end_floor,t*t*(3-2*t));var low:float=lower[i];var high:float=upper[i]
+		# Match the runtime's prompt entrance descent before clamping to the grade envelope.
+		if not cover.is_empty() and cover[0]==0:
+			desired=minf(desired,start_floor-minf(cumulative[i]*grade,headroom+roof))
 		if i>0:low=maxf(low,previous-distances[i]*grade);high=minf(high,previous+distances[i]*grade)
 		if low>high+.0000001:reject.reason="selected_floor_envelope_empty";return reject
 		var floor_height:float=clampf(desired,low,maxf(low,high));var point:=Vector3(stations[i].x,floor_height,stations[i].y);points.append(point)
