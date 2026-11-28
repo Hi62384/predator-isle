@@ -219,7 +219,7 @@ internal static class CaveFieldEvaluation
 
     internal static double Evaluate(CaveField f, Vector3 point, ReadOnlySpan<int> features)
     {
-        double closed = Far, opening = Far, floorOffset = 0, retainedRock = -Far;
+        double closed = Far, opening = Far, floorOffset = 0, retainedRock = double.NegativeInfinity;
         if (f.floor_relief.Count > 0)
             foreach (int feature in features)
                 if ((f.Kinds[feature] is 2 or 4) && Math.Abs((double)point.Y - f.Begins[feature].Y) <= 5)

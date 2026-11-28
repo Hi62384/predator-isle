@@ -23,7 +23,9 @@ internal static class CaveProceduralChecks
             var network=new CaveNetwork{activity=1,EntrancesPerRegion=4,OceanLevel=0,geological_morphology=true,chamber_variety=true};
             network.configure(surface,water,seed,1200);return network;
         }
-        int mouths=0,zero=0,links=0,deepLinks=0,loops=0;
+        int mouths=0,zero=0,links=0,deepLinks=0,loops=0,totalNodes=0,accessibleNodes=0;
+        var accessibleRegions=new HashSet<(long,Vector2I)>();
+        var reachableLengthByBand=new Dictionary<int,double>();
         double minSpacing=double.PositiveInfinity;
         foreach(long seed in new long[]{17,73921,2063,118})
         {
@@ -32,6 +34,10 @@ internal static class CaveProceduralChecks
             var stored=new Dictionary<Vector2I,D>();
             foreach(var cell in cells.Reverse())stored[cell]=replay.region(cell);
             var entrances=new List<Vector3>();
+            var seedNodes=new Dictionary<string,Vector3>(StringComparer.Ordinal);
+            var seedEdges=new List<D>();
+            var seedMouths=new HashSet<string>(StringComparer.Ordinal);
+            var roots=new Dictionary<Vector2I,string>();
             foreach(var cell in cells)
             {
                 long began=Stopwatch.GetTimestamp();var region=network.region(cell);
@@ -41,6 +47,13 @@ internal static class CaveProceduralChecks
                 var nodes=region["nodes"].AsGodotArray().Select(v=>v.AsGodotDictionary()).ToArray();
                 var edges=region["edges"].AsGodotArray().Select(v=>v.AsGodotDictionary()).ToArray();
                 var ids=nodes.ToDictionary(n=>n["id"].AsString(),StringComparer.Ordinal);
+                roots[cell]=nodes[0]["id"].AsString();
+                foreach(var node in nodes)
+                {
+                    string id=node["id"].AsString();seedNodes.Add(id,node["point"].AsVector3());
+                    if(node["level"].AsInt32()==-1)seedMouths.Add(id);
+                }
+                seedEdges.AddRange(edges);
                 var reachable=new HashSet<string>{nodes[0]["id"].AsString()};
                 int count;
                 do
@@ -90,14 +103,46 @@ internal static class CaveProceduralChecks
                 var b=replay.connections(cell,Vector2I.Zero);
                 require(GD.VarToBytes(a).SequenceEqual(GD.VarToBytes(b)),"Cross-region connection depends on discovery order");
                 links+=a.Count;
-                foreach(var edge in a)if(edge.AsGodotDictionary()["growth_role"].AsString()=="deep_region_link")deepLinks++;
+                foreach(var edge in a)
+                {
+                    var link=edge.AsGodotDictionary();seedEdges.Add(link);
+                    if(link["growth_role"].AsString()=="deep_region_link")deepLinks++;
+                }
+            }
+            // Unlike a local root-only connectivity check, start at actual
+            // surface mouths and traverse the cross-region return routes.
+            var adjacent=seedNodes.Keys.ToDictionary(id=>id,id=>new List<string>(),StringComparer.Ordinal);
+            foreach(var edge in seedEdges)
+            {
+                string a=edge["from"].AsString(),b=edge["to"].AsString();
+                require(adjacent.ContainsKey(a)&&adjacent.ContainsKey(b),"Dangling cross-region route");
+                adjacent[a].Add(b);adjacent[b].Add(a);
+            }
+            var reached=new HashSet<string>(seedMouths,StringComparer.Ordinal);
+            var queue=new Queue<string>(seedMouths);
+            while(queue.Count>0)foreach(string next in adjacent[queue.Dequeue()])if(reached.Add(next))queue.Enqueue(next);
+            totalNodes+=seedNodes.Count;accessibleNodes+=reached.Count;
+            foreach(var root in roots)if(reached.Contains(root.Value))accessibleRegions.Add((seed,root.Key));
+            foreach(var edge in seedEdges)
+            {
+                if(!reached.Contains(edge["from"].AsString())||!reached.Contains(edge["to"].AsString()))continue;
+                var points=edge["points"].AsVector3Array();
+                for(int i=1;i<points.Length;i++)
+                {
+                    int band=(int)Math.Floor((points[i-1].Y+points[i].Y)/200)*100;
+                    reachableLengthByBand[band]=reachableLengthByBand.GetValueOrDefault(band)+points[i-1].DistanceTo(points[i]);
+                }
             }
         }
         require(mouths>0&&zero>0,"Fixture did not exercise both surface access and buried regions");
         require(profiles.Count>=8,"Insufficient diversity in depth and connectivity");
         require(links>0,"No cross-region connection admitted");
         require(samples.Any(x=>x.Depth<=-950),"No graph descended to approximately Y=-1000");
-        var deepest=samples.OrderBy(x=>x.Depth).First();
+        require(totalNodes>0&&accessibleNodes>=totalNodes*.9,"Too much sampled geometry is disconnected from surface access");
+        foreach(int band in new[]{-100,-300,-500,-800,-900,-1000})
+            require(reachableLengthByBand.GetValueOrDefault(band)>0,$"No surface-reachable route at depth band {band}");
+        var deepest=samples.Where(x=>accessibleRegions.Contains((x.Seed,x.Cell))).OrderBy(x=>x.Depth).First();
+        require(deepest.Depth<=-950,"No surface-reachable network descended to approximately Y=-1000");
         using var field=new CaveField{maximum_depth=1200,minimum_roof=10,continuous_route_floors=true};
         long compile=Stopwatch.GetTimestamp();
         require(field.compile(new A{deepest.Region},surface),"Deepest procedural volume failed to compile");
@@ -150,6 +195,10 @@ internal static class CaveProceduralChecks
         submerged.configure(Callable.From<double,double,double>((x,z)=>-2),water,17,1200);
         require(submerged.region(Vector2I.Zero)["entrances"].AsGodotArray().Count==0,"Submerged entrance was admitted");
         Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes(),["warped_footprint_different_samples"]=distinct,["optional_vertical_links"]=shafts,["maximum_room_diameter_m"]=maxRoom*2};
+        Measurements["surface_reachable_nodes"]=accessibleNodes;Measurements["total_nodes"]=totalNodes;
+        Measurements["surface_reachable_regions"]=accessibleRegions.Count;
+        var lengthBands=new D();foreach(var band in reachableLengthByBand.OrderBy(pair=>pair.Key))lengthBands[band.Key.ToString()]=band.Value;
+        Measurements["reachable_route_metres_by_100m_band"]=lengthBands;
         GD.Print("Procedural cave measurements: "+Json.Stringify(Measurements));
     }
 }
