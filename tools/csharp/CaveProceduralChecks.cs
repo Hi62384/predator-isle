@@ -1,0 +1,120 @@
+using Godot;
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.Linq;
+using PredatorIsle.Caves;
+using A = Godot.Collections.Array;
+using D = Godot.Collections.Dictionary;
+
+namespace PredatorIsle.Checks;
+
+/// <summary>Native end-to-end checks of the new graph, implicit volume and mesh.</summary>
+internal static class CaveProceduralChecks
+{
+    internal static D Measurements {get;private set;}=new();
+    internal static void Run(Action<bool,string> require)
+    {
+        var report=new A();var profiles=new HashSet<string>();var samples=new List<(long Seed,Vector2I Cell,double Depth,Vector3 Floor,D Region)>();
+        var surface=Callable.From<double,double,double>((x,z)=>100+8*Math.Sin(x*.001)+5*Math.Sin(z*.002));
+        var water=Callable.From<double,double,double>((x,z)=>-1000);
+        CaveNetwork Make(long seed)
+        {
+            var network=new CaveNetwork{activity=1,EntrancesPerRegion=4,OceanLevel=0,geological_morphology=true,chamber_variety=true};
+            network.configure(surface,water,seed,1200);return network;
+        }
+        int mouths=0,zero=0,links=0,deepLinks=0,loops=0;
+        double minSpacing=double.PositiveInfinity;
+        foreach(long seed in new long[]{17,73921,2063,118})
+        {
+            using var network=Make(seed);using var replay=Make(seed);
+            var cells=new[]{Vector2I.Zero,Vector2I.Right,Vector2I.Down,new Vector2I(-1,0)};
+            var stored=new Dictionary<Vector2I,D>();
+            foreach(var cell in cells.Reverse())stored[cell]=replay.region(cell);
+            var entrances=new List<Vector3>();
+            foreach(var cell in cells)
+            {
+                long began=Stopwatch.GetTimestamp();var region=network.region(cell);
+                double milliseconds=Stopwatch.GetElapsedTime(began).TotalMilliseconds;
+                require(region["valid"].AsBool(),$"Flat/slightly rolling land failed to generate a network: {seed}/{cell}");
+                require(GD.VarToBytes(region).SequenceEqual(GD.VarToBytes(stored[cell])),"Discovery order changed region graph");
+                var nodes=region["nodes"].AsGodotArray().Select(v=>v.AsGodotDictionary()).ToArray();
+                var edges=region["edges"].AsGodotArray().Select(v=>v.AsGodotDictionary()).ToArray();
+                var ids=nodes.ToDictionary(n=>n["id"].AsString(),StringComparer.Ordinal);
+                var reachable=new HashSet<string>{nodes[0]["id"].AsString()};
+                int count;
+                do
+                {
+                    count=reachable.Count;
+                    foreach(var e in edges)
+                    {
+                        string a=e["from"].AsString(),b=e["to"].AsString();
+                        require(ids.ContainsKey(a)&&ids.ContainsKey(b),"Dangling graph edge");
+                        if(reachable.Contains(a)||reachable.Contains(b)){reachable.Add(a);reachable.Add(b);}
+                    }
+                }while(count!=reachable.Count);
+                require(reachable.Count==nodes.Length,"Disconnected local route network");
+                double length=0,grade=0;
+                foreach(var edge in edges)
+                {
+                    var p=edge["points"].AsVector3Array();
+                    require(p.Length>=2&&p.All(v=>v.IsFinite()&&v.Y>=-1000.01),"Invalid route coordinates");
+                    for(int i=1;i<p.Length;i++)
+                    {
+                        var d=p[i]-p[i-1];double horizontal=new Vector2(d.X,d.Z).Length();
+                        require(horizontal>.001,"Degenerate route segment");
+                        grade=Math.Max(grade,Math.Abs(d.Y)/horizontal);length+=d.Length();
+                    }
+                }
+                require(grade<=.201,"Protected return grade exceeded 20 percent");
+                var localMouths=nodes.Where(n=>n["level"].AsInt32()==-1).Select(n=>n["point"].AsVector3()).ToArray();
+                require(localMouths.Length<=4,"Entrance ceiling exceeded");
+                require(localMouths.Length==region["entrances"].AsGodotArray().Count,"Entrance count inconsistent");
+                mouths+=localMouths.Length;if(localMouths.Length==0)zero++;
+                entrances.AddRange(localMouths);
+                var floor=nodes.OrderBy(n=>n["point"].AsVector3().Y).First()["point"].AsVector3();
+                int cycles=edges.Length-nodes.Length+1;loops+=cycles;
+                var bands=nodes.GroupBy(n=>(int)Math.Floor(n["point"].AsVector3().Y/100)).OrderBy(g=>g.Key).Select(g=>$"{g.Key}:{g.Count()}");
+                profiles.Add(string.Join("/",bands)+":"+cycles);
+                samples.Add((seed,cell,floor.Y,floor,region));
+                report.Add(new D{["seed"]=seed,["region"]=cell,["nodes"]=nodes.Length,["edges"]=edges.Length,["entrances"]=localMouths.Length,["floor_y"]=floor.Y,["target_y"]=region["target_floor_y"],["cycles"]=cycles,["length_metres"]=length,["max_grade"]=grade,["generation_ms"]=milliseconds});
+            }
+            for(int i=0;i<entrances.Count;i++)for(int j=i+1;j<entrances.Count;j++)
+            {
+                double distance=new Vector2(entrances[i].X-entrances[j].X,entrances[i].Z-entrances[j].Z).Length();
+                minSpacing=Math.Min(minSpacing,distance);require(distance>=399.99,"Entrance separation below 400 metres");
+            }
+            foreach(var cell in cells.Skip(1))
+            {
+                var a=network.connections(Vector2I.Zero,cell);
+                var b=replay.connections(cell,Vector2I.Zero);
+                require(GD.VarToBytes(a).SequenceEqual(GD.VarToBytes(b)),"Cross-region connection depends on discovery order");
+                links+=a.Count;
+                foreach(var edge in a)if(edge.AsGodotDictionary()["growth_role"].AsString()=="deep_region_link")deepLinks++;
+            }
+        }
+        require(mouths>0&&zero>0,"Fixture did not exercise both surface access and buried regions");
+        require(profiles.Count>=8,"Insufficient diversity in depth and connectivity");
+        require(links>0,"No cross-region connection admitted");
+        require(samples.Any(x=>x.Depth<=-950),"No graph descended to approximately Y=-1000");
+        var deepest=samples.OrderBy(x=>x.Depth).First();
+        using var field=new CaveField{maximum_depth=1200,minimum_roof=10,continuous_route_floors=true};
+        long compile=Stopwatch.GetTimestamp();
+        require(field.compile(new A{deepest.Region},surface),"Deepest procedural volume failed to compile");
+        double compileMs=Stopwatch.GetElapsedTime(compile).TotalMilliseconds;
+        require(field.sample(deepest.Floor+Vector3.Up*2)<0,"Deepest graph chamber has no actual walkable air volume");
+        var key=field.cell(deepest.Floor+Vector3.Up*2);
+        using var mesher=new CaveMesher();
+        long meshStart=Stopwatch.GetTimestamp();
+        var mesh=mesher.build(field,key,2);
+        double meshMs=Stopwatch.GetElapsedTime(meshStart).TotalMilliseconds;
+        require(mesh.Count>0,"Deep cave failed to generate geometry");
+        var vertices=mesh[(int)Mesh.ArrayType.Vertex].AsVector3Array();
+        require(vertices.Length>=3&&vertices.Length%3==0&&vertices.All(v=>v.IsFinite()),"Invalid deep cave mesh");
+        using var submerged=Make(17);
+        submerged.configure(Callable.From<double,double,double>((x,z)=>-2),water,17,1200);
+        require(submerged.region(Vector2I.Zero)["entrances"].AsGodotArray().Count==0,"Submerged entrance was admitted");
+        Measurements=new D{["regions"]=report,["region_count"]=samples.Count,["entrances"]=mouths,["zero_mouth_regions"]=zero,["minimum_spacing_metres"]=double.IsFinite(minSpacing)?minSpacing:0,["distinct_depth_connectivity_profiles"]=profiles.Count,["links"]=links,["deep_links"]=deepLinks,["cycles"]=loops,["deepest_y"]=deepest.Depth,["deep_cell"]=key,["field_compile_ms"]=compileMs,["mesh_ms"]=meshMs,["mesh_vertices"]=vertices.Length,["field_bytes"]=field.numeric_bytes()};
+        GD.Print("Procedural cave measurements: "+Json.Stringify(Measurements));
+    }
+}

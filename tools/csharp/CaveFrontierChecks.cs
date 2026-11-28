@@ -25,7 +25,7 @@ internal static class CaveFrontierChecks
             foreach (var node in mesh.GetNode<Node3D>("CaveFrontiers").GetChildren().Cast<MeshInstance3D>())
             {
                 sealedFaces++;
-                require(node.Visible && node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer == 1, "Missing neighbour not sealed");
+                require(!node.Visible && node.Mesh == null && node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer == 1, "Missing neighbour not sealed invisibly without a render mesh");
                 require(node.GetNode<StaticBody3D>("FrontierCollision").GetChild<CollisionShape3D>(0).Shape is ConcavePolygonShape3D, "Frontier physics shape missing");
             }
             var neighbour = new MeshInstance3D(); owner.AddChild(neighbour);
@@ -34,11 +34,13 @@ internal static class CaveFrontierChecks
                 if (node.GetMeta("face").AsInt32() == 1) require(!node.Visible && node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer == 0, "Ready neighbour remained sealed");
             cells.Remove(key + Vector3I.Right);
             neighbour.Free();
+            current.synchronize(cells);
+            foreach (var node in mesh.GetNode<Node3D>("CaveFrontiers").GetChildren().Cast<MeshInstance3D>()) require(!node.Visible && node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer == 1, "Unloaded neighbour was not resealed");
             current.synchronize(cells, false);
             foreach (var node in mesh.GetNode<Node3D>("CaveFrontiers").GetChildren().Cast<MeshInstance3D>()) require(node.GetNode<StaticBody3D>("FrontierCollision").CollisionLayer == 0, "Disabled frontier collision remained active");
             mesh.Free();
         }
-        require(sealedFaces > 0, "Frontier fixture never exercised visible seals or native collision");
+        require(sealedFaces > 0, "Frontier fixture never exercised collision-only seals");
         var captured = new A(); for (int i = 0; i < 6; i++) { var values = new float[1089]; for (int j = 0; j < values.Length; j++) values[j] = j % 3 == 0 ? -.5f : 1.5f; captured.Add(values); }
         require(GD.VarToBytes(old.Call("build", field, Vector3I.Zero, captured)).SequenceEqual(GD.VarToBytes(current.build(field, Vector3I.Zero, captured))), "Captured frontier lattice differs");
         using var water = new CaveWaterRenderer(); var originalWater = GD.Load<GDScript>("res://scripts/caves/water_renderer.gd");

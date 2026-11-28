@@ -44,35 +44,15 @@ public partial class MigrationChecks : Node
                 }
                 GetTree().Quit();return;
             }
-            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"tributary-layouts") >= 0)
+            if (Array.IndexOf(OS.GetCmdlineUserArgs(),"tributary-layouts") >= 0 ||
+                Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-mouths-only") >= 0 ||
+                Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-procedural-only") >= 0)
             {
-                foreach (long seed in new long[]{73921,2063,118})
-                {
-                    using var network = new CaveNetwork { activity=1, geological_morphology=true, EntrancesPerRegion=18 };
-                    network.configure(Callable.From<double,double,double>((x,z)=>72), Callable.From<double,double,double>((x,z)=>0), seed,1200);
-                    var region = network.region(Vector2I.Zero);
-                    int sideJoins=0, winding=0;
-                    foreach (var item in region["edges"].AsGodotArray())
-                    {
-                        var edge = item.AsGodotDictionary();
-                        if (!edge["entrance"].AsBool()) continue;
-                        var path = edge["points"].AsVector3Array();
-                        float length=0;
-                        for(int i=1;i<path.Length;i++) length+=path[i-1].DistanceTo(path[i]);
-                        if(length > path[0].DistanceTo(path[^1])*1.04f) winding++;
-                        string own = edge["from"].AsString()+":confluence";
-                        string end = edge["to"].AsString();
-                        if(end==own)
-                            foreach(var other in region["edges"].AsGodotArray())
-                            {
-                                var reach=other.AsGodotDictionary();
-                                if(reach["from"].AsString()==own){end=reach["to"].AsString();break;}
-                            }
-                        if(end.EndsWith(":confluence",StringComparison.Ordinal))sideJoins++;
-                    }
-                    GD.Print($"Seed {seed}: {sideJoins} entrances joined earlier passages, {winding} curved approaches");
-                    Require(sideJoins>0 && winding>0,"Repeated radial entrance layout");
-                }
+                _mode="cave-procedural";
+                CaveProceduralChecks.Run(Require);
+                CaveFrontierChecks.Run(this,Require);
+                MigrationEvidence.Write(_mode,_checks,true,CaveProceduralChecks.Measurements);
+                GD.Print($"C# procedural cave checks passed: {_checks}");
                 await Finish();return;
             }
             if (Array.IndexOf(OS.GetCmdlineUserArgs(),"distance-key") >= 0)
@@ -424,56 +404,9 @@ public partial class MigrationChecks : Node
 
                 }
                 GD.Print($"Streamable entrances in origin region: {mouths}");
-                Require(mouths>=12 && underground,"Expected multiple exposed entrances and underground geometry");
+                Require(mouths<=4,"Excessive surface entrance density");
+                Require(mouths==0 || underground,"Admitted entrance has no underground geometry");
                 await Finish();return;
-            }
-            if(Array.IndexOf(OS.GetCmdlineUserArgs(),"cave-mouths-only")>=0)
-            {
-                using var network=new PredatorIsle.Caves.CaveNetwork{EntrancesPerRegion=3,OceanLevel=0,activity=1};
-                var flat=Callable.From<double,double,double>((x,z)=>100);
-                var dry=Callable.From<double,double,double>((x,z)=>-1000);
-                network.configure(flat,dry,17,1200);
-                var region=network.region(Vector2I.Zero);
-                Require(region["entrances"].AsGodotArray().Count==3,"Expected three dry entrances on the flat fixture");
-                double lowest=double.PositiveInfinity;
-                foreach(var value in region["nodes"].AsGodotArray())
-                    lowest=Math.Min(lowest,value.AsGodotDictionary()["point"].AsVector3().Y);
-                GD.Print($"Deepest generated floor Y {lowest}");
-                Require(lowest <= -950,"Expected a route to approximately Y -1000");
-                var layouts = new System.Collections.Generic.HashSet<string>();
-                for (int x=0; x<4; x++)
-                {
-                    var sample = network.region(new Vector2I(x,0));
-                    var counts = new int[4];
-                    var reachable = new System.Collections.Generic.HashSet<string>();
-                    var entrances = sample["entrances"].AsGodotArray();
-                    Require(entrances.Count == 3,"Missing flat-world entrance");
-                    reachable.Add(entrances[0].AsString());
-                    int before;
-                    do
-                    {
-                        before = reachable.Count;
-                        foreach (var value in sample["edges"].AsGodotArray())
-                        {
-                            var edge = value.AsGodotDictionary();
-                            string a = edge["from"].AsString(), b = edge["to"].AsString();
-                            if (reachable.Contains(a) || reachable.Contains(b)) { reachable.Add(a); reachable.Add(b); }
-                        }
-                    } while (reachable.Count != before);
-                    foreach (var value in sample["nodes"].AsGodotArray())
-                    {
-                        var node = value.AsGodotDictionary();
-                        Require(reachable.Contains(node["id"].AsString()),"Disconnected cave node");
-                        int level = node["level"].AsInt32();
-                        if (level >= 0) counts[level]++;
-                    }
-                    layouts.Add(string.Join("/",counts));
-                }
-                Require(layouts.Count >= 3,"Repeated cave layouts across regions");
-                GD.Print("Connected chamber counts by depth: "+string.Join(", ",layouts));
-                network.configure(Callable.From<double,double,double>((x,z)=>-2),dry,17);
-                Require(!network.region(Vector2I.Zero)["valid"].AsBool(),"An entrance was admitted below the global ocean");
-                GD.Print("Three dry entrances generated; submerged terrain rejected.");await Finish();return;
             }
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"blob-only")){_mode="blob";BlobRuntimeChecks.Run(this,Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# blob runtime checks passed: {_checks}");await Finish();return;}
             if(System.Linq.Enumerable.Contains(OS.GetCmdlineUserArgs(),"rings-only")){_mode="rings";TerrainRingChecks.Run(Require);MigrationEvidence.Write(_mode,_checks,true);GD.Print($"C# ring checks passed: {_checks}");await Finish();return;}

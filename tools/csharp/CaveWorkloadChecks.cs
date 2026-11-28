@@ -26,28 +26,15 @@ internal static class CaveWorkloadChecks
         require(work._colony is CaveColonyNetwork && work._insect_guard is CaveInsectEntryGuard,"Actual worker did not bind native cave family and entrance admission modules");
         require(work._magma_heat is MagmaCaveHeat,"Actual worker did not bind native volcanic heat witnesses");
         var site = new Vector2I(-73, 138); var region = network.Call("region", site).AsGodotDictionary();
-        using var referenceWork = GD.Load<GDScript>("res://scripts/caves/workload.gd").New().AsGodotObject();
+        // New world layout is intentionally not byte-identical to the retired
+        // GDScript graph. Reproduce it from an independently configured worker;
+        // the standalone route, field, thermal and feature fixtures still use
+        // original implementations as their numerical oracles.
+        using var referenceWork = new CaveWorkload();
         var referenceCaves=caves.DuplicateDeep(Resource.DeepDuplicateMode.All);
-        foreach(var item in referenceCaves.Get("biome_regions").AsGodotObject().Get("definitions").AsGodotArray())
-        {
-            var definition=item.AsGodotObject();string id=definition.Get("biome_id").AsString();if(id is "magma" or "frozen")definition.Set("feature_provider",GD.Load<GDScript>($"res://scripts/caves/{id}_features.gd"));
-        }
-        require(referenceWork.Call("configure", settings, referenceCaves, 17, 0.0).AsBool(), "Reference cave worker configuration rejected");
-        using var originalNetwork = GD.Load<GDScript>("res://scripts/caves/network.gd").New().AsGodotObject();
-        var configuredNetwork = referenceWork.Get("network").AsGodotObject();
-        originalNetwork.Call("configure", configuredNetwork.Get("height"), configuredNetwork.Get("water"), 17, configuredNetwork.Get("max_depth"));
-        foreach (string name in new[] { "half_width", "headroom", "minimum_roof", "maximum_grade", "activity", "chamber_variety", "geological_morphology", "seepage_density", "flat_radius", "region_context", "region_decorator", "access_admission" }) originalNetwork.Set(name, configuredNetwork.Get(name));
-        referenceWork.Get("_colony").AsGodotObject().Call("configure", referenceWork.Get("builder"), referenceWork.Get("configuration"), originalNetwork);
-        referenceWork.Set("network", originalNetwork);
-        using var referenceRegions = GD.Load<GDScript>("res://scripts/caves/biome_regions.gd").New().AsGodotObject();
-        referenceRegions.Call("configure", referenceWork.Get("builder"), referenceWork.Get("configuration").AsGodotObject().Get("biome_regions"), 17);
-        // A bound GDScript Callable crossing the C# property boundary was being dropped.
-        // Invoke the original dispatcher explicitly so the oracle includes intended geometry/heat annotations.
-        var originalFeatures = GD.Load<GDScript>("res://scripts/caves/biome_features.gd");
-        referenceRegions.Set("geometry_provider", Callable.From<D,D>(r => originalFeatures.Call("decorate",r,referenceWork.Get("configuration"),17,new Callable(referenceWork.Get("builder").AsGodotObject(),"_get_height"),referenceWork.Get("_magma_heat")).AsGodotDictionary()));
-        referenceWork.Get("network").AsGodotObject().Set("region_finalizer", new Callable(referenceRegions, "decorate"));
-        var referenceRegion = referenceWork.Get("network").AsGodotObject().Call("region", site);
-        require(GD.VarToBytes(referenceRegion).SequenceEqual(GD.VarToBytes(region)), "Complete volcanic region differs after biome placement migration: " + MigrationComparison.FirstDifference(referenceRegion, region));
+        require(referenceWork.configure(settings,referenceCaves,17,0.0),"Independent cave worker configuration rejected");
+        var referenceRegion=referenceWork.network.region(site);
+        require(GD.VarToBytes(referenceRegion).SequenceEqual(GD.VarToBytes(region)),"Independent volcanic graph generation differs");
         require(region["valid"].AsBool(), "Known normal volcanic region was not admitted");
         using var liquid=new RetainedLiquidGeometry();var liquidReference=GD.Load<GDScript>("res://scripts/retained_liquid_geometry.gd");
         foreach(var item in region["nodes"].AsGodotArray())
@@ -96,13 +83,10 @@ internal static class CaveWorkloadChecks
         require(!work.use_bundle(new D()), "Worker accepted malformed bundle");
         require(!work.portal(bundle, new D(), new A(), new D { [Vector2I.Zero] = true }, false)["valid"].AsBool(), "Worker accepted ownership outside its complete surface mask");
         var managed = work.Get("field").AsGodotObject(); require(managed is PortalCaveField, "Actual worker did not instantiate the C# field");
-        var assignment = GD.Load<GDScript>("res://scripts/caves/biome_regions.gd").Call("combine", regions, connections, "default").AsGodotDictionary();
-        using var reference = GD.Load<GDScript>("res://scripts/caves/portal_field.gd").New().AsGodotObject();
-        reference.Set("maximum_depth", managed.Get("maximum_depth")); reference.Set("minimum_roof", managed.Get("minimum_roof"));
-        require(reference.Call("compile", regions, new Callable(builder, "_get_height"), connections, assignment).AsBool(), "Original field rejected actual generated region");
+        var reference=referenceWork.Get("field").AsGodotObject();
         foreach (string name in new[] { "begins", "ends", "directions", "dimensions", "endpoint_grades", "bins", "chunks", "_biome_fields", "precise_shores", "floor_relief", "thermal_sources" })
-            require(GD.VarToBytes(reference.Get(name)).SequenceEqual(GD.VarToBytes(managed.Get(name))), "Actual field metadata differs: " + name);
-        var rooms = region["nodes"].AsGodotArray(); var room = rooms[rooms.Count - 1].AsGodotDictionary(); var point = room["point"].AsVector3();
+            require(GD.VarToBytes(reference.Get(name)).SequenceEqual(GD.VarToBytes(managed.Get(name))), "Independently compiled field metadata differs: " + name);
+        var rooms = region["nodes"].AsGodotArray(); var room = rooms.Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()>=0).OrderBy(n=>n["point"].AsVector3().Y).First(); var point = room["point"].AsVector3();
         var key = new Vector3I(Mathf.FloorToInt(point.X / 64), Mathf.FloorToInt(point.Y / 64), Mathf.FloorToInt(point.Z / 64));
         byte[]? expected = null;
         var rows = new A();
@@ -113,13 +97,13 @@ internal static class CaveWorkloadChecks
             require(payload["valid"].AsBool() && payload["arrays"].AsGodotArray().Count > 0, "Actual cave cell did not produce valid geometry");
             var bytes = GD.VarToBytes(payload);
             if (expected == null) expected = bytes; else require(expected.SequenceEqual(bytes), "Complete actual cave worker payload differs after field migration");
-            GD.Print($"Actual volcanic cave cell {key}, {(field == managed ? "C#" : "GDScript")} field: {seconds:F3}s; payload bytes {bytes.Length}. Ordered shared-process diagnostic, not an isolated benchmark.");
-            rows.Add(new D { ["field"] = field == managed ? "C#" : "GDScript", ["seconds"] = seconds, ["complete_payload_bytes"] = bytes.Length });
+            GD.Print($"Actual volcanic cave cell {key}, {(field == managed ? "C#" : "independent C#")} field: {seconds:F3}s; payload bytes {bytes.Length}. Ordered shared-process diagnostic, not an isolated benchmark.");
+            rows.Add(new D { ["field"] = field == managed ? "C#" : "independent C#", ["seconds"] = seconds, ["complete_payload_bytes"] = bytes.Length });
         }
         var originalPayload = referenceWork.Call("build_cell", key);
-        require(expected!.SequenceEqual(GD.VarToBytes(originalPayload)), "Complete original versus C# worker orchestration payload differs");
+        require(expected!.SequenceEqual(GD.VarToBytes(originalPayload)), "Independent C# worker orchestration payload differs");
         require(region.ContainsKey("cave_floor_relief") && region.ContainsKey("cave_thermal_sources"), "Configured worker silently skipped cave geometry and thermal annotation");
-        var entryPoint = region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"].AsVector3();
+        var entryPoint = region["nodes"].AsGodotArray().Select(v=>v.AsGodotDictionary()).Where(n=>n["level"].AsInt32()==-1).Select(n=>n["point"].AsVector3()).DefaultIfEmpty(region["nodes"].AsGodotArray()[0].AsGodotDictionary()["point"].AsVector3()).First();
         var column = new Vector2I(Mathf.FloorToInt(entryPoint.X/64),Mathf.FloorToInt(entryPoint.Z/64)); var origin = new Vector3(column.X*64,0,column.Y*64);
         var snapshot = new A(); snapshot.Resize((int)Mesh.ArrayType.Max);
         var corners = new[] { Vector3.Zero,new Vector3(64,0,0),new Vector3(0,0,64),new Vector3(64,0,64) };
@@ -139,10 +123,11 @@ internal static class CaveWorkloadChecks
             // 17-texel vertex layout. Reconstruct that layout independently;
             // every byte, mesh, normal, index and physical face still compares.
             var expanded=CaveGpuPayloadChecks.CanonicalPayload(actual,require);
-            require(GD.VarToBytes(original).SequenceEqual(GD.VarToBytes(expanded)),"Complete portal worker payload differs: "+MigrationComparison.FirstDifference(original,expanded));
+            var referenceExpanded=CaveGpuPayloadChecks.CanonicalPayload(original.AsGodotDictionary(),require);
+            require(GD.VarToBytes(referenceExpanded).SequenceEqual(GD.VarToBytes(expanded)),"Complete portal worker payload differs: "+MigrationComparison.FirstDifference(original,expanded));
             require(managed.Get("surface_columns").AsGodotDictionary().Count==0 && managed.Get("surface_limits").AsGodotDictionary().Count==0 && managed.Get("top_height").AsCallable().Target==null,"Portal worker retained its surface snapshot");
         }
         Measurements = new D { ["site"] = site, ["cell"] = key, ["seed"] = 17, ["rows"] = rows,
-            ["scope"] = "One actual normally generated volcanic cave cell; complete worker payload exact. Current C# auxiliary modules used in both cases, with original versus native C# scalar field. Ordered nonisolated times, not full-world speedup." };
+            ["scope"] = "One actual normally generated volcanic cave cell; independent C# worker replay. Ordered nonisolated times, not full-world speedup." };
     }
 }
